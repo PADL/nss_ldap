@@ -189,15 +189,20 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 	free (*credp);
     }
 
-  if (__session.ls_config->ldc_binddn != NULL)
-    *whop = strdup (__session.ls_config->ldc_binddn);
+  *whop = *credp = NULL;
+  if (geteuid() == 0 && __session.ls_config->ldc_rootbinddn)
+  {
+    *whop = strdup (__session.ls_config->ldc_rootbinddn);
+    if (__session.ls_config->ldc_rootbindpw)
+      *credp = strdup (__session.ls_config->ldc_rootbindpw);
+  }
   else
-    *whop = NULL;
-
-  if (__session.ls_config->ldc_bindpw != NULL)
-    *credp = strdup (__session.ls_config->ldc_bindpw);
-  else
-    *credp = NULL;
+  {
+    if (__session.ls_config->ldc_binddn != NULL)
+      *whop = strdup (__session.ls_config->ldc_binddn);
+    if (__session.ls_config->ldc_bindpw != NULL)
+      *credp = strdup (__session.ls_config->ldc_bindpw);
+  }
 
   *methodp = LDAP_AUTH_SIMPLE;
 

@@ -33,6 +33,7 @@
 /**
  * Common attributes, not from RFC 2307.
  */
+#define AT_objectClass            "objectClass"
 #define AT_cn                     "cn"
 #define AT_uid                    "uid"
 #define AT_description            "description"

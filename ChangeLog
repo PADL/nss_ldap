@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+106.2	Luke Howard <lukeh@padl.com>
+
+	* if root, use rootbinddn/rootbindpw in rebind proc
+	* include objectClass in pwd required attributes
+
 106.1	Luke Howard <lukeh@padl.com>
 
 	* if user is a shadowAccount, then don't return password

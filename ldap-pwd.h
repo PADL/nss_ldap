@@ -29,7 +29,8 @@ static const char *pw_attributes[] =
  AT (uidNumber), AT (gidNumber),
  AT (cn), AT (homeDirectory),
  AT (loginShell), AT (gecos),
- AT (description), NULL};
+ AT (description), AT (objectClass),
+ NULL};
 
 static const char filt_getpwnam[] =
 #ifdef IDS_UID
