@@ -106,10 +106,12 @@ see:
 And if you need an LDAP server, or some general information on LDAP,
 see:
 
-	<URL:http://www.critical-angle.com/ldapworld>
+	<URL:http://www.openldap.org>
 
 7. Who wrote it?
 ----------------
 
-nss_ldap was written by PADL Software Pty Ltd <dev@padl.com>.
+nss_ldap was written by PADL Software Pty Ltd <dev@padl.com>. Many
+others have contributed, see the file AUTHORS in this directory.
+
 
