@@ -461,6 +461,11 @@ typedef enum nss_status NSS_STATUS;
 typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *,
 				char *, size_t);
 
+#ifdef HPUX
+extern int __thread_mutex_lock(pthread_mutex_t *);
+extern int __thread_mutex_unlock(pthread_mutex_t *);
+#endif /* HPUX */
+
 /*
  * Portable locking macro.
  */
@@ -473,9 +478,15 @@ typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *,
 #define NSS_LDAP_UNLOCK(m)		__libc_lock_unlock(m)
 #define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
 #elif defined(HAVE_PTHREAD_H)
-#define NSS_LDAP_LOCK(m)		pthread_mutex_lock(&m)
-#define NSS_LDAP_UNLOCK(m)		pthread_mutex_unlock(&m)
-#define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
+#ifdef HPUX
+# define NSS_LDAP_LOCK(m)		__thread_mutex_lock(&m)
+# define NSS_LDAP_UNLOCK(m)		__thread_mutex_unlock(&m)
+# define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
+#else
+# define NSS_LDAP_LOCK(m)		pthread_mutex_lock(&m)
+# define NSS_LDAP_UNLOCK(m)		pthread_mutex_unlock(&m)
+# define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
+#endif /* HPUX */
 #else
 #define NSS_LDAP_LOCK(m)
 #define NSS_LDAP_UNLOCK(m)

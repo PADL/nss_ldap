@@ -25,7 +25,7 @@
 
 /* $Id$ */
 
-#ifdef _AIX
+#ifdef AIX
 void *nw_pvtinit (void);
 #endif
 IRS_EXPORT void nw_close (struct irs_nw *);
@@ -137,7 +137,7 @@ IRS_EXPORT void
 nw_close (struct irs_nw *this)
 {
   LOOKUP_ENDENT (this);
-#ifdef _AIX
+#ifdef AIX
   free (this->private);
   free (this);
 #endif
@@ -176,7 +176,7 @@ nw_minimize (struct irs_nw *this)
 {
 }
 
-#ifdef _AIX
+#ifdef AIX
 void *
 nw_pvtinit (void)
 #else

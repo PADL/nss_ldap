@@ -27,7 +27,7 @@
 static char rcsId[] =
   "$Id$";
 
-#ifdef _AIX
+#ifdef AIX
 
 #include <stdlib.h>
 #include <string.h>
@@ -228,5 +228,5 @@ nss_ldap_initialize (struct secmethod_table *meths)
   return AUTH_SUCCESS;
 }
 
-#endif /* _AIX */
+#endif /* AIX */
 

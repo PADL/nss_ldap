@@ -59,10 +59,10 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 
-#if defined(HAVE_IRS_H) || defined(_AIX)
+#if defined(HAVE_IRS_H) || defined(AIX)
 #define MAXALIASES 35
 #define MAXADDRSIZE 4
-#endif /* HAVE_IRS_H || _AIX */
+#endif /* HAVE_IRS_H || AIX */
 
 #ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>

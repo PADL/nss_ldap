@@ -199,7 +199,7 @@ _nss_ldap_parse_gr (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(_AIX)
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(AIX)
 #ifdef HAVE_NSS_H
 NSS_STATUS _nss_ldap_initgroups_dyn (const char *user, gid_t group,
 				     long int *start, long int *size,
@@ -223,7 +223,7 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 			  long int *size, gid_t ** groupsp, long int limit,
 			  int *errnop)
-#elif defined(_AIX)
+#elif defined(AIX)
      char *_nss_ldap_getgrset (char *user)
 #endif
 {
@@ -238,21 +238,21 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   ldap_args_t a;
   NSS_STATUS stat;
   LDAPMessage *res, *e;
-#ifdef _AIX
+#ifdef AIX
   char *grplist = NULL;
   size_t listlen = 0;
-#endif /* _AIX */
+#endif /* AIX */
 
 #ifdef HAVE_NSS_H
   gid_t *groups = *groupsp;
 #endif /* HAVE_NSS_H */
 
   LA_INIT (a);
-#if defined(HAVE_NSS_H) || defined(_AIX)
+#if defined(HAVE_NSS_H) || defined(AIX)
   LA_STRING (a) = user;
 #else
   LA_STRING (a) = gbm->username;
-#endif /* HAVE_NSS_H || _AIX */
+#endif /* HAVE_NSS_H || AIX */
   LA_TYPE (a) = LA_TYPE_STRING;
 
   _nss_ldap_enter ();
@@ -263,11 +263,11 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   if (stat != NSS_SUCCESS)
     {
       _nss_ldap_leave ();
-#ifndef _AIX
+#ifndef AIX
       return stat;
 #else
       return NULL;
-#endif /* !_AIX */
+#endif /* !AIX */
     }
 
   /* lookup the user's DN. XXX: import this filter from somewhere else */
@@ -310,7 +310,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   if (stat != NSS_SUCCESS)
     {
       _nss_ldap_leave ();
-#ifndef _AIX
+#ifndef AIX
       return stat;
 #else
       return NULL;
@@ -319,7 +319,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   for (e = _nss_ldap_first_entry (res);
        e != NULL; e = _nss_ldap_next_entry (e))
     {
-#ifdef _AIX
+#ifdef AIX
       char **values = _nss_ldap_get_values (e, AT (gidNumber));
       if (values != NULL)
 	{
@@ -405,14 +405,14 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 	    }
 #endif /* HAVE_NSSWITCH_H */
 	}
-#endif /* _AIX */
+#endif /* AIX */
     }
   ldap_msgfree (res);
   _nss_ldap_leave ();
 
 #ifdef HAVE_NSS_H
   return NSS_SUCCESS;
-#elif defined(_AIX)
+#elif defined(AIX)
   /* Strip last comma and terminate the string */
   if (grplist && listlen)
     grplist[listlen - 1] = '\0';
@@ -422,7 +422,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   return NSS_NOTFOUND;
 #endif /* HAVE_NSS_H */
 }
-#endif /* HAVE_NSSWITCH_H || HAVE_NSS_H || _AIX */
+#endif /* HAVE_NSSWITCH_H || HAVE_NSS_H || AIX */
 
 #ifdef HAVE_NSS_H
 NSS_STATUS
