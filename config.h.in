@@ -36,6 +36,9 @@
 /* Define if you have the ldap_controls_free function.  */
 #undef HAVE_LDAP_CONTROLS_FREE
 
+/* Define if you have the ldap_create_control function.  */
+#undef HAVE_LDAP_CREATE_CONTROL
+
 /* Define if you have the ldap_create_page_control function.  */
 #undef HAVE_LDAP_CREATE_PAGE_CONTROL
 
