@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+2.63	Luke Howard <lukeh@padl.com>
+
+	* added patch from gero@faveve.uni-stuttgart.de for
+	  parsing of ldap.conf with tabs
+
 2.62 	Luke Howard <lukeh@padl.com>
 
 	* added experimental support for DN-membered groups;

@@ -388,7 +388,7 @@ NSS_STATUS _nss_ldap_readconfig(
 		return NSS_UNAVAIL;
 		}
 
-	while(fgets(b, sizeof(b), fp) != NULL)
+	while (fgets(b, sizeof(b), fp) != NULL)
 		{
 		char *k, *v;
 		int len;
@@ -398,11 +398,11 @@ NSS_STATUS _nss_ldap_readconfig(
 			continue;
 
 		k = b;
-		v = strchr(k, ' ');
-		if (v == NULL)
-			v = strchr(k, '\t');
+		v = k;
+		while (*v != '\0' && *v != ' ' && *v != '\t')
+			v++;
 
-		if (v == NULL)
+		if (*v == '\0')
 			continue;
 
 		*(v++) = '\0';
