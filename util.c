@@ -541,6 +541,10 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 void
 _nss_ldap_init_config (ldap_config_t * result)
 {
+  int i;
+
+  memset (result, 0, sizeof(*result));
+
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
   result->ldc_deref = LDAP_DEREF_NEVER;
   result->ldc_host = NULL;
@@ -579,6 +583,11 @@ _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_oc_map = NULL;
   result->ldc_password_type = LU_RFC2307_USERPASSWORD;
 #endif /* AT_OC_MAP */
+
+  for (i = 0; i < LM_NONE; i++)
+    {
+      result->ldc_sds[i] = NULL;
+    }
 
   result->ldc_next = result;
 }

@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+202	Luke Howard <lukeh@padl.com>
+
+	* configuration parser crasher fix
+
 201	Luke Howard <lukeh@padl.com>
 
 	* Berkeley DB fixes from Howard Chu
