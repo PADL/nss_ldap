@@ -737,7 +737,7 @@ do_parse_innetgr (LDAP *ld, LDAPMessage *e, ldap_state_t *pvt,
 
   debug ("==> do_parse_innetgr");
 
-  values = _nss_ldap_get_values (e, AT(cn));
+  values = _nss_ldap_get_values (e, ATM (netgroup, cn));
   if (values != NULL)
     {
       assert (values[0] != NULL);

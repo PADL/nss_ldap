@@ -74,7 +74,8 @@ _nss_ldap_parse_bp (LDAP * ld,
   NSS_STATUS stat;
 
   stat =
-    _nss_ldap_assign_attrval (ld, e, AT (cn), &bp->bp_name, &buffer, &buflen);
+    _nss_ldap_assign_attrval (ld, e, ATM (bootparams, cn), &bp->bp_name,
+                              &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 

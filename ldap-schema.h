@@ -110,13 +110,15 @@ extern char _nss_ldap_filt_innetgr[];
  * objectclass/attribute.
  */
 #define OC(oc)                   _nss_ldap_map_oc(OC##_##oc)
-#define AT(at)                   _nss_ldap_map_at(AT##_##at)
+#define AT(at)                   _nss_ldap_map_at(NULL, AT##_##at)
+#define ATM(map, at)             _nss_ldap_map_at(MP##_##map, AT##_##at)
 #define DF(at)                   _nss_ldap_map_df(at)
 #define OV(at)                   _nss_ldap_map_ov(at)
 
 #else /* AT_OC_MAP */
 #define OC(oc)                    OC##_##oc
 #define AT(at)                    AT##_##at
+#define ATM(map, at)              AT##_##at
 #define DF(at)                    NULL
 #define OV(at)                    NULL
 
@@ -291,5 +293,23 @@ extern char _nss_ldap_filt_innetgr[];
 #define AT_bootFile               "bootFile"
 #define AT_bootParameter          "bootParameter"
 
+/*
+ * Map names
+ */
+
+#define MP_passwd                 "passwd"
+#define MP_shadow                 "shadow"
+#define MP_group                  "group"
+#define MP_hosts                  "hosts"
+#define MP_services               "services"
+#define MP_networks               "networks"
+#define MP_protocols              "protocols"
+#define MP_rpc                    "rpc"
+#define MP_ethers                 "ethers"
+#define MP_netmasks               "netmasks"
+#define MP_bootparams             "bootparams"
+#define MP_aliases                "aliases"
+#define MP_netgroup               "netgroup"
+#define MP_automount              "automount"
 
 #endif /* _LDAP_NSS_LDAP_LDAP_SCHEMA_H */

@@ -1,6 +1,13 @@
 $Id$
 ===============================================================
 
+215	Luke Howard <lukeh@padl.com>
+
+	* choose between using native GSS-API and putenv()
+	  for setting keytab path
+	* per-map attribute mapping for attributes that
+	  appear in multiple maps
+
 214	Luke Howard <lukeh@padl.com>
 
 	* define LDAP_DEPRECATED for compiling against

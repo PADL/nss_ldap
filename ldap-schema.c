@@ -133,17 +133,20 @@ _nss_ldap_init_filters ()
 {
   /* rfc822 mail aliases */
   snprintf (_nss_ldap_filt_getaliasbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (nisMailAlias), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (nisMailAlias),
+            ATM (aliases, cn), "%s");
   snprintf (_nss_ldap_filt_getaliasent, LDAP_FILT_MAXSIZ,
 	    "(objectclass=%s)", OC (nisMailAlias));
 
   /* boot parameters */
   snprintf (_nss_ldap_filt_getbootparamsbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (bootableDevice), AT (cn), "%d");
+	    "(&(objectclass=%s)(%s=%s))", OC (bootableDevice),
+            ATM (bootparams, cn), "%d");
 
   /* MAC address mappings */
   snprintf (_nss_ldap_filt_gethostton, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ieee802Device), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (ieee802Device),
+            ATM (ethers, cn), "%s");
   snprintf (_nss_ldap_filt_getntohost, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (ieee802Device), AT (macAddress),
 	    "%s");
@@ -152,10 +155,11 @@ _nss_ldap_init_filters ()
 
   /* groups */
   snprintf (_nss_ldap_filt_getgrnam, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup),
+            ATM (group, cn), "%s");
   snprintf (_nss_ldap_filt_getgrgid, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup), AT (gidNumber),
-	    "%d");
+	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup),
+            ATM (group, gidNumber), "%d");
   snprintf (_nss_ldap_filt_getgrent, LDAP_FILT_MAXSIZ, "(&(objectclass=%s))",
 	    OC (posixGroup));
 #ifdef RFC2307BIS
@@ -169,7 +173,8 @@ _nss_ldap_init_filters ()
 
   /* IP hosts */
   snprintf (_nss_ldap_filt_gethostbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipHost), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (ipHost), ATM (hosts, cn),
+            "%s");
   snprintf (_nss_ldap_filt_gethostbyaddr, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (ipHost), AT (ipHostNumber),
 	    "%s");
@@ -178,7 +183,8 @@ _nss_ldap_init_filters ()
 
   /* IP networks */
   snprintf (_nss_ldap_filt_getnetbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipNetwork), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (ipNetwork),
+            ATM (networks, cn), "%s");
   snprintf (_nss_ldap_filt_getnetbyaddr, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (ipNetwork),
 	    AT (ipNetworkNumber), "%s");
@@ -187,7 +193,8 @@ _nss_ldap_init_filters ()
 
   /* IP protocols */
   snprintf (_nss_ldap_filt_getprotobyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipProtocol), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (ipProtocol),
+            ATM (protocols, cn), "%s");
   snprintf (_nss_ldap_filt_getprotobynumber, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (ipProtocol),
 	    AT (ipProtocolNumber), "%d");
@@ -196,7 +203,8 @@ _nss_ldap_init_filters ()
 
   /* users */
   snprintf (_nss_ldap_filt_getpwnam, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (posixAccount), AT (uid), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (posixAccount),
+            ATM (passwd, uid), "%s");
   snprintf (_nss_ldap_filt_getpwuid, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))",
 	    OC (posixAccount), AT (uidNumber), "%d");
@@ -205,7 +213,7 @@ _nss_ldap_init_filters ()
 
   /* RPCs */
   snprintf (_nss_ldap_filt_getrpcbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (oncRpc), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (oncRpc), ATM (rpc, cn), "%s");
   snprintf (_nss_ldap_filt_getrpcbynumber, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (oncRpc), AT (oncRpcNumber),
 	    "%d");
@@ -214,10 +222,12 @@ _nss_ldap_init_filters ()
 
   /* IP services */
   snprintf (_nss_ldap_filt_getservbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipService), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (ipService), ATM (services, cn),
+            "%s");
   snprintf (_nss_ldap_filt_getservbynameproto, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s)(%s=%s))",
-	    OC (ipService), AT (cn), "%s", AT (ipServiceProtocol), "%s");
+	    OC (ipService), ATM (services, cn), "%s", AT (ipServiceProtocol),
+            "%s");
   snprintf (_nss_ldap_filt_getservbyport, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (ipService), AT (ipServicePort),
 	    "%d");
@@ -229,13 +239,15 @@ _nss_ldap_init_filters ()
 
   /* shadow users */
   snprintf (_nss_ldap_filt_getspnam, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (shadowAccount), AT (uid), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (shadowAccount),
+            ATM (shadow, uid), "%s");
   snprintf (_nss_ldap_filt_getspent, LDAP_FILT_MAXSIZ,
 	    "(objectclass=%s)", OC (shadowAccount));
 
   /* netgroups */
   snprintf (_nss_ldap_filt_getnetgrent, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (cn), "%s");
+	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup),
+            ATM (netgroup, cn), "%s");
   snprintf (_nss_ldap_filt_innetgr, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (memberNisNetgroup), "%s");
 }
@@ -286,15 +298,15 @@ init_pwd_attributes (const char ***pwd_attrs)
 
   (*pwd_attrs) = __pwd_attrs;
 
-  (*pwd_attrs)[0] = AT (uid);
-  (*pwd_attrs)[1] = AT (userPassword);
+  (*pwd_attrs)[0] = ATM (passwd, uid);
+  (*pwd_attrs)[1] = ATM (passwd, userPassword);
   (*pwd_attrs)[2] = AT (uidNumber);
-  (*pwd_attrs)[3] = AT (gidNumber);
-  (*pwd_attrs)[4] = AT (cn);
+  (*pwd_attrs)[3] = ATM (passwd, gidNumber);
+  (*pwd_attrs)[4] = ATM (passwd, cn);
   (*pwd_attrs)[5] = AT (homeDirectory);
   (*pwd_attrs)[6] = AT (loginShell);
   (*pwd_attrs)[7] = AT (gecos);
-  (*pwd_attrs)[8] = AT (description);
+  (*pwd_attrs)[8] = ATM (passwd, description);
   (*pwd_attrs)[9] = AT (objectClass);
   (*pwd_attrs)[10] = NULL;
 }
@@ -306,8 +318,8 @@ init_sp_attributes (const char ***sp_attrs)
 
   (*sp_attrs) = __sp_attrs;
 
-  (*sp_attrs)[0] = (char *) AT (uid);
-  (*sp_attrs)[1] = (char *) AT (userPassword);
+  (*sp_attrs)[0] = (char *) ATM (shadow, uid);
+  (*sp_attrs)[1] = (char *) ATM (shadow, userPassword);
   (*sp_attrs)[2] = (char *) AT (shadowLastChange);
   (*sp_attrs)[3] = (char *) AT (shadowMax);
   (*sp_attrs)[4] = (char *) AT (shadowMin);
@@ -326,13 +338,13 @@ init_grp_attributes (const char ***grp_attrs)
 
   (*grp_attrs) = __grp_attrs;
 
-  (*grp_attrs)[i++] = (char *) AT (cn);
-  (*grp_attrs)[i++] = (char *) AT (userPassword);
+  (*grp_attrs)[i++] = (char *) ATM (group, cn);
+  (*grp_attrs)[i++] = (char *) ATM (group, userPassword);
   (*grp_attrs)[i++] = (char *) AT (memberUid);
 #ifdef RFC2307BIS
   (*grp_attrs)[i++] = (char *) AT (uniqueMember);
 #endif /* RFC2307BIS */
-  (*grp_attrs)[i++] = (char *) AT (gidNumber);
+  (*grp_attrs)[i++] = (char *) ATM (group, gidNumber);
   (*grp_attrs)[i] = NULL;
 }
 
@@ -343,7 +355,7 @@ init_hosts_attributes (const char ***hosts_attrs)
 
   (*hosts_attrs) = __hosts_attrs;
 
-  (*hosts_attrs)[0] = (char *) AT (cn);
+  (*hosts_attrs)[0] = (char *) ATM (hosts, cn);
   (*hosts_attrs)[1] = (char *) AT (ipHostNumber);
   (*hosts_attrs)[2] = NULL;
 }
@@ -355,7 +367,7 @@ init_services_attributes (const char ***services_attrs)
 
   (*services_attrs) = __services_attrs;
 
-  (*services_attrs)[0] = AT (cn);
+  (*services_attrs)[0] = ATM (services, cn);
   (*services_attrs)[1] = AT (ipServicePort);
   (*services_attrs)[2] = AT (ipServiceProtocol);
   (*services_attrs)[3] = NULL;
@@ -368,7 +380,7 @@ init_network_attributes (const char ***network_attrs)
 
   (*network_attrs) = __network_attrs;
 
-  (*network_attrs)[0] = AT (cn);
+  (*network_attrs)[0] = ATM (networks, cn);
   (*network_attrs)[1] = AT (ipNetworkNumber);
   (*network_attrs)[2] = AT (ipNetmaskNumber);
   (*network_attrs)[3] = NULL;
@@ -381,7 +393,7 @@ init_proto_attributes (const char ***proto_attrs)
 
   (*proto_attrs) = __proto_attrs;
 
-  (*proto_attrs)[0] = AT (cn);
+  (*proto_attrs)[0] = ATM (protocols, cn);
   (*proto_attrs)[1] = AT (ipProtocolNumber);
   (*proto_attrs)[2] = NULL;
 }
@@ -393,7 +405,7 @@ init_rpc_attributes (const char ***rpc_attrs)
 
   (*rpc_attrs) = __rpc_attrs;
 
-  (*rpc_attrs)[0] = AT (cn);
+  (*rpc_attrs)[0] = ATM (rpc, cn);
   (*rpc_attrs)[1] = AT (oncRpcNumber);
   (*rpc_attrs)[2] = NULL;
 }
@@ -405,7 +417,7 @@ init_ethers_attributes (const char ***ethers_attrs)
 
   (*ethers_attrs) = __ethers_attrs;
 
-  (*ethers_attrs)[0] = AT (cn);
+  (*ethers_attrs)[0] = ATM (ethers, cn);
   (*ethers_attrs)[1] = AT (macAddress);
   (*ethers_attrs)[2] = NULL;
 }
@@ -417,7 +429,7 @@ init_bp_attributes (const char ***bp_attrs)
 
   (*bp_attrs) = __bp_attrs;
 
-  (*bp_attrs)[0] = AT (cn);
+  (*bp_attrs)[0] = ATM (bootparams, cn);
   (*bp_attrs)[1] = AT (bootParameter);
   (*bp_attrs)[2] = NULL;
 }
@@ -429,7 +441,7 @@ init_alias_attributes (const char ***alias_attrs)
 
   (*alias_attrs) = __alias_attrs;
 
-  (*alias_attrs)[0] = AT (cn);
+  (*alias_attrs)[0] = ATM (aliases, cn);
   (*alias_attrs)[1] = AT (rfc822MailMember);
   (*alias_attrs)[2] = NULL;
 }
@@ -441,7 +453,7 @@ init_netgrp_attributes (const char ***netgrp_attrs)
 
   (*netgrp_attrs) = __netgrp_attrs;
 
-  (*netgrp_attrs)[0] = AT (cn);
+  (*netgrp_attrs)[0] = ATM (netgroup, cn);
   (*netgrp_attrs)[1] = AT (nisNetgroupTriple);
   (*netgrp_attrs)[2] = AT (memberNisNetgroup);
   (*netgrp_attrs)[3] = NULL;
@@ -454,10 +466,10 @@ init_automount_attributes (const char ***automount_attrs)
 
   (*automount_attrs) = __automount_attrs;
 
-  (*automount_attrs)[0] = AT (cn);
+  (*automount_attrs)[0] = ATM (automount, cn);
   (*automount_attrs)[1] = AT (nisMapEntry);
   (*automount_attrs)[2] = AT (nisMapName);
-  (*automount_attrs)[3] = AT (description);
+  (*automount_attrs)[3] = ATM (automount, description);
   (*automount_attrs)[4] = NULL;
 }
 

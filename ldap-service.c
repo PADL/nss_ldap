@@ -160,15 +160,15 @@ _nss_ldap_parse_serv (LDAP * ld,
     }
 
   stat =
-    _nss_ldap_getrdnvalue (ld, e, AT (cn), &service->s_name, &buffer,
-			   &buflen);
+    _nss_ldap_getrdnvalue (ld, e, ATM (services, cn), &service->s_name,
+                           &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     {
       return stat;
     }
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, AT (cn), service->s_name,
+    _nss_ldap_assign_attrvals (ld, e, ATM (services, cn), service->s_name,
 			       &service->s_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     {

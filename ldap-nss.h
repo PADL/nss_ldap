@@ -93,6 +93,10 @@
 #define LOGNAME_MAX 8
 #endif /* LOGNAME_MAX */
 
+#ifndef MAP_KEY_MAXSIZ
+#define MAP_KEY_MAXSIZ 64
+#endif
+
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
 #ifdef HAVE_NSSWITCH_H
@@ -742,6 +746,7 @@ NSS_STATUS _nss_ldap_map_put (ldap_config_t * config,
 			      const char *key, const char *value);
 
 NSS_STATUS _nss_ldap_atmap_get (ldap_config_t * config,
+                                const char *map,
 				const char *rfc2307attribute,
 				const char **attribute);
 
@@ -761,7 +766,7 @@ NSS_STATUS _nss_ldap_map_get (ldap_config_t * config,
                               ldap_map_type_t map,
 			      const char *key, const char **value);
 
-const char *_nss_ldap_map_at (const char *pChar);
+const char *_nss_ldap_map_at (const char *pChar, const char *pChar2);
 const char *_nss_ldap_map_oc (const char *pChar);
 const char *_nss_ldap_map_ov (const char *pChar);
 const char *_nss_ldap_map_df (const char *pChar);

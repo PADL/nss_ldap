@@ -1517,7 +1517,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       if (__config->ldc_krb5_ccname != NULL)
 	{
           ccname = __config->ldc_krb5_ccname;
-#   ifndef HAVE_GSS_KRB5_CCACHE_NAME
+# ifdef CONFIGURE_KRB5_CCNAME_ENV
 	  oldccname = getenv ("KRB5CCNAME");
 	  if (oldccname != NULL)
 	    {
@@ -1531,13 +1531,13 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
           oldccname = tmpbuf;
 	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s", ccname);
 	  putenv (envbuf);
-#   else
+# elif defined(CONFIGURE_KRB5_CCNAME_GSSAPI)
           if (gss_krb5_ccache_name (&retval, ccname, &oldccname) != GSS_S_COMPLETE)
             {
               debug("do_bind: unable to set default credential cache");
               return -1;
             }
-# endif				/* !HAVE_GSS_KRB5_CCACHE_NAME */
+# endif
        }
 # endif				/* CONFIGURE_KRB5_CCNAME */
 
@@ -1549,16 +1549,16 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       /* Restore default Kerberos ticket cache. */
       if (oldccname != NULL)
 	{
-#  ifndef HAVE_GSS_KRB5_CCACHE_NAME
+# ifdef CONFIGURE_KRB5_CCNAME_ENV
 	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s", oldccname);
 	  putenv (envbuf);
-#  else
+# elif defined(CONFIGURE_KRB5_CCNAME_GSSAPI)
           if (gss_krb5_ccache_name (&retval, oldccname, NULL) != GSS_S_COMPLETE)
             {
               debug("do_bind: unable to restore default credential cache");
               return -1;
             }
-# endif				/* !HAVE_GSS_KRB5_CCACHE_NAME */
+# endif
         }
 # endif				/* CONFIGURE_KRB5_CCNAME */
 
@@ -3239,11 +3239,11 @@ _nss_ldap_shadow_handle_flag (struct spwd *sp)
 #endif /* HAVE_SHADOW_H */
 
 const char *
-_nss_ldap_map_at (const char *attribute)
+_nss_ldap_map_at (const char *map, const char *attribute)
 {
   char *mapped;
 
-  if (_nss_ldap_atmap_get (__config, attribute, (const char **) &mapped) ==
+  if (_nss_ldap_atmap_get (__config, map, attribute, (const char **) &mapped) ==
       NSS_NOTFOUND)
     return attribute;
 
@@ -3352,16 +3352,27 @@ _nss_ldap_map_put (ldap_config_t * config, ldap_map_type_t type,
 }
 
 NSS_STATUS
-_nss_ldap_atmap_get (ldap_config_t * config,
+_nss_ldap_atmap_get (ldap_config_t * config, const char *map,
 		     const char *rfc2307attribute, const char **attribute)
 {
+  char key[MAP_KEY_MAXSIZ];
   NSS_STATUS stat;
 
-  stat =
-    _nss_ldap_map_get (config, MAP_ATTRIBUTE, rfc2307attribute, attribute);
+  if (map != NULL)
+    {
+      sprintf (key, "%s:%s", map, rfc2307attribute);
+      stat = _nss_ldap_map_get (config, MAP_ATTRIBUTE, key, attribute);
+    }
+  else
+    stat = NSS_NOTFOUND;
   if (stat == NSS_NOTFOUND)
     {
-      *attribute = rfc2307attribute;
+      stat = _nss_ldap_map_get (config, MAP_ATTRIBUTE, rfc2307attribute,
+                                attribute);
+      if (stat == NSS_NOTFOUND)
+        {
+          *attribute = rfc2307attribute;
+        }
     }
   return stat;
 }

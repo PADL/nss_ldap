@@ -82,20 +82,22 @@ _nss_ldap_parse_gr (LDAP * ld,
 #endif /* RFC2307BIS */
 
   stat =
-    _nss_ldap_assign_attrval (ld, e, AT (gidNumber), &gid, &buffer, &buflen);
+    _nss_ldap_assign_attrval (ld, e, ATM (group, gidNumber), &gid, &buffer,
+                              &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   gr->gr_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol (gid);
 
   stat =
-    _nss_ldap_getrdnvalue (ld, e, AT (cn), &gr->gr_name, &buffer, &buflen);
+    _nss_ldap_getrdnvalue (ld, e, ATM (group, cn), &gr->gr_name, &buffer,
+                           &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &gr->gr_passwd,
-				   &buffer, &buflen);
+    _nss_ldap_assign_userpassword (ld, e, ATM (group, userPassword),
+                                   &gr->gr_passwd, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -317,7 +319,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
        e != NULL; e = _nss_ldap_next_entry (e))
     {
 #ifdef AIX
-      char **values = _nss_ldap_get_values (e, AT (gidNumber));
+      char **values = _nss_ldap_get_values (e, ATM (group, gidNumber));
       if (values != NULL)
 	{
 	  size_t l = strlen (values[0]);
@@ -337,7 +339,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 	  ldap_value_free (values);
 	}
 #else
-      char **values = _nss_ldap_get_values (e, AT (gidNumber));
+      char **values = _nss_ldap_get_values (e, ATM (group, gidNumber));
       if (values != NULL)
 	{
 	  int i;

@@ -90,7 +90,7 @@ _nss_ldap_parse_net (LDAP * ld,
   /* IPv6 support ? XXX */
   network->n_addrtype = AF_INET;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &network->n_name,
+  stat = _nss_ldap_assign_attrval (ld, e, ATM (networks, cn), &network->n_name,
 				   &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -114,7 +114,7 @@ _nss_ldap_parse_net (LDAP * ld,
 #endif
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, AT (cn), network->n_name,
+    _nss_ldap_assign_attrvals (ld, e, ATM (networks, cn), network->n_name,
 			       &network->n_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

@@ -107,7 +107,7 @@ _nss_ldap_parse_ether (LDAP * ld,
   NSS_STATUS stat;
   struct ether_addr *addr;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (cn),
+  stat = _nss_ldap_assign_attrval (ld, e, ATM (ethers, cn),
 				   &ether->e_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
