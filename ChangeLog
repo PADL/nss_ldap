@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+182	Luke Howard <lukeh@padl.com>
+
+	* return error strings in AIX authentication routine
+
 181	Luke Howard <lukeh@padl.com>
 
 	* ignore SIGPIPE whilst inside nss_ldap library routines

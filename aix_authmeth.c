@@ -130,9 +130,11 @@ _nss_ldap_authenticate (char *user, char *response, int **reenter,
     {
     case NSS_TRYAGAIN:
       rc = AUTH_FAILURE;
+      *message = "Invalid Password.\n";
       break;
     case NSS_NOTFOUND:
       rc = AUTH_NOTFOUND;
+      *message = "Unknown User.\n";
       break;
     case NSS_SUCCESS:
       rc = AUTH_SUCCESS;
@@ -140,6 +142,7 @@ _nss_ldap_authenticate (char *user, char *response, int **reenter,
     default:
     case NSS_UNAVAIL:
       rc = AUTH_UNAVAIL;
+      *message = "LDAP Unavailable.\n";
       break;
     }
 
