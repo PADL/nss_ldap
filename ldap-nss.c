@@ -487,7 +487,7 @@ do_open (void)
 
 #ifndef HAVE_PTHREAD_ATFORK
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  if (__pthread_atfork != NULL)
+  if (__pthread_atfork == NULL)
     pid = getpid ();
   else
     pid = -1;
@@ -518,7 +518,7 @@ do_open (void)
 
 #ifndef HAVE_PTHREAD_ATFORK
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  if (__pthread_atfork != NULL && __pid != pid)
+  if (__pthread_atfork == NULL && __pid != pid)
 #else
   if (__pid != pid)
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
