@@ -377,7 +377,8 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -402,7 +403,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -664,7 +666,8 @@ do_close_no_unbind (void)
 /*
  * A simple alias around do_open().
  */
-NSS_STATUS _nss_ldap_init (void)
+NSS_STATUS
+_nss_ldap_init (void)
 {
   return do_open ();
 }
@@ -1301,9 +1304,9 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 	}
 #ifdef PAGE_RESULTS
       if (ctx->ec_cookie != NULL)
-        {
-          ber_bvfree(ctx->ec_cookie);
-        }
+	{
+	  ber_bvfree (ctx->ec_cookie);
+	}
 #endif /* PAGE_RESULTS */
       if (ctx->ec_msgid > -1 && _nss_ldap_result (ctx) == NSS_SUCCESS)
 	{
@@ -1346,11 +1349,11 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
       ctx->ec_res = NULL;
     }
 #ifdef PAGE_RESULTS
-    if (ctx->ec_cookie != NULL)
-      {
-        ber_bvfree(ctx->ec_cookie);
-        ctx->ec_cookie = NULL;
-      }
+  if (ctx->ec_cookie != NULL)
+    {
+      ber_bvfree (ctx->ec_cookie);
+      ctx->ec_cookie = NULL;
+    }
 #endif /* PAGE_RESULTS */
 
   /*
@@ -1558,11 +1561,12 @@ do_result (ent_context_t * ctx, int all)
 #ifdef PAGE_RESULTS
 	      else if (resultControls != NULL)
 		{
-                /* See if there are any more pages to come */
-	          parserc = ldap_parse_page_control(__session.ls_conn,
-	                           resultControls, NULL, &(ctx->ec_cookie));
-		  ldap_controls_free(resultControls);
-                  stat = NSS_NOTFOUND;
+		  /* See if there are any more pages to come */
+		  parserc = ldap_parse_page_control (__session.ls_conn,
+						     resultControls, NULL,
+						     &(ctx->ec_cookie));
+		  ldap_controls_free (resultControls);
+		  stat = NSS_NOTFOUND;
 		}
 #endif /* PAGE_RESULTS */
 	      else
@@ -1764,13 +1768,14 @@ do_search (const char *base, int scope,
   debug ("==> do_search");
 
 #ifdef PAGE_RESULTS
-  rc = ldap_create_page_control(__session.ls_conn, LDAP_PAGESIZE, NULL, 0, 
-                                &serverctrls[0]);
-  if (rc != LDAP_SUCCESS) return rc;
+  rc = ldap_create_page_control (__session.ls_conn, LDAP_PAGESIZE, NULL, 0,
+				 &serverctrls[0]);
+  if (rc != LDAP_SUCCESS)
+    return rc;
   rc = ldap_search_ext (__session.ls_conn, base, scope, filter,
 			(char **) attrs, 0, serverctrls, NULL, LDAP_NO_LIMIT,
 			sizelimit, msgid);
-  ldap_control_free(serverctrls[0]);
+  ldap_control_free (serverctrls[0]);
 #else
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_SIZELIMIT)
   ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
@@ -2029,7 +2034,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2181,11 +2187,9 @@ _nss_ldap_search (const ldap_args_t * args,
 #ifdef PAGE_RESULTS
 static NSS_STATUS
 do_next_page (const ldap_args_t * args,
-                  const char *filterprot,
-                  ldap_map_selector_t sel,
-                  int sizelimit,
-                  int *msgid,
-                  struct berval *pCookie)
+	      const char *filterprot,
+	      ldap_map_selector_t sel,
+	      int sizelimit, int *msgid, struct berval *pCookie)
 {
   char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
   char filterBuf[LDAP_FILT_MAXSIZ];
@@ -2194,6 +2198,8 @@ do_next_page (const ldap_args_t * args,
   NSS_STATUS stat;
   ldap_service_search_descriptor_t *sd = NULL;
   LDAPControl *serverctrls[2] = { NULL, NULL };
+
+  _nss_ldap_enter ();
 
   /* Set some reasonable defaults. */
   base = __session.ls_config->ldc_base;
@@ -2229,21 +2235,29 @@ do_next_page (const ldap_args_t * args,
   stat =
     do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf), &filter);
   if (stat != NSS_SUCCESS)
-    return stat;
+    {
+      _nss_ldap_leave ();
+      return stat;
+    }
 
-  stat = ldap_create_page_control(__session.ls_conn, LDAP_PAGESIZE, pCookie, 0,
-                                  &serverctrls[0]);
+  stat =
+    ldap_create_page_control (__session.ls_conn, LDAP_PAGESIZE, pCookie, 0,
+			      &serverctrls[0]);
   if (stat != LDAP_SUCCESS)
-    return NSS_UNAVAIL;
-    
-  stat = ldap_search_ext(__session.ls_conn, base, __session.ls_config->ldc_scope,
-                         (args == NULL) ? (char *) filterprot : filter,
-                         (char **)attrs, 0, serverctrls, NULL, LDAP_NO_LIMIT,
-                         sizelimit, msgid);
-  ldap_control_free(serverctrls[0]);
-                           
+    {
+      _nss_ldap_leave ();
+      return NSS_UNAVAIL;
+    }
+
+  stat =
+    ldap_search_ext (__session.ls_conn, base, __session.ls_config->ldc_scope,
+		     (args == NULL) ? (char *) filterprot : filter,
+		     (char **) attrs, 0, serverctrls, NULL, LDAP_NO_LIMIT,
+		     sizelimit, msgid);
+  ldap_control_free (serverctrls[0]);
+
+  _nss_ldap_leave ();
   return (*msgid < 0) ? NSS_UNAVAIL : NSS_SUCCESS;
-  
 }
 #endif /* PAGE_RESULTS */
 
@@ -2316,20 +2330,20 @@ _nss_ldap_getent (ent_context_t ** ctx,
     {
       /* Is there another page of results? */
       if ((*ctx)->ec_cookie != NULL && (*ctx)->ec_cookie->bv_len != 0)
-        {
-          int msgid;
-          
-          _nss_ldap_enter ();  /* Better get back the lock */
-          stat = do_next_page (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid, (*ctx)->ec_cookie);
-          _nss_ldap_leave ();
-          if (stat != NSS_SUCCESS)
-   	    {
+	{
+	  int msgid;
+
+	  stat =
+	    do_next_page (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid,
+			  (*ctx)->ec_cookie);
+	  if (stat != NSS_SUCCESS)
+	    {
 	      debug ("<== _nss_ldap_getent");
 	      return stat;
 	    }
-          (*ctx)->ec_msgid = msgid;
-          stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
-        }
+	  (*ctx)->ec_msgid = msgid;
+	  stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
+	}
     }
 #endif /* PAGE_RESULTS */
 
@@ -2628,7 +2642,8 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -2874,7 +2889,8 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password)
+NSS_STATUS
+_nss_ldap_proxy_bind (const char *user, const char *password)
 {
   ldap_args_t args;
   LDAPMessage *res, *e;
