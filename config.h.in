@@ -27,9 +27,6 @@
 /* define to enable configurable Kerberos credentials cache (gssapi method) */
 #undef CONFIGURE_KRB5_CCNAME_GSSAPI
 
-/* Define to 1 if you have the <gssapi/gssapi_krb5.h> header file. */
-#undef HAVE_GSSAPI_GSSAPI_KRB5_H
-
 /* define to enable struct ether_addr definition */
 #undef HAVE_STRUCT_ETHER_ADDR
 
@@ -152,6 +149,9 @@
 
 /* Define if you have the <db_185.h> header file.  */
 #undef HAVE_DB_185_H
+
+/* Define if you have the <gssapi/gssapi_krb5.h> header file.  */
+#undef HAVE_GSSAPI_GSSAPI_KRB5_H
 
 /* Define if you have the <gssldap.h> header file.  */
 #undef HAVE_GSSLDAP_H
