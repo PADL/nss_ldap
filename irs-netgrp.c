@@ -76,8 +76,8 @@ ng_rewind (struct irs_ng *this, const char *group)
   ngbe = (nss_ldap_netgr_backend_t *) this->private;
 
   /* clear out old state */
-  nn_destroy (&ngbe->known_groups);
-  nn_destroy (&ngbe->needed_groups);
+  _nss_ldap_namelist_destroy (&ngbe->known_groups);
+  _nss_ldap_namelist_destroy (&ngbe->needed_groups);
 
   LA_INIT (a);
   LA_TYPE (a) = LA_TYPE_STRING;
@@ -146,8 +146,8 @@ ng_close (struct irs_ng *this)
 	  _nss_ldap_leave ();
 	}
 
-      nn_destroy (&ngbe->known_groups);
-      nn_destroy (&ngbe->needed_groups);
+      _nss_ldap_namelist_destroy (&ngbe->known_groups);
+      _nss_ldap_namelist_destroy (&ngbe->needed_groups);
 
       free (ngbe);
     }
