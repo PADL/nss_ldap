@@ -5,6 +5,7 @@ $Id$
 
 	* fix netgroup compilation error when debugging is
 	  enabled
+	* support GSS-API for setting ccache name
 
 212	Luke Howard <lukeh@padl.com>
 

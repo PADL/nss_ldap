@@ -75,6 +75,9 @@
 /* Define to 1 if you have the `gethostbyname_r' function. */
 #undef HAVE_GETHOSTBYNAME_R
 
+/* Define to 1 if you have the <gssapi/gssapi_krb5.h> header file. */
+#undef HAVE_GSSAPI_GSSAPI_KRB5_H
+
 /* Define to 1 if you have the <gssldap.h> header file. */
 #undef HAVE_GSSLDAP_H
 
@@ -152,6 +155,9 @@
 
 /* Define to 1 if you have the <libc-lock.h> header file. */
 #undef HAVE_LIBC_LOCK_H
+
+/* Define to 1 if you have the `gssapi_krb5' library (-lgssapi_krb5). */
+#undef HAVE_LIBGSSAPI_KRB5
 
 /* Define to 1 if you have the `lber' library (-llber). */
 #undef HAVE_LIBLBER
