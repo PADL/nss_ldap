@@ -70,7 +70,6 @@ CC = @CC@
 CPP = @CPP@
 MAKEINFO = @MAKEINFO@
 NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
-NSS_SUFFIX = @NSS_SUFFIX@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 install_sh = @install_sh@
@@ -468,9 +467,10 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 @AIX_FALSE@@GLIBC_TRUE@	(cd $(DESTDIR)$(libdir); ln -sf $(NSS_LDAP_LIBC_VERSIONED) $(NSS_LDAP_NSS_VERSIONED))
 @AIX_FALSE@@GLIBC_TRUE@	$(mkinstalldirs) $(DESTDIR)/usr$(libdir)
 @AIX_FALSE@@GLIBC_TRUE@	(cd $(DESTDIR)/usr$(libdir); ln -sf ../..$(libdir)/$(NSS_LDAP_NSS_VERSIONED) .)
-@AIX_FALSE@@GLIBC_FALSE@	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.$(NSS_SUFFIX).1
-@AIX_FALSE@@GLIBC_FALSE@	-rm -f $(DESTDIR)$(libdir)/nss_ldap.$(NSS_SUFFIX)
-@AIX_FALSE@@GLIBC_FALSE@	-ln -s $(DESTDIR)$(libdir)/nss_ldap.$(NSS_SUFFIX).1 $(DESTDIR)$(libdir)/nss_ldap.$(NSS_SUFFIX)
+@AIX_FALSE@@GLIBC_FALSE@@HPUX_TRUE@	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.1
+@AIX_FALSE@@GLIBC_FALSE@@HPUX_FALSE@	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.so.1
+@AIX_FALSE@@GLIBC_FALSE@@HPUX_FALSE@	-rm -f $(DESTDIR)$(libdir)/nss_ldap.so
+@AIX_FALSE@@GLIBC_FALSE@@HPUX_FALSE@	-ln -s $(DESTDIR)$(libdir)/nss_ldap.so.1 $(DESTDIR)$(libdir)/nss_ldap.so
 
 install-data-local:
 	@$(NORMAL_INSTALL)

@@ -72,9 +72,13 @@ if GLIBC
 	$(mkinstalldirs) $(DESTDIR)/usr$(libdir)
 	(cd $(DESTDIR)/usr$(libdir); ln -sf ../..$(libdir)/$(NSS_LDAP_NSS_VERSIONED) .)
 else
-	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.$(NSS_SUFFIX).1
-	-rm -f $(DESTDIR)$(libdir)/nss_ldap.$(NSS_SUFFIX)
-	-ln -s $(DESTDIR)$(libdir)/nss_ldap.$(NSS_SUFFIX).1 $(DESTDIR)$(libdir)/nss_ldap.$(NSS_SUFFIX)
+if HPUX
+	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.1
+else
+	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.so.1
+	-rm -f $(DESTDIR)$(libdir)/nss_ldap.so
+	-ln -s $(DESTDIR)$(libdir)/nss_ldap.so.1 $(DESTDIR)$(libdir)/nss_ldap.so
+endif
 endif
 
 endif
