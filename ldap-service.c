@@ -151,6 +151,7 @@ _nss_ldap_parse_serv (LDAP * ld,
 	  stat = NSS_SUCCESS;
 	}
 
+      ldap_value_free (vals);
       state->ls_info.ls_index--;
     }
 

@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+142	Luke Howard <lukeh@padl.com>
+
+	* patch from Simon Wilkinson <sxw@sxw.org.uk>
+	  for memory leak in ldap-service.c
+
 141	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#54 (AIX detection broken)
