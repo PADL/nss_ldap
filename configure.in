@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 191)
+AM_INIT_AUTOMAKE(nss_ldap, 192)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -98,6 +98,7 @@ AC_CHECK_HEADERS(db3/db_185.h)
 AC_CHECK_HEADERS(alignof.h)
 AC_CHECK_HEADERS(rpc/rpcent.h)
 AC_CHECK_HEADERS(sys/byteorder.h)
+AC_CHECK_HEADERS(sys/un.h)
 AC_CHECK_HEADERS(libc-lock.h)
 AC_CHECK_HEADERS(bits/libc-lock.h)
 AC_CHECK_HEADERS(sasl.h)

@@ -183,6 +183,9 @@
 /* Define if you have the <sys/byteorder.h> header file.  */
 #undef HAVE_SYS_BYTEORDER_H
 
+/* Define if you have the <sys/un.h> header file.  */
+#undef HAVE_SYS_UN_H
+
 /* Define if you have the <thread.h> header file.  */
 #undef HAVE_THREAD_H
 

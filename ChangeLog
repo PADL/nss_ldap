@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+192	Luke Howard <lukeh@padl.com>
+
+	* more carefully compare cached socket and peer
+	  addresses
+
 191	Luke Howard <lukeh@padl.com>
 
 	* added configurable [hard|soft] reconnect, see the
