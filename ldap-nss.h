@@ -47,6 +47,9 @@
 #endif
 #endif /* __STDC__ */
 
+#include <netdb.h>
+#include <netinet/in.h>
+
 #ifdef HAVE_NSSWITCH_H
 #include <nss_common.h>
 #include <nss_dbdefs.h>
@@ -69,6 +72,22 @@
 #define LDAP_NSS_SLEEPTIME       4	/* seconds to sleep; doubled until max */
 #define LDAP_NSS_MAXSLEEPTIME    64	/* maximum seconds to sleep */
 #define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
+
+#ifdef notdef
+/*
+ * NSS modules shouldn't open file descriptors that the program/utility
+ * linked against NSS doesn't know about.  syslog() transparently opens
+ * a file descriptor unless it is wrapped in openlog() and closelog().
+ */
+#include <syslog.h>
+
+#define do_syslog(kind, fmt, args...) \
+{ \
+    openlog ("", LOG_NOWAIT, LOG_USER); \
+    syslog (kind, fmt, ##args); \
+    closelog (); \
+}
+#endif
 
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
@@ -289,6 +308,9 @@ struct ldap_session
   ldap_config_t *ls_config;
   /* timestamp of last activity */
   time_t ls_timestamp;
+  /* keep track of the LDAP sockets */
+  struct sockaddr ls_sockname;
+  struct sockaddr ls_peername;
 };
 
 typedef struct ldap_session ldap_session_t;

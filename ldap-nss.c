@@ -102,6 +102,15 @@ static char rcsId[] =
 #define LDAP_MSG_RECEIVED       0x02
 #endif
 
+#ifdef HAVE_LDAP_LD_FREE
+#if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+extern int ldap_ld_free (LDAP * ld, int close, LDAPControl **,
+			 LDAPControl **);
+#else
+extern int ldap_ld_free (LDAP * ld, int close);
+#endif /* OPENLDAP 2.x */
+#endif /* HAVE_LDAP_LD_FREE */
+
 NSS_LDAP_DEFINE_LOCK (__lock);
 
 /*
@@ -170,7 +179,7 @@ static void do_close_no_unbind (void);
 /*
  * Disable keepalive on a LDAP connection's socket.
  */
-static void do_disable_keepalive (LDAP * ld);
+static void do_set_sockopts (LDAP * ld);
 
 /*
  * TLS routines: set global SSL session options.
@@ -310,9 +319,8 @@ static int
 do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 	   int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-     static int
-       do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-		  int freeit)
+static int
+do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
 #endif
 {
   if (freeit)
@@ -438,7 +446,8 @@ do_atfork_setup (void)
   debug ("==> do_atfork_setup");
 
 #ifdef HAVE_PTHREAD_ATFORK
-  (void) pthread_atfork (do_atfork_prepare, do_atfork_parent, do_atfork_child);
+  (void) pthread_atfork (do_atfork_prepare, do_atfork_parent,
+			 do_atfork_child);
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   (void) __libc_atfork (do_atfork_prepare, do_atfork_parent, do_atfork_child);
 #endif
@@ -496,7 +505,7 @@ _nss_ldap_leave (void)
 }
 
 static void
-do_disable_keepalive (LDAP * ld)
+do_set_sockopts (LDAP * ld)
 {
 /*
  * Netscape SSL-enabled LDAP library does not
@@ -505,7 +514,7 @@ do_disable_keepalive (LDAP * ld)
 #ifndef HAVE_LDAPSSL_CLIENT_INIT
   int sd = -1;
 
-  debug ("==> do_disable_keepalive");
+  debug ("==> do_set_sockopts");
 #if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
   if (ldap_get_option (ld, LDAP_OPT_DESC, &sd) == 0)
 #else
@@ -513,10 +522,26 @@ do_disable_keepalive (LDAP * ld)
 #endif /* LDAP_OPT_DESC */
     {
       int off = 0;
-      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, &off, sizeof off);
-      fcntl(sd, F_SETFD, FD_CLOEXEC);
+      int namelen = sizeof (struct sockaddr);
+
+      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, &off, sizeof (off));
+      (void) fcntl (sd, F_SETFD, FD_CLOEXEC);
+      /*
+       * NSS modules shouldn't open file descriptors that the program/utility
+       * linked against NSS doesn't know about.  The LDAP library opens a
+       * connection to the LDAP server transparently.  There's an edge case
+       * where a daemon might fork a child and, being written well, closes
+       * all its file descriptors.  This will close the socket descriptor
+       * being used by the LDAP library!  Worse, the daemon might open many
+       * files and sockets, eventually opening a descriptor with the same number
+       * as that originally used by the LDAP library.  The only way to know that
+       * this isn't "our" socket descriptor is to save the local and remote
+       * sockaddr_in structures for later comparison in do_close_no_unbind ().
+       */
+      (void) getsockname (sd, &__session.ls_sockname, &namelen);
+      (void) getpeername (sd, &__session.ls_peername, &namelen);
     }
-  debug ("<== do_disable_keepalive");
+  debug ("<== do_set_sockopts");
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
 
   return;
@@ -537,7 +562,7 @@ do_close (void)
     {
 #ifdef DEBUG
       syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
-	      __session.ls_conn);
+		 __session.ls_conn);
 #endif /* DEBUG */
       ldap_unbind (__session.ls_conn);
       __session.ls_conn = NULL;
@@ -560,57 +585,87 @@ do_close (void)
 static void
 do_close_no_unbind (void)
 {
+  int sd;
+  int bogusSd = -1;
+#ifndef HAVE_LDAP_LD_FREE
+  int closeSocket = 1;
+#endif /* HAVE_LDAP_LD_FREE */
+
   debug ("==> do_close_no_unbind");
 
-  if (__session.ls_conn != NULL)
+  if (__session.ls_conn == NULL)
     {
-#ifdef DEBUG
-      syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
-	      __session.ls_conn);
-#endif /* DEBUG */
+      debug ("<== do_close_no_unbind (connection was not open)");
+      return;
     }
 
-  if (__session.ls_conn != NULL)
+#ifdef DEBUG
+  syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
+	     __session.ls_conn);
+#endif /* DEBUG */
+
+  /*
+   * Before freeing the LDAP context or closing the socket descriptor, we
+   * must ensure that it is *our* socket descriptor.  See the much lengthier
+   * description of this at the end of do_open () where the values
+   * __session.ls_sockname and __session.ls_peername are saved.
+   */
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
+  if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
+#else
+  if ((sd = ld->ld_sb.sb_sd) > 0)
+#endif /* LDAP_OPT_DESC */
     {
+      struct sockaddr sockname;
+      struct sockaddr peername;
+      int socknamelen = sizeof (struct sockaddr);
+      int peernamelen = sizeof (struct sockaddr);
+
+      if ((getsockname (sd, &sockname, &socknamelen) != 0)
+	  || (memcmp (&sockname, &__session.ls_sockname, socknamelen) != 0)
+	  || (getpeername (sd, &peername, &peernamelen) != 0)
+	  || (memcmp (&peername, &__session.ls_peername, peernamelen) != 0))
+	{
+	  debug ("invalidated socket descriptor");
+
+#ifdef HAVE_LDAP_LD_FREE
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
+	  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
+#else
+	  __session.ls_conn->ld_sb.sb_sd = bogusSd;
+#endif /* LDAP_OPT_DESC */
+#else
+	  closeSocket = 0;
+#endif /* HAVE_LDAP_LD_FREE */
+	}
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
+    }
+
 #ifdef HAVE_LDAP_LD_FREE
 
 #if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
-      extern int ldap_ld_free (LDAP * ld, int close, LDAPControl **,
-			       LDAPControl **);
-      (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
+  (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
 #else
-      extern int ldap_ld_free (LDAP * ld, int close);
-      (void) ldap_ld_free (__session.ls_conn, 0);
+  (void) ldap_ld_free (__session.ls_conn, 0);
 #endif /* OPENLDAP 2.x */
 
 #else
-      /*
-       * We'll be rude and close the socket ourselves. 
-       * XXX untested code
-       */
-      int sd = -1;
-#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
-      if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
-#else
-      if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-#endif /* LDAP_OPT_DESC */
-	{
-	  close (sd);
-	  sd = -1;
+  if (closeSocket == 0)
+    close (sd);
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
-	  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
+  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
 #else
-	  __session.ls_conn->ld_sb.sb_sd = sd;
-#endif /*  LDAP_OPT_DESC */
-	}
+  __session.ls_conn->ld_sb.sb_sd = bogusSd;
+#endif /* LDAP_OPT_DESC */
 
-      /* hope we closed it OK! */
-      ldap_unbind (__session.ls_conn);
+  /* hope we closed it OK! */
+  ldap_unbind (__session.ls_conn);
 
 #endif /* HAVE_LDAP_LD_FREE */
 
-      __session.ls_conn = NULL;
-    }
+  __session.ls_conn = NULL;
+
   debug ("<== do_close_no_unbind");
 
   return;
@@ -619,7 +674,8 @@ do_close_no_unbind (void)
 /*
  * A simple alias around do_open().
  */
-NSS_STATUS _nss_ldap_init (void)
+NSS_STATUS
+_nss_ldap_init (void)
 {
   return do_open ();
 }
@@ -684,19 +740,19 @@ do_open (void)
 #ifdef DEBUG
 #ifdef HAVE_PTHREAD_ATFORK
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
-	  __session.ls_conn, __euid, euid);
+	     "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
+	     __session.ls_conn, __euid, euid);
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   syslog (LOG_DEBUG,
-	  "nss_ldap: libpthreads=%s, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
-	  (__pthread_atfork == NULL ? "FALSE" : "TRUE"),
-	  __session.ls_conn,
-	  (__pthread_atfork == NULL ? __pid : -1),
-	  (__pthread_atfork == NULL ? pid : -1), __euid, euid);
+	     "nss_ldap: libpthreads=%s, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	     (__pthread_atfork == NULL ? "FALSE" : "TRUE"),
+	     __session.ls_conn,
+	     (__pthread_atfork == NULL ? __pid : -1),
+	     (__pthread_atfork == NULL ? pid : -1), __euid, euid);
 #else
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
-	  __session.ls_conn, __pid, pid, __euid, euid);
+	     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	     __session.ls_conn, __pid, pid, __euid, euid);
 #endif
 #endif /* DEBUG */
 
@@ -736,8 +792,7 @@ do_open (void)
       if (__session.ls_config->ldc_idle_timelimit)
 	{
 	  time (&current_time);
-	  if (
-	      (__session.ls_timestamp +
+	  if ((__session.ls_timestamp +
 	       __session.ls_config->ldc_idle_timelimit) < current_time)
 	    {
 	      debug ("idle_timelimit reached");
@@ -777,7 +832,7 @@ do_open (void)
 #endif
 
   __euid = euid;
-  __session.ls_config = NULL;
+  memset (&__session, 0, sizeof (__session));
 
   if (__config == NULL)
     {
@@ -1047,10 +1102,7 @@ do_open (void)
 	}
     }
 
-  /*
-   * Disable SO_KEEPALIVE on the session's socket.
-   */
-  do_disable_keepalive (__session.ls_conn);
+  do_set_sockopts (__session.ls_conn);
 
   __session.ls_config = cfg;
 
@@ -1345,8 +1397,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
       switch (args->la_type)
 	{
 	case LA_TYPE_STRING:
-	  if (
-	      (stat =
+	  if ((stat =
 	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
 					sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
@@ -1357,8 +1408,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 		    args->la_arg1.la_number);
 	  break;
 	case LA_TYPE_STRING_AND_STRING:
-	  if (
-	      (stat =
+	  if ((stat =
 	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
 					sizeof (buf1))) != NSS_SUCCESS
 	      || (stat =
@@ -1368,8 +1418,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  snprintf (filterBufP, filterSiz, filterprot, buf1, buf2);
 	  break;
 	case LA_TYPE_NUMBER_AND_STRING:
-	  if (
-	      (stat =
+	  if ((stat =
 	       _nss_ldap_escape_string (args->la_arg2.la_string, buf1,
 					sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
@@ -1462,7 +1511,7 @@ do_result (ent_context_t * ctx, int all)
 	  rc = __session.ls_conn->ld_errno;
 #endif /* LDAP_OPT_ERROR_NUMBER */
 	  syslog (LOG_ERR, "nss_ldap: could not get LDAP result - %s",
-		  ldap_err2string (rc));
+		     ldap_err2string (rc));
 	  stat = NSS_UNAVAIL;
 	  break;
 	case LDAP_RES_SEARCH_ENTRY:
@@ -1487,8 +1536,9 @@ do_result (ent_context_t * ctx, int all)
 		{
 		  stat = NSS_UNAVAIL;
 		  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
-		  syslog (LOG_ERR, "nss_ldap: could not get LDAP result - %s",
-			  ldap_err2string (rc));
+		  syslog (LOG_ERR,
+			     "nss_ldap: could not get LDAP result - %s",
+			     ldap_err2string (rc));
 		}
 	      else
 		{
@@ -1545,8 +1595,8 @@ do_with_reconnect (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
-		  backoff);
+		     "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+		     backoff);
 	  (void) sleep (backoff);
 	}
       else if (tries > 0)
@@ -1607,20 +1657,21 @@ do_with_reconnect (const char *base, int scope,
     {
     case NSS_UNAVAIL:
       syslog (LOG_ERR, "nss_ldap: could not search LDAP server - %s",
-	      ldap_err2string (rc));
+		 ldap_err2string (rc));
       break;
     case NSS_TRYAGAIN:
       syslog (LOG_ERR,
-	      "nss_ldap: could not reconnect to LDAP server - %s",
-	      ldap_err2string (rc));
+		 "nss_ldap: could not reconnect to LDAP server - %s",
+		 ldap_err2string (rc));
       stat = NSS_UNAVAIL;
       break;
     case NSS_SUCCESS:
       if (tries)
 	{
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnected to LDAP server after %d attempt(s)",
-		  tries);}
+		     "nss_ldap: reconnected to LDAP server after %d attempt(s)",
+		     tries);
+	}
       time (&__session.ls_timestamp);
       break;
     default:
@@ -1878,8 +1929,7 @@ do_parse_s (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
 NSS_STATUS
 _nss_ldap_read (const char *dn, const char **attributes, LDAPMessage ** res)
 {
-  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)",
-			    attributes, 1,	/* sizelimit */
+  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes, 1,	/* sizelimit */
 			    res, (search_func_t) do_search_s);
 }
 
@@ -2668,9 +2718,9 @@ static int
 do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		 int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-     static int
-       do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-			int freeit)
+static int
+do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+		 int freeit)
 #endif
 {
 #if LDAP_SET_REBIND_PROC_ARGS == 3
