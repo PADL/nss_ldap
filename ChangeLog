@@ -4,7 +4,9 @@ $Id$
 92	Luke Howard <lukeh@padl.com>
 
 	* signal handling fix: don't restore handler
-	  unnecessarily
+	  unnecessarily. 
+	* don't open nss_ldap.secret unless a root pw
+	  is specified in ldap.conf
 
 91	Luke Howard <lukeh@padl.com>
 
