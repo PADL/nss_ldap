@@ -35,10 +35,10 @@
 #define LDAP_ATTR_COMMENT		"description"
 
 static const char *pw_attributes[] =
-        { LDAP_ATTR_USERNAME, LDAP_ATTR_PASSWD,
-          LDAP_ATTR_UID, LDAP_ATTR_USER_GID,
-          LDAP_ATTR_REALNAME, LDAP_ATTR_HOME,
-          LDAP_ATTR_SHELL, LDAP_ATTR_GECOS,
+	{ LDAP_ATTR_USERNAME, LDAP_ATTR_PASSWD,
+     LDAP_ATTR_UID, LDAP_ATTR_USER_GID,
+     LDAP_ATTR_REALNAME, LDAP_ATTR_HOME,
+     LDAP_ATTR_SHELL, LDAP_ATTR_GECOS,
 	  LDAP_ATTR_COMMENT, NULL };
 
 static const char filt_getpwnam[] =
