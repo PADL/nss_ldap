@@ -20,8 +20,7 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] =
-  "$Id$";
+static char rcsId[] = "$Id$";
 
 #include "config.h"
 
@@ -82,46 +81,49 @@ static char rcsId[] =
 
 #ifndef HAVE_LDAP_CREATE_PAGE_CONTROL
 int
-ldap_create_page_control( LDAP *ld,
-	unsigned long pagesize,
-	struct berval *cookiep,
-	int iscritical,
-	LDAPControl **ctrlp )
+ldap_create_page_control (LDAP * ld,
+			  unsigned long pagesize,
+			  struct berval *cookiep,
+			  int iscritical, LDAPControl ** ctrlp)
 {
-	ber_tag_t tag;
-	BerElement *ber;
-	BerElement *ldap_alloc_ber_with_options(LDAP *ld);
-	int rc;
+  ber_tag_t tag;
+  BerElement *ber;
+  BerElement *ldap_alloc_ber_with_options (LDAP * ld);
+  int rc;
 
-	if ( (ld==NULL) || (ctrlp == NULL) ) {
-		return(LDAP_PARAM_ERROR);
-	}
+  if ((ld == NULL) || (ctrlp == NULL))
+    {
+      return (LDAP_PARAM_ERROR);
+    }
 
-	if ((ber = ldap_alloc_ber_with_options(ld)) == NULL) {
-		return(LDAP_NO_MEMORY);
-	}
+  if ((ber = ldap_alloc_ber_with_options (ld)) == NULL)
+    {
+      return (LDAP_NO_MEMORY);
+    }
 
-	tag = ber_printf(ber, "{i", pagesize);
-	if( tag == LBER_ERROR ) goto exit;
+  tag = ber_printf (ber, "{i", pagesize);
+  if (tag == LBER_ERROR)
+    goto exit;
 
-	if (cookiep == NULL)
-		tag = ber_printf(ber, "o", "", 0);
-	else
- 		tag = ber_printf(ber, "O", cookiep);
-	if( tag == LBER_ERROR ) goto exit;
+  if (cookiep == NULL)
+    tag = ber_printf (ber, "o", "", 0);
+  else
+    tag = ber_printf (ber, "O", cookiep);
+  if (tag == LBER_ERROR)
+    goto exit;
 
-	tag = ber_printf(ber, /*{*/ "N}");
-	if( tag == LBER_ERROR ) goto exit;
+  tag = ber_printf (ber, /*{ */ "N}");
+  if (tag == LBER_ERROR)
+    goto exit;
 
-	rc = ldap_create_control(LDAP_CONTROL_PAGE_OID,
-		ber, iscritical, ctrlp);
+  rc = ldap_create_control (LDAP_CONTROL_PAGE_OID, ber, iscritical, ctrlp);
 
-	ber_free(ber, 1);
-	return(rc);
+  ber_free (ber, 1);
+  return (rc);
 
 exit:
-	ber_free(ber, 1);
-	return(LDAP_ENCODING_ERROR);
+  ber_free (ber, 1);
+  return (LDAP_ENCODING_ERROR);
 }
 #endif /* HAVE_LDAP_CREATE_PAGE_CONTROL */
 
@@ -151,65 +153,70 @@ exit:
 
 #ifndef HAVE_LDAP_PARSE_PAGE_CONTROL
 int
-ldap_parse_page_control(
-	LDAP           *ld,
-	LDAPControl    **ctrls,
-	unsigned long  *list_countp,
-	struct berval  **cookiep )
+ldap_parse_page_control (LDAP * ld,
+			 LDAPControl ** ctrls,
+			 unsigned long *list_countp, struct berval **cookiep)
 {
-	BerElement  *ber;
-	LDAPControl *pControl;
-	int i;
-	unsigned long count, err;
-	ber_tag_t tag, berTag;
-	ber_len_t berLen;
+  BerElement *ber;
+  LDAPControl *pControl;
+  int i;
+  unsigned long count, err;
+  ber_tag_t tag, berTag;
+  ber_len_t berLen;
 
-	if (cookiep) {
-		*cookiep = NULL;	 /* Make sure we return a NULL if error occurs. */
-	}
+  if (cookiep)
+    {
+      *cookiep = NULL;		/* Make sure we return a NULL if error occurs. */
+    }
 
-	if (ld == NULL) {
-		return(LDAP_PARAM_ERROR);
-	}
+  if (ld == NULL)
+    {
+      return (LDAP_PARAM_ERROR);
+    }
 
-	if (ctrls == NULL) {
-		return(LDAP_CONTROL_NOT_FOUND);
-	}
+  if (ctrls == NULL)
+    {
+      return (LDAP_CONTROL_NOT_FOUND);
+    }
 
-	/* Search the list of control responses for a Page control. */
-	for (i=0; ctrls[i]; i++) {
-		pControl = ctrls[i];
-		if (!strcmp(LDAP_CONTROL_PAGE_OID, pControl->ldctl_oid))
-			goto foundPageControl;
-	}
+  /* Search the list of control responses for a Page control. */
+  for (i = 0; ctrls[i]; i++)
+    {
+      pControl = ctrls[i];
+      if (!strcmp (LDAP_CONTROL_PAGE_OID, pControl->ldctl_oid))
+	goto foundPageControl;
+    }
 
-	/* No page control was found. */
-	return(LDAP_CONTROL_NOT_FOUND);
+  /* No page control was found. */
+  return (LDAP_CONTROL_NOT_FOUND);
 
 foundPageControl:
-	/* Create a BerElement from the berval returned in the control. */
-	ber = ber_init(&pControl->ldctl_value);
+  /* Create a BerElement from the berval returned in the control. */
+  ber = ber_init (&pControl->ldctl_value);
 
-	if (ber == NULL) {
-		return(LDAP_NO_MEMORY);
-	}
+  if (ber == NULL)
+    {
+      return (LDAP_NO_MEMORY);
+    }
 
-	/* Extract the data returned in the control. */
-	tag = ber_scanf(ber, "{iO" /*}*/, &count, cookiep);
+  /* Extract the data returned in the control. */
+  tag = ber_scanf (ber, "{iO" /*} */ , &count, cookiep);
 
-	if( tag == LBER_ERROR) {
-		ber_free(ber, 1);
-		return(LDAP_DECODING_ERROR);
-	}
+  if (tag == LBER_ERROR)
+    {
+      ber_free (ber, 1);
+      return (LDAP_DECODING_ERROR);
+    }
 
-	ber_free(ber, 1);
+  ber_free (ber, 1);
 
-	/* Return data to the caller for items that were requested. */
-	if (list_countp) {
-		*list_countp = count;
-	}
+  /* Return data to the caller for items that were requested. */
+  if (list_countp)
+    {
+      *list_countp = count;
+    }
 
-	return(LDAP_SUCCESS);
+  return (LDAP_SUCCESS);
 }
 #endif /* HAVE_LDAP_PARSE_PAGE_CONTROL */
 
