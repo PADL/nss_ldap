@@ -168,7 +168,7 @@ struct ldap_service_search_descriptor
     /* filter */
     char *lsd_filter;
     /* next */
-    struct ldap_service_search_descriptor *lsd_next;
+    /* struct ldap_service_search_descriptor *lsd_next; */
   };
 
 typedef struct ldap_service_search_descriptor ldap_service_search_descriptor_t;
@@ -213,7 +213,7 @@ struct ldap_config
     /* SSL certificate path */
     char *ldc_sslpath;
     /* naming contexts */
-    ldap_service_search_descriptor_t **ldc_sds;
+    ldap_service_search_descriptor_t *ldc_sds[LM_NONE];
     /* next configuration. loops back onto itself for last entry */
     struct ldap_config *ldc_next;
   };
