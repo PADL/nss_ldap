@@ -433,6 +433,7 @@ do_open (void)
 #else
 	  old_handler = signal (SIGPIPE, SIG_IGN);
 #endif /* SUN_NSS */
+	  len = sizeof(sin);
 	  if (getpeername (sd, (struct sockaddr *) &sin, &len) < 0)
 	    {
 	      /*
@@ -786,7 +787,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 static NSS_STATUS
 do_result (ent_context_t * ctx, int all)
 {
-  int parserc, rc = LDAP_UNAVAILABLE;
+  int rc = LDAP_UNAVAILABLE;
   NSS_STATUS stat = NSS_TRYAGAIN;
 
   debug ("==> do_result");
@@ -824,6 +825,7 @@ do_result (ent_context_t * ctx, int all)
 	  else
 	    {
 #ifdef LDAP_VERSION3_API
+	      int parserc;
 	      /* NB: this frees ctx->ec_res */
 	      parserc =
 		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
@@ -840,7 +842,7 @@ do_result (ent_context_t * ctx, int all)
 		  stat = NSS_NOTFOUND;
 		}
 #else
-	      stat = NSS_UNAVAIL;
+	      stat = NSS_NOTFOUND;
 #endif /* LDAP_VERSION3_API */
 	      ctx->ec_res = NULL;
 	      ctx->ec_msgid = -1;
@@ -1054,10 +1056,9 @@ do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
    * NSS_NOTFOUND and reset the index to -1, at which point we'll retrieve
    * another entry.
    */
-  while (stat == NSS_SUCCESS)
-    {
-      if (ctx->ec_state.ls_type == LS_TYPE_KEY
-	  || ctx->ec_state.ls_info.ls_index == -1)
+      if (ctx->ec_state.ls_retry == 0 && 
+	  (ctx->ec_state.ls_type == LS_TYPE_KEY
+	   || ctx->ec_state.ls_info.ls_index == -1))
 	{
 	  stat = do_result (ctx, LDAP_MSG_ONE);
 	}
@@ -1070,21 +1071,19 @@ do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
 	    parser (__session.ls_conn, ctx->ec_res, &ctx->ec_state, result,
 		    buffer, buflen);
 
-	  if (ctx->ec_state.ls_type == LS_TYPE_KEY
-	      || ctx->ec_state.ls_info.ls_index == -1)
+	  ctx->ec_state.ls_retry = (stat == NSS_TRYAGAIN ? 1 : 0);
+	  
+          if (ctx->ec_state.ls_retry == 0 && 
+	      (ctx->ec_state.ls_type == LS_TYPE_KEY
+	       || ctx->ec_state.ls_info.ls_index == -1))
 	    {
 	      /* we don't need the result anymore, ditch it. */
 	      ldap_msgfree (ctx->ec_res);
 	      ctx->ec_res = NULL;
 	    }
-	  if (stat == NSS_SUCCESS)
-	    {
-	      /* yay. we parsed successfully. break */
-	      break;
-	    }
 	}
-    }
 
+  *errnop = 0;
   if (stat == NSS_TRYAGAIN)
     {
 #ifdef SUN_NSS
@@ -1255,7 +1254,7 @@ _nss_ldap_search (const ldap_args_t * args, const char *filterprot,
  * Locks mutex.
  */
 NSS_STATUS
-_nss_ldap_getent (ent_context_t * ctx,
+_nss_ldap_getent (ent_context_t ** ctx,
 		  void *result,
 		  char *buffer,
 		  size_t buflen,
@@ -1265,10 +1264,18 @@ _nss_ldap_getent (ent_context_t * ctx,
   NSS_STATUS stat = NSS_SUCCESS;
 
   debug ("==> _nss_ldap_getent");
-  if (ctx == NULL)
+
+  if (*ctx == NULL || (*ctx)->ec_msgid == -1)
     {
-      debug ("<== _nss_ldap_getent");
-      return NSS_UNAVAIL;
+      /*
+       * implicitly call setent() if this is the first time
+       * or there is no active search
+       */
+      if (_nss_ldap_ent_context_init(ctx) == NULL)
+      {
+        debug ("<== _nss_ldap_getent");
+        return NSS_UNAVAIL;
+      }
     }
 
   /*
@@ -1282,7 +1289,7 @@ _nss_ldap_getent (ent_context_t * ctx,
   /*
    * If ctx->ec_msgid < 0, then we haven't searched yet. Let's do it!
    */
-  if (ctx->ec_msgid < 0)
+  if ((*ctx)->ec_msgid < 0)
     {
       int msgid;
 
@@ -1295,13 +1302,13 @@ _nss_ldap_getent (ent_context_t * ctx,
 	  return stat;
 	}
 
-      ctx->ec_msgid = msgid;
+      (*ctx)->ec_msgid = msgid;
     }
 
 
   nss_context_unlock ();
 
-  stat = do_parse (ctx, result, buffer, buflen, errnop, parser);
+  stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
 
   debug ("<== _nss_ldap_getent");
 

@@ -218,6 +218,7 @@ typedef struct ldap_args ldap_args_t;
 struct ldap_state
   {
     int ls_type;
+    int ls_retry;
 #define LS_TYPE_KEY	(0)
 #define LS_TYPE_INDEX	(1)
     union
@@ -235,7 +236,7 @@ typedef struct ldap_state ldap_state_t;
 /*
  * LS_INIT only used for enumeration contexts
  */
-#define LS_INIT(state)	do { state.ls_type = LS_TYPE_INDEX; state.ls_info.ls_index = -1; } while (0)
+#define LS_INIT(state)	do { state.ls_type = LS_TYPE_INDEX; state.ls_retry = 0; state.ls_info.ls_index = -1; } while (0)
 
 /*
  * thread specific context: result chain, and state data
@@ -413,7 +414,7 @@ NSS_STATUS _nss_ldap_read (const char *dn,	/* IN */
 /*
  * common enumeration routine; uses asynchronous API.
  */
-NSS_STATUS _nss_ldap_getent (ent_context_t * key,	/* IN/OUT */
+NSS_STATUS _nss_ldap_getent (ent_context_t ** key,	/* IN/OUT */
 			     void *result,	/* IN/OUT */
 			     char *buffer,	/* IN */
 			     size_t buflen,	/* IN */

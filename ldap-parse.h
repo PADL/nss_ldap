@@ -66,7 +66,7 @@
 	return s
 #define LOOKUP_GETENT(args, be, filter, attributes, parser) \
 	NSS_STATUS s; \
-	s = _nss_ldap_getent(((nss_ldap_backend_t *)be)->state, \
+	s = _nss_ldap_getent(&((nss_ldap_backend_t *)be)->state, \
 		NSS_ARGS(args)->buf.result, \
 		NSS_ARGS(args)->buf.buffer, \
 		NSS_ARGS(args)->buf.buflen, \
@@ -94,7 +94,7 @@
 	LA_TYPE(a) = LA_TYPE_NUMBER; \
 	return _nss_ldap_getbyname(&a, result, buffer, buflen, errnop, filter, (const char **)attributes, parser)
 #define LOOKUP_GETENT(key, result, buffer, buflen, errnop, filter, attributes, parser) \
-	return _nss_ldap_getent(key, result, buffer, buflen, errnop, filter, (const char **)attributes, parser)
+	return _nss_ldap_getent(&key, result, buffer, buflen, errnop, filter, (const char **)attributes, parser)
 
 #elif defined(IRS_NSS)
 
@@ -129,7 +129,7 @@
 #define LOOKUP_GETENT(this, filter, attributes, parser) \
 	struct pvt *pvt = (struct pvt *)this->private; \
 	NSS_STATUS s; \
-	s = _nss_ldap_getent(pvt->state, &pvt->result, pvt->buffer, \
+	s = _nss_ldap_getent(&pvt->state, &pvt->result, pvt->buffer, \
 		sizeof(pvt->buffer), &errno, filter, \
 		(const char **)attributes, parser); \
 	if (s != NSS_SUCCESS) { \
