@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+124	Luke Howard <lukeh@padl.com>
+
+	* patch from nalin@redhat.com for StartTLS
+	* fixed up indenting
+
 123	Luke Howard <lukeh@padl.com>
 
 	* rolled in BUG#52 branch with fixes for AIX

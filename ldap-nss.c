@@ -19,8 +19,7 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] =
-  "$Id$";
+static char rcsId[] = "$Id$";
 
 #ifdef SUN_NSS
 #include <thread.h>
@@ -148,7 +147,8 @@ static NSS_STATUS do_result (ent_context_t * ctx, int all);
  * Format a filter given a prototype.
  */
 static NSS_STATUS do_filter (const ldap_args_t * args, const char *filterprot,
-		       const char **attrs, char *filter, size_t filterlen);
+			     const char **attrs, char *filter,
+			     size_t filterlen);
 
 /*
  * Parse a result, fetching new results until a successful parse
@@ -176,8 +176,7 @@ do_with_reconnect (const char *base, int scope,
 /*
  * Do a bind with a defined timeout
  */
-static int
-do_bind (LDAP *ld, const char *dn, const char *pw);
+static int do_bind (LDAP * ld, const char *dn, const char *pw);
 
 
 /*
@@ -202,19 +201,19 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
     }
 
   *whop = *credp = NULL;
-  if (geteuid() == 0 && __session.ls_config->ldc_rootbinddn)
-  {
-    *whop = strdup (__session.ls_config->ldc_rootbinddn);
-    if (__session.ls_config->ldc_rootbindpw)
-      *credp = strdup (__session.ls_config->ldc_rootbindpw);
-  }
+  if (geteuid () == 0 && __session.ls_config->ldc_rootbinddn)
+    {
+      *whop = strdup (__session.ls_config->ldc_rootbinddn);
+      if (__session.ls_config->ldc_rootbindpw)
+	*credp = strdup (__session.ls_config->ldc_rootbindpw);
+    }
   else
-  {
-    if (__session.ls_config->ldc_binddn != NULL)
-      *whop = strdup (__session.ls_config->ldc_binddn);
-    if (__session.ls_config->ldc_bindpw != NULL)
-      *credp = strdup (__session.ls_config->ldc_bindpw);
-  }
+    {
+      if (__session.ls_config->ldc_binddn != NULL)
+	*whop = strdup (__session.ls_config->ldc_binddn);
+      if (__session.ls_config->ldc_bindpw != NULL)
+	*credp = strdup (__session.ls_config->ldc_bindpw);
+    }
 
   *methodp = LDAP_AUTH_SIMPLE;
 
@@ -228,7 +227,8 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -250,7 +250,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -451,7 +452,7 @@ do_open (void)
 #else
 	  old_handler = signal (SIGPIPE, SIG_IGN);
 #endif /* SUN_NSS */
-	  len = sizeof(sin);
+	  len = sizeof (sin);
 	  if (getpeername (sd, (struct sockaddr *) &sin, &len) < 0)
 	    {
 	      /*
@@ -524,7 +525,8 @@ do_open (void)
        */
       if (cfg->ldc_ssl_on)
 	{
-	  if (__ssl_initialized == 0 && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
+	  if (__ssl_initialized == 0
+	      && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
 	    {
 	      continue;
 	    }
@@ -577,13 +579,39 @@ do_open (void)
 #endif /* LDAP_VERSION3_API */
 
 #ifdef LDAP_VERSION3_API
-  ldap_set_option (__session.ls_conn, LDAP_OPT_DEREF,
-		   &cfg->ldc_version);
+  ldap_set_option (__session.ls_conn, LDAP_OPT_DEREF, &cfg->ldc_version);
 #else
   __session.ls_conn->ld_deref = cfg->ldc_deref;
 #endif /* LDAP_VERSION3_API */
 
-#ifdef SSL
+#ifdef TLS
+  if (cfg->ldc_ssl_on)
+    {
+      int version;
+
+      if (ldap_get_option
+	  (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
+	   &version) == LDAP_OPT_SUCCESS)
+	{
+	  if (version < LDAP_VERSION3)
+	    {
+	      version = LDAP_VERSION3;
+	      ldap_set_option (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
+			       &v ersion);
+	    }
+	}
+      debug ("==> start_tls");
+      if (ldap_start_tls_s (__session.ls_conn, NULL, NULL) == LDAP_SUCCESS)
+	{
+	  debug ("TLS startup succeeded");
+	}
+      else
+	{
+	  debug ("TLS startup failed");
+	}
+      debug ("<== start_tls");
+    }
+#elif defined(SSL)
   /*
    * If SSL is desired, then enable it.
    */
@@ -649,55 +677,53 @@ do_open (void)
 }
 
 static int
-do_bind (LDAP * ld,
-	  const char * dn,
-	  const char * pw)
+do_bind (LDAP * ld, const char *dn, const char *pw)
 {
   int rc;
   int msgid;
   struct timeval tv;
   LDAPMessage *result;
-    
-  debug("==> do_bind");
+
+  debug ("==> do_bind");
 
   msgid = ldap_simple_bind (ld, dn, pw);
-  
+
   if (msgid < 0)
     {
 #ifdef LDAP_VERSION3_API
       if (ldap_get_option (ld, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
-        {
-          rc = LDAP_UNAVAILABLE;
-        }
+	{
+	  rc = LDAP_UNAVAILABLE;
+	}
 #else
       rc = ld->ld_errno;
 #endif /* LDAP_VERSION3_API */
-      debug("<== do_bind");
+      debug ("<== do_bind");
 
       return rc;
     }
-     
+
 #ifdef BIND_TIMEOUT
   tv.tv_sec = BIND_TIMEOUT;
 #else
   tv.tv_sec = 30;
-#endif    
+#endif
   tv.tv_usec = 0;
-    
-  rc = ldap_result(ld, msgid, 0, &tv, &result);
+
+  rc = ldap_result (ld, msgid, 0, &tv, &result);
   if (rc > 0)
     {
-      debug("<== do_bind");
-      return ldap_result2error(ld, result, 1);
+      debug ("<== do_bind");
+      return ldap_result2error (ld, result, 1);
     }
 
-    /* took too long */
+  /* took too long */
   if (rc == 0)
     {
-      ldap_abandon(ld, msgid);
+      ldap_abandon (ld, msgid);
     }
-    
-  debug("<== do_bind");
+
+  debug ("<== do_bind");
 
   return -1;
 }
@@ -833,7 +859,10 @@ do_filter (const ldap_args_t * args, const char *filterprot,
       switch (args->la_type)
 	{
 	case LA_TYPE_STRING:
-	  if ((stat = _nss_ldap_escape_string(args->la_arg1.la_string, buf1, sizeof(buf1))) != NSS_SUCCESS)
+	  if (
+	      (stat =
+	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
+					sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
 #ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot, buf1);
@@ -849,8 +878,13 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 #endif
 	  break;
 	case LA_TYPE_STRING_AND_STRING:
-	  if ((stat = _nss_ldap_escape_string(args->la_arg1.la_string, buf1, sizeof(buf1))) != NSS_SUCCESS ||
-	      (stat = _nss_ldap_escape_string(args->la_arg2.la_string, buf2, sizeof(buf2)) != NSS_SUCCESS))
+	  if (
+	      (stat =
+	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
+					sizeof (buf1))) != NSS_SUCCESS
+	      || (stat =
+		  _nss_ldap_escape_string (args->la_arg2.la_string, buf2,
+					   sizeof (buf2)) != NSS_SUCCESS))
 	    return stat;
 #ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot, buf1, buf2);
@@ -859,14 +893,16 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 #endif
 	  break;
 	case LA_TYPE_NUMBER_AND_STRING:
-	  if ((stat = _nss_ldap_escape_string(args->la_arg2.la_string, buf1, sizeof(buf1))) != NSS_SUCCESS)
+	  if (
+	      (stat =
+	       _nss_ldap_escape_string (args->la_arg2.la_string, buf1,
+					sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
 #ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot,
 		    args->la_arg1.la_number, buf1);
 #else
-	  sprintf (filter, filterprot, args->la_arg1.la_number,
-		   buf1);
+	  sprintf (filter, filterprot, args->la_arg1.la_number, buf1);
 #endif
 	  break;
 	}
@@ -929,7 +965,8 @@ do_result (ent_context_t * ctx, int all)
 	      parserc =
 		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
 				   NULL, NULL, NULL, 1);
-	      if (parserc != LDAP_SUCCESS && parserc != LDAP_MORE_RESULTS_TO_RETURN)
+	      if (parserc != LDAP_SUCCESS
+		  && parserc != LDAP_MORE_RESULTS_TO_RETURN)
 		{
 		  stat = NSS_UNAVAIL;
 		  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
@@ -1159,7 +1196,7 @@ do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
     {
       NSS_STATUS resultStat = NSS_SUCCESS;
 
-      if (ctx->ec_state.ls_retry == 0 && 
+      if (ctx->ec_state.ls_retry == 0 &&
 	  (ctx->ec_state.ls_type == LS_TYPE_KEY
 	   || ctx->ec_state.ls_info.ls_index == -1))
 	{
@@ -1184,22 +1221,22 @@ do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
        */
       parseStat =
 	parser (__session.ls_conn, ctx->ec_res, &ctx->ec_state, result,
-		    buffer, buflen);
+		buffer, buflen);
 
       /* hold onto the state if we're out of memory XXX */
       ctx->ec_state.ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
 
       /* free entry is we're moving on */
-      if (ctx->ec_state.ls_retry == 0 && 
-          (ctx->ec_state.ls_type == LS_TYPE_KEY
-           || ctx->ec_state.ls_info.ls_index == -1))
+      if (ctx->ec_state.ls_retry == 0 &&
+	  (ctx->ec_state.ls_type == LS_TYPE_KEY
+	   || ctx->ec_state.ls_info.ls_index == -1))
 	{
 	  /* we don't need the result anymore, ditch it. */
 	  ldap_msgfree (ctx->ec_res);
 	  ctx->ec_res = NULL;
 	}
     }
-  while (parseStat == NSS_NOTFOUND); 
+  while (parseStat == NSS_NOTFOUND);
 
   *errnop = 0;
   if (parseStat == NSS_TRYAGAIN)
@@ -1289,8 +1326,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -1301,10 +1337,9 @@ _nss_ldap_result (ent_context_t * ctx)
  */
 NSS_STATUS
 _nss_ldap_search_s (const ldap_args_t * args,
-		    const char *filterprot, 
+		    const char *filterprot,
 		    ldap_map_selector_t sel,
-		    int sizelimit,
-		    LDAPMessage ** res)
+		    int sizelimit, LDAPMessage ** res)
 {
   char filter[LDAP_FILT_MAXSIZ], *base;
   const char **attrs;
@@ -1355,9 +1390,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
 NSS_STATUS
 _nss_ldap_search (const ldap_args_t * args,
 		  const char *filterprot,
-		  ldap_map_selector_t sel,
-		  int sizelimit,
-		  int *msgid)
+		  ldap_map_selector_t sel, int sizelimit, int *msgid)
 {
   char filter[LDAP_FILT_MAXSIZ], *base;
   const char **attrs;
@@ -1415,8 +1448,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
 		  size_t buflen,
 		  int *errnop,
 		  const char *filterprot,
-		  ldap_map_selector_t sel,
-		  parser_t parser)
+		  ldap_map_selector_t sel, parser_t parser)
 {
   NSS_STATUS stat = NSS_SUCCESS;
 
@@ -1428,11 +1460,11 @@ _nss_ldap_getent (ent_context_t ** ctx,
        * implicitly call setent() if this is the first time
        * or there is no active search
        */
-      if (_nss_ldap_ent_context_init(ctx) == NULL)
-      {
-        debug ("<== _nss_ldap_getent");
-        return NSS_UNAVAIL;
-      }
+      if (_nss_ldap_ent_context_init (ctx) == NULL)
+	{
+	  debug ("<== _nss_ldap_getent");
+	  return NSS_UNAVAIL;
+	}
     }
 
   /*
@@ -1450,8 +1482,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
     {
       int msgid;
 
-      stat =
-	_nss_ldap_search (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid);
+      stat = _nss_ldap_search (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid);
       if (stat != NSS_SUCCESS)
 	{
 	  nss_unlock ();
@@ -1483,8 +1514,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
 		     size_t buflen,
 		     int *errnop,
 		     const char *filterprot,
-		     ldap_map_selector_t sel,
-		     parser_t parser)
+		     ldap_map_selector_t sel, parser_t parser)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
   ent_context_t ctx;
@@ -1725,14 +1755,13 @@ _nss_ldap_assign_passwd (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP *ld,
-                                LDAPMessage * e,
-                                const char * oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
 
-  vals = ldap_get_values(ld, e, "objectClass");
+  vals = ldap_get_values (ld, e, "objectClass");
   if (vals != NULL)
     {
       for (valiter = vals; *valiter != NULL; valiter++)
@@ -1752,5 +1781,3 @@ NSS_STATUS _nss_ldap_oc_check (LDAP *ld,
 
   return ret;
 }
-
-
