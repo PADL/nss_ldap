@@ -71,7 +71,7 @@ _nss_ldap_parse_sp (LDAP * ld,
   char *tmp = NULL;
 
   stat =
-    _nss_ldap_assign_passwd (ld, e, AT (userPassword), &sp->sp_pwdp, &buffer,
+    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &sp->sp_pwdp, &buffer,
 			     &buflen);
   if (stat != NSS_SUCCESS)
     return stat;

@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+145	Luke Howard <lukeh@padl.com>
+
+	* preliminary support for authPassword attribute
+	* updated COPYING
+
 144	Luke Howard <lukeh@padl.com>
 
 	* when specifying filters with nss_base_XXX,

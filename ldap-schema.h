@@ -67,6 +67,7 @@ extern const char **_nss_ldap_attrtab[];
  */
 #define OC_posixAccount           "posixAccount"
 #define AT_userPassword           "userPassword"
+#define AT_authPassword           "authPassword"
 #define AT_uidNumber              "uidNumber"
 #define AT_gidNumber              "gidNumber"
 #define AT_homeDirectory          "homeDirectory"

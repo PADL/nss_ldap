@@ -114,7 +114,7 @@ _nss_ldap_parse_pw (LDAP * ld,
   else
     {
          stat =
-	    _nss_ldap_assign_passwd (ld, e, AT (userPassword), &pw->pw_passwd,
+	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &pw->pw_passwd,
 			     &buffer, &buflen);
 	 if (stat != NSS_SUCCESS)
 	    return stat;

@@ -281,7 +281,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
@@ -304,7 +304,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
@@ -1049,7 +1049,7 @@ _nss_ldap_ent_context_free (ent_context_t ** ctx)
 /*
  * Do the necessary formatting to create a string filter.
  */
-static NSS_STATUS 
+static NSS_STATUS
 do_filter (const ldap_args_t * args, const char *filterprot,
 	   ldap_service_search_descriptor_t * sd, char *userbuf,
 	   size_t userbufSiz, const char **retFilter)
@@ -1564,7 +1564,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
@@ -1966,17 +1966,15 @@ _nss_ldap_assign_attrval (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-
 /*
  * Assign a single value to *valptr, after examining userPassword for
- * a syntactically suitable value. The behaviour here is determinable at
- * runtime from ldap.conf.
+ * a syntactically suitable value. 
  */
 NSS_STATUS
-_nss_ldap_assign_passwd (LDAP * ld,
-			 LDAPMessage * e,
-			 const char *attr,
-			 char **valptr, char **buffer, size_t * buflen)
+_nss_ldap_assign_userpassword (LDAP * ld,
+			       LDAPMessage * e,
+			       const char *attr,
+			       char **valptr, char **buffer, size_t * buflen)
 {
   char **vals;
   char **valiter;
@@ -2033,7 +2031,72 @@ _nss_ldap_assign_passwd (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS 
+/*
+ * Assign a single value to *valptr, after examining authPassword for
+ * a syntactically suitable value. 
+ */
+NSS_STATUS
+_nss_ldap_assign_authpassword (LDAP * ld,
+			       LDAPMessage * e,
+			       const char *attr,
+			       char **valptr, char **buffer, size_t * buflen)
+{
+  char **vals;
+  char **valiter;
+  char *pwd = NULL;
+  int vallen;
+
+  vals = ldap_get_values (ld, e, (char *) attr);
+  if (vals != NULL)
+    {
+      for (valiter = vals; *valiter != NULL; valiter++)
+	{
+	  if (strncasecmp (*valiter,
+			   "CRYPT$", (sizeof ("CRYPT$") - 1)) == 0)
+	    {
+	      pwd = *valiter;
+	      break;
+	    }
+	}
+    }
+
+  if (pwd == NULL)
+    {
+      pwd = "x";
+    }
+  else
+    {
+      pwd += (sizeof ("CRYPT$") - 1);
+    }
+
+  vallen = strlen (pwd);
+
+  if (*buflen < (size_t) (vallen + 1))
+    {
+      if (vals != NULL)
+	{
+	  ldap_value_free (vals);
+	}
+      return NSS_TRYAGAIN;
+    }
+
+  *valptr = *buffer;
+
+  strncpy (*valptr, pwd, vallen);
+  (*valptr)[vallen] = '\0';
+
+  *buffer += vallen + 1;
+  *buflen -= vallen + 1;
+
+  if (vals != NULL)
+    {
+      ldap_value_free (vals);
+    }
+
+  return NSS_SUCCESS;
+}
+
+NSS_STATUS
 _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;

@@ -87,7 +87,7 @@ _nss_ldap_parse_gr (LDAP * ld,
     return stat;
 
   stat =
-    _nss_ldap_assign_passwd (ld, e, AT (userPassword), &gr->gr_passwd,
+    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &gr->gr_passwd,
 			     &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
