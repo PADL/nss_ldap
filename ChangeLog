@@ -12,6 +12,8 @@ $Id$
 	  ldap_init() or ldap_initialize() rather than ldap_open
 	* fix for BUG#183: support pw_change and pw_expire
 	  on BSD
+	* fix for BUG#187: NSS_BUFLEN_DEFAULT causing problems
+	  on IRS platforms
 	* fix for glibc 2.1 from Alexander Spannagel
 
 226	Luke Howard <lukeh@padl.com>

@@ -731,7 +731,7 @@ do_parse_initgroups (LDAPMessage * e,
 	  return NSS_TRYAGAIN;
 	}
     }
-  else if (*(lia->start) == *(lia->size))
+  if (*(lia->start) == *(lia->size))
     {
       /* Need a bigger buffer */
       *(lia->groups) = (gid_t *) realloc (*(lia->groups),

@@ -39,7 +39,7 @@ IRS_EXPORT void sv_minimize (struct irs_sv *);
 struct pvt
 {
   struct servent result;
-  char buffer[NSS_BUFLEN_PROTOCOLS];
+  char buffer[NSS_BUFLEN_SERVICES];
   ent_context_t *state;
 };
 

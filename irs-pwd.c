@@ -38,7 +38,7 @@ IRS_EXPORT void pw_minimize (struct irs_pw *);
 struct pvt
 {
   struct passwd result;
-  char buffer[LDAP_NSS_BUFLEN_DEFAULT];
+  char buffer[NSS_BUFLEN_PASSWD];
   ent_context_t *state;
 };
 
