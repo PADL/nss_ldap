@@ -56,7 +56,7 @@ $Id$
 88	Luke Howard <lukeh@padl.com>
 
 	* added breaks to switch in _nss_ldap_lookup
-	  (thanks to Mike.Shelton@FMR.COM for pointing
+	  (thanks to Nathan.Hawkins@FMR.COM for pointing
 	   this out)
 	* save signal handler and ignore SIGPIPE for
 	  appropriate sections of do_open() and confirm
