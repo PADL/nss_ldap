@@ -97,7 +97,7 @@ GCCFLAGS=-O -g -Wall -fPIC
 # these are the flags wcs@sun used
 SUNCFLAGS=-O -G -K pic
 SUNLDFLAGS=-G -z text
-DEBUGFLAGS=-DDEBUG
+DEBUGFLAGS=
 
 # choose your C compiler
 #CC=/usr/local/opt/SUNWspro/bin/cc

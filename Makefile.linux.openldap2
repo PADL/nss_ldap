@@ -83,7 +83,7 @@ LIBDIRS=-L.
 LIBS=-lldap -llber -lnsl -lpthread -lresolv
 
 GCCFLAGS=-O -g -Wall -fPIC
-DEBUGFLAGS=-DDEBUG
+DEBUGFLAGS=
 
 CC=gcc
 COMPILERFLAGS=$(GCCFLAGS)

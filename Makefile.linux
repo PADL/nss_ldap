@@ -85,7 +85,7 @@ LIBS=-lldap -lnsl -llber -lpthread -lresolv
 
 # uncomment this if you're using gcc
 GCCFLAGS=-O -g -Wall -fPIC
-DEBUGFLAGS=-DDEBUG
+DEBUGFLAGS=
 
 CC=gcc
 COMPILERFLAGS=$(GCCFLAGS)

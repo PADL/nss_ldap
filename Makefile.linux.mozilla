@@ -83,7 +83,7 @@ LIBDIRS=-L.
 LIBS=-L/usr/local/ldapsdk/lib -Wl,-rpath /usr/local/ldapsdk/lib -lldapssl30 -lnsl -lpthread -lresolv
 
 GCCFLAGS=-O -g -Wall -fPIC
-DEBUGFLAGS=-DDEBUG
+DEBUGFLAGS=
 
 CC=gcc
 COMPILERFLAGS=$(GCCFLAGS)
