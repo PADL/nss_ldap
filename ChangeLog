@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+237	Luke Howard <lukeh@padl.com>
+
+	* more manual page updates
+
 236	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#201: typo in ldap-schema.c causing build
