@@ -1,11 +1,13 @@
 $Id$
 ===============================================================
 
-SHX-4	Luke Howard <lukeh@padl.com>
+SHX-5	Luke Howard <lukeh@padl.com>
 	*** Restricted Release - Use Subject to License ***
 
 	* Solaris netgroup support test release
-	* fix do_sasl_interact() crasher
+	* fix crasher in do_sasl_interact()
+	* do_sasl_interact() needs to strdup() result for
+	  Cyrus SASL 1.x but not 2.x
 
 211	Luke Howard <lukeh@padl.com>
 

@@ -3474,6 +3474,13 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 	      interact->result = "";
 	      interact->len = 0;
 	    }
+#ifdef SASL_VERSION_MAJOR < 2
+	  interact->result = strdup (interact->result);
+	  if (interact->result == NULL)
+	    {
+	      return LDAP_NO_MEMORY;
+	    }
+#endif /* SASL_VERSION_MAJOR < 2 */
 	}
       else
 	{
