@@ -1506,17 +1506,16 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
     }
   else
     {
-# ifdef HAVE_LDAP_GSS_BIND
+#ifdef HAVE_LDAP_GSS_BIND
       return ldap_gss_bind (ld, dn, pw, GSSSASL_NO_SECURITY_LAYER,
 			    LDAP_SASL_GSSAPI);
-# else
-#  ifdef CONFIGURE_KRB5_CCNAME
+#else
+# ifdef CONFIGURE_KRB5_CCNAME
       char tmpbuf[256];
       static char envbuf[256];
-      char * ccname;
-      char * oldccname;
+      char *ccname, *oldccname;
       int retval;
-#  endif				/* CONFIGURE_KRB5_CCNAME */
+# endif				/* CONFIGURE_KRB5_CCNAME */
 
       if (__config->ldc_sasl_secprops != NULL)
 	{
@@ -1530,20 +1529,13 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 	    }
 	}
 
-#  ifdef CONFIGURE_KRB5_CCNAME
+# ifdef CONFIGURE_KRB5_CCNAME
       /* Set default Kerberos ticket cache for SASL-GSSAPI */
       /* There are probably race conditions here XXX */
       if (__config->ldc_krb5_ccname != NULL)
 	{
-#   ifdef HAVE_GSS_KRB5_CCACHE_NAME
           ccname = __config->ldc_krb5_ccname;
-          if (ccname && (gss_krb5_ccache_name (&retval, ccname, NULL) !=
-              GSS_S_COMPLETE))
-            {
-              debug("do_bind: unable to set default credential cache");
-              return -1;
-            }
-#   else
+#   ifndef HAVE_GSS_KRB5_CCACHE_NAME
 	  oldccname = getenv ("KRB5CCNAME");
 	  if (oldccname != NULL)
 	    {
@@ -1554,39 +1546,44 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 	    {
 	      tmpbuf[0] = '\0';
 	    }
-	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s",
-		    __config->ldc_krb5_ccname);
+          oldccname = tmpbuf;
+	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s", ccname);
 	  putenv (envbuf);
-#   endif				/* HAVE_GSS_KRB5_CCACHE_NAME */
-	}
-#  endif				/* CONFIGURE_KRB5_CCNAME */
+#   else
+          if (gss_krb5_ccache_name (&retval, ccname, &oldccname) != GSS_S_COMPLETE)
+            {
+              debug("do_bind: unable to set default credential cache");
+              return -1;
+            }
+# endif				/* !HAVE_GSS_KRB5_CCACHE_NAME */
+       }
+# endif				/* CONFIGURE_KRB5_CCNAME */
 
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
 					 do_sasl_interact, (void *) pw);
 
 # ifdef CONFIGURE_KRB5_CCNAME
-#  ifdef HAVE_GSS_KRB5_CCACHE_NAME
       /* Restore default Kerberos ticket cache. */
-      if (oldccname && (gss_krb5_ccache_name (&retval, oldccname, NULL) != GSS_S_COMPLETE))
-        {
-          debug("do_bind: unable to restore default credential cache");
-          return -1;
-        }
-#  else
-      /* Restore default Kerberos ticket cache. */
-      if (__config->ldc_krb5_ccname != NULL)
+      if (oldccname != NULL)
 	{
-	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s", tmpbuf);
+#  ifndef HAVE_GSS_KRB5_CCACHE_NAME
+	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s", oldccname);
 	  putenv (envbuf);
-	}
-#  endif				/* HAVE_GSS_KRB5_CCACHE_NAME */
+#  else
+          if (gss_krb5_ccache_name (&retval, oldccname, NULL) != GSS_S_COMPLETE)
+            {
+              debug("do_bind: unable to restore default credential cache");
+              return -1;
+            }
+# endif				/* !HAVE_GSS_KRB5_CCACHE_NAME */
+        }
 # endif				/* CONFIGURE_KRB5_CCNAME */
 
       return rc;
-# endif /* HAVE_LDAP_GSS_BIND */
-#endif
+#endif /* HAVE_LDAP_GSS_BIND */
     }
+#endif
 
   debug ("<== do_bind");
 
@@ -3657,7 +3654,7 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 	      interact->result = "";
 	      interact->len = 0;
 	    }
-#if SASL_VERSION_MAJOR < 2
+#ifdef SASL_VERSION_MAJOR < 2
 	  interact->result = strdup (interact->result);
 	  if (interact->result == NULL)
 	    {

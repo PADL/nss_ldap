@@ -15,7 +15,7 @@ AC_ARG_ENABLE(debugging, [  --enable-debugging        enable debug code ], [AC_D
 AC_ARG_ENABLE(paged-results, [  --enable-paged-results    enable paged results control ], [AC_DEFINE(PAGE_RESULTS)])
 AC_ARG_ENABLE(configurable-krb5-ccname, [  --enable-configurable-krb5-ccname   enable configurable Kerberos V credentials cache name ], [AC_DEFINE(CONFIGURE_KRB5_CCNAME)])
 AC_ARG_WITH(ldap-lib, [  --with-ldap-lib=type      select ldap library [auto|netscape5|netscape4|netscape3|umich|openldap]])
-AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of ldap SDK])
+AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of LDAP SDK])
 AC_ARG_WITH(ldap-conf-file, [  --with-ldap-conf-file     path to LDAP configuration file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_CONF, "$with_ldap_conf_file")])
 AC_ARG_WITH(ldap-secret-file, [  --with-ldap-secret-file   path to LDAP root secret file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_ROOTPASSWD, "$with_ldap_secret_file")])
 AC_ARG_WITH(gssapi-dir, [  --with-gssapi-dir=DIR     base directory of gssapi SDK])
@@ -81,7 +81,6 @@ if test -n "$with_ldap_dir"; then
   *) LDFLAGS="$LDFLAGS -Wl,-rpath,$with_ldap_dir/lib" ;;
   esac  
 fi
-
 if test -n "$with_gssapi_dir"; then
   CPPFLAGS="$CPPFLAGS -I$with_gssapi_dir/include"
   LDFLAGS="$LDFLAGS -L$with_gssapi_dir/lib"
@@ -190,6 +189,7 @@ fi
 
 AC_CHECK_LIB(dl, dlopen,[LIBS="-ldl $LIBS"],,$LIBS)
 AC_CHECK_LIB(db, main,[LIBS="-ldb $LIBS"],,$LIBS)
+AC_CHECK_LIB(gssapi_krb5, gss_krb5_ccache_name,[LIBS="-lgssapi_krb5 $LIBS"],,$LIBS)
 dnl Following checks probably not strictly necessary.
 dnl AC_CHECK_LIB(crypto, main,[LIBS="-lcrypto $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(ssl, main,[LIBS="-lssl $LIBS"],,$LIBS)
@@ -198,7 +198,7 @@ dnl AC_CHECK_LIB(k5crypto, main,[LIBS="-lk5crypto $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(krb5, main,[LIBS="-lkrb5 $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(krb4, main,[LIBS="-lkrb4 $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(sasl, sasl_client_init,[LIBS="-lsasl $LIBS"],,$LIBS)
-AC_CHECK_LIB(gssapi_krb5, gss_krb5_ccache_name)
+
 if test -z "$found_ldap_lib" -a \( $with_ldap_lib = auto -o $with_ldap_lib = umich -o $with_ldap_lib = openldap \); then
   AC_CHECK_LIB(lber, main)
   AC_CHECK_LIB(ldap, main, [LIBS="-lldap $LIBS" found_ldap_lib=yes],,$LIBS)
