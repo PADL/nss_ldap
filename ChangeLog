@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+103	Luke Howard <lukeh@padl.com>
+
+	* don't call ldap_parse_result() with V2 API
+
 102	Luke Howard <lukeh@padl.com>
 
 	* added defines for LDAP_MSG_ONE et al if not in ldap.h
