@@ -158,10 +158,15 @@ dn2uid_cache_put (const char *dn, const char *uid)
 	  return NSS_TRYAGAIN;
 	}
     }
+
+  memset (&key, 0, sizeof(key));
   key.data = (void *) dn;
   key.size = strlen (dn);
+
+  memset (&val, 0, sizeof(val));
   val.data = (void *) uid;
   val.size = strlen (uid);
+
   rc = (__cache->put) (__cache,
 #if DB_VERSION_MAJOR >= 2
 	NULL,
@@ -185,8 +190,11 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
       return NSS_NOTFOUND;
     }
 
+  memset (&key, 0, sizeof(key));
   key.data = (void *) dn;
   key.size = strlen (dn);
+
+  memset (&val, 0, sizeof(val));
 
   if ((__cache->get) (__cache,
 #if DB_VERSION_MAJOR >= 2

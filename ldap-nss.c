@@ -3152,10 +3152,14 @@ _nss_ldap_map_put (ldap_config_t * config, ldap_map_type_t type,
   if (vadup == NULL)
     return NSS_TRYAGAIN;
 
+  memset (&key, 0, sizeof(key));
   key.data = (void *) rfc2307attribute;
   key.size = strlen (rfc2307attribute);
+
+  memset (&val, 0, sizeof(val));
   val.data = (void *) &vadup;
   val.size = sizeof (vadup);
+
   rc = (((DB *) (*map))->put) ((DB *) * map,
 #if DB_VERSION_MAJOR > 2
 			       NULL,	/* DB_TXN */
@@ -3238,8 +3242,11 @@ _nss_ldap_map_get (ldap_config_t * config, ldap_map_type_t type,
 
   map = config->ldc_maps[type];
 
+  memset (&key, 0, sizeof(key));
   key.data = (void *) rfc2307attribute;
   key.size = strlen (rfc2307attribute);
+
+  memset (&val, 0, sizeof(val));
 
   if ((((DB *) map)->get) ((DB *) map,
 #if DB_VERSION_MAJOR > 2
