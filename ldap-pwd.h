@@ -24,12 +24,7 @@
 #define _LDAP_NSS_LDAP_LDAP_PWD_H
 
 static const char filt_getpwnam[] =
-#ifdef IDS_UID
-"(&(objectclass="
-OC (posixAccount) ")(|(" AT (uid) "=%s)(" AT (uid) "=%s@*)))";
-#else
 "(&(objectclass=" OC (posixAccount) ")(" AT (uid) "=%s))";
-#endif
      static const char filt_getpwuid[] =
      "(&(objectclass=" OC (posixAccount) ")(" AT (uidNumber) "=%d))";
      static const char filt_getpwent[] =

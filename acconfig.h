@@ -7,9 +7,6 @@
 /* define to set RFC2307BIS support */
 #define RFC2307BIS
 
-/* define to set IDSUID support */
-#undef IDS_UID
-
 /* define to disable keepalive */
 #undef DISABLE_SO_KEEPALIVE
 

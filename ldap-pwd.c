@@ -91,14 +91,6 @@ _nss_ldap_parse_pw (LDAP * ld,
   size_t tmplen;
   char *tmp;
 
-#ifdef IDS_UID
-  /*
-   * ids-dirnaming drafts endorses uid values like
-   * uid=lukeh@padl.com,dc=padl,dc=com. This is bogus IMHO, but...
-   */
-  char *at;
-#endif /* IDS_UID */
-
   if (_nss_ldap_oc_check (ld, e, "shadowAccount") == NSS_SUCCESS)
     {
       /* don't include password for shadowAccount */
@@ -130,11 +122,6 @@ _nss_ldap_parse_pw (LDAP * ld,
       if (stat != NSS_SUCCESS)
 	return stat;
     }
-
-#ifdef IDS_UID
-  if ((at = strchr (pw->pw_passwd, '@')) != NULL)
-    *at = '\0';
-#endif /* IDS_UID */
 
   stat =
     _nss_ldap_assign_attrval (ld, e, AT (uid), &pw->pw_name, &buffer,

@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+164	Luke Howard <lukeh@padl.com>
+
+	* removed IDS_UID code, never worked properly
+
 163	Luke Howard <lukeh@padl.com>
 
 	* removed context_free function, usage confusing
