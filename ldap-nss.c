@@ -1303,6 +1303,7 @@ do_ssl_options (ldap_config_t * cfg)
 
   debug ("==> do_ssl_options");
 
+#ifdef LDAP_OPT_X_TLS_RANDOM_FILE
   if (cfg->ldc_tls_randfile != NULL)
     {
       /* rand file */
@@ -1315,6 +1316,7 @@ do_ssl_options (ldap_config_t * cfg)
 	  return LDAP_OPERATIONS_ERROR;
 	}
     }
+#endif /* LDAP_OPT_X_TLS_RANDOM_FILE */
 
   if (cfg->ldc_tls_cacertfile != NULL)
     {

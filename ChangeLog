@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+206	Luke Howard <lukeh@padl.com>
+
+	* work without LDAP_OPT_X_TLS_RANDOM_FILE
+
 205	Luke Howard <lukeh@padl.com>
 
 	* build with Sleepycat DB without db185 compat layer
