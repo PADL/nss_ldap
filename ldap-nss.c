@@ -226,48 +226,50 @@ do_close_no_unbind (void)
 {
   debug ("==> do_close_no_unbind");
 
-#ifdef DEBUG
   if (__session.ls_conn != NULL)
     {
+#ifdef DEBUG
       syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
 	      __session.ls_conn);
-    }
 #endif /* DEBUG */
 
-  if (__session.ls_conn != NULL)
-    {
 #ifdef HAVE_LDAP_LD_FREE
-#if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+
+# if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
       extern int ldap_ld_free (LDAP * ld, int close, LDAPControl **,
 			       LDAPControl **);
       (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
-#else
+# else
       extern int ldap_ld_free (LDAP * ld, int close);
       (void) ldap_ld_free (__session.ls_conn, 0);
-#endif /* OPENLDAP 2.x */
+# endif /* OPENLDAP 2.x */
+
 #else
       /*
        * We'll be rude and close the socket ourselves. 
        * XXX untested code
        */
       int sd = -1;
-#ifdef LDAP_VERSION3_API
+# ifdef LDAP_VERSION3_API
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
-#else
+# else
       if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-#endif /* LDAP_VERSION3_API */
+# endif /* LDAP_VERSION3_API */
 	{
 	  close (sd);
 	  sd = -1;
-#ifdef LDAP_VERSION3_API
+# ifdef LDAP_VERSION3_API
 	  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
-#else
+# else
 	  __session.ls_conn->ld_sb.sb_sd = sd;
-#endif /*  LDAP_VERSION3_API */
+# endif /*  LDAP_VERSION3_API */
 	}
+
 	/* hope we closed it OK! */
 	ldap_unbind(__session.ls_conn);
+
 #endif /* HAVE_LDAP_LD_FREE */
+
       __session.ls_conn = NULL;
     }
   debug ("<== do_close_no_unbind");
