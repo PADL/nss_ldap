@@ -681,7 +681,7 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 
 static NSS_STATUS
 do_innetgr_nested (const char *netgroup,
-	     const char *nested, enum nss_netgr_status *status)
+	     const char *nested, enum nss_netgr_status *status, int *depth)
 {
   NSS_STATUS stat;
   ldap_args_t a;
@@ -691,6 +691,12 @@ do_innetgr_nested (const char *netgroup,
   debug ("==> do_innetgr_nested netgroup=%s assertion=%s", netgroup, nested);
 
   *status = NSS_NETGR_NO;
+
+  if (*depth > LDAP_NSS_MAXNETGR_DEPTH)
+    {
+      debug ("<== do_innetgr_nested: depth exceeded");
+      return NSS_NOTFOUND;
+    }
 
   LA_INIT (a);
   LA_TYPE (a) = LA_TYPE_STRING;
@@ -726,6 +732,8 @@ do_innetgr_nested (const char *netgroup,
 
   assert (values[0] != NULL);
 
+  *depth++;
+
   if (strcasecmp (netgroup, values[0]) == 0)
     {
       stat = NSS_SUCCESS;
@@ -733,7 +741,7 @@ do_innetgr_nested (const char *netgroup,
     }
   else
     {
-      stat = do_innetgr_nested (netgroup, values[0], status);
+      stat = do_innetgr_nested (netgroup, values[0], status, depth);
     }
 
   ldap_value_free (values);
@@ -757,6 +765,7 @@ do_innetgr (const char *netgroup,
   char escaped_machine[3 * (MAXHOSTNAMELEN + 1)];
   char escaped_user[3 * (LOGNAME_MAX + 1)];
   char escaped_domain[3 * (MAXHOSTNAMELEN + 1)];
+  int depth = 0;
 
   *status = NSS_NETGR_NO;
 
@@ -858,7 +867,7 @@ do_innetgr (const char *netgroup,
     }
   else
     {
-      stat = do_innetgr_nested (netgroup, values[0], status);
+      stat = do_innetgr_nested (netgroup, values[0], status, &depth);
     }
 
   ldap_value_free (values);

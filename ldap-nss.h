@@ -77,6 +77,10 @@
 #define LDAP_NSS_MAXSLEEPTIME    64	/* maximum seconds to sleep */
 #define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
 
+#ifdef HAVE_NSSWITCH_H
+#define LDAP_NSS_MAXNETGR_DEPTH	10 /* maximum depth of netgroup nesting */
+#endif
+
 #ifdef PAGE_RESULTS
 #define LDAP_PAGESIZE 1000
 #endif /* PAGE_RESULTS */
