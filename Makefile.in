@@ -102,12 +102,12 @@ EXTRA_DIST = CVSVersionInfo.txt ChangeLog \
 nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c \
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
-	ldap-bp.c util.c globals.c ltf.c snprintf.c resolve.c \
+	ldap-bp.c util.c ltf.c snprintf.c resolve.c \
 	dnsconfig.c irs-nss.c pagectrl.c
 
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c \
-	util.c globals.c ltf.c snprintf.c resolve.c dnsconfig.c \
+	util.c ltf.c snprintf.c resolve.c dnsconfig.c \
 	irs-nss.c sasl.c pagectrl.c aix_authmeth.c
 
 DEFS = @DEFS@
@@ -135,10 +135,9 @@ PROGRAMS = $(noinst_PROGRAMS)
 
 am_NSS_LDAP_OBJECTS = ldap-nss.$(OBJEXT) ldap-grp.$(OBJEXT) \
 	ldap-pwd.$(OBJEXT) ldap-netgrp.$(OBJEXT) ldap-schema.$(OBJEXT) \
-	util.$(OBJEXT) globals.$(OBJEXT) ltf.$(OBJEXT) \
-	snprintf.$(OBJEXT) resolve.$(OBJEXT) dnsconfig.$(OBJEXT) \
-	irs-nss.$(OBJEXT) sasl.$(OBJEXT) pagectrl.$(OBJEXT) \
-	aix_authmeth.$(OBJEXT)
+	util.$(OBJEXT) ltf.$(OBJEXT) snprintf.$(OBJEXT) \
+	resolve.$(OBJEXT) dnsconfig.$(OBJEXT) irs-nss.$(OBJEXT) \
+	sasl.$(OBJEXT) pagectrl.$(OBJEXT) aix_authmeth.$(OBJEXT)
 NSS_LDAP_OBJECTS = $(am_NSS_LDAP_OBJECTS)
 NSS_LDAP_LDADD = $(LDADD)
 NSS_LDAP_DEPENDENCIES =
@@ -148,9 +147,8 @@ am_nss_ldap_so_OBJECTS = ldap-nss.$(OBJEXT) ldap-pwd.$(OBJEXT) \
 	ldap-proto.$(OBJEXT) ldap-spwd.$(OBJEXT) ldap-alias.$(OBJEXT) \
 	ldap-service.$(OBJEXT) ldap-schema.$(OBJEXT) \
 	ldap-ethers.$(OBJEXT) ldap-bp.$(OBJEXT) util.$(OBJEXT) \
-	globals.$(OBJEXT) ltf.$(OBJEXT) snprintf.$(OBJEXT) \
-	resolve.$(OBJEXT) dnsconfig.$(OBJEXT) irs-nss.$(OBJEXT) \
-	pagectrl.$(OBJEXT)
+	ltf.$(OBJEXT) snprintf.$(OBJEXT) resolve.$(OBJEXT) \
+	dnsconfig.$(OBJEXT) irs-nss.$(OBJEXT) pagectrl.$(OBJEXT)
 nss_ldap_so_OBJECTS = $(am_nss_ldap_so_OBJECTS)
 nss_ldap_so_LDADD = $(LDADD)
 nss_ldap_so_DEPENDENCIES =
@@ -161,10 +159,10 @@ LIBS = @LIBS@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 @AMDEP_TRUE@DEP_FILES = ./$(DEPDIR)/aix_authmeth.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/dnsconfig.Po ./$(DEPDIR)/globals.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/irs-nss.Po ./$(DEPDIR)/ldap-alias.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ldap-bp.Po ./$(DEPDIR)/ldap-ethers.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/ldap-grp.Po ./$(DEPDIR)/ldap-hosts.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/dnsconfig.Po ./$(DEPDIR)/irs-nss.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ldap-alias.Po ./$(DEPDIR)/ldap-bp.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ldap-ethers.Po ./$(DEPDIR)/ldap-grp.Po \
+@AMDEP_TRUE@	./$(DEPDIR)/ldap-hosts.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ldap-netgrp.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ldap-network.Po ./$(DEPDIR)/ldap-nss.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ldap-proto.Po ./$(DEPDIR)/ldap-pwd.Po \
@@ -241,7 +239,6 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aix_authmeth.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dnsconfig.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/globals.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/irs-nss.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ldap-alias.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ldap-bp.Po@am__quote@
