@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+229	Luke Howard <lukeh@padl.com>
+
+	* more debugging in initgroups
+
 228	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#188: better documentation for OpenLDAP

@@ -845,6 +845,17 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 				    errnop));
 }
 #endif
+
+#ifdef DEBUG
+# ifdef HAVE_NSSWITCH_H
+# define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_getgroupsbymember_r"
+# elif defined(HAVE_NSS_H)
+# define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_initgroups_dyn"
+# elif defined(HAVE_USERSEC_H)
+# define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_getgrset"
+# endif
+#endif /* DEBUG */
+
 #ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
@@ -880,6 +891,8 @@ char *_nss_ldap_getgrset (char *user)
 #endif /* HAVE_NSS_H || HAVE_USERSEC_H */
   LA_TYPE (a) = LA_TYPE_STRING;
 
+  debug ("==> " NSS_LDAP_INITGROUPS_FUNCTION " (user=%s)", LA_STRING (a) );
+
 #ifdef HAVE_USERSEC_H
   lia.grplist = NULL;
   lia.listlen = 0;
@@ -901,6 +914,7 @@ char *_nss_ldap_getgrset (char *user)
   stat = _nss_ldap_init ();
   if (stat != NSS_SUCCESS)
     {
+      debug ("<== " NSS_LDAP_INITGROUPS_FUNCTION " (init failed)");
       _nss_ldap_leave ();
 # ifdef HAVE_USERSEC_H
       return NULL;
@@ -936,6 +950,7 @@ char *_nss_ldap_getgrset (char *user)
 
   if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
     {
+      debug ("<== " NSS_LDAP_INITGROUPS_FUNCTION " (ent_context_init failed)");
       _nss_ldap_leave ();
 # ifdef HAVE_USERSEC_H
       return NULL;
@@ -982,6 +997,7 @@ char *_nss_ldap_getgrset (char *user)
    */
   if (stat != NSS_SUCCESS && stat != NSS_NOTFOUND)
     {
+      debug ("<== " NSS_LDAP_INITGROUPS_FUNCTION " (not found)");
 #ifndef HAVE_NSS_H
       if (erange)
 	errno = ERANGE;
@@ -992,6 +1008,8 @@ char *_nss_ldap_getgrset (char *user)
       return NULL;
 #endif /* HAVE_USERSEC_H */
     }
+
+  debug ("<== " NSS_LDAP_INITGROUPS_FUNCTION " (success)");
 
 #ifdef HAVE_NSS_H
   return NSS_SUCCESS;
