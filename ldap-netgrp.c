@@ -144,11 +144,11 @@ strip_whitespace (char *str)
   char *cp = str;
 
   /* Skip leading spaces.  */
-  while (isspace ((int)*cp))
+  while (isspace ((int) *cp))
     cp++;
 
   str = cp;
-  while (*cp != '\0' && !isspace ((int)*cp))
+  while (*cp != '\0' && !isspace ((int) *cp))
     cp++;
 
   /* Null-terminate, stripping off any trailing spaces.  */
@@ -169,7 +169,7 @@ _nss_ldap_parse_netgr (void *vresultp, char *buffer, size_t buflen)
     return NSS_RETURN;
 
   /* First skip leading spaces. */
-  while (isspace ((int)*cp))
+  while (isspace ((int) *cp))
     ++cp;
 
   if (*cp != '(')
@@ -177,7 +177,7 @@ _nss_ldap_parse_netgr (void *vresultp, char *buffer, size_t buflen)
       /* We have a list of other netgroups. */
       char *name = cp;
 
-      while (*cp != '\0' && !isspace ((int)*cp))
+      while (*cp != '\0' && !isspace ((int) *cp))
 	++cp;
 
       if (name != cp)
@@ -365,75 +365,81 @@ _nss_ldap_getnetgrent_r (struct __netgrent *result,
 /*
  * Add a nested netgroup to the namelist
  */
-static NSS_STATUS nn_push(struct name_list **head, const char *name)
+static NSS_STATUS
+nn_push (struct name_list **head, const char *name)
 {
-	struct name_list *nl;
+  struct name_list *nl;
 
-	debug ("==> nn_push (%s)", name);
+  debug ("==> nn_push (%s)", name);
 
-	nl = (struct name_list *)malloc(sizeof(*nl));
-	if (nl == NULL) {
-		debug ("<== nn_push");
-		return NSS_TRYAGAIN;
-	}
+  nl = (struct name_list *) malloc (sizeof (*nl));
+  if (nl == NULL)
+    {
+      debug ("<== nn_push");
+      return NSS_TRYAGAIN;
+    }
 
-	nl->name = strdup(name);
-	if (nl->name == NULL) {
-		debug ("<== nn_push");
-		free(nl);
-		return NSS_TRYAGAIN;
-	}
+  nl->name = strdup (name);
+  if (nl->name == NULL)
+    {
+      debug ("<== nn_push");
+      free (nl);
+      return NSS_TRYAGAIN;
+    }
 
-	nl->next = *head;
+  nl->next = *head;
 
-	*head = nl;
+  *head = nl;
 
-	debug ("<== nn_push");
+  debug ("<== nn_push");
 
-	return NSS_SUCCESS;
+  return NSS_SUCCESS;
 }
 
 /*
  * Remove last nested netgroup from the namelist
  */
-static void nn_pop(struct name_list **head)
+static void
+nn_pop (struct name_list **head)
 {
-	struct name_list *nl;
+  struct name_list *nl;
 
-	debug ("==> nn_pop");
+  debug ("==> nn_pop");
 
-	assert(*head != NULL);
-	nl = *head;
+  assert (*head != NULL);
+  nl = *head;
 
-	*head = nl->next;
+  *head = nl->next;
 
-	assert(nl->name != NULL);
-	free(nl->name);
-	free(nl);
+  assert (nl->name != NULL);
+  free (nl->name);
+  free (nl);
 
-	debug ("<== nn_pop");
+  debug ("<== nn_pop");
 }
 
 /*
  * Cleanup nested netgroup namelist.
  */
-static void nn_destroy(struct name_list **head)
+static void
+nn_destroy (struct name_list **head)
 {
-	struct name_list *p, *next;
+  struct name_list *p, *next;
 
-	debug ("==> nn_destroy");
+  debug ("==> nn_destroy");
 
-	for (p = *head; p != NULL; p = next) {
-		next = p->next;
+  for (p = *head; p != NULL; p = next)
+    {
+      next = p->next;
 
-		if (p->name != NULL)
-			free(p->name);
-		free(p);
-	}
+      if (p->name != NULL)
+	free (p->name);
+      free (p);
+    }
 
-	*head = NULL;
+  *head = NULL;
 
-	debug ("<== nn_destroy");
+  debug ("<== nn_destroy");
 }
 
 /*
@@ -441,222 +447,251 @@ static void nn_destroy(struct name_list **head)
  * the next one - don't want to fail authoritatively because of bad
  * user data.
  */
-static NSS_STATUS nn_chase(nss_ldap_netgr_backend_t *psbe, LDAPMessage **pEntry)
+static NSS_STATUS
+nn_chase (nss_ldap_netgr_backend_t * psbe, LDAPMessage ** pEntry)
 {
-	ldap_args_t a;
-	NSS_STATUS stat = NSS_NOTFOUND;
+  ldap_args_t a;
+  NSS_STATUS stat = NSS_NOTFOUND;
 
-	debug ("==> nn_chase");
+  debug ("==> nn_chase");
 
-	if (psbe->state->ec_res != NULL) {
-		ldap_msgfree(psbe->state->ec_res);
-		psbe->state->ec_res = NULL;
+  if (psbe->state->ec_res != NULL)
+    {
+      ldap_msgfree (psbe->state->ec_res);
+      psbe->state->ec_res = NULL;
+    }
+
+  while (psbe->namelist != NULL)
+    {
+      LA_INIT (a);
+      LA_TYPE (a) = LA_TYPE_STRING;
+      LA_STRING (a) = psbe->namelist->name;
+
+      debug (":== nn_chase: nested netgroup=%s", LA_STRING (a));
+
+      _nss_ldap_enter ();
+      stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getnetgrent,
+				 LM_NETGROUP, 1, &psbe->state->ec_res);
+      _nss_ldap_leave ();
+
+      nn_pop (&psbe->namelist);
+
+      if (stat == NSS_SUCCESS)
+	{
+	  /* Check we got an entry, not just a result. */
+	  *pEntry = _nss_ldap_first_entry (psbe->state->ec_res);
+	  if (*pEntry == NULL)
+	    {
+	      ldap_msgfree (psbe->state->ec_res);
+	      psbe->state->ec_res = NULL;
+	      stat = NSS_NOTFOUND;
+	    }
 	}
 
-	while (psbe->namelist != NULL) {
-		LA_INIT(a);
-		LA_TYPE(a) = LA_TYPE_STRING;
-		LA_STRING(a) = psbe->namelist->name;
-
-		debug (":== nn_chase: nested netgroup=%s", LA_STRING(a));
-
-		_nss_ldap_enter();
-		stat = _nss_ldap_search_s(&a, _nss_ldap_filt_getnetgrent,
-			LM_NETGROUP, 1, &psbe->state->ec_res);
-		_nss_ldap_leave();
-
-		nn_pop(&psbe->namelist);
-
-		if (stat == NSS_SUCCESS) {
-			/* Check we got an entry, not just a result. */
-			*pEntry = _nss_ldap_first_entry(psbe->state->ec_res);
-			if (*pEntry == NULL) {
-				ldap_msgfree(psbe->state->ec_res);
-				psbe->state->ec_res = NULL;
-				stat = NSS_NOTFOUND;
-			}
-		}
-
-		if (stat == NSS_SUCCESS) {
-			/* found one. */
-			break;
-		}
+      if (stat == NSS_SUCCESS)
+	{
+	  /* found one. */
+	  break;
 	}
+    }
 
-	debug ("<== nn_chase result=%d", stat);
+  debug ("<== nn_chase result=%d", stat);
 
-	return stat;
-}
-
-static NSS_STATUS _nss_ldap_getnetgroup_endent (nss_backend_t *be, void *_args)
-{
-	LOOKUP_ENDENT(be);
-}
-
-static NSS_STATUS _nss_ldap_getnetgroup_setent (nss_backend_t *be, void *_args)
-{
-	debug ("==> _nss_ldap_getnetgroup_setent");
-
-	/* This is a NOOP but I guess we could use it to resolve nested groups */
-
-	debug ("<== _nss_ldap_getnetgroup_setent");
-
-	return NSS_SUCCESS;
-}
-
-static NSS_STATUS _nss_ldap_getnetgroup_getent (nss_backend_t *_be, void *_args)
-{
-	struct nss_getnetgrent_args *args = (struct nss_getnetgrent_args *)_args;
-	nss_ldap_netgr_backend_t *be = (nss_ldap_netgr_backend_t *)_be;
-	ent_context_t *ctx;
-	NSS_STATUS parseStat;
-	char *buffer;
-	size_t buflen;
-
-	/*
-	 * This function is called with the pseudo-backend that
-	 * we created in _nss_ldap_setnetgrent() (see below)
-	 */
-	debug("==> _nss_ldap_getnetgroup_getent");
-
-	ctx = be->state;
-	assert(ctx != NULL);
-
-	buffer = args->buffer;
-	buflen = args->buflen;
-
-	args->status = NSS_NETGR_NO;
-	args->retp[NSS_NETGR_MACHINE] = NULL;
-	args->retp[NSS_NETGR_USER] = NULL;
-	args->retp[NSS_NETGR_DOMAIN] = NULL;
-
-	do {
-		NSS_STATUS resultStat = NSS_SUCCESS;
-		char **vals, **p;
-		ldap_state_t *state = &ctx->ec_state;
-		struct __netgrent __netgrent;
-		LDAPMessage *e;
-
-		if (state->ls_retry == 0 && state->ls_info.ls_index == -1) {
-			resultStat = NSS_NOTFOUND;
-
-			if (ctx->ec_res != NULL) {
-				e = _nss_ldap_first_entry(ctx->ec_res);
-				if (e != NULL)
-					resultStat = NSS_SUCCESS;
-			}
-
-			if (resultStat != NSS_SUCCESS) {
-				/* chase nested netgroups */
-				resultStat = nn_chase(be, &e);
-			}
-
-			if (resultStat != NSS_SUCCESS) {
-				parseStat = resultStat;
-				break;
-			}
-
-			assert(e != NULL);
-
-			/* Push nested netgroups onto stack for deferred chasing */
-			vals = _nss_ldap_get_values(e, AT(memberNisNetgroup));
-			if (vals != NULL) {
-				for (p = vals; *p != NULL; p++) {
-					parseStat = nn_push(&be->namelist, *p);
-					if (parseStat != NSS_SUCCESS) {
-						break;
-					}
-				}
-				ldap_value_free(vals);
-
-				if (parseStat != NSS_SUCCESS) {
-					break; /* out of memory */
-				}
-			}
-		} else {
-			assert(ctx->ec_res != NULL);
-			e = _nss_ldap_first_entry(ctx->ec_res);
-			if (e == NULL) {
-				/* This should never happen, but we fail gracefully. */
-				parseStat = NSS_UNAVAIL;
-				break;
-			}
-		}
-
-		/* We have an entry; now, try to parse it. */
-		vals = _nss_ldap_get_values(e, AT(nisNetgroupTriple));
-		if (vals == NULL) {
-			state->ls_info.ls_index = -1;
-			parseStat = NSS_NOTFOUND;
-			ldap_msgfree(ctx->ec_res);
-			ctx->ec_res = NULL;
-			continue;
-		}
-
-		switch (state->ls_info.ls_index) {
-		case 0:
-			/* last time. decrementing ls_index to -1 AND returning
-			 * an error code will force this entry to be discared.
-			 */
-			parseStat = NSS_NOTFOUND;
-			break;
-		case -1:
-			/* first time */
-			state->ls_info.ls_index = ldap_count_values(vals);
-			/* fall off to default... */
-		default:
-			__netgrent.data = vals[state->ls_info.ls_index - 1];
-			__netgrent.data_size = strlen(vals[state->ls_info.ls_index - 1]);
-			__netgrent.cursor = __netgrent.data;
-			__netgrent.first = 1;
-
-			parseStat = _nss_ldap_parse_netgr(&__netgrent, buffer, buflen);
-			if (parseStat != NSS_SUCCESS) {
-				fprintf(stderr, "**** PARSE %s --> %d\n",
-					__netgrent.cursor, parseStat);
-				break;
-			}
-			if (__netgrent.type != triple_val) {
-				parseStat = NSS_NOTFOUND;
-				break;
-			}
-			args->retp[NSS_NETGR_MACHINE] = (char *)__netgrent.val.triple.host;
-			args->retp[NSS_NETGR_USER] = (char *)__netgrent.val.triple.user;
-			args->retp[NSS_NETGR_DOMAIN] = (char *)__netgrent.val.triple.domain;
-			break;
-		}
-
-		ldap_value_free(vals);
-		state->ls_info.ls_index--;
-
-		/* hold onto the state if we're out of memory XXX */
-		state->ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
-		args->status = (parseStat == NSS_SUCCESS) ? NSS_NETGR_FOUND : NSS_NETGR_NOMEM;
-
-		if (state->ls_retry == 0 && state->ls_info.ls_index == -1) {
-			ldap_msgfree(ctx->ec_res);
-			ctx->ec_res = NULL;
-		}
-	} while (parseStat == NSS_NOTFOUND);
-
-	if (parseStat == NSS_TRYAGAIN) {
-		errno = ERANGE;
-	}
-
-	debug ("<== _nss_ldap_getnetgroup_getent");
-
-	return parseStat;
+  return stat;
 }
 
 static NSS_STATUS
-_nss_ldap_getnetgroup_destr (nss_backend_t *netgroup_context, void *args)
+_nss_ldap_getnetgroup_endent (nss_backend_t * be, void *_args)
 {
-  nss_ldap_netgr_backend_t *psbe = (nss_ldap_netgr_backend_t *)netgroup_context;
+  LOOKUP_ENDENT (be);
+}
+
+static NSS_STATUS
+_nss_ldap_getnetgroup_setent (nss_backend_t * be, void *_args)
+{
+  debug ("==> _nss_ldap_getnetgroup_setent");
+
+  /* This is a NOOP but I guess we could use it to resolve nested groups */
+
+  debug ("<== _nss_ldap_getnetgroup_setent");
+
+  return NSS_SUCCESS;
+}
+
+static NSS_STATUS
+_nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
+{
+  struct nss_getnetgrent_args *args = (struct nss_getnetgrent_args *) _args;
+  nss_ldap_netgr_backend_t *be = (nss_ldap_netgr_backend_t *) _be;
+  ent_context_t *ctx;
+  NSS_STATUS parseStat;
+  char *buffer;
+  size_t buflen;
+
+  /*
+   * This function is called with the pseudo-backend that
+   * we created in _nss_ldap_setnetgrent() (see below)
+   */
+  debug ("==> _nss_ldap_getnetgroup_getent");
+
+  ctx = be->state;
+  assert (ctx != NULL);
+
+  buffer = args->buffer;
+  buflen = args->buflen;
+
+  args->status = NSS_NETGR_NO;
+  args->retp[NSS_NETGR_MACHINE] = NULL;
+  args->retp[NSS_NETGR_USER] = NULL;
+  args->retp[NSS_NETGR_DOMAIN] = NULL;
+
+  do
+    {
+      NSS_STATUS resultStat = NSS_SUCCESS;
+      char **vals, **p;
+      ldap_state_t *state = &ctx->ec_state;
+      struct __netgrent __netgrent;
+      LDAPMessage *e;
+
+      if (state->ls_retry == 0 && state->ls_info.ls_index == -1)
+	{
+	  resultStat = NSS_NOTFOUND;
+
+	  if (ctx->ec_res != NULL)
+	    {
+	      e = _nss_ldap_first_entry (ctx->ec_res);
+	      if (e != NULL)
+		resultStat = NSS_SUCCESS;
+	    }
+
+	  if (resultStat != NSS_SUCCESS)
+	    {
+	      /* chase nested netgroups */
+	      resultStat = nn_chase (be, &e);
+	    }
+
+	  if (resultStat != NSS_SUCCESS)
+	    {
+	      parseStat = resultStat;
+	      break;
+	    }
+
+	  assert (e != NULL);
+
+	  /* Push nested netgroups onto stack for deferred chasing */
+	  vals = _nss_ldap_get_values (e, AT (memberNisNetgroup));
+	  if (vals != NULL)
+	    {
+	      for (p = vals; *p != NULL; p++)
+		{
+		  parseStat = nn_push (&be->namelist, *p);
+		  if (parseStat != NSS_SUCCESS)
+		    {
+		      break;
+		    }
+		}
+	      ldap_value_free (vals);
+
+	      if (parseStat != NSS_SUCCESS)
+		{
+		  break;	/* out of memory */
+		}
+	    }
+	}
+      else
+	{
+	  assert (ctx->ec_res != NULL);
+	  e = _nss_ldap_first_entry (ctx->ec_res);
+	  if (e == NULL)
+	    {
+	      /* This should never happen, but we fail gracefully. */
+	      parseStat = NSS_UNAVAIL;
+	      break;
+	    }
+	}
+
+      /* We have an entry; now, try to parse it. */
+      vals = _nss_ldap_get_values (e, AT (nisNetgroupTriple));
+      if (vals == NULL)
+	{
+	  state->ls_info.ls_index = -1;
+	  parseStat = NSS_NOTFOUND;
+	  ldap_msgfree (ctx->ec_res);
+	  ctx->ec_res = NULL;
+	  continue;
+	}
+
+      switch (state->ls_info.ls_index)
+	{
+	case 0:
+	  /* last time. decrementing ls_index to -1 AND returning
+	   * an error code will force this entry to be discared.
+	   */
+	  parseStat = NSS_NOTFOUND;
+	  break;
+	case -1:
+	  /* first time */
+	  state->ls_info.ls_index = ldap_count_values (vals);
+	  /* fall off to default... */
+	default:
+	  __netgrent.data = vals[state->ls_info.ls_index - 1];
+	  __netgrent.data_size = strlen (vals[state->ls_info.ls_index - 1]);
+	  __netgrent.cursor = __netgrent.data;
+	  __netgrent.first = 1;
+
+	  parseStat = _nss_ldap_parse_netgr (&__netgrent, buffer, buflen);
+	  if (parseStat != NSS_SUCCESS)
+	    {
+	      break;
+	    }
+	  if (__netgrent.type != triple_val)
+	    {
+	      parseStat = NSS_NOTFOUND;
+	      break;
+	    }
+	  args->retp[NSS_NETGR_MACHINE] = (char *) __netgrent.val.triple.host;
+	  args->retp[NSS_NETGR_USER] = (char *) __netgrent.val.triple.user;
+	  args->retp[NSS_NETGR_DOMAIN] =
+	    (char *) __netgrent.val.triple.domain;
+	  break;
+	}
+
+      ldap_value_free (vals);
+      state->ls_info.ls_index--;
+
+      /* hold onto the state if we're out of memory XXX */
+      state->ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
+      args->status =
+	(parseStat == NSS_SUCCESS) ? NSS_NETGR_FOUND : NSS_NETGR_NOMEM;
+
+      if (state->ls_retry == 0 && state->ls_info.ls_index == -1)
+	{
+	  ldap_msgfree (ctx->ec_res);
+	  ctx->ec_res = NULL;
+	}
+    }
+  while (parseStat == NSS_NOTFOUND);
+
+  if (parseStat == NSS_TRYAGAIN)
+    {
+      errno = ERANGE;
+    }
+
+  debug ("<== _nss_ldap_getnetgroup_getent");
+
+  return parseStat;
+}
+
+static NSS_STATUS
+_nss_ldap_getnetgroup_destr (nss_backend_t * netgroup_context, void *args)
+{
+  nss_ldap_netgr_backend_t *psbe =
+    (nss_ldap_netgr_backend_t *) netgroup_context;
 
   /* free list of nested netgroups */
-  nn_destroy(&psbe->namelist);
+  nn_destroy (&psbe->namelist);
 
-  return _nss_ldap_default_destr(netgroup_context, args);
+  return _nss_ldap_default_destr (netgroup_context, args);
 }
 
 static nss_backend_op_t getnetgroup_ops[] = {
@@ -670,211 +705,240 @@ static nss_backend_op_t getnetgroup_ops[] = {
  * Test a 4-tuple
  */
 
-static NSS_STATUS do_innetgr2(const char *netgroup,
-	const char *nested,
-	enum nss_netgr_status *status)
+static NSS_STATUS
+do_innetgr2 (const char *netgroup,
+	     const char *nested, enum nss_netgr_status *status)
 {
-	NSS_STATUS stat;
-	ldap_args_t a;
-	LDAPMessage *e, *res;
-	char **values;
+  NSS_STATUS stat;
+  ldap_args_t a;
+  LDAPMessage *e, *res;
+  char **values;
 
-	debug ("==> do_innetgr2 %s %s", netgroup, nested);
+  debug ("==> do_innetgr2 %s %s", netgroup, nested);
 
-	*status = NSS_NETGR_NO;
+  *status = NSS_NETGR_NO;
 
-	LA_INIT(a);
-	LA_TYPE(a) = LA_TYPE_STRING;
-	LA_STRING(a) = nested; /* memberNisNetgroup */
+  LA_INIT (a);
+  LA_TYPE (a) = LA_TYPE_STRING;
+  LA_STRING (a) = nested;	/* memberNisNetgroup */
 
-	stat = _nss_ldap_search_s(&a, _nss_ldap_filt_innetgr2,
-		LM_NETGROUP, 1, &res);
-	if (stat != NSS_SUCCESS) {
-		debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
-		return stat;
-	}
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr2,
+			     LM_NETGROUP, 1, &res);
+  if (stat != NSS_SUCCESS)
+    {
+      debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
+      return stat;
+    }
 
-	e = _nss_ldap_first_entry(res);
-	if (e == NULL) {
-		stat = NSS_NOTFOUND;
-		debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
-		ldap_msgfree(res);
-		return stat;
-	}
+  e = _nss_ldap_first_entry (res);
+  if (e == NULL)
+    {
+      stat = NSS_NOTFOUND;
+      debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
+      ldap_msgfree (res);
+      return stat;
+    }
 
-	values = _nss_ldap_get_values(e, AT(cn));
-	if (values == NULL) {
-		stat = NSS_NOTFOUND;
-		debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
-		ldap_msgfree(res);
-		return stat;
-	}
+  values = _nss_ldap_get_values (e, AT (cn));
+  if (values == NULL)
+    {
+      stat = NSS_NOTFOUND;
+      debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
+      ldap_msgfree (res);
+      return stat;
+    }
 
-	ldap_msgfree(res);
+  ldap_msgfree (res);
 
-	assert(values[0] != NULL);
+  assert (values[0] != NULL);
 
-	if (strcasecmp(netgroup, values[0]) == 0) {
-		stat = NSS_SUCCESS;
-		*status = NSS_NETGR_FOUND;
-	} else {
-		stat = do_innetgr2(netgroup, nested, status);
-	}
+  if (strcasecmp (netgroup, values[0]) == 0)
+    {
+      stat = NSS_SUCCESS;
+      *status = NSS_NETGR_FOUND;
+    }
+  else
+    {
+      stat = do_innetgr2 (netgroup, nested, status);
+    }
 
-	ldap_value_free(values);
+  ldap_value_free (values);
 
-	debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
+  debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
 
-	return stat;
-}
-
-static NSS_STATUS do_innetgr(const char *netgroup,
-	const char *machine,
-	const char *user,
-	const char *domain,
-	enum nss_netgr_status *status)
-{
-	NSS_STATUS stat;
-	ldap_args_t a;
-	char triple[LDAP_FILT_MAXSIZ];
-	LDAPMessage *e, *res;
-	char **values;
-	char escaped_machine[MAXHOSTNAMELEN];
-	char escaped_user[LOGNAME_MAX];
-	char escaped_domain[MAXHOSTNAMELEN];
-
-	*status = NSS_NETGR_NO;
-
-	/*
-	 * First, find which netgroup the 3-tuple belongs to.
-	 */
-	if (machine != NULL) {
-		stat = _nss_ldap_escape_string(machine, escaped_machine, sizeof(escaped_machine));
-		if (stat != NSS_SUCCESS)
-			return stat;
-	} else {
-		escaped_machine[0] = '*';
-		escaped_machine[1] = '\0';
-	}
-
-	if (user != NULL) {
-		stat = _nss_ldap_escape_string(user, escaped_user, sizeof(escaped_user));
-		if (stat != NSS_SUCCESS)
-			return stat;
-	} else {
-		escaped_user[0] = '*';
-		escaped_user[1] = '\0';
-	}
-
-	if (domain != NULL) {
-		stat = _nss_ldap_escape_string(domain, escaped_domain, sizeof(escaped_domain));
-		if (stat != NSS_SUCCESS)
-			return stat;
-	} else {
-		escaped_domain[0] = '*';
-		escaped_domain[1] = '\0';
-	}
-
-	snprintf(triple, sizeof(triple), "(%s,%s,%s)",
-		escaped_machine, escaped_user, escaped_domain);
-
-	debug ("==> do_innetgr %s %s", netgroup, triple);
-
-	LA_INIT(a);
-	LA_TYPE(a) = LA_TYPE_STRING_UNESCAPED;
-	LA_STRING(a) = triple; /* nisNetgroupTriple */
-
-	stat = _nss_ldap_search_s(&a, _nss_ldap_filt_innetgr,
-		LM_NETGROUP, 1, &res);
-	if (stat != NSS_SUCCESS) {
-		debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
-		return stat;
-	}
-
-	e = _nss_ldap_first_entry(res);
-	if (e == NULL) {
-		stat = NSS_NOTFOUND;
-		debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
-		ldap_msgfree(res);
-		return stat;
-	}
-
-	values = _nss_ldap_get_values(e, AT(cn));
-	if (values == NULL) {
-		stat = NSS_NOTFOUND;
-		debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
-		ldap_msgfree(res);
-		return stat;
-	}
-
-	ldap_msgfree(res);
-
-	assert(values[0] != NULL);
-
-	if (strcasecmp(netgroup, values[0]) == 0) {
-		stat = NSS_SUCCESS;
-		*status = NSS_NETGR_FOUND;
-	} else {
-		stat = do_innetgr2(netgroup, values[0], status);
-	}
-
-	ldap_value_free(values);
-
-	/*
-	 * Then, recurse up to see whether this netgroup belongs
-	 * to the argument
-	 */
-	debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
-	
-	return stat;
+  return stat;
 }
 
 static NSS_STATUS
-_nss_ldap_innetgr (nss_backend_t *be, void *_args)
+do_innetgr (const char *netgroup,
+	    const char *machine,
+	    const char *user,
+	    const char *domain, enum nss_netgr_status *status)
 {
-	NSS_STATUS stat = NSS_NOTFOUND;
-	struct nss_innetgr_args *args = (struct nss_innetgr_args *)_args;
-	int i;
+  NSS_STATUS stat;
+  ldap_args_t a;
+  char triple[LDAP_FILT_MAXSIZ];
+  LDAPMessage *e, *res;
+  char **values;
+  char escaped_machine[MAXHOSTNAMELEN];
+  char escaped_user[LOGNAME_MAX];
+  char escaped_domain[MAXHOSTNAMELEN];
 
-	/*
-	 * Enumerate the groups in args structure and see whether
-	 * any 4-tuple was satisfied. This really needs LDAP
-	 * component matching to be done efficiently.
-	 */
+  *status = NSS_NETGR_NO;
 
-	/* Presume these are harmonized -- this is a bit odd API */
-	assert(args->arg[NSS_NETGR_MACHINE].argc == 0 ||
-	       args->arg[NSS_NETGR_MACHINE].argc == args->groups.argc);
-	assert(args->arg[NSS_NETGR_USER].argc == 0 ||
-	       args->arg[NSS_NETGR_USER].argc == args->groups.argc);
-	assert(args->arg[NSS_NETGR_DOMAIN].argc == 0 ||
-	       args->arg[NSS_NETGR_DOMAIN].argc == args->groups.argc);
-
-	_nss_ldap_enter();
-	for (i = 0; i < args->groups.argc; i++) {
-		NSS_STATUS parseStat;
-
-		const char *netgroup = args->groups.argv[i];
-		const char *machine = (args->arg[NSS_NETGR_MACHINE].argc != 0) ?
-			args->arg[NSS_NETGR_MACHINE].argv[i] : NULL;
-		const char *user = (args->arg[NSS_NETGR_USER].argc != 0) ?
-			args->arg[NSS_NETGR_USER].argv[i] : NULL;
-		const char *domain = (args->arg[NSS_NETGR_DOMAIN].argc != 0) ?
-			args->arg[NSS_NETGR_DOMAIN].argv[i] : NULL;
-
-		parseStat = do_innetgr(netgroup, machine, user, domain, &args->status);
-		if (parseStat != NSS_SUCCESS && parseStat != NSS_NOTFOUND) {
-			/* fatal error */
-			break;
-		}
-
-		if (args->status == NSS_NETGR_FOUND) {
-			stat = NSS_SUCCESS;
-		}
-	}
-	_nss_ldap_leave();
-
+  /*
+   * First, find which netgroup the 3-tuple belongs to.
+   */
+  if (machine != NULL)
+    {
+      stat =
+	_nss_ldap_escape_string (machine, escaped_machine,
+				 sizeof (escaped_machine));
+      if (stat != NSS_SUCCESS)
 	return stat;
+    }
+  else
+    {
+      escaped_machine[0] = '*';
+      escaped_machine[1] = '\0';
+    }
+
+  if (user != NULL)
+    {
+      stat =
+	_nss_ldap_escape_string (user, escaped_user, sizeof (escaped_user));
+      if (stat != NSS_SUCCESS)
+	return stat;
+    }
+  else
+    {
+      escaped_user[0] = '*';
+      escaped_user[1] = '\0';
+    }
+
+  if (domain != NULL)
+    {
+      stat =
+	_nss_ldap_escape_string (domain, escaped_domain,
+				 sizeof (escaped_domain));
+      if (stat != NSS_SUCCESS)
+	return stat;
+    }
+  else
+    {
+      escaped_domain[0] = '*';
+      escaped_domain[1] = '\0';
+    }
+
+  snprintf (triple, sizeof (triple), "(%s,%s,%s)",
+	    escaped_machine, escaped_user, escaped_domain);
+
+  debug ("==> do_innetgr %s %s", netgroup, triple);
+
+  LA_INIT (a);
+  LA_TYPE (a) = LA_TYPE_STRING_UNESCAPED;
+  LA_STRING (a) = triple;	/* nisNetgroupTriple */
+
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr,
+			     LM_NETGROUP, 1, &res);
+  if (stat != NSS_SUCCESS)
+    {
+      debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
+      return stat;
+    }
+
+  e = _nss_ldap_first_entry (res);
+  if (e == NULL)
+    {
+      stat = NSS_NOTFOUND;
+      debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
+      ldap_msgfree (res);
+      return stat;
+    }
+
+  values = _nss_ldap_get_values (e, AT (cn));
+  if (values == NULL)
+    {
+      stat = NSS_NOTFOUND;
+      debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
+      ldap_msgfree (res);
+      return stat;
+    }
+
+  ldap_msgfree (res);
+
+  assert (values[0] != NULL);
+
+  if (strcasecmp (netgroup, values[0]) == 0)
+    {
+      stat = NSS_SUCCESS;
+      *status = NSS_NETGR_FOUND;
+    }
+  else
+    {
+      stat = do_innetgr2 (netgroup, values[0], status);
+    }
+
+  ldap_value_free (values);
+
+  /*
+   * Then, recurse up to see whether this netgroup belongs
+   * to the argument
+   */
+  debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
+
+  return stat;
+}
+
+static NSS_STATUS
+_nss_ldap_innetgr (nss_backend_t * be, void *_args)
+{
+  NSS_STATUS stat = NSS_NOTFOUND;
+  struct nss_innetgr_args *args = (struct nss_innetgr_args *) _args;
+  int i;
+
+  /*
+   * Enumerate the groups in args structure and see whether
+   * any 4-tuple was satisfied. This really needs LDAP
+   * component matching to be done efficiently.
+   */
+
+  /* Presume these are harmonized -- this is a bit odd API */
+  assert (args->arg[NSS_NETGR_MACHINE].argc == 0 ||
+	  args->arg[NSS_NETGR_MACHINE].argc == args->groups.argc);
+  assert (args->arg[NSS_NETGR_USER].argc == 0 ||
+	  args->arg[NSS_NETGR_USER].argc == args->groups.argc);
+  assert (args->arg[NSS_NETGR_DOMAIN].argc == 0 ||
+	  args->arg[NSS_NETGR_DOMAIN].argc == args->groups.argc);
+
+  _nss_ldap_enter ();
+  for (i = 0; i < args->groups.argc; i++)
+    {
+      NSS_STATUS parseStat;
+
+      const char *netgroup = args->groups.argv[i];
+      const char *machine = (args->arg[NSS_NETGR_MACHINE].argc != 0) ?
+	args->arg[NSS_NETGR_MACHINE].argv[i] : NULL;
+      const char *user = (args->arg[NSS_NETGR_USER].argc != 0) ?
+	args->arg[NSS_NETGR_USER].argv[i] : NULL;
+      const char *domain = (args->arg[NSS_NETGR_DOMAIN].argc != 0) ?
+	args->arg[NSS_NETGR_DOMAIN].argv[i] : NULL;
+
+      parseStat = do_innetgr (netgroup, machine, user, domain, &args->status);
+      if (parseStat != NSS_SUCCESS && parseStat != NSS_NOTFOUND)
+	{
+	  /* fatal error */
+	  break;
+	}
+
+      if (args->status == NSS_NETGR_FOUND)
+	{
+	  stat = NSS_SUCCESS;
+	}
+    }
+  _nss_ldap_leave ();
+
+  return stat;
 }
 
 /*
@@ -885,68 +949,74 @@ _nss_ldap_innetgr (nss_backend_t *be, void *_args)
  * ie. this is the constructor for the pseudo-backend.
  */
 static NSS_STATUS
-_nss_ldap_setnetgrent (nss_backend_t *be, void *_args)
+_nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
 {
-	NSS_STATUS stat;
-	struct nss_setnetgrent_args *args;
-	nss_ldap_netgr_backend_t *psbe;
-	ldap_args_t a;
+  NSS_STATUS stat;
+  struct nss_setnetgrent_args *args;
+  nss_ldap_netgr_backend_t *psbe;
+  ldap_args_t a;
 
-	debug("==> _nss_ldap_setnetgrent");
+  debug ("==> _nss_ldap_setnetgrent");
 
-	args = (struct nss_setnetgrent_args *)_args;
-	args->iterator = NULL; /* initialize */
+  args = (struct nss_setnetgrent_args *) _args;
+  args->iterator = NULL;	/* initialize */
 
-	/*
-	 * This retrieves the top-level netgroup; nested netgroups
-	 * are chased inside the pseudo-backend.
-	 */
+  /*
+   * This retrieves the top-level netgroup; nested netgroups
+   * are chased inside the pseudo-backend.
+   */
 
-	LA_INIT(a);
-	LA_TYPE(a) = LA_TYPE_STRING;
-	LA_STRING(a) = args->netgroup;	/* cn */
+  LA_INIT (a);
+  LA_TYPE (a) = LA_TYPE_STRING;
+  LA_STRING (a) = args->netgroup;	/* cn */
 
-	psbe = (nss_ldap_netgr_backend_t *)malloc(sizeof(*psbe));
-	if (psbe == NULL) {
-		debug("<== _nss_ldap_setnetgrent");
-		return NSS_UNAVAIL;
-	}
+  psbe = (nss_ldap_netgr_backend_t *) malloc (sizeof (*psbe));
+  if (psbe == NULL)
+    {
+      debug ("<== _nss_ldap_setnetgrent");
+      return NSS_UNAVAIL;
+    }
 
-	psbe->ops = getnetgroup_ops;
-	psbe->n_ops = sizeof(getnetgroup_ops)/sizeof(nss_backend_op_t);
-	psbe->state = NULL;
-	psbe->namelist = NULL;
+  psbe->ops = getnetgroup_ops;
+  psbe->n_ops = sizeof (getnetgroup_ops) / sizeof (nss_backend_op_t);
+  psbe->state = NULL;
+  psbe->namelist = NULL;
 
-	stat = _nss_ldap_default_constr((nss_ldap_backend_t *)psbe);
-	if (stat != NSS_SUCCESS) {
-		free(psbe);
-		debug("<== _nss_ldap_setnetgrent");
-		return stat;
-	}
+  stat = _nss_ldap_default_constr ((nss_ldap_backend_t *) psbe);
+  if (stat != NSS_SUCCESS)
+    {
+      free (psbe);
+      debug ("<== _nss_ldap_setnetgrent");
+      return stat;
+    }
 
-	if (_nss_ldap_ent_context_init(&psbe->state) == NULL) {
-		_nss_ldap_default_destr((nss_backend_t *)psbe, NULL);
-		debug("<== _nss_ldap_setnetgrent");
-		return NSS_UNAVAIL;
-	}
+  if (_nss_ldap_ent_context_init (&psbe->state) == NULL)
+    {
+      _nss_ldap_default_destr ((nss_backend_t *) psbe, NULL);
+      debug ("<== _nss_ldap_setnetgrent");
+      return NSS_UNAVAIL;
+    }
 
-	assert(psbe->state != NULL);
-	assert(psbe->state->ec_res == NULL);
+  assert (psbe->state != NULL);
+  assert (psbe->state->ec_res == NULL);
 
-	_nss_ldap_enter();
-	stat = _nss_ldap_search_s(&a, _nss_ldap_filt_getnetgrent,
-		LM_NETGROUP, 1, &psbe->state->ec_res);
-	_nss_ldap_leave();
+  _nss_ldap_enter ();
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getnetgrent,
+			     LM_NETGROUP, 1, &psbe->state->ec_res);
+  _nss_ldap_leave ();
 
-	if (stat == NSS_SUCCESS) {
-		args->iterator = (nss_backend_t *)psbe;
-	} else {
-		_nss_ldap_default_destr((nss_backend_t *)psbe, NULL);
-	}
+  if (stat == NSS_SUCCESS)
+    {
+      args->iterator = (nss_backend_t *) psbe;
+    }
+  else
+    {
+      _nss_ldap_default_destr ((nss_backend_t *) psbe, NULL);
+    }
 
-	debug("<== _nss_ldap_setnetgrent");
+  debug ("<== _nss_ldap_setnetgrent");
 
-	return stat;
+  return stat;
 }
 
 static NSS_STATUS
@@ -958,7 +1028,7 @@ _nss_ldap_netgroup_destr (nss_backend_t * netgroup_context, void *args)
 static NSS_STATUS
 _nss_ldap_netgroup_noop (nss_backend_t * netgroup_context, void *args)
 {
-  assert("_nss_ldap_netgroup_noop" == NULL);
+  assert ("_nss_ldap_netgroup_noop" == NULL);
 
   return NSS_UNAVAIL;
 }
