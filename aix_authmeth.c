@@ -115,33 +115,35 @@ _nss_ldap_getgracct (void *id, int type)
 
 #ifdef PROXY_AUTH
 int
-_nss_ldap_authenticate (char *user, char *response, int **reenter, char **message)
+_nss_ldap_authenticate (char *user, char *response, int **reenter,
+			char **message)
 {
-    NSS_STATUS stat;
-    int rc;
+  NSS_STATUS stat;
+  int rc;
 
-    *reenter = 0;
-    *message = NULL;
+  *reenter = 0;
+  *message = NULL;
 
-    stat = _nss_ldap_proxy_bind(user, response);
+  stat = _nss_ldap_proxy_bind (user, response);
 
-    switch (stat) {
-	case NSS_TRYAGAIN:
-	    rc = AUTH_FAILURE;
-	    break;
-	case NSS_NOTFOUND:
-	    rc = AUTH_NOTFOUND;
-	    break;
-	case NSS_SUCCESS:
-	    rc = AUTH_SUCCESS;
-	    break;
-	default:
-	case NSS_UNAVAIL:
-	    rc = AUTH_UNAVAIL;
-	    break;
+  switch (stat)
+    {
+    case NSS_TRYAGAIN:
+      rc = AUTH_FAILURE;
+      break;
+    case NSS_NOTFOUND:
+      rc = AUTH_NOTFOUND;
+      break;
+    case NSS_SUCCESS:
+      rc = AUTH_SUCCESS;
+      break;
+    default:
+    case NSS_UNAVAIL:
+      rc = AUTH_UNAVAIL;
+      break;
     }
 
-    return rc;
+  return rc;
 }
 #endif /* PROXY_AUTH */
 
@@ -155,21 +157,25 @@ _nss_ldap_authenticate (char *user, char *response, int **reenter, char **messag
 char *
 _nss_ldap_getpasswd (char *user)
 {
-    struct passwd *pw;
-    static char pwdbuf[32];
-    char *p = NULL;
+  struct passwd *pw;
+  static char pwdbuf[32];
+  char *p = NULL;
 
-    pw = _nss_ldap_getpwnam(user);
-    if (pw != NULL) {
-	if (strlen(pw->pw_passwd) > sizeof(pwdbuf) - 1) {
-		errno = ERANGE;
-	} else {
-		strcpy(pwdbuf, pw->pw_passwd);
-		p = pwdbuf;
+  pw = _nss_ldap_getpwnam (user);
+  if (pw != NULL)
+    {
+      if (strlen (pw->pw_passwd) > sizeof (pwdbuf) - 1)
+	{
+	  errno = ERANGE;
+	}
+      else
+	{
+	  strcpy (pwdbuf, pw->pw_passwd);
+	  p = pwdbuf;
 	}
     }
 
-    return p;
+  return p;
 }
 
 int

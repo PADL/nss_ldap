@@ -362,7 +362,8 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -387,7 +388,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -1028,7 +1030,8 @@ do_open (void)
     {
 #if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
       usesasl = cfg->ldc_rootusesasl;
-      bindarg = cfg->ldc_rootusesasl ? cfg->ldc_rootsaslid : cfg->ldc_rootbindpw;
+      bindarg =
+	cfg->ldc_rootusesasl ? cfg->ldc_rootsaslid : cfg->ldc_rootbindpw;
 #else
       usesasl = 0;
       bindarg = cfg->ldc_rootbindpw;
@@ -1225,7 +1228,8 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       void *defaults;
 
       /* FIXME: a little configurability here, perhaps? */
-      defaults = _nss_ldap_sasl_defaults (ld, "GSSAPI", NULL, NULL, NULL, (char *)pw);
+      defaults =
+	_nss_ldap_sasl_defaults (ld, "GSSAPI", NULL, NULL, NULL, (char *) pw);
 
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
@@ -1961,7 +1965,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2466,7 +2471,8 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -2661,15 +2667,16 @@ static ldap_proxy_bind_args_t __proxy_args = { NULL, NULL };
 #if LDAP_SET_REBIND_PROC_ARGS == 3
 static int
 do_proxy_rebind (LDAP * ld, LDAP_CONST char *url, ber_tag_t request,
-	   ber_int_t msgid, void *arg)
+		 ber_int_t msgid, void *arg)
 #else
 static int
-do_proxy_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
+do_proxy_rebind (LDAP * ld, LDAP_CONST char *url, int request,
+		 ber_int_t msgid)
 #endif
 {
   int timelimit;
 #if LDAP_SET_REBIND_PROC_ARGS == 3
-  ldap_proxy_bind_args_t *who = (ldap_proxy_bind_args_t *)arg;
+  ldap_proxy_bind_args_t *who = (ldap_proxy_bind_args_t *) arg;
 #else
   ldap_proxy_bind_args_t *who = &__proxy_args;
 #endif
@@ -2682,15 +2689,15 @@ do_proxy_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 #if LDAP_SET_REBIND_PROC_ARGS == 3
 static int
 do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-	   int freeit, void *arg)
+		 int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
      static int
        do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-		  int freeit)
+			int freeit)
 #endif
 {
 #if LDAP_SET_REBIND_PROC_ARGS == 3
-  ldap_proxy_bind_args_t *who = (ldap_proxy_bind_args_t *)arg;
+  ldap_proxy_bind_args_t *who = (ldap_proxy_bind_args_t *) arg;
 #else
   ldap_proxy_bind_args_t *who = &__proxy_args;
 #endif
@@ -2702,8 +2709,8 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 	free (*credp);
     }
 
-  *whop = who->binddn ? strdup(who->binddn) : NULL;
-  *credp = who->bindpw ? strdup(who->bindpw) : NULL;
+  *whop = who->binddn ? strdup (who->binddn) : NULL;
+  *credp = who->bindpw ? strdup (who->bindpw) : NULL;
 
   *methodp = LDAP_AUTH_SIMPLE;
 
@@ -2711,90 +2718,97 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-NSS_STATUS _nss_ldap_proxy_bind(const char *user, const char *password)
+NSS_STATUS
+_nss_ldap_proxy_bind (const char *user, const char *password)
 {
-	ldap_args_t args;
-	LDAPMessage *res, *e;
-	NSS_STATUS stat;
-	int rc;
+  ldap_args_t args;
+  LDAPMessage *res, *e;
+  NSS_STATUS stat;
+  int rc;
 #if LDAP_SET_REBIND_PROC_ARGS == 3
-	ldap_proxy_bind_args_t proxy_args_buf;
-	ldap_proxy_bind_args_t *proxy_args = &proxy_args_buf;
+  ldap_proxy_bind_args_t proxy_args_buf;
+  ldap_proxy_bind_args_t *proxy_args = &proxy_args_buf;
 #else
-	ldap_proxy_bind_args_t *proxy_args = __proxy_args;
+  ldap_proxy_bind_args_t *proxy_args = &__proxy_args;
 #endif
 
-	LA_INIT(args);
-	LA_TYPE(args) = LA_TYPE_STRING;
-	LA_STRING(args) = user;
+  LA_INIT (args);
+  LA_TYPE (args) = LA_TYPE_STRING;
+  LA_STRING (args) = user;
 
-	/*
-	 * Binding with an empty password will always work, so don't let
-	 * the user in if they try that.
-	 */
-	if (password == NULL || password[0] == '\0') {
-		/* XXX overload */
-		return NSS_TRYAGAIN;
-	}
+  /*
+   * Binding with an empty password will always work, so don't let
+   * the user in if they try that.
+   */
+  if (password == NULL || password[0] == '\0')
+    {
+      /* XXX overload */
+      return NSS_TRYAGAIN;
+    }
 
-	nss_lock();
+  nss_lock ();
 
-	stat = _nss_ldap_search_s(&args, _nss_ldap_filt_getpwnam,
-		LM_PASSWD, 1, &res);
-	if (stat == NSS_SUCCESS) {
-		e = ldap_first_entry(__session.ls_conn, res);
-		if (e != NULL) {
-			proxy_args->binddn = _nss_ldap_get_dn(e);
-			proxy_args->bindpw = password;
+  stat = _nss_ldap_search_s (&args, _nss_ldap_filt_getpwnam,
+			     LM_PASSWD, 1, &res);
+  if (stat == NSS_SUCCESS)
+    {
+      e = ldap_first_entry (__session.ls_conn, res);
+      if (e != NULL)
+	{
+	  proxy_args->binddn = _nss_ldap_get_dn (e);
+	  proxy_args->bindpw = password;
 
-			if (proxy_args->binddn != NULL) {
-				/* Use our special rebind procedure. */
+	  if (proxy_args->binddn != NULL)
+	    {
+	      /* Use our special rebind procedure. */
 #if LDAP_SET_REBIND_PROC_ARGS == 3
-				ldap_set_rebind_proc (__session.ls_conn, do_proxy_rebind, NULL);
+	      ldap_set_rebind_proc (__session.ls_conn, do_proxy_rebind, NULL);
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-				ldap_set_rebind_proc (__session.ls_conn, do_proxy_rebind);
+	      ldap_set_rebind_proc (__session.ls_conn, do_proxy_rebind);
 #endif
-				rc = do_bind(__session.ls_conn,
-					__session.ls_config->ldc_bind_timelimit,
-					proxy_args->binddn,
-					proxy_args->bindpw,
-					0);
-				switch (rc) {
-					case LDAP_INVALID_CREDENTIALS:
-						/* XXX overload */
-						stat = NSS_TRYAGAIN;
-						break;
-					case LDAP_NO_SUCH_OBJECT:
-						stat = NSS_NOTFOUND;
-						break;
-					case LDAP_SUCCESS:
-						stat = NSS_SUCCESS;
-						break;
-					default:
-						stat = NSS_UNAVAIL;
-						break;
-				}
-				/*
-				 * Close the connection, don't want to continue
-				 * being bound as this user or using this rebind proc.
-				 */
-				do_close();
-				ldap_memfree(proxy_args->binddn);
-			} else {
-				stat = NSS_NOTFOUND;
-			}
-			proxy_args->binddn = NULL;
-			proxy_args->bindpw = NULL;
-		} else {
-			stat = NSS_NOTFOUND;
+	      rc = do_bind (__session.ls_conn,
+			    __session.ls_config->ldc_bind_timelimit,
+			    proxy_args->binddn, proxy_args->bindpw, 0);
+	      switch (rc)
+		{
+		case LDAP_INVALID_CREDENTIALS:
+		  /* XXX overload */
+		  stat = NSS_TRYAGAIN;
+		  break;
+		case LDAP_NO_SUCH_OBJECT:
+		  stat = NSS_NOTFOUND;
+		  break;
+		case LDAP_SUCCESS:
+		  stat = NSS_SUCCESS;
+		  break;
+		default:
+		  stat = NSS_UNAVAIL;
+		  break;
 		}
-		ldap_msgfree(res);
+	      /*
+	       * Close the connection, don't want to continue
+	       * being bound as this user or using this rebind proc.
+	       */
+	      do_close ();
+	      ldap_memfree (proxy_args->binddn);
+	    }
+	  else
+	    {
+	      stat = NSS_NOTFOUND;
+	    }
+	  proxy_args->binddn = NULL;
+	  proxy_args->bindpw = NULL;
 	}
+      else
+	{
+	  stat = NSS_NOTFOUND;
+	}
+      ldap_msgfree (res);
+    }
 
-	nss_unlock();
+  nss_unlock ();
 
-	return stat;
+  return stat;
 }
 
 #endif /* PROXY_AUTH */
-

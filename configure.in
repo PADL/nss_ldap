@@ -49,6 +49,7 @@ if test -n "$with_ldap_dir"; then
   CPPFLAGS="$CPPFLAGS -I$with_ldap_dir/include"
   LDFLAGS="$LDFLAGS -L$with_ldap_dir/lib"
   case "$target_os" in  
+  aix*) LDFLAGS="$LDFLAGS -Wl,-blibpath:$with_ldap_dir/lib" ;;
   solaris*) LDFLAGS="$LDFLAGS -Wl,-R$with_ldap_dir/lib" ;;  
   *) LDFLAGS="$LDFLAGS -Wl,-rpath,$with_ldap_dir/lib" ;;
   esac  
