@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+180	Luke Howard <lukeh@padl.com>
+
+	* pull in libpthreads on AIX 
+
 179	Luke Howard <lukeh@padl.com>
 
 	* a couple more patches for AIX
