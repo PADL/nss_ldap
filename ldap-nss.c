@@ -1058,7 +1058,7 @@ do_open (void)
 #ifdef HAVE_LDAP_SET_OPTION
   if (cfg->ldc_debug)
     {
-#ifdef LBER_OPT_LOG_PRINT_FILE
+# ifdef LBER_OPT_LOG_PRINT_FILE
       if (cfg->ldc_logdir && !debugfile)
         {
           char *name = malloc(strlen(cfg->ldc_logdir)+18);
@@ -1073,14 +1073,16 @@ do_open (void)
               ber_set_option( NULL, LBER_OPT_LOG_PRINT_FILE, debugfile );
             }
         }
-#endif
+# endif /* LBER_OPT_LOG_PRINT_FILE */
+# ifdef LBER_OPT_DEBUG_LEVEL
       if (cfg->ldc_debug)
         {
           ber_set_option( NULL, LBER_OPT_DEBUG_LEVEL, &cfg->ldc_debug );
           ldap_set_option( NULL, LDAP_OPT_DEBUG_LEVEL, &cfg->ldc_debug );
         }
+# endif /* LBER_OPT_DEBUG_LEVEL */
     }
-#endif
+#endif /* HAVE_LDAP_SET_OPTION */
 #ifdef HAVE_LDAPSSL_CLIENT_INIT
       /*
        * Initialize the SSL library. 
