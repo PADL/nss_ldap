@@ -7,7 +7,7 @@ ProjectMaintainer: lukeh
 #
 # run this before building in RC. @@@PLATFORM@@@ is
 # substituted for our platform names (linux, solaris etc)
-PreBuild: configure
+PreBuild: configure --enable-rfc2370bis --with-ldap-lib=netscape3 --with-ldap-dir=/usr/local/ldapsdk
 PostBuild: make distclean
 # binaries to ship (although we don't do that at the moment)
 Shippables: nss_ldap.so

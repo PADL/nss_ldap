@@ -4,6 +4,8 @@ $Header$
 167	Luke Howard <lukeh@padl.com>
 
 	* support for new OpenLDAP rebind proc prototype
+	* in rebind function, respect timeout
+	* fix for PADL Release Control
 
 166	Luke Howard <lukeh@padl.com>
 

@@ -238,6 +238,7 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 #endif
 {
   char *who, *cred;
+  int timelimit;
 
   if (geteuid () == 0 && __session.ls_config->ldc_rootbinddn)
     {
@@ -250,7 +251,9 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
       cred = __session.ls_config->ldc_bindpw;
     }
 
-  return ldap_simple_bind_s (ld, who, cred);
+  timelimit = __session.ls_config->ldc_bind_timelimit;
+
+  return do_bind (ld, timelimit, who, cred);
 }
 #else
 #if LDAP_SET_REBIND_PROC_ARGS == 3
