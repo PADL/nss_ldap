@@ -1,6 +1,12 @@
 $Header$
 ===============================================================
 
+144	Luke Howard <lukeh@padl.com>
+
+	* when specifying filters with nss_base_XXX,
+	  only escape the filter argument not the entire
+	  filter
+
 143	Luke Howard <lukeh@padl.com>
 
 	* patch from nalin@redhat.com to avoid 
