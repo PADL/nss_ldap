@@ -108,7 +108,7 @@ nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c 
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c \
 	util.c ltf.c snprintf.c resolve.c dnsconfig.c \
-	irs-nss.c sasl.c pagectrl.c aix_authmeth.c
+	irs-nss.c pagectrl.c aix_authmeth.c
 
 DEFS = @DEFS@
 
@@ -137,7 +137,7 @@ am_NSS_LDAP_OBJECTS = ldap-nss.$(OBJEXT) ldap-grp.$(OBJEXT) \
 	ldap-pwd.$(OBJEXT) ldap-netgrp.$(OBJEXT) ldap-schema.$(OBJEXT) \
 	util.$(OBJEXT) ltf.$(OBJEXT) snprintf.$(OBJEXT) \
 	resolve.$(OBJEXT) dnsconfig.$(OBJEXT) irs-nss.$(OBJEXT) \
-	sasl.$(OBJEXT) pagectrl.$(OBJEXT) aix_authmeth.$(OBJEXT)
+	pagectrl.$(OBJEXT) aix_authmeth.$(OBJEXT)
 NSS_LDAP_OBJECTS = $(am_NSS_LDAP_OBJECTS)
 NSS_LDAP_LDADD = $(LDADD)
 NSS_LDAP_DEPENDENCIES =
@@ -170,8 +170,7 @@ am__depfiles_maybe = depfiles
 @AMDEP_TRUE@	./$(DEPDIR)/ldap-service.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/ldap-spwd.Po ./$(DEPDIR)/ltf.Po \
 @AMDEP_TRUE@	./$(DEPDIR)/pagectrl.Po ./$(DEPDIR)/resolve.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/sasl.Po ./$(DEPDIR)/snprintf.Po \
-@AMDEP_TRUE@	./$(DEPDIR)/util.Po
+@AMDEP_TRUE@	./$(DEPDIR)/snprintf.Po ./$(DEPDIR)/util.Po
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -257,7 +256,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ltf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pagectrl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/resolve.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sasl.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/snprintf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 
