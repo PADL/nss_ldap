@@ -57,6 +57,9 @@
 /* Define if you have the ldapssl_client_init function.  */
 #undef HAVE_LDAPSSL_CLIENT_INIT
 
+/* Define if you have the nsdispatch function.  */
+#undef HAVE_NSDISPATCH
+
 /* Define if you have the res_search function.  */
 #undef HAVE_RES_SEARCH
 

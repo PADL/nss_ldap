@@ -79,6 +79,7 @@ AC_CHECK_FUNCS(res_search)
 AC_CHECK_FUNCS(dn_expand)
 AC_CHECK_FUNCS(snprintf)
 AC_CHECK_FUNCS(gethostbyname)
+AC_CHECK_FUNCS(nsdispatch)
 
 dnl check which ldap library we have
 if test -z "$with_ldap_lib"; then
