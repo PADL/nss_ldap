@@ -37,6 +37,9 @@ static char rcsId[] =
 #include <netinet/in.h>
 #include <lber.h>
 #include <ldap.h>
+#ifdef SSL
+#include <ldap_ssl.h> 
+#endif /* SSL */ 
 
 #ifdef GNU_NSS
 #include <nss.h>
