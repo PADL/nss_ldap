@@ -31,11 +31,6 @@ extern pthread_mutex_t _nss_ldap_lock;
 extern int _nss_ldap_herrno2nssstat_tab[];
 extern int _nss_ldap_herrno2nssstat_tab_count;
 
-extern const char *_nss_ldap_crypt_prefixes_tab[];
-extern size_t _nss_ldap_crypt_prefixes_size_tab[];
-extern size_t _nss_ldap_crypt_prefixes_tab_count;
-extern crypt_prefix_t _nss_ldap_crypt_prefix;
-
 #ifdef DL_NSS
 extern void *_nss_ldap_libc_handle;
 #endif

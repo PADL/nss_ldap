@@ -445,21 +445,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	{
 	  t = &result->ldc_sslpath;
 	}
-      else if (!strcasecmp (k, NSS_LDAP_KEY_CRYPT))
-	{
-	  if (!strcasecmp (v, "md5"))
-	    {
-	      _nss_ldap_crypt_prefix = MD5_CRYPT;
-	    }
-	  else if (!strcasecmp (v, "sha"))
-	    {
-	      _nss_ldap_crypt_prefix = SHA_CRYPT;
-	    }
-	  else if (!strcasecmp (v, "des"))
-	    {
-	      _nss_ldap_crypt_prefix = UNIX_CRYPT;
-	    }
-	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SCOPE))
 	{
 	  if (!strcasecmp (v, "sub"))

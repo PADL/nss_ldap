@@ -155,20 +155,6 @@ struct ldap_session
 
 typedef struct ldap_session ldap_session_t;
 
-/*
- * glibc supports MD5 encryption. So we should recognise it. This
- *  is configurable at runtime by putting crypt [md5|crypt|sha] in
- * /etc/ldap.conf.
- */
-enum crypt_prefix
-  {
-    UNIX_CRYPT,
-    SHA_CRYPT,
-    MD5_CRYPT
-  };
-
-typedef enum crypt_prefix crypt_prefix_t;
-
 #if !defined(SUN_NSS)
 #ifndef UID_NOBODY
 #define UID_NOBODY      (-2)

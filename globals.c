@@ -77,34 +77,3 @@ size_t _nss_ldap_herrno2nssstat_tab_count =
 (sizeof (_nss_ldap_herrno2nssstat_tab) /
  sizeof (_nss_ldap_herrno2nssstat_tab[0]));
 
-const char *_nss_ldap_crypt_prefixes_tab[] =
-{
-#if !defined(__GNUC__) || defined(NeXT)
-  "{CRYPT}",
-  "{MD5}",
-  "{SHA}"
-#else
-  [UNIX_CRYPT] = "{CRYPT}",
-  [MD5_CRYPT] = "{MD5}",
-  [SHA_CRYPT] = "{SHA}"
-#endif
-};
-
-size_t _nss_ldap_crypt_prefixes_size_tab[] =
-{
-#if !defined(__GNUC__) || defined(NeXT)
-  sizeof ("{CRYPT}") - 1,
-  sizeof ("{MD5}") - 1,
-  sizeof ("{SHA}") - 1
-#else
-  [UNIX_CRYPT] = sizeof ("{CRYPT}") - 1,
-  [MD5_CRYPT] = sizeof ("{MD5}") - 1,
-  [SHA_CRYPT] = sizeof ("{SHA}") - 1
-#endif
-};
-
-crypt_prefix_t _nss_ldap_crypt_prefix = UNIX_CRYPT;
-
-size_t _nss_ldap_crypt_prefixes_tab_count =
-(sizeof (_nss_ldap_crypt_prefixes_tab) /
- sizeof (_nss_ldap_crypt_prefixes_tab[0]));

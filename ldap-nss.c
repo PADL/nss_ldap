@@ -1173,10 +1173,8 @@ _nss_ldap_assign_passwd (LDAP * ld,
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
 	  if (strncasecmp (*valiter,
-			   _nss_ldap_crypt_prefixes_tab
-			   [_nss_ldap_crypt_prefix],
-			   _nss_ldap_crypt_prefixes_size_tab
-			   [_nss_ldap_crypt_prefix]) == 0)
+			   "{CRYPT}",
+			   (sizeof("{CRYPT}") - 1)) == 0)
 	    {
 	      pwd = *valiter;
 	      break;
@@ -1190,7 +1188,7 @@ _nss_ldap_assign_passwd (LDAP * ld,
     }
   else
     {
-      pwd += _nss_ldap_crypt_prefixes_size_tab[_nss_ldap_crypt_prefix];
+      pwd += (sizeof("{CRYPT}") - 1);
     }
 
   vallen = strlen (pwd);

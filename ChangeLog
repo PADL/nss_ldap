@@ -5,6 +5,7 @@ $Id$
 
 	* /etc/nss_ldap.secret -> /etc/ldap.secret (sorry,
 	  Doug!)
+	* deleted crypt-mechanism code. Junk.
 
 97	Luke Howard <lukeh@padl.com>
 
