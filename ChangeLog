@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+231	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#138 (blind last char remove in ldap.secret)
+
 230	Luke Howard <lukeh@padl.com>
 
 	* don't free gss_krb5_ccache_name() output (Heimdal)
