@@ -383,6 +383,7 @@ do_parse_group_members (LDAP * ld,
 	  if (*pGroupMembers == NULL)
 	    {
 	      stat = NSS_TRYAGAIN;
+	      *pGroupMembersBufferIsMalloced = 0; /* don't try to free */
 	      goto out;
 	    }
 
