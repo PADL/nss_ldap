@@ -20,7 +20,7 @@
  */
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifdef SUN_NSS
 #include <thread.h>
@@ -77,7 +77,8 @@ static ldap_config_t *__config = NULL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session = { NULL, NULL };
+static ldap_session_t __session =
+{NULL, NULL};
 
 /* 
  * Process ID that opened the session.
@@ -234,35 +235,35 @@ do_close_no_unbind (void)
   if (__session.ls_conn != NULL)
     {
 #ifdef HAVE_LDAP_LD_FREE
-# if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+#if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
       extern int ldap_ld_free (LDAP * ld, int close, LDAPControl **,
 			       LDAPControl **);
       (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
       __session.ls_conn = NULL;
-# else
+#else
       extern int ldap_ld_free (LDAP * ld, int close);
       (void) ldap_ld_free (__session.ls_conn, 0);
-# endif				/* OPENLDAP 2.x */
+#endif /* OPENLDAP 2.x */
 #else
       /*
        * We'll be rude and close the socket ourselves. 
        * XXX untested code
        */
       int sd = -1;
-# ifdef LDAP_VERSION3_API
+#ifdef LDAP_VERSION3_API
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
-# else
-	if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-# endif				/* LDAP_VERSION3_API */
-	  {
-	    close (sd);
-	    sd = -1;
-# ifdef LDAP_VERSION3_API
-	    (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
-# else
-	    __session.ls_conn->ld_sb.sb_sd = sd;
-# endif				/*  LDAP_VERSION3_API */
-	  }
+#else
+      if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
+#endif /* LDAP_VERSION3_API */
+	{
+	  close (sd);
+	  sd = -1;
+#ifdef LDAP_VERSION3_API
+	  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
+#else
+	  __session.ls_conn->ld_sb.sb_sd = sd;
+#endif /*  LDAP_VERSION3_API */
+	}
 #endif /* HAVE_LDAP_LD_FREE */
       __session.ls_conn = NULL;
     }
@@ -288,7 +289,7 @@ do_open (void)
 
 #ifdef DEBUG
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif /* DEBUG */
 
@@ -615,7 +616,7 @@ do_search_s (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+	   "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
 		  backoff);
 	  (void) sleep (backoff);
 	}
@@ -823,7 +824,7 @@ _nss_ldap_getent (ent_context_t * ctx,
 		  char *buffer,
 		  size_t buflen,
 		  int *errnop,
-		  const char *filterprot, const char **attrs, parser_t parser)
+		const char *filterprot, const char **attrs, parser_t parser)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
 
