@@ -177,7 +177,10 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   result->ldc_bindpw = NULL;
   result->ldc_rootbinddn = NULL;
   result->ldc_rootbindpw = NULL;
-  result->ldc_ssl_on = 0;
+  result->ldc_version = LDAP_VERSION2;
+  result->ldc_timelimit = LDAP_NO_LIMIT;
+  result->ldc_bind_timelimit = 30;
+  result->ldc_ssl_on = SSL_OFF;
   result->ldc_sslpath = NULL;
   result->ldc_next = result;
 
@@ -242,7 +245,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	  /* Hack: if the port is the registered SSL port, enable SSL. */
 	  if (result->ldc_port == LDAPS_PORT)
 	    {
-	      result->ldc_ssl_on = 1;
+	      result->ldc_ssl_on = SSL_LDAPS;
 	    }
 #endif /* SSL */
 

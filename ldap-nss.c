@@ -227,8 +227,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -250,8 +249,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -523,7 +521,7 @@ do_open (void)
       /*
        * Initialize the SSL library. 
        */
-      if (cfg->ldc_ssl_on)
+      if (cfg->ldc_ssl_on == SSL_LDAPS)
 	{
 	  if (__ssl_initialized == 0
 	      && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
@@ -579,13 +577,20 @@ do_open (void)
 #endif /* LDAP_VERSION3_API */
 
 #ifdef LDAP_VERSION3_API
-  ldap_set_option (__session.ls_conn, LDAP_OPT_DEREF, &cfg->ldc_version);
+  ldap_set_option (__session.ls_conn, LDAP_OPT_DEREF, &cfg->ldc_deref);
 #else
   __session.ls_conn->ld_deref = cfg->ldc_deref;
 #endif /* LDAP_VERSION3_API */
 
+#ifdef LDAP_VERSION3_API
+  ldap_set_option (__session.ls_conn, LDAP_OPT_TIMELIMIT,
+		   &cfg->ldc_timelimit);
+#else
+  __session.ls_conn->ld_timelimit = cfg->ldc_timelimit;
+#endif /* LDAP_VERSION3_API */
+
 #ifdef TLS
-  if (cfg->ldc_ssl_on)
+  if (cfg->ldc_ssl_on == SSL_START_TLS)
     {
       int version;
 
@@ -611,12 +616,24 @@ do_open (void)
 	}
       debug ("<== start_tls");
     }
-#elif defined(SSL)
-  /*
-   * If SSL is desired, then enable it.
-   */
-  if (cfg->ldc_ssl_on)
+  else
+#endif
+
+    /*
+     * If SSL is desired, then enable it.
+     */
+  if (cfg->ldc_ssl_on == SSL_LDAPS)
     {
+#ifdef    LDAP_OPT_X_TLS
+      int tls = LDAP_OPT_X_TLS_HARD;
+      if (ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS, &tls) !=
+	  LDAP_SUCCESS)
+	{
+	  do_close ();
+	  debug ("<== do_open");
+	  return NSS_UNAVAIL;
+	}
+#elif defined(SSL)		/* Netscape */
       if (ldapssl_install_routines (__session.ls_conn) != LDAP_SUCCESS)
 	{
 	  do_close ();
@@ -630,8 +647,8 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_UNAVAIL;
 	}
-    }
 #endif /* SSL */
+    }
 
   /*
    * If we're running as root, let us bind as a special
@@ -642,7 +659,7 @@ do_open (void)
   if (euid == 0 && cfg->ldc_rootbinddn != NULL)
     {
       if (do_bind
-	  (__session.ls_conn, cfg->ldc_rootbinddn,
+	  (__session.ls_conn, cfg->ldc_bind_timelimit, cfg->ldc_rootbinddn,
 	   cfg->ldc_rootbindpw) != LDAP_SUCCESS)
 	{
 	  do_close ();
@@ -653,7 +670,7 @@ do_open (void)
   else
     {
       if (do_bind
-	  (__session.ls_conn, cfg->ldc_binddn,
+	  (__session.ls_conn, cfg->ldc_bind_timelimit, cfg->ldc_binddn,
 	   cfg->ldc_bindpw) != LDAP_SUCCESS)
 	{
 	  do_close ();
@@ -677,7 +694,7 @@ do_open (void)
 }
 
 static int
-do_bind (LDAP * ld, const char *dn, const char *pw)
+do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw)
 {
   int rc;
   int msgid;
@@ -703,11 +720,7 @@ do_bind (LDAP * ld, const char *dn, const char *pw)
       return rc;
     }
 
-#ifdef BIND_TIMEOUT
-  tv.tv_sec = BIND_TIMEOUT;
-#else
-  tv.tv_sec = 30;
-#endif
+  tv.tv_sec = timelimit;
   tv.tv_usec = 0;
 
   rc = ldap_result (ld, msgid, 0, &tv, &result);
@@ -1326,7 +1339,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -1755,8 +1769,7 @@ _nss_ldap_assign_passwd (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;

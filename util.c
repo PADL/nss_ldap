@@ -428,7 +428,9 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   result->ldc_rootbinddn = NULL;
   result->ldc_rootbindpw = NULL;
   result->ldc_version = LDAP_VERSION2;
-  result->ldc_ssl_on = 0;
+  result->ldc_timelimit = LDAP_NO_LIMIT;
+  result->ldc_bind_timelimit = 30;
+  result->ldc_ssl_on = SSL_OFF;
   result->ldc_sslpath = NULL;
   result->ldc_next = result;
 
@@ -541,11 +543,26 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SSL))
 	{
-	  result->ldc_ssl_on = !strcasecmp (v, "yes");
+ 	  if (!strcasecmp(v, "yes"))
+	{
+		result->ldc_ssl_on = SSL_LDAPS;
+	}
+	  else if (!strcasecmp(v, "start_tls"))
+	{
+		result->ldc_ssl_on = SSL_START_TLS;
+	}
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_VERSION))
 	{
 	  result->ldc_version = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_TIMELIMIT))
+	{
+	  result->ldc_timelimit = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_BIND_TIMELIMIT))
+	{
+	  result->ldc_bind_timelimit = atoi (v);
 	}
       else
         {
@@ -598,7 +615,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   if (result->ldc_port == 0)
     {
 #ifdef SSL
-      if (result->ldc_ssl_on)
+      if (result->ldc_ssl_on == SSL_LDAPS)
 	{
 	  result->ldc_port = LDAPS_PORT;
 	}

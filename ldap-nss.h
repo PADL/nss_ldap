@@ -156,6 +156,28 @@ enum ldap_map_selector
 typedef enum ldap_map_selector ldap_map_selector_t;
 
 /*
+ * POSIX profile information (not used yet)
+ * see draft-joslin-config-schema-00.txt
+ */
+struct ldap_service_search_descriptor
+  {
+    /* search base, qualified */
+    char *lsd_base;
+    /* scope */
+    int lsd_scope;
+    /* filter *
+    char *lsd_filter;
+    /* next */
+    struct ldap_service_search_descriptor *lsd_next;
+  };
+
+typedef struct ldap_service_search_descriptor ldap_service_search_descriptor_t;
+
+#define SSL_OFF        0
+#define SSL_LDAPS      1 
+#define SSL_START_TLS  2
+
+/*
  * linked list of configurations pointing to LDAP servers. The first
  * which has a successful ldap_open() is used. Conceivably the rest
  * could be used after a failed or exhausted search.
@@ -182,6 +204,10 @@ struct ldap_config
     char *ldc_rootbindpw;
     /* protocol version */
     int ldc_version;
+    /* search timelimit */
+    int ldc_timelimit;
+    /* bind timelimit */
+    int ldc_bind_timelimit;
     /* SSL enabled */
     int ldc_ssl_on;
     /* SSL certificate path */

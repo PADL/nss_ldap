@@ -66,6 +66,8 @@ NSS_STATUS _nss_ldap_dn2uid (
 #define NSS_LDAP_KEY_DEREF    		"deref"
 #define NSS_LDAP_KEY_ROOTBINDDN		"rootbinddn"
 #define NSS_LDAP_KEY_LDAP_VERSION	"ldap_version"
+#define NSS_LDAP_KEY_TIMELIMIT		"timelimit"
+#define NSS_LDAP_KEY_BIND_TIMELIMIT	"bind_timelimit"
 #define NSS_LDAP_KEY_SSL		"ssl"
 #define NSS_LDAP_KEY_SSLPATH		"sslpath"
 

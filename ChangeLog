@@ -3,8 +3,15 @@ $Header$
 
 127	Luke Howard <lukeh@padl.com>
 
-	* fixed up RPM Mkefiles to build libnss_ldap
-
+	* fixed up RPM Makefiles to build libnss_ldap
+	* added "timelimit" and "bind_timelimit"
+	  directives to ldap.conf
+	* fixed bug with dereferencing aliases
+	* preliminary support for profiles
+	* parity with pam_ldap; "ssl" directive in
+	  ldap.conf can now specify "yes" or
+	  "start_tls" for Start TLS
+ 
 126	Luke Howard <lukeh@padl.com>
 
 125	Luke Howard <lukeh@padl.com>
