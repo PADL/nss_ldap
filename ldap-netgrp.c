@@ -893,7 +893,7 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 	args->arg[NSS_NETGR_DOMAIN].argc,
 	args->groups.argc);
 
-  /* Presume these are harmonized -- this is a bit odd API */
+  /* Presume these are harmonized -- this is a strange interface */
   assert (args->arg[NSS_NETGR_MACHINE].argc == 0 ||
 	  args->arg[NSS_NETGR_MACHINE].argc == args->groups.argc);
   assert (args->arg[NSS_NETGR_USER].argc == 0 ||
