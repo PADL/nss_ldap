@@ -139,13 +139,21 @@ _nss_ldap_parse_gr (LDAP * ld,
 	    }
 
 	  stat = _nss_ldap_dn2uid (ld, *valiter, &uid, &buffer, &buflen);
-	  if (stat == NSS_SUCCESS)
+	  switch (stat)
 	    {
+	    case NSS_SUCCESS:
 	      *mem_p = uid;
 	      mem_p++;
+	      break;
+	    case NSS_TRYAGAIN:
+	      ldap_value_free (vals);
+	      return NSS_TRYAGAIN;
+	      break;
+	    case NSS_NOTFOUND:
+	    default:
+	      dn_mems_c--;
+	      break;
 	    }
-	  else
-	    dn_mems_c--;
 	}
       ldap_value_free (vals);
     }
@@ -452,8 +460,7 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_setgrent (void)
+NSS_STATUS _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -466,8 +473,7 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_endgrent (void)
+NSS_STATUS _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }

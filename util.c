@@ -189,7 +189,7 @@ _nss_ldap_dn2uid (LDAP * ld,
   debug ("==> _nss_ldap_dn2uid");
 
   status = do_getrdnvalue (dn, AT (uid), uid, buffer, buflen);
-  if (status != NSS_SUCCESS)
+  if (status == NSS_NOTFOUND)
     {
 #ifdef DN2UID_CACHE
       status = dn2uid_cache_get (dn, uid, buffer, buflen);
