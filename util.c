@@ -422,7 +422,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
     t = &result[LM_NETGROUP];
 
   if (t == NULL)
-    return NSS_NOTFOUND;
+    return NSS_SUCCESS;
 
   /* we have already checked for room for the value */
   /* len is set to the length of value */
@@ -671,7 +671,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	}
       else
 	{
-	  /* check whether the key is a naming context key */
+	  /*
+	   * check whether the key is a naming context key
+	   * if yes, parse; otherwise just return NSS_SUCCESS
+	   * so we can ignore keys we don't understand.
+	   */
 	  stat =
 	    do_searchdescriptorconfig (k, v, len, result->ldc_sds, &buffer,
 				       &buflen);
@@ -694,7 +698,9 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 
   fclose (fp);
 
-  /* fix in nss_ldap-127: return if out of buffer space */
+  /*
+   * fix in nss_ldap-127: return if out of buffer space
+   */
   if (stat != NSS_SUCCESS)
     {
       free (result);

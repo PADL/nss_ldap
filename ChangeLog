@@ -5,6 +5,10 @@ $Header$
 
 	* close config file FILE * if out of buffer space
 	  for parsing search descriptor
+	* fixed bug where non-recognized directives in
+	  ldap.conf would cause the configuration file to
+	  not be parsed at all, if they were the last
+	  entries in the config file.
 	  
 137.1	Luke Howard <lukeh@padl.com>
 
