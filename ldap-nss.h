@@ -35,6 +35,7 @@
 #endif
 
 #include <errno.h>
+#include <time.h>
 
 #ifdef __STDC__
 #ifndef __P
@@ -224,6 +225,8 @@ struct ldap_config
     char *ldc_tls_cert;
     /* tls key */
     char *ldc_tls_key;
+    /* idle timeout */
+    time_t ldc_idle_timelimit;
     /* next configuration. loops back onto itself for last entry */
     struct ldap_config *ldc_next;
   };
@@ -240,6 +243,8 @@ struct ldap_session
     LDAP *ls_conn;
     /* pointer into config table */
     ldap_config_t *ls_config;
+    /* timestamp of last activity */
+    time_t ls_timestamp;
   };
 
 typedef struct ldap_session ldap_session_t;

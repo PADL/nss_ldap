@@ -18,7 +18,8 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] = "$Id$";
+static char rcsId[] =
+  "$Id$";
 
 #include "config.h"
 
@@ -92,8 +93,7 @@ static ldap_config_t *__config = NULL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session =
-{NULL, NULL};
+static ldap_session_t __session = { NULL, NULL, 0 };
 
 #if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
 static pthread_once_t __once = PTHREAD_ONCE_INIT;
@@ -155,7 +155,7 @@ static void do_disable_keepalive (LDAP * ld);
  */
 
 #if defined HAVE_LDAP_START_TLS_S || (defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS))
-static int set_ssl_options(ldap_config_t **);
+static int set_ssl_options (ldap_config_t **);
 #endif
 
 /*
@@ -209,9 +209,9 @@ typedef NSS_STATUS (*search_func_t) (const char *, int, const char *,
  * Do a search with a reconnect harness.
  */
 static NSS_STATUS
-  do_with_reconnect (const char *base, int scope,
-		     const char *filter, const char **attrs, int sizelimit,
-		     void *private, search_func_t func);
+do_with_reconnect (const char *base, int scope,
+		   const char *filter, const char **attrs, int sizelimit,
+		   void *private, search_func_t func);
 
 /*
  * Do a bind with a defined timeout
@@ -290,8 +290,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -313,8 +312,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -549,7 +547,7 @@ do_open (void)
 	  (__pthread_atfork == NULL ? pid : -1), __euid, euid);
 #else
   syslog (LOG_DEBUG,
-     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif
 #endif /* DEBUG */
@@ -575,6 +573,11 @@ do_open (void)
     }
   else if (__session.ls_conn != NULL && __session.ls_config != NULL)
     {
+      /*
+       * Patch from Steven Barrus <sbarrus@eng.utah.edu> to
+       * close the session after an idle timeout.
+       */
+      time_t current_time;
 #ifndef HAVE_LDAPSSL_CLIENT_INIT
       /*
        * Otherwise we can hand back this process' global
@@ -636,6 +639,22 @@ do_open (void)
       (void) signal (SIGPIPE, SIG_IGN);
 #endif /* HAVE_SIGSET */
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
+
+      /*  
+       * Patch from Steven Barrus <sbarrus@eng.utah.edu> to
+       * close the session after an idle timeout.
+       */
+      if (__session.ls_config->ldc_idle_timelimit)
+	{
+	  time (&current_time);
+	  if ((__session.ls_timestamp + __session.ls_config->ldc_idle_timelimit)
+	      < current_time)
+	    {
+	      debug ("idle_timelimit reached");
+	      do_close ();
+	    }
+	}
+
       /*
        * If the connection is still there (ie. do_close() wasn't
        * called) then we can return the cached connection.
@@ -704,7 +723,7 @@ do_open (void)
       if (cfg->ldc_ssl_on == SSL_LDAPS)
 	{
 	  if (__ssl_initialized == 0
-	    && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
+	      && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
 	    {
 	      break;
 	    }
@@ -713,32 +732,32 @@ do_open (void)
 #endif /* SSL */
 #ifdef HAVE_LDAP_INITIALIZE
       __session.ls_conn = NULL;
-      if ( cfg->ldc_uri != NULL )
-        {
-          int rc;
-          debug ("==> ldap_initialize");
-          rc = ldap_initialize (&__session.ls_conn, cfg->ldc_uri);
-          debug ("<== ldap_initialize");
+      if (cfg->ldc_uri != NULL)
+	{
+	  int rc;
+	  debug ("==> ldap_initialize");
+	  rc = ldap_initialize (&__session.ls_conn, cfg->ldc_uri);
+	  debug ("<== ldap_initialize");
 
-          if ( rc != LDAP_SUCCESS )
-            {
-              break;
-            }
-        }
+	  if (rc != LDAP_SUCCESS)
+	    {
+	      break;
+	    }
+	}
       else
-        {
+	{
 #endif /* HAVE_LDAP_INITIALIZE */
 #ifdef HAVE_LDAP_INIT
-      debug ("==> ldap_init");
-      __session.ls_conn = ldap_init (cfg->ldc_host, cfg->ldc_port);
-      debug ("<== ldap_init");
+	  debug ("==> ldap_init");
+	  __session.ls_conn = ldap_init (cfg->ldc_host, cfg->ldc_port);
+	  debug ("<== ldap_init");
 #else
-      debug ("==> ldap_open");
-      __session.ls_conn = ldap_open (cfg->ldc_host, cfg->ldc_port);
-      debug ("<== ldap_open");
+	  debug ("==> ldap_open");
+	  __session.ls_conn = ldap_open (cfg->ldc_host, cfg->ldc_port);
+	  debug ("<== ldap_open");
 #endif /* HAVE_LDAP_INIT */
 #ifdef HAVE_LDAP_INITIALIZE
-        }
+	}
 #endif
       if (__session.ls_conn != NULL || cfg->ldc_next == cfg)
 	{
@@ -827,10 +846,10 @@ do_open (void)
 
       /* set up SSL context */
       debug ("==> set_ssl_options");
-      if (set_ssl_options(&cfg) != LDAP_SUCCESS)
+      if (set_ssl_options (&cfg) != LDAP_SUCCESS)
 	{
 	  debug ("Setting of SSL options failed");
-        }
+	}
       debug ("<== set_ssl_options");
 
       debug ("==> start_tls");
@@ -865,13 +884,13 @@ do_open (void)
 	  return NSS_UNAVAIL;
 	}
 
-	/* set up SSL context */
-	debug ("==> set_ssl_options");
-	if (set_ssl_options(&cfg) != LDAP_SUCCESS)
-	  {
-	    debug ("Setting of SSL options failed");
-	  }
-	debug ("<== set_ssl_options");
+      /* set up SSL context */
+      debug ("==> set_ssl_options");
+      if (set_ssl_options (&cfg) != LDAP_SUCCESS)
+	{
+	  debug ("Setting of SSL options failed");
+	}
+      debug ("<== set_ssl_options");
 
 #elif defined(HAVE_LDAPSSL_CLIENT_INIT)
       if (ldapssl_install_routines (__session.ls_conn) != LDAP_SUCCESS)
@@ -928,6 +947,8 @@ do_open (void)
 
   __session.ls_config = cfg;
 
+  time (&__session.ls_timestamp);
+
   debug ("<== do_open");
 
   return NSS_SUCCESS;
@@ -935,17 +956,17 @@ do_open (void)
 
 #if defined HAVE_LDAP_START_TLS_S || (defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS))
 static int
-set_ssl_options(ldap_config_t ** presult)
+set_ssl_options (ldap_config_t ** presult)
 {
-  int ldap_pvt_tls_set_option(void *, int, void *);
+  int ldap_pvt_tls_set_option (void *, int, void *);
   ldap_config_t *config;
   int rc;
 
   config = *presult;
 
   /* ca cert file */
-  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_CACERTFILE,
-		config->ldc_tls_cacertfile);
+  rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_CACERTFILE,
+				config->ldc_tls_cacertfile);
   if (rc != LDAP_SUCCESS)
     {
       debug ("Setting of LDAP_OPT_X_TLS_CACERTFILE failed");
@@ -953,8 +974,8 @@ set_ssl_options(ldap_config_t ** presult)
     }
 
   /* ca cert directory */
-  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_CACERTDIR,
-		config->ldc_tls_cacertdir);
+  rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_CACERTDIR,
+				config->ldc_tls_cacertdir);
   if (rc != LDAP_SUCCESS)
     {
       debug ("Setting of LDAP_OPT_X_TLS_CACERTDIR failed");
@@ -962,8 +983,8 @@ set_ssl_options(ldap_config_t ** presult)
     }
 
   /* require cert? */
-  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_REQUIRE_CERT,
-		&config->ldc_tls_checkpeer);
+  rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_REQUIRE_CERT,
+				&config->ldc_tls_checkpeer);
   if (rc != LDAP_SUCCESS)
     {
       debug ("Setting of LDAP_OPT_X_TLS_REQUIRE_CERT failed");
@@ -971,22 +992,22 @@ set_ssl_options(ldap_config_t ** presult)
     }
 
   /* set cipher suite, certificate and private key: */
-  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_CIPHER_SUITE,
-		config->ldc_tls_ciphers);
+  rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_CIPHER_SUITE,
+				config->ldc_tls_ciphers);
   if (rc != LDAP_SUCCESS)
     {
       debug ("Setting of LDAP_OPT_X_TLS_CIPHER_SUITE failed");
       return LDAP_OPERATIONS_ERROR;
     }
-  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_CERTFILE,
-		config->ldc_tls_cert);
+  rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_CERTFILE,
+				config->ldc_tls_cert);
   if (rc != LDAP_SUCCESS)
     {
       debug ("Setting of LDAP_OPT_X_TLS_CERTFILE failed");
       return LDAP_OPERATIONS_ERROR;
     }
-  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_KEYFILE,
-		config->ldc_tls_key);
+  rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_KEYFILE,
+				config->ldc_tls_key);
   if (rc != LDAP_SUCCESS)
     {
       debug ("Setting of LDAP_OPT_X_TLS_KEYFILE failed");
@@ -1192,9 +1213,9 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	{
 	case LA_TYPE_STRING:
 	  if (
-	       (stat =
-		_nss_ldap_escape_string (args->la_arg1.la_string, buf1,
-					 sizeof (buf1))) != NSS_SUCCESS)
+	      (stat =
+	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
+					sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
 	  snprintf (filterBufP, filterSiz, filterprot, buf1);
 	  break;
@@ -1204,20 +1225,20 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  break;
 	case LA_TYPE_STRING_AND_STRING:
 	  if (
-	       (stat =
-		_nss_ldap_escape_string (args->la_arg1.la_string, buf1,
-					 sizeof (buf1))) != NSS_SUCCESS
-	       || (stat =
-		   _nss_ldap_escape_string (args->la_arg2.la_string, buf2,
-					    sizeof (buf2)) != NSS_SUCCESS))
+	      (stat =
+	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
+					sizeof (buf1))) != NSS_SUCCESS
+	      || (stat =
+		  _nss_ldap_escape_string (args->la_arg2.la_string, buf2,
+					   sizeof (buf2)) != NSS_SUCCESS))
 	    return stat;
 	  snprintf (filterBufP, filterSiz, filterprot, buf1, buf2);
 	  break;
 	case LA_TYPE_NUMBER_AND_STRING:
 	  if (
-	       (stat =
-		_nss_ldap_escape_string (args->la_arg2.la_string, buf1,
-					 sizeof (buf1))) != NSS_SUCCESS)
+	      (stat =
+	       _nss_ldap_escape_string (args->la_arg2.la_string, buf1,
+					sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
 	  snprintf (filterBufP, filterSiz, filterprot,
 		    args->la_arg1.la_number, buf1);
@@ -1287,7 +1308,7 @@ do_result (ent_context_t * ctx, int all)
 	case 0:
 #if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
 	  if (ldap_get_option
-	    (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	    {
 	      rc = LDAP_UNAVAILABLE;
 	    }
@@ -1345,6 +1366,9 @@ do_result (ent_context_t * ctx, int all)
   while (0);
 #endif /* LDAP_RES_SEARCH_REFERENCE */
 
+  if (stat == NSS_SUCCESS)
+    time (&__session.ls_timestamp);
+
   debug ("<== do_result");
 
   return stat;
@@ -1375,7 +1399,7 @@ do_with_reconnect (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-	   "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
 		  backoff);
 	  (void) sleep (backoff);
 	}
@@ -1401,7 +1425,7 @@ do_with_reconnect (const char *base, int scope,
 	{
 #if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
 	  if (ldap_get_option
-	    (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	    {
 	      rc = LDAP_UNAVAILABLE;
 	    }
@@ -1514,8 +1538,15 @@ do_search (const char *base, int scope,
   *msgid = ldap_search (__session.ls_conn, base, scope, filter,
 			(char **) attrs, 0);
 
-
-  stat = (*msgid < 0) ? NSS_UNAVAIL : NSS_SUCCESS;
+  if (*msgid < 0)
+    {
+      stat = NSS_SUCCESS;
+      time (&__session.ls_timestamp);
+    }
+  else
+    {
+      stat = NSS_UNAVAIL;
+    }
 
   debug ("<== do_search");
 
@@ -1676,8 +1707,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2206,8 +2236,7 @@ _nss_ldap_assign_authpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;

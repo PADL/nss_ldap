@@ -173,6 +173,14 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   result->ldc_sslpath = NULL;
   result->ldc_referrals = 1;
   result->ldc_restart = 1;
+  result->ldc_uri = NULL; 
+  result->ldc_tls_checkpeer = 0;
+  result->ldc_tls_cacertfile = NULL;
+  result->ldc_tls_cacertdir = NULL;
+  result->ldc_tls_ciphers = NULL;
+  result->ldc_tls_cert = NULL;
+  result->ldc_tls_key = NULL;
+  result->ldc_idle_timelimit = 0;
   result->ldc_next = result;
 
   __nss_dns_lock ();

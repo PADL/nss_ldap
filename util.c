@@ -517,6 +517,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   result->ldc_tls_ciphers = NULL;
   result->ldc_tls_cert = NULL;
   result->ldc_tls_key = NULL;
+  result->ldc_idle_timelimit = 0;
   result->ldc_next = result;
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
@@ -670,6 +671,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       else if (!strcasecmp (k, NSS_LDAP_KEY_BIND_TIMELIMIT))
 	{
 	  result->ldc_bind_timelimit = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_IDLE_TIMELIMIT))
+	{
+	  result->ldc_idle_timelimit = atoi (v);
 	}
       else if (!strcasecmp (k, "tls_checkpeer"))
         {
