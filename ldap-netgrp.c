@@ -1,9 +1,3 @@
-/*
- * THIS FILE UNDER RESTRICTED RELEASE
- * Use is subject to license. Confidential and proprietary.
- * This notice subsumes any notices below.
- */
-
 /* Copyright (C) 2002-2003 Luke Howard.
    This file is part of the nss_ldap library.
    Linux support contributed by Larry Lile, <llile@dreamworks.com>, 2002.
