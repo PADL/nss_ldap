@@ -1,6 +1,6 @@
 Summary: NSS library for LDAP
 Name:      nss_ldap
-Version:   81
+Version:   83
 Release:   1
 Source:    ftp://ftp.padl.com/pub/%{name}-%{version}.tar.gz
 URL:       http://www.padl.com/
