@@ -951,9 +951,6 @@ static NSS_STATUS do_init (void)
 #ifndef HAVE_PTHREAD_ATFORK
   pid_t pid;
 #endif
-#ifdef LDAP_X_OPT_CONNECT_TIMEOUT
-  int timeout;
-#endif
   uid_t euid;
 
   debug ("==> do_init");
@@ -1233,6 +1230,9 @@ do_open (void)
   NSS_STATUS stat;
 #ifdef LDAP_OPT_NETWORK_TIMEOUT
   struct timeval tv;
+#endif
+#ifdef LDAP_X_OPT_CONNECT_TIMEOUT
+  int timeout;
 #endif
 
   debug ("==> do_open");
