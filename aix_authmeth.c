@@ -41,7 +41,6 @@ static char rcsId[] =
 #endif
 
 #include "ldap-nss.h"
-#include "globals.h"
 #include "util.h"
 
 static struct irs_gr *grp_conn = NULL;
