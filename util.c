@@ -373,6 +373,7 @@ do_searchdescriptorconfig (const char *key, const char *value,
 {
   ldap_service_search_descriptor_t **t = NULL, *p;
   char *base;
+  size_t len;
 
   if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
     t = &result[LM_PASSWD];
@@ -405,9 +406,14 @@ do_searchdescriptorconfig (const char *key, const char *value,
     return NSS_NOTFOUND;
 
   /* we have already checked for room for the value */
+  len = strlen (value);
+
   base = *buffer;
-  strcpy (base, value);
-  *buflen -= strlen (base);
+  strncpy (base, value, len);
+  base[len] = '\0';
+
+  *buffer += len;
+  *buflen -= len;
 
   /* now we need MORE space for a descriptor, do we have it? */
   if (*buflen - alignof (ldap_service_search_descriptor_t) + 1 <
@@ -415,12 +421,18 @@ do_searchdescriptorconfig (const char *key, const char *value,
     return NSS_UNAVAIL;
 
   /* align so we can put a descriptor in here */
-  p = *t;
+  p = *t = (ldap_service_search_descriptor_t *) *buffer;
   *t += alignof (ldap_service_search_descriptor_t) - 1;
   *t -= ((*t - (ldap_service_search_descriptor_t *)NULL) % alignof (ldap_service_search_descriptor_t));
-  *buflen -= (*t - p);
 
-  *t = (ldap_service_search_descriptor_t *) buffer;
+  len = (*t - p);
+
+  *buffer += len;
+  *buflen -= len;
+
+  *t = (ldap_service_search_descriptor_t *) *buffer;
+
+  *buffer += sizeof (ldap_service_search_descriptor_t);
   *buflen -= sizeof (ldap_service_search_descriptor_t);
 
   (*t)->lsd_base = base;
