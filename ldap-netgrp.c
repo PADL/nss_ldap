@@ -70,7 +70,8 @@ static ent_context_t *_ngbe = NULL;
 #endif
 
 #ifdef HAVE_NSSWITCH_H
-struct ldap_innetgr_args {
+struct ldap_innetgr_args
+{
   const char *lia_netgroup;
   enum nss_netgr_status lia_netgr_status;
   int lia_depth;
@@ -81,7 +82,7 @@ typedef struct ldap_innetgr_args ldap_innetgr_args_t;
 
 static nss_backend_op_t netgroup_ops[];
 
-static NSS_STATUS do_innetgr_nested (ldap_innetgr_args_t *li_args,
+static NSS_STATUS do_innetgr_nested (ldap_innetgr_args_t * li_args,
 				     const char *nested);
 #endif /* HAVE_NSSWITCH_H */
 
@@ -321,7 +322,8 @@ out:
   return stat;
 }
 
-NSS_STATUS _nss_ldap_endnetgrent (struct __netgrent * result)
+NSS_STATUS
+_nss_ldap_endnetgrent (struct __netgrent * result)
 {
   if (result->data != NULL)
     {
@@ -334,7 +336,8 @@ NSS_STATUS _nss_ldap_endnetgrent (struct __netgrent * result)
   LOOKUP_ENDENT (_ngbe);
 }
 
-NSS_STATUS _nss_ldap_setnetgrent (char *group, struct __netgrent *result)
+NSS_STATUS
+_nss_ldap_setnetgrent (char *group, struct __netgrent *result)
 {
   int errnop = 0, buflen = 0;
   char *buffer = (char *) NULL;
@@ -728,10 +731,10 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
  * Test a 4-tuple
  */
 static NSS_STATUS
-do_parse_innetgr (LDAP *ld, LDAPMessage *e, ldap_state_t *pvt,
+do_parse_innetgr (LDAP * ld, LDAPMessage * e, ldap_state_t * pvt,
 		  void *result, char *buffer, size_t buflen)
 {
-  ldap_innetgr_args_t *li_args = (ldap_innetgr_args_t *)result;
+  ldap_innetgr_args_t *li_args = (ldap_innetgr_args_t *) result;
   char **values = NULL;
   NSS_STATUS stat = NSS_NOTFOUND;
 
@@ -747,7 +750,7 @@ do_parse_innetgr (LDAP *ld, LDAPMessage *e, ldap_state_t *pvt,
 	  li_args->lia_netgr_status = NSS_NETGR_FOUND;
 	  stat = NSS_SUCCESS;
 	}
-      else 
+      else
 	{
 	  stat = do_innetgr_nested (li_args, values[0]);
 	}
@@ -761,7 +764,7 @@ do_parse_innetgr (LDAP *ld, LDAPMessage *e, ldap_state_t *pvt,
 }
 
 static NSS_STATUS
-do_innetgr_nested (ldap_innetgr_args_t *li_args, const char *nested)
+do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
 {
   NSS_STATUS stat;
   ldap_args_t a;
@@ -778,9 +781,9 @@ do_innetgr_nested (ldap_innetgr_args_t *li_args, const char *nested)
 
   LA_INIT (a);
   LA_TYPE (a) = LA_TYPE_STRING;
-  LA_STRING (a) = nested; /* memberNisNetgroup */
+  LA_STRING (a) = nested;	/* memberNisNetgroup */
 
-  if (_nss_ldap_ent_context_init(&ctx) == NULL)
+  if (_nss_ldap_ent_context_init (&ctx) == NULL)
     {
       debug ("<== do_innetgr_nested: failed to initialize context");
       return NSS_UNAVAIL;
@@ -788,7 +791,7 @@ do_innetgr_nested (ldap_innetgr_args_t *li_args, const char *nested)
 
   li_args->lia_depth++;
 
-  stat = _nss_ldap_getent_ex (&a, &ctx, (void *)li_args, NULL, 0,
+  stat = _nss_ldap_getent_ex (&a, &ctx, (void *) li_args, NULL, 0,
 			      &li_args->lia_erange, _nss_ldap_filt_innetgr,
 			      LM_NETGROUP, do_parse_innetgr);
 
@@ -801,10 +804,8 @@ do_innetgr_nested (ldap_innetgr_args_t *li_args, const char *nested)
 }
 
 static NSS_STATUS
-do_innetgr (ldap_innetgr_args_t *li_args,
-	    const char *machine,
-	    const char *user,
-	    const char *domain)
+do_innetgr (ldap_innetgr_args_t * li_args,
+	    const char *machine, const char *user, const char *domain)
 {
   NSS_STATUS stat;
   ldap_args_t a;
@@ -827,7 +828,7 @@ do_innetgr (ldap_innetgr_args_t *li_args,
       return NSS_UNAVAIL;
     }
 
-  stat = _nss_ldap_getent_ex (&a, &ctx, (void *)li_args, NULL, 0,
+  stat = _nss_ldap_getent_ex (&a, &ctx, (void *) li_args, NULL, 0,
 			      &li_args->lia_erange, NULL, LM_NETGROUP,
 			      do_parse_innetgr);
 

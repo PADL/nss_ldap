@@ -6,6 +6,8 @@ $Id$
 	* patch from Thorsten Kukuk to avoid overwriting
 	  sockaddr storage for IPv6; use struct
 	  sockaddr_storage if available
+	* fix for BUG#153: use asynchronous search API
+	  in initgroups()
 	* fix for BUG#157: check for __pthread_once rather
 	  than __pthread_atfork on glibc, as the latter is
 	  no longer exported
