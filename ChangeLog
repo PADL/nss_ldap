@@ -1,6 +1,15 @@
 $Header$
 ===============================================================
 
+118	Luke Howard <lukeh@padl.com>
+
+	* Makefile.RPM.openldap2 from Joe Little
+
+117	Luke Howard <lukeh@padl.com>
+
+	* permanently ignore SIGPIPE when using SSL. This
+	  bug should be fixed properly.
+
 116	Luke Howard <lukeh@padl.com>
 
 	* added irs-nss.diff and README.IRS from Emile
