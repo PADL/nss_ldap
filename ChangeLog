@@ -4,6 +4,7 @@ $Header$
 139	Luke Howard <lukeh@padl.com>
 
 	* updated INSTALL file with boilerplate 
+	* fixed pointer error in ldap-nss.c
 
 138	Luke Howard <lukeh@padl.com>
 

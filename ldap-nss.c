@@ -766,7 +766,7 @@ do_open (void)
    * we use the bind_timelimit to control this.
    */
   timeout = cfg->ldc_bind_timelimit * 1000;
-  ldap_set_option (__session->ls_conn, LDAP_X_OPT_CONNECT_TIMEOUT, &timeout);
+  ldap_set_option (__session.ls_conn, LDAP_X_OPT_CONNECT_TIMEOUT, &timeout);
 #endif /* LDAP_X_OPT_CONNECT_TIMEOUT */
 
 #ifdef LDAP_OPT_REFERRALS
