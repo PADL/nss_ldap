@@ -74,11 +74,11 @@ static NSS_STATUS do_open(void);
 /*
  * Rebind functions.
  */
-#ifdef LDAP_VERSION3_API
+#if NETSCAPE_API_EXTENSIONS
 static int _nss_ldap_rebind(LDAP *ld, char **whop, char **credp, int *methodp, int freeit, void *arg)
 #else
 static int _nss_ldap_rebind(LDAP *ld, char **whop, char **credp, int *methodp, int freeit)
-#endif /* LDAP_VERSION3_API */
+#endif /* NETSCAPE_API_EXTENSIONS */
 {
 	if (freeit)
 		{
@@ -254,20 +254,20 @@ static NSS_STATUS do_open(void)
 		return NSS_UNAVAIL;
 		}
 
-#ifdef LDAP_VERSION3_API
+#ifdef NETSCAPE_API_EXTENSIONS
 	if (_nss_ldap_ltf_thread_init(__session.ls_conn) != NSS_SUCCESS)
 		{
 		do_close();
 		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
-#endif /* LDAP_VERSION3_API */
+#endif /* NETSCAPE_API_EXTENSIONS */
 
-#ifdef LDAP_VERSION3_API
+#ifdef NETSCAPE_API_EXTENSIONS
 	ldap_set_rebind_proc(__session.ls_conn, _nss_ldap_rebind, NULL);
 #else
 	ldap_set_rebind_proc(__session.ls_conn, _nss_ldap_rebind);
-#endif /* LDAP_VERSION3_API */
+#endif /* NETSCAPE_API_EXTENSIONS */
 
 #ifdef LDAP_VERSION3_API
 	ldap_set_option(__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION, &cfg->ldc_version);

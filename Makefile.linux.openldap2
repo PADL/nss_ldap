@@ -1,4 +1,7 @@
-# Makefile for Solaris nss_ldap
+# Makefile for Linux nss_ldap using Netscape's Mozilla LDAP
+# client library. We've used their thread wrappers in ltf.c
+# and define LDAP_VERSION3_API, like we do with their C LDAP SDK.
+#
 
 # Copyright (C) 1997 Luke Howard.
 # This file is part of the nss_ldap Library.
@@ -65,49 +68,50 @@ SRCS=	ldap-nss.c \
 	dnsconfig.c
 
 OBJS=$(SRCS:.c=.o)
-LIB=$(MODULE).so.1
 
-NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API -DNETSCAPE_API_EXTENSIONS
+NSFLAGS=-I/usr/local/include -DLDAP_VERSION3_API -DRFC2307BIS
 
-SUNFLAGS=-DSUN_NSS -D_REENTRANT -DHAVE_SNPRINTF -D__EXTENSIONS__
-INCDIRS=
-LIBDIRS=-L/usr/local/ldapsdk/lib
-LIBS=-lldapssl30
+GNUFLAGS=-DGNU_NSS -DHAVE_SNPRINTF -D_REENTRANT
+LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 
-# uncomment this if you're using gcc
-GCCFLAGS=-O -g -Wall -fPIC $(PDOFLAGS)
-# don't know about these CFLAGS?
-#SUNCFLAGS=-g -pic
-# these are the flags wcs@sun used
-SUNCFLAGS=-O -G -K pic
-SUNLDFLAGS=-M mapfile -G -z text
+SOLIB=lib$(MODULE).so.$(NSSLIBVER)
+NSSLIB=lib$(MODULE)-$(LIBCVERS).so
+NSSLIBVER=$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
+
+LIBDIRS=-L.
+
+LIBS=-lldap -llber -lnsl -lpthread -lresolv
+
+GCCFLAGS=-O -g -Wall -fPIC
 DEBUGFLAGS=-DDEBUG
-
-# choose your C compiler
-#CC=/usr/local/opt/SUNWspro/bin/cc
-#CC=cc
-#COMPILERFLAGS=$(SUNCFLAGS)
-#LD=$(CC)
-#LDFLAGS=$(SUNLDFLAGS)
 
 CC=gcc
 COMPILERFLAGS=$(GCCFLAGS)
 
-# These "GNU" flags seem to work OK, with Sun CC too ???
-LD=ld
-GNULDFLAGS=-M mapfile -G -dy -z text -R/usr/local/ldapsdk/lib
+LD=gcc
+GNULDFLAGS=-shared -Wl,-soname,$(SOLIB)
 LDFLAGS=$(GNULDFLAGS)
 
-CFLAGS=$(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFLAGS) $(INCDIRS)
+CFLAGS=-DLDAP_REFERRALS $(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFLAGS) $(INCDIRS)
 
 all: $(MODULE)
 
+# This symlink is purely to keep RC happy.
 $(MODULE): $(OBJS)
-	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(LIB) $(OBJS) $(LIBS)
+	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(NSSLIB) $(OBJS) $(LIBS)
+	-ln -sf $(NSSLIB) $(MODULE).so.1
 
-install:
-	cp $(LIB) /usr/lib/
+install: install_lib install_conf
+
+install_lib:
+	install -m 644 -o root -g root $(NSSLIB) /lib/$(NSSLIB)
+	ln -sf $(NSSLIB) /lib/$(SOLIB)
+	ln -sf /lib/$(NSSLIB) /usr/lib/$(MODULE).so
+
+install_conf:
+	install -m 644 -o root -g root nsswitch.ldap /etc/nsswitch.ldap
+	install -m 644 -o root -g root ldap.conf /etc/ldap.conf
 
 clean:
-	rm -f $(OBJS) $(LIB)
+	rm -f $(OBJS) $(LIB) core
 

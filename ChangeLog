@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.65	Luke Howard <lukeh@padl.com>
+
+	* mods to compile with OpenLDAP 2
+
 2.64	Luke Howard <lukeh@padl.com>
 
 	* changed alias schema to Sun SDS nisMailAlias schema

@@ -21,7 +21,7 @@
 #ifndef _LDAP_NSS_LDAP_LTF_H
 #define _LDAP_NSS_LDAP_LTF_H
 
-#ifdef LDAP_VERSION3_API
+#ifdef NETSCAPE_API_EXTENSIONS
 NSS_STATUS _nss_ldap_ltf_thread_init(LDAP *ld);
 #endif
 

@@ -69,7 +69,7 @@ SRCS=	ldap-nss.c \
 
 OBJS=$(SRCS:.c=.o)
 
-NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API #-DRFC2307BIS
+NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API -DNETSCAPE_API_EXTENSIONS #-DRFC2307BIS
 
 GNUFLAGS=-DGNU_NSS -DHAVE_SNPRINTF -D_REENTRANT
 LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
