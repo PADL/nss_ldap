@@ -28,7 +28,7 @@
 
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #include "config.h"
 
@@ -208,8 +208,8 @@ _nss_ldap_getservbyname_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
 				(NSS_ARGS (args)->key.serv.proto == NULL) ?
-				_nss_ldap_filt_getservbyname : filt_getservbynameproto,
-				LM_SERVICES,
+				_nss_ldap_filt_getservbyname :
+				filt_getservbynameproto, LM_SERVICES,
 				_nss_ldap_parse_serv);
 
   if (status == NSS_SUCCESS)
@@ -232,10 +232,9 @@ _nss_ldap_getservbyname_r (const char *name,
   LA_STRING2 (a) = proto;
 
   return _nss_ldap_getbyname (&a, result, buffer, buflen, errnop,
-			      ((proto == NULL) ? _nss_ldap_filt_getservbyname :
-			       _nss_ldap_filt_getservbynameproto),
-			      LM_SERVICES,
-			      _nss_ldap_parse_serv);
+			      ((proto == NULL) ? _nss_ldap_filt_getservbyname
+			       : _nss_ldap_filt_getservbynameproto),
+			      LM_SERVICES, _nss_ldap_parse_serv);
 }
 #endif
 
@@ -258,8 +257,8 @@ _nss_ldap_getservbyport_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
 				(NSS_ARGS (args)->key.serv.proto == NULL) ?
-				_nss_ldap_filt_getservbyport : filt_getservbyportproto,
-				LM_SERVICES,
+				_nss_ldap_filt_getservbyport :
+				filt_getservbyportproto, LM_SERVICES,
 				_nss_ldap_parse_serv);
 
   if (status == NSS_SUCCESS)
@@ -284,8 +283,7 @@ _nss_ldap_getservbyport_r (int port,
 			      (proto ==
 			       NULL) ? _nss_ldap_filt_getservbyport :
 			      _nss_ldap_filt_getservbyportproto,
-			      LM_SERVICES,
-			      _nss_ldap_parse_serv);
+			      LM_SERVICES, _nss_ldap_parse_serv);
 }
 #endif
 
@@ -326,7 +324,8 @@ _nss_ldap_getservent_r (struct servent *result, char *buffer, size_t buflen,
 			int *errnop)
 {
   LOOKUP_GETENT (serv_context, result, buffer, buflen, errnop,
-		 _nss_ldap_filt_getservent, LM_SERVICES, _nss_ldap_parse_serv);
+		 _nss_ldap_filt_getservent, LM_SERVICES,
+		 _nss_ldap_parse_serv);
 }
 #endif
 
@@ -337,8 +336,7 @@ _nss_ldap_services_destr (nss_backend_t * serv_context, void *args)
   return _nss_ldap_default_destr (serv_context, args);
 }
 
-static nss_backend_op_t services_ops[] =
-{
+static nss_backend_op_t services_ops[] = {
   _nss_ldap_services_destr,
   _nss_ldap_endservent_r,
   _nss_ldap_setservent_r,

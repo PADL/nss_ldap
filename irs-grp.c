@@ -36,22 +36,24 @@ IRS_EXPORT void gr_rewind (struct irs_gr *);
 IRS_EXPORT void gr_minimize (struct irs_gr *);
 
 struct pvt
-  {
-    struct group result;
-    char buffer[NSS_BUFLEN_GROUP];
-    ent_context_t *state;
-  };
+{
+  struct group result;
+  char buffer[NSS_BUFLEN_GROUP];
+  ent_context_t *state;
+};
 
 IRS_EXPORT struct group *
 gr_byname (struct irs_gr *this, const char *name)
 {
-  LOOKUP_NAME (name, this, _nss_ldap_filt_getgrnam, LM_GROUP, _nss_ldap_parse_gr);
+  LOOKUP_NAME (name, this, _nss_ldap_filt_getgrnam, LM_GROUP,
+	       _nss_ldap_parse_gr);
 }
 
 IRS_EXPORT struct group *
 gr_bygid (struct irs_gr *this, gid_t gid)
 {
-  LOOKUP_NUMBER (gid, this, _nss_ldap_filt_getgrgid, LM_GROUP, _nss_ldap_parse_gr);
+  LOOKUP_NUMBER (gid, this, _nss_ldap_filt_getgrgid, LM_GROUP,
+		 _nss_ldap_parse_gr);
 }
 
 IRS_EXPORT void

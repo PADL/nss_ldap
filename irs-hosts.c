@@ -39,17 +39,15 @@ IRS_EXPORT void ho_rewind (struct irs_ho *this);
 IRS_EXPORT void ho_minimize (struct irs_ho *this);
 
 
-static const u_char mapped[] =
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
-static const u_char tunnelled[] =
-{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const u_char mapped[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
+static const u_char tunnelled[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 struct pvt
-  {
-    struct hostent result;
-    char buffer[NSS_BUFLEN_HOSTS];
-    ent_context_t *state;
-  };
+{
+  struct hostent result;
+  char buffer[NSS_BUFLEN_HOSTS];
+  ent_context_t *state;
+};
 
 IRS_EXPORT struct hostent *
 ho_byname (struct irs_ho *this, const char *name)
@@ -68,8 +66,7 @@ ho_byname (struct irs_ho *this, const char *name)
 			   sizeof (pvt->buffer),
 			   &errno,
 			   _nss_ldap_filt_gethostbyname,
-			   LM_HOSTS,
-			   _nss_ldap_parse_host);
+			   LM_HOSTS, _nss_ldap_parse_host);
 
   if (s != NSS_SUCCESS)
     {
@@ -114,8 +111,7 @@ ho_byaddr (struct irs_ho *this, const void *addr, int len, int af)
 			   sizeof (pvt->buffer),
 			   &errno,
 			   _nss_ldap_filt_gethostbyaddr,
-			   LM_HOSTS,
-			   _nss_ldap_parse_host);
+			   LM_HOSTS, _nss_ldap_parse_host);
 
   if (s != NSS_SUCCESS)
     {
@@ -147,8 +143,7 @@ ho_next (struct irs_ho *this)
 			sizeof (pvt->buffer),
 			&errno,
 			_nss_ldap_filt_gethostent,
-			LM_HOSTS,
-			_nss_ldap_parse_host);
+			LM_HOSTS, _nss_ldap_parse_host);
 
   if (s != NSS_SUCCESS)
     {

@@ -52,7 +52,7 @@ _nss_ldap_open (const char *name, const char *domain,
   return NULL;
 }
 
-static int 
+static int
 _nss_ldap_close (void *token)
 {
   gr_close (grp_conn);
@@ -109,7 +109,7 @@ _nss_ldap_getgracct (void *id, int type)
     return _nss_ldap_getgrnam ((char *) id);
 }
 
-int 
+int
 nss_ldap_initialize (struct secmethod_table *meths)
 {
   bzero (meths, sizeof (*meths));

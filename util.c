@@ -56,15 +56,15 @@ static NSS_STATUS do_getrdnvalue (const char *dn,
 
 #ifdef AT_OC_MAP
 enum ldap_map_type
-  {
-    MAP_ATTRIBUTE,
-    MAP_OBJECTCLASS
-  };
+{
+  MAP_ATTRIBUTE,
+  MAP_OBJECTCLASS
+};
 
 typedef enum ldap_map_type ldap_map_type_t;
 
-static NSS_STATUS do_parse_map_statement (ldap_config_t* cfg,
-					  const char* statement,
+static NSS_STATUS do_parse_map_statement (ldap_config_t * cfg,
+					  const char *statement,
 					  ldap_map_type_t type);
 #endif /* AT_OC_MAP */
 
@@ -201,8 +201,7 @@ _nss_ldap_dn2uid (LDAP * ld,
       if (status != NSS_SUCCESS)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[] =
-	  {AT (uid), NULL};
+	  const char *attrs[] = { AT (uid), NULL };
 	  LDAPMessage *res;
 
 	  status = NSS_NOTFOUND;
@@ -402,9 +401,8 @@ do_getrdnvalue (const char *dn,
 
 #ifdef AT_OC_MAP
 static NSS_STATUS
-do_parse_map_statement (ldap_config_t* cfg,
-			const char* statement,
-			ldap_map_type_t type)
+do_parse_map_statement (ldap_config_t * cfg,
+			const char *statement, ldap_map_type_t type)
 {
   /**
    * statement has already been prepared in _nss_ldap_readconfig
@@ -413,7 +411,7 @@ do_parse_map_statement (ldap_config_t* cfg,
   NSS_STATUS stat;
   char *key, *val;
 
-  key = (char*)statement;
+  key = (char *) statement;
   val = key;
   while (*val != ' ' && *val != '\t')
     val++;
@@ -424,7 +422,7 @@ do_parse_map_statement (ldap_config_t* cfg,
 
   if (type == MAP_ATTRIBUTE)
     stat = _nss_ldap_atmap_put (cfg, key, val);
-  else /* type == MAP_OBJECTCLASS */
+  else				/* type == MAP_OBJECTCLASS */
     stat = _nss_ldap_ocmap_put (cfg, key, val);
 
   return stat;
@@ -732,48 +730,48 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	  result->ldc_idle_timelimit = atoi (v);
 	}
       else if (!strcasecmp (k, "tls_checkpeer"))
-        {
-          if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
-              || !strcasecmp (v, "true"))
-            {
-              result->ldc_tls_checkpeer = 1;
-            }
-          else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
-              || !strcasecmp (v, "false"))
-            {
-              result->ldc_tls_checkpeer = 0;
-            }
-        }
+	{
+	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
+	      || !strcasecmp (v, "true"))
+	    {
+	      result->ldc_tls_checkpeer = 1;
+	    }
+	  else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
+		   || !strcasecmp (v, "false"))
+	    {
+	      result->ldc_tls_checkpeer = 0;
+	    }
+	}
       else if (!strcasecmp (k, "tls_cacertfile"))
-        {
+	{
 	  t = &result->ldc_tls_cacertfile;
-        }
+	}
       else if (!strcasecmp (k, "tls_cacertdir"))
-        {
+	{
 	  t = &result->ldc_tls_cacertdir;
-        }
+	}
       else if (!strcasecmp (k, "tls_ciphers"))
-        {
+	{
 	  t = &result->ldc_tls_ciphers;
-        }
+	}
       else if (!strcasecmp (k, "tls_cert"))
-        {
+	{
 	  t = &result->ldc_tls_cert;
-        }
+	}
       else if (!strcasecmp (k, "tls_key"))
-        {
+	{
 	  t = &result->ldc_tls_key;
-        }
+	}
 #ifdef AT_OC_MAP
       else if (!strncasecmp (k, NSS_LDAP_KEY_MAP_ATTRIBUTE,
-			     strlen(NSS_LDAP_KEY_MAP_ATTRIBUTE)))
+			     strlen (NSS_LDAP_KEY_MAP_ATTRIBUTE)))
 	{
-	  do_parse_map_statement(result, v, MAP_ATTRIBUTE);
+	  do_parse_map_statement (result, v, MAP_ATTRIBUTE);
 	}
       else if (!strncasecmp (k, NSS_LDAP_KEY_MAP_OBJECTCLASS,
-			     strlen(NSS_LDAP_KEY_MAP_OBJECTCLASS)))
+			     strlen (NSS_LDAP_KEY_MAP_OBJECTCLASS)))
 	{
-	  do_parse_map_statement(result, v, MAP_OBJECTCLASS);
+	  do_parse_map_statement (result, v, MAP_OBJECTCLASS);
 	}
 #endif /* AT_OC_MAP */
       else
@@ -849,11 +847,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	}
     }
 
-  if (result->ldc_host == NULL 
+  if (result->ldc_host == NULL
 #ifdef HAVE_LDAP_INITIALIZE
       && result->ldc_uri == NULL
 #endif
-      )
+    )
     {
       free (result);
       return NSS_NOTFOUND;
@@ -874,8 +872,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   return stat;
 }
 
-NSS_STATUS 
-_nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
   int ret = NSS_TRYAGAIN;
   char *p = buf;
@@ -918,4 +915,3 @@ _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 
   return ret;
 }
-

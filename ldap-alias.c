@@ -22,7 +22,7 @@
 
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #include "config.h"
 
@@ -87,18 +87,17 @@ NSS_STATUS
 _nss_ldap_getaliasbyname_r (const char *name, struct aliasent * result,
 			    char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, _nss_ldap_filt_getaliasbyname,
-	       LM_ALIASES, _nss_ldap_parse_alias);
+  LOOKUP_NAME (name, result, buffer, buflen, errnop,
+	       _nss_ldap_filt_getaliasbyname, LM_ALIASES,
+	       _nss_ldap_parse_alias);
 }
 
-NSS_STATUS
-_nss_ldap_setaliasent_r (void)
+NSS_STATUS _nss_ldap_setaliasent_r (void)
 {
   LOOKUP_SETENT (alias_context);
 }
 
-NSS_STATUS
-_nss_ldap_endaliasent_r (void)
+NSS_STATUS _nss_ldap_endaliasent_r (void)
 {
   LOOKUP_ENDENT (alias_context);
 }
@@ -108,7 +107,8 @@ _nss_ldap_getaliasent_r (struct aliasent *result, char *buffer, size_t buflen,
 			 int *errnop)
 {
   LOOKUP_GETENT (alias_context, result, buffer, buflen, errnop,
-		 _nss_ldap_filt_getaliasent, LM_ALIASES, _nss_ldap_parse_alias);
+		 _nss_ldap_filt_getaliasent, LM_ALIASES,
+		 _nss_ldap_parse_alias);
 }
 
 #endif /* HAVE_NSS_H */

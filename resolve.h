@@ -61,45 +61,45 @@
 #endif
 
 struct dns_query
-  {
-    char *domain;
-    unsigned type;
-    unsigned class;
-  };
+{
+  char *domain;
+  unsigned type;
+  unsigned class;
+};
 
 struct mx_record
-  {
-    unsigned preference;
-    char domain[1];
-  };
+{
+  unsigned preference;
+  char domain[1];
+};
 
 struct srv_record
-  {
-    unsigned priority;
-    unsigned weight;
-    unsigned port;
-    char target[1];
-  };
+{
+  unsigned priority;
+  unsigned weight;
+  unsigned port;
+  char target[1];
+};
 
 struct resource_record
+{
+  char *domain;
+  unsigned type;
+  unsigned class;
+  unsigned ttl;
+  unsigned size;
+  union
   {
-    char *domain;
-    unsigned type;
-    unsigned class;
-    unsigned ttl;
-    unsigned size;
-    union
-      {
-	void *data;
-	struct mx_record *mx;
-	struct mx_record *afsdb;	/* mx and afsdb are identical */
-	struct srv_record *srv;
-	struct in_addr *a;
-	char *txt;
-      }
-    u;
-    struct resource_record *next;
-  };
+    void *data;
+    struct mx_record *mx;
+    struct mx_record *afsdb;	/* mx and afsdb are identical */
+    struct srv_record *srv;
+    struct in_addr *a;
+    char *txt;
+  }
+  u;
+  struct resource_record *next;
+};
 
 
 #ifndef HAVE_ARPA_NAMESER_H	/* XXX */
@@ -107,11 +107,11 @@ typedef int HEADER;		/* will never be used */
 #endif
 
 struct dns_reply
-  {
-    HEADER h;
-    struct dns_query q;
-    struct resource_record *head;
-  };
+{
+  HEADER h;
+  struct dns_query q;
+  struct resource_record *head;
+};
 
 #define dns_lookup	_nss_ldap_dns_lookup
 #define dns_free_data	_nss_ldap_dns_free_data

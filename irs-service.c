@@ -37,11 +37,11 @@ IRS_EXPORT void sv_rewind (struct irs_sv *);
 IRS_EXPORT void sv_minimize (struct irs_sv *);
 
 struct pvt
-  {
-    struct servent result;
-    char buffer[NSS_BUFLEN_PROTOCOLS];
-    ent_context_t *state;
-  };
+{
+  struct servent result;
+  char buffer[NSS_BUFLEN_PROTOCOLS];
+  ent_context_t *state;
+};
 
 IRS_EXPORT struct servent *
 sv_byname (struct irs_sv *this, const char *name, const char *proto)
@@ -60,8 +60,7 @@ sv_byname (struct irs_sv *this, const char *name, const char *proto)
 			 (proto ==
 			  NULL) ? _nss_ldap_filt_getservbyname :
 			 _nss_ldap_filt_getservbynameproto,
-			 LM_SERVICES,
-			 _nss_ldap_parse_serv);
+			 LM_SERVICES, _nss_ldap_parse_serv);
 
   if (s != NSS_SUCCESS)
     {
@@ -88,8 +87,7 @@ sv_byport (struct irs_sv *this, int port, const char *proto)
 			 (proto ==
 			  NULL) ? _nss_ldap_filt_getservbyport :
 			 _nss_ldap_filt_getservbyportproto,
-			 LM_SERVICES,
-			 _nss_ldap_parse_serv);
+			 LM_SERVICES, _nss_ldap_parse_serv);
 
   if (s != NSS_SUCCESS)
     {

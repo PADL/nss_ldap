@@ -19,7 +19,7 @@
  */
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #include "config.h"
 
@@ -71,8 +71,8 @@ _nss_ldap_parse_sp (LDAP * ld,
   char *tmp = NULL;
 
   stat =
-    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &sp->sp_pwdp, &buffer,
-				   &buflen);
+    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &sp->sp_pwdp,
+				   &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -135,8 +135,7 @@ _nss_ldap_getspnam_r (nss_backend_t * be, void *args)
 #endif /* HAVE_NSS_H */
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_setspent (void)
+NSS_STATUS _nss_ldap_setspent (void)
 #else
 static NSS_STATUS
 _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
@@ -148,8 +147,7 @@ _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_endspent (void)
+NSS_STATUS _nss_ldap_endspent (void)
 #else
 static NSS_STATUS
 _nss_ldap_endspent_r (nss_backend_t * sp_context, void *args)
@@ -165,8 +163,8 @@ NSS_STATUS
 _nss_ldap_getspent_r (struct spwd *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_GETENT (sp_context, result, buffer, buflen, errnop, _nss_ldap_filt_getspent,
-		 LM_SHADOW, _nss_ldap_parse_sp);
+  LOOKUP_GETENT (sp_context, result, buffer, buflen, errnop,
+		 _nss_ldap_filt_getspent, LM_SHADOW, _nss_ldap_parse_sp);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
@@ -184,8 +182,7 @@ _nss_ldap_shadow_destr (nss_backend_t * sp_context, void *args)
   return _nss_ldap_default_destr (sp_context, args);
 }
 
-static nss_backend_op_t shadow_ops[] =
-{
+static nss_backend_op_t shadow_ops[] = {
   _nss_ldap_shadow_destr,
   _nss_ldap_endspent_r,		/* NSS_DBOP_ENDENT */
   _nss_ldap_setspent_r,		/* NSS_DBOP_SETENT */

@@ -22,7 +22,7 @@
 
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #include "config.h"
 
@@ -127,8 +127,7 @@ _nss_ldap_gethostton_r (nss_backend_t * be, void *args)
 				sizeof (buffer),
 				&NSS_ARGS (args)->erange,
 				_nss_ldap_filt_gethostton,
-				LM_ETHERS,
-				_nss_ldap_parse_ether);
+				LM_ETHERS, _nss_ldap_parse_ether);
 
   if (status == NSS_SUCCESS)
     {
@@ -144,8 +143,8 @@ NSS_STATUS
 _nss_ldap_gethostton_r (const char *name, struct ether * result,
 			char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, _nss_ldap_filt_gethostton,
-	       LM_ETHERS, _nss_ldap_parse_ether);
+  LOOKUP_NAME (name, result, buffer, buflen, errnop,
+	       _nss_ldap_filt_gethostton, LM_ETHERS, _nss_ldap_parse_ether);
 }
 #endif
 
@@ -171,8 +170,7 @@ _nss_ldap_getntohost_r (nss_backend_t * be, void *args)
 				sizeof (buffer),
 				&NSS_ARGS (args)->erange,
 				_nss_ldap_filt_getntohost,
-				LM_ETHERS,
-				_nss_ldap_parse_ether);
+				LM_ETHERS, _nss_ldap_parse_ether);
 
   if (status == NSS_SUCCESS)
     {
@@ -232,15 +230,13 @@ _nss_ldap_getetherent_r (nss_backend_t * ether_context, void *args)
   struct ether result;
   NSS_STATUS status;
 
-  status = _nss_ldap_getent (
-			      &((nss_ldap_backend_t *) ether_context)->state,
-			      &result,
-			      NSS_ARGS (args)->buf.buffer,
-			      NSS_ARGS (args)->buf.buflen,
-			      &NSS_ARGS (args)->erange,
-			      _nss_ldap_filt_getetherent,
-			      LM_ETHERS,
-			      _nss_ldap_parse_ether);
+  status = _nss_ldap_getent (&((nss_ldap_backend_t *) ether_context)->state,
+			     &result,
+			     NSS_ARGS (args)->buf.buffer,
+			     NSS_ARGS (args)->buf.buflen,
+			     &NSS_ARGS (args)->erange,
+			     _nss_ldap_filt_getetherent,
+			     LM_ETHERS, _nss_ldap_parse_ether);
 
   if (status == NSS_SUCCESS)
     {
@@ -261,7 +257,8 @@ _nss_ldap_getetherent_r (struct ether * result, char *buffer, size_t buflen,
 			 int *errnop)
 {
   LOOKUP_GETENT (ether_context, result, buffer, buflen, errnop,
-		 _nss_ldap_filt_getetherent, LM_ETHERS, _nss_ldap_parse_ether);
+		 _nss_ldap_filt_getetherent, LM_ETHERS,
+		 _nss_ldap_parse_ether);
 }
 #endif
 
@@ -272,8 +269,7 @@ _nss_ldap_ethers_destr (nss_backend_t * ether_context, void *args)
   return _nss_ldap_default_destr (ether_context, args);
 }
 
-static nss_backend_op_t ethers_ops[] =
-{
+static nss_backend_op_t ethers_ops[] = {
   _nss_ldap_ethers_destr,
   _nss_ldap_gethostton_r,
   _nss_ldap_getntohost_r

@@ -30,11 +30,11 @@
 #define _LDAP_NSS_LDAP_LDAP_ETHERS_H
 
 
-     struct ether
-       {
-	 char *e_name;
-	 struct ether_addr e_addr;
-       };
+struct ether
+{
+  char *e_name;
+  struct ether_addr e_addr;
+};
 
 /*
    typedef u_char ether_addr_t[6];
@@ -43,31 +43,30 @@
    };
  */
 
-     static NSS_STATUS _nss_ldap_parse_ether (
-					       LDAP * ld,
-					       LDAPMessage * e,
-					       ldap_state_t * pvt,
-					       void *result,
-					       char *buffer,
-					       size_t buflen);
+static NSS_STATUS _nss_ldap_parse_ether (LDAP * ld,
+					 LDAPMessage * e,
+					 ldap_state_t * pvt,
+					 void *result,
+					 char *buffer, size_t buflen);
 
 #ifdef HAVE_NSSWITCH_H
-     static NSS_STATUS _nss_ldap_gethostton_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_getntohost_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_gethostton_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getntohost_r (nss_backend_t * be, void *fakeargs);
 
-     nss_backend_t *_nss_ldap_ethers_constr (const char *db_name,
-					     const char *src_name,
-					     const char *cfg_args);
+nss_backend_t *_nss_ldap_ethers_constr (const char *db_name,
+					const char *src_name,
+					const char *cfg_args);
 
 #elif defined(HAVE_NSS_H)
 /* for the record */
-     NSS_STATUS _nss_ldap_gethostton_r (const char *name, struct ether *eth,
-				  char *buffer, size_t buflen, int *errnop);
-     NSS_STATUS _nss_ldap_getntohost_r (struct ether_addr *addr, struct ether *eth,
-				  char *buffer, size_t buflen, int *errnop);
-     NSS_STATUS _nss_ldap_endetherent (void);
-     NSS_STATUS _nss_ldap_setetherent (void);
-     NSS_STATUS _nss_ldap_getetherent_r (struct ether *result, char *buffer, size_t buflen, int *errnop);
+NSS_STATUS _nss_ldap_gethostton_r (const char *name, struct ether *eth,
+				   char *buffer, size_t buflen, int *errnop);
+NSS_STATUS _nss_ldap_getntohost_r (struct ether_addr *addr, struct ether *eth,
+				   char *buffer, size_t buflen, int *errnop);
+NSS_STATUS _nss_ldap_endetherent (void);
+NSS_STATUS _nss_ldap_setetherent (void);
+NSS_STATUS _nss_ldap_getetherent_r (struct ether *result, char *buffer,
+				    size_t buflen, int *errnop);
 #endif
 
 

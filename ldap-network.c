@@ -23,7 +23,7 @@
 /* parts based on nss_nis */
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #include "config.h"
 
@@ -141,8 +141,7 @@ _nss_ldap_getnetbyname_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
 				_nss_ldap_filt_getnetbyname,
-				LM_NETWORKS,
-				_nss_ldap_parse_net);
+				LM_NETWORKS, _nss_ldap_parse_net);
 
   if (status == NSS_SUCCESS)
     NSS_ARGS (args)->returnval = NSS_ARGS (args)->buf.result;
@@ -170,8 +169,7 @@ _nss_ldap_getnetbyname_r (const char *name, struct netent * result,
 				buflen,
 				errnop,
 				_nss_ldap_filt_getnetbyname,
-				LM_NETWORKS,
-				_nss_ldap_parse_net);
+				LM_NETWORKS, _nss_ldap_parse_net);
 
   MAP_H_ERRNO (status, *herrnop);
 
@@ -186,7 +184,7 @@ _nss_ldap_getnetbyaddr_r (nss_backend_t * be, void *args)
 #else
 NSS_STATUS
 _nss_ldap_getnetbyaddr_r (unsigned long addr, int type,
-			struct netent * result, char *buffer, size_t buflen,
+			  struct netent * result, char *buffer, size_t buflen,
 			  int *errnop, int *herrnop)
 #endif
 {
@@ -220,8 +218,7 @@ _nss_ldap_getnetbyaddr_r (unsigned long addr, int type,
       retval = _nss_ldap_getbyname (&a, result, buffer, buflen, errnop,
 #endif
 				    _nss_ldap_filt_getnetbyaddr,
-				    LM_NETWORKS,
-				    _nss_ldap_parse_net);
+				    LM_NETWORKS, _nss_ldap_parse_net);
 
       if (retval != NSS_SUCCESS)
 	{
@@ -301,16 +298,15 @@ _nss_ldap_endnetent_r (nss_backend_t * net_context, void *fakeargs)
 static NSS_STATUS
 _nss_ldap_getnetent_r (nss_backend_t * net_context, void *args)
 {
-  NSS_STATUS status = _nss_ldap_getent (
-				     &((nss_ldap_backend_t *) net_context)->
-					 state,
-					 NSS_ARGS (args)->buf.result,
-					 NSS_ARGS (args)->buf.buffer,
-					 NSS_ARGS (args)->buf.buflen,
-					 &NSS_ARGS (args)->erange,
-					 _nss_ldap_filt_getnetent,
-					 LM_NETWORKS,
-					 _nss_ldap_parse_net);
+  NSS_STATUS status =
+    _nss_ldap_getent (&((nss_ldap_backend_t *) net_context)->state,
+		      NSS_ARGS (args)->buf.result,
+		      NSS_ARGS (args)->buf.buffer,
+		      NSS_ARGS (args)->buf.buflen,
+		      &NSS_ARGS (args)->erange,
+		      _nss_ldap_filt_getnetent,
+		      LM_NETWORKS,
+		      _nss_ldap_parse_net);
 
   if (status == NSS_SUCCESS)
     NSS_ARGS (args)->returnval = NSS_ARGS (args)->buf.result;
@@ -330,8 +326,7 @@ _nss_ldap_getnetent_r (struct netent * result, char *buffer, size_t buflen,
 			     buflen,
 			     errnop,
 			     _nss_ldap_filt_getnetent,
-			     LM_NETWORKS,
-			     _nss_ldap_parse_net);
+			     LM_NETWORKS, _nss_ldap_parse_net);
 
   MAP_H_ERRNO (status, *herrnop);
 
@@ -346,8 +341,7 @@ _nss_ldap_networks_destr (nss_backend_t * net_context, void *args)
   return _nss_ldap_default_destr (net_context, args);
 }
 
-static nss_backend_op_t net_ops[] =
-{
+static nss_backend_op_t net_ops[] = {
   _nss_ldap_networks_destr,
   _nss_ldap_endnetent_r,
   _nss_ldap_setnetent_r,

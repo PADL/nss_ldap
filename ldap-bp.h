@@ -25,19 +25,17 @@
 
 /* I'm guessing here. This is certainly wrong. */
 struct bootparams
-  {
-    char *bp_name;
-    char **bp_params;
-  };
+{
+  char *bp_name;
+  char **bp_params;
+};
 
 
-     static NSS_STATUS _nss_ldap_parse_bp (
-					    LDAP * ld,
-					    LDAPMessage * e,
-					    ldap_state_t * pvt,
-					    void *result,
-					    char *buffer,
-					    size_t buflen);
+static NSS_STATUS _nss_ldap_parse_bp (LDAP * ld,
+				      LDAPMessage * e,
+				      ldap_state_t * pvt,
+				      void *result,
+				      char *buffer, size_t buflen);
 
 #ifdef HAVE_NSSWITCH_H
 
@@ -48,11 +46,12 @@ struct bootparams
    char **bp_execpath, char **bp_kvmpath);
  */
 
-     static NSS_STATUS _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getbootparamsbyname_r (nss_backend_t * be,
+						   void *fakeargs);
 
-     nss_backend_t *_nss_ldap_bootparams_constr (const char *db_name,
-						 const char *src_name,
-						 const char *cfg_args);
+nss_backend_t *_nss_ldap_bootparams_constr (const char *db_name,
+					    const char *src_name,
+					    const char *cfg_args);
 
 #endif
 

@@ -23,24 +23,27 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_ALIAS_H
 #define _LDAP_NSS_LDAP_LDAP_ALIAS_H
 
-     static NSS_STATUS _nss_ldap_parse_alias (LDAP * ld,
-					      LDAPMessage * e,
-					      ldap_state_t *,
-					      void *result,
-					      char *buffer,
-					      size_t buflen);
+static NSS_STATUS _nss_ldap_parse_alias (LDAP * ld,
+					 LDAPMessage * e,
+					 ldap_state_t *,
+					 void *result,
+					 char *buffer, size_t buflen);
 
 #if 0
 /* no support in Sun NSS for aliases */
 
-     static NSS_STATUS _nss_ldap_getaliasbyname_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_getaliasent_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_setaliasent_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_endaliasent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getaliasbyname_r (nss_backend_t * be,
+					      void *fakeargs);
+static NSS_STATUS _nss_ldap_getaliasent_r (nss_backend_t * be,
+					   void *fakeargs);
+static NSS_STATUS _nss_ldap_setaliasent_r (nss_backend_t * be,
+					   void *fakeargs);
+static NSS_STATUS _nss_ldap_endaliasent_r (nss_backend_t * be,
+					   void *fakeargs);
 
-     nss_backend_t *_nss_ldap_alias_constr (const char *db_name,
-					    const char *src_name,
-					    const char *cfg_args);
+nss_backend_t *_nss_ldap_alias_constr (const char *db_name,
+				       const char *src_name,
+				       const char *cfg_args);
 #endif
 
 #endif /* _LDAP_NSS_LDAP_LDAP_ALIAS_H */

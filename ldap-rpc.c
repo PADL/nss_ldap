@@ -28,7 +28,7 @@
 
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #include "config.h"
 
@@ -111,15 +111,16 @@ _nss_ldap_parse_rpc (LDAP * ld,
 static NSS_STATUS
 _nss_ldap_getrpcbyname_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, _nss_ldap_filt_getrpcbyname, LM_RPC, _nss_ldap_parse_rpc);
+  LOOKUP_NAME (args, _nss_ldap_filt_getrpcbyname, LM_RPC,
+	       _nss_ldap_parse_rpc);
 }
 #elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getrpcbyname_r (const char *name, struct rpcent *result,
 			  char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, _nss_ldap_filt_getrpcbyname,
-	       LM_RPC, _nss_ldap_parse_rpc);
+  LOOKUP_NAME (name, result, buffer, buflen, errnop,
+	       _nss_ldap_filt_getrpcbyname, LM_RPC, _nss_ldap_parse_rpc);
 }
 #endif
 
@@ -135,8 +136,8 @@ NSS_STATUS
 _nss_ldap_getrpcbynumber_r (int number, struct rpcent *result,
 			    char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NUMBER (number, result, buffer, buflen, errnop, _nss_ldap_filt_getrpcbynumber,
-		 LM_RPC, _nss_ldap_parse_rpc);
+  LOOKUP_NUMBER (number, result, buffer, buflen, errnop,
+		 _nss_ldap_filt_getrpcbynumber, LM_RPC, _nss_ldap_parse_rpc);
 }
 #endif
 
@@ -176,8 +177,8 @@ NSS_STATUS
 _nss_ldap_getrpcent_r (struct rpcent *result, char *buffer, size_t buflen,
 		       int *errnop)
 {
-  LOOKUP_GETENT (rpc_context, result, buffer, buflen, errnop, _nss_ldap_filt_getrpcent,
-		 LM_RPC, _nss_ldap_parse_rpc);
+  LOOKUP_GETENT (rpc_context, result, buffer, buflen, errnop,
+		 _nss_ldap_filt_getrpcent, LM_RPC, _nss_ldap_parse_rpc);
 }
 #endif
 
@@ -188,8 +189,7 @@ _nss_ldap_rpc_destr (nss_backend_t * rpc_context, void *args)
   return _nss_ldap_default_destr (rpc_context, args);
 }
 
-static nss_backend_op_t rpc_ops[] =
-{
+static nss_backend_op_t rpc_ops[] = {
   _nss_ldap_rpc_destr,
   _nss_ldap_endrpcent_r,
   _nss_ldap_setrpcent_r,

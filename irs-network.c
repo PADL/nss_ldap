@@ -36,11 +36,11 @@ IRS_EXPORT void nw_rewind (struct irs_nw *);
 IRS_EXPORT void nw_minimize (struct irs_nw *);
 
 struct pvt
-  {
-    struct nwent result;
-    char buffer[NSS_BUFLEN_NETWORKS];
-    ent_context_t *state;
-  };
+{
+  struct nwent result;
+  char buffer[NSS_BUFLEN_NETWORKS];
+  ent_context_t *state;
+};
 
 IRS_EXPORT struct nwent *
 nw_byname (struct irs_nw *this, const char *name, int af)
@@ -66,8 +66,7 @@ nw_byname (struct irs_nw *this, const char *name, int af)
 			   sizeof (pvt->buffer),
 			   &errno,
 			   _nss_ldap_filt_getnetbyname,
-			   LM_NETWORKS,
-			   _nss_ldap_parse_net);
+			   LM_NETWORKS, _nss_ldap_parse_net);
 
   if (s != NSS_SUCCESS)
     {
@@ -109,8 +108,7 @@ nw_byaddr (struct irs_nw *this, void *net, int length, int af)
 			   sizeof (pvt->buffer),
 			   &errno,
 			   _nss_ldap_filt_getnetbyaddr,
-			   LM_NETWORKS,
-			   _nss_ldap_parse_net);
+			   LM_NETWORKS, _nss_ldap_parse_net);
 
   if (s != NSS_SUCCESS)
     {
@@ -123,8 +121,7 @@ nw_byaddr (struct irs_nw *this, void *net, int length, int af)
 				   sizeof (pvt->buffer),
 				   &errno,
 				   _nss_ldap_filt_getnetbyaddr,
-				   LM_NETWORKS,
-				   _nss_ldap_parse_net);
+				   LM_NETWORKS, _nss_ldap_parse_net);
 	  if (s != NSS_SUCCESS)
 	    {
 	      MAP_H_ERRNO (s, h_errno);

@@ -28,7 +28,8 @@
  * Thanks to Assar & co for resolve.[ch].
  */
 
-static char rcsId[] = "$Id$";
+static char rcsId[] =
+  "$Id$";
 
 #include "config.h"
 
@@ -173,7 +174,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   result->ldc_sslpath = NULL;
   result->ldc_referrals = 1;
   result->ldc_restart = 1;
-  result->ldc_uri = NULL; 
+  result->ldc_uri = NULL;
   result->ldc_tls_checkpeer = 0;
   result->ldc_tls_cacertfile = NULL;
   result->ldc_tls_cacertdir = NULL;

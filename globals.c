@@ -41,8 +41,7 @@ mutex_t _nss_ldap_lock = DEFAULTMUTEX;
 pthread_mutex_t _nss_ldap_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif /* HAVE_THREAD_H */
 
-int _nss_ldap_herrno2nssstat_tab[] =
-{
+int _nss_ldap_herrno2nssstat_tab[] = {
 #ifdef HAVE_NSS_H
   [NSS_SUCCESS - _NSS_LOOKUP_OFFSET] = 0,
   [NSS_TRYAGAIN - _NSS_LOOKUP_OFFSET] = TRY_AGAIN,
@@ -64,21 +63,19 @@ int _nss_ldap_herrno2nssstat_tab[] =
 };
 
 size_t _nss_ldap_herrno2nssstat_tab_count =
-(sizeof (_nss_ldap_herrno2nssstat_tab) /
- sizeof (_nss_ldap_herrno2nssstat_tab[0]));
+  (sizeof (_nss_ldap_herrno2nssstat_tab) /
+   sizeof (_nss_ldap_herrno2nssstat_tab[0]));
 
 #ifdef HAVE_IRS_H
 #ifdef __GNUC__
-int _nss_ldap_errno2nssstat_tab[] =
-{
+int _nss_ldap_errno2nssstat_tab[] = {
   [NSS_SUCCESS] = 0,
   [NSS_TRYAGAIN] = ERANGE,
   [NSS_NOTFOUND] = ENOENT,
   [NSS_UNAVAIL] = EPERM
 };
 #else
-int _nss_ldap_errno2nssstat_tab[] =
-{
+int _nss_ldap_errno2nssstat_tab[] = {
   0,
   ERANGE,
   ENOENT,
@@ -87,6 +84,6 @@ int _nss_ldap_errno2nssstat_tab[] =
 #endif
 
 size_t _nss_ldap_errno2nssstat_tab_count =
-(sizeof (_nss_ldap_errno2nssstat_tab) /
- sizeof (_nss_ldap_errno2nssstat_tab[0]));
+  (sizeof (_nss_ldap_errno2nssstat_tab) /
+   sizeof (_nss_ldap_errno2nssstat_tab[0]));
 #endif /* HAVE_IRS_H */

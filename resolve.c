@@ -56,18 +56,17 @@ static char rcsId[] = "$Id$";
 #define DECL(X) {#X, T_##X}
 
 static struct stot
-  {
-    char *name;
-    int type;
-  }
+{
+  char *name;
+  int type;
+}
 stot[] =
 {
   DECL (A),
     DECL (NS),
     DECL (CNAME), DECL (PTR), DECL (MX), DECL (TXT), DECL (AFSDB), DECL (SRV),
   {
-    NULL, 0
-  }
+  NULL, 0}
 };
 
 static int

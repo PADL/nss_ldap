@@ -30,24 +30,27 @@
  */
 
 
-     static NSS_STATUS _nss_ldap_parse_proto (
-					       LDAP * ld,
-					       LDAPMessage * e,
-					       ldap_state_t * pvt,
-					       void *result,
-					       char *buffer,
-					       size_t buflen);
+static NSS_STATUS _nss_ldap_parse_proto (LDAP * ld,
+					 LDAPMessage * e,
+					 ldap_state_t * pvt,
+					 void *result,
+					 char *buffer, size_t buflen);
 
 #ifdef HAVE_NSSWITCH_H
-     static NSS_STATUS _nss_ldap_getprotobyname_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_getprotobynumber_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_setprotoent_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_endprotoent_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_getprotoent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getprotobyname_r (nss_backend_t * be,
+					      void *fakeargs);
+static NSS_STATUS _nss_ldap_getprotobynumber_r (nss_backend_t * be,
+						void *fakeargs);
+static NSS_STATUS _nss_ldap_setprotoent_r (nss_backend_t * be,
+					   void *fakeargs);
+static NSS_STATUS _nss_ldap_endprotoent_r (nss_backend_t * be,
+					   void *fakeargs);
+static NSS_STATUS _nss_ldap_getprotoent_r (nss_backend_t * be,
+					   void *fakeargs);
 
-     nss_backend_t *_nss_ldap_protocols_constr (const char *db_name,
-						const char *src_name,
-						const char *cfg_args);
+nss_backend_t *_nss_ldap_protocols_constr (const char *db_name,
+					   const char *src_name,
+					   const char *cfg_args);
 #endif /* HAVE_NSSWITCH_H */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_PROTO_H */

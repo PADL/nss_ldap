@@ -15,4 +15,3 @@
 
 /* define to enable attribute/objectclass mapping */
 #undef AT_OC_MAP
-

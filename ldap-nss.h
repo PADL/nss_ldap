@@ -81,7 +81,7 @@
 #ifdef _AIX
 #include <stdarg.h>
 static void
-debug (char *fmt,...)
+debug (char *fmt, ...)
 {
   va_list ap;
 
@@ -98,7 +98,7 @@ debug (char *fmt,...)
 #else
 #ifdef _AIX
 static void
-debug (char *fmt,...)
+debug (char *fmt, ...)
 {
 }
 #else
@@ -129,42 +129,42 @@ debug (char *fmt,...)
 
 /* selectors for different maps */
 enum ldap_map_selector
-  {
-    LM_PASSWD,
-    LM_SHADOW,
-    LM_GROUP,
-    LM_HOSTS,
-    LM_SERVICES,
-    LM_NETWORKS,
-    LM_PROTOCOLS,
-    LM_RPC,
-    LM_ETHERS,
-    LM_NETMASKS,
-    LM_BOOTPARAMS,
-    LM_ALIASES,
-    LM_NETGROUP,
-    LM_NONE
-  };
+{
+  LM_PASSWD,
+  LM_SHADOW,
+  LM_GROUP,
+  LM_HOSTS,
+  LM_SERVICES,
+  LM_NETWORKS,
+  LM_PROTOCOLS,
+  LM_RPC,
+  LM_ETHERS,
+  LM_NETMASKS,
+  LM_BOOTPARAMS,
+  LM_ALIASES,
+  LM_NETGROUP,
+  LM_NONE
+};
 
 typedef enum ldap_map_selector ldap_map_selector_t;
 
 #ifdef AT_OC_MAP
 enum ldap_userpassword_selector
-  {
-    LU_RFC2307_USERPASSWORD,
-    LU_RFC3112_AUTHPASSWORD,
-    LU_OTHER_PASSWORD
-  };
+{
+  LU_RFC2307_USERPASSWORD,
+  LU_RFC3112_AUTHPASSWORD,
+  LU_OTHER_PASSWORD
+};
 
 typedef enum ldap_userpassword_selector ldap_userpassword_selector_t;
 #endif /* AT_OC_MAP */
 
 enum ldap_ssl_options
-  {
-    SSL_OFF,
-    SSL_LDAPS,
-    SSL_START_TLS
-  };
+{
+  SSL_OFF,
+  SSL_LDAPS,
+  SSL_START_TLS
+};
 
 typedef enum ldap_ssl_options ldap_ssl_options_t;
 
@@ -173,16 +173,16 @@ typedef enum ldap_ssl_options ldap_ssl_options_t;
  * see draft-joslin-config-schema-00.txt
  */
 struct ldap_service_search_descriptor
-  {
-    /* search base, qualified */
-    char *lsd_base;
-    /* scope */
-    int lsd_scope;
-    /* filter */
-    char *lsd_filter;
-    /* next */
-    /* struct ldap_service_search_descriptor *lsd_next; */
-  };
+{
+  /* search base, qualified */
+  char *lsd_base;
+  /* scope */
+  int lsd_scope;
+  /* filter */
+  char *lsd_filter;
+  /* next */
+  /* struct ldap_service_search_descriptor *lsd_next; */
+};
 
 typedef struct ldap_service_search_descriptor
   ldap_service_search_descriptor_t;
@@ -193,79 +193,79 @@ typedef struct ldap_service_search_descriptor
  * could be used after a failed or exhausted search.
  */
 struct ldap_config
-  {
-    /* URI for a single server */
-    char *ldc_uri;
-    /* space delimited list of servers */
-    char *ldc_host;
-    /* port, expected to be common to all servers */
-    int ldc_port;
-    /* base DN, eg. dc=gnu,dc=org */
-    char *ldc_base;
-    /* scope for searches */
-    int ldc_scope;
-    /* dereference aliases/links */
-    int ldc_deref;
-    /* bind DN */
-    char *ldc_binddn;
-    /* bind cred */
-    char *ldc_bindpw;
-    /* shadow bind DN */
-    char *ldc_rootbinddn;
-    /* shadow bind cred */
-    char *ldc_rootbindpw;
-    /* protocol version */
-    int ldc_version;
-    /* search timelimit */
-    int ldc_timelimit;
-    /* bind timelimit */
-    int ldc_bind_timelimit;
-    /* SSL enabled */
-    ldap_ssl_options_t ldc_ssl_on;
-    /* SSL certificate path */
-    char *ldc_sslpath;
-    /* Chase referrals */
-    int ldc_referrals;
-    int ldc_restart;
-    /* naming contexts */
-    ldap_service_search_descriptor_t *ldc_sds[LM_NONE];
-    /* tls check peer */
-    int ldc_tls_checkpeer;
-    /* tls ca certificate file */
-    char *ldc_tls_cacertfile;
-    /* tls ca certificate dir */
-    char *ldc_tls_cacertdir;
-    /* tls ciphersuite */
-    char *ldc_tls_ciphers;
-    /* tls certificate */
-    char *ldc_tls_cert;
-    /* tls key */
-    char *ldc_tls_key;
-    /* idle timeout */
-    time_t ldc_idle_timelimit;
-    /* next configuration. loops back onto itself for last entry */
+{
+  /* URI for a single server */
+  char *ldc_uri;
+  /* space delimited list of servers */
+  char *ldc_host;
+  /* port, expected to be common to all servers */
+  int ldc_port;
+  /* base DN, eg. dc=gnu,dc=org */
+  char *ldc_base;
+  /* scope for searches */
+  int ldc_scope;
+  /* dereference aliases/links */
+  int ldc_deref;
+  /* bind DN */
+  char *ldc_binddn;
+  /* bind cred */
+  char *ldc_bindpw;
+  /* shadow bind DN */
+  char *ldc_rootbinddn;
+  /* shadow bind cred */
+  char *ldc_rootbindpw;
+  /* protocol version */
+  int ldc_version;
+  /* search timelimit */
+  int ldc_timelimit;
+  /* bind timelimit */
+  int ldc_bind_timelimit;
+  /* SSL enabled */
+  ldap_ssl_options_t ldc_ssl_on;
+  /* SSL certificate path */
+  char *ldc_sslpath;
+  /* Chase referrals */
+  int ldc_referrals;
+  int ldc_restart;
+  /* naming contexts */
+  ldap_service_search_descriptor_t *ldc_sds[LM_NONE];
+  /* tls check peer */
+  int ldc_tls_checkpeer;
+  /* tls ca certificate file */
+  char *ldc_tls_cacertfile;
+  /* tls ca certificate dir */
+  char *ldc_tls_cacertdir;
+  /* tls ciphersuite */
+  char *ldc_tls_ciphers;
+  /* tls certificate */
+  char *ldc_tls_cert;
+  /* tls key */
+  char *ldc_tls_key;
+  /* idle timeout */
+  time_t ldc_idle_timelimit;
+  /* next configuration. loops back onto itself for last entry */
 
 #ifdef AT_OC_MAP
-    /*
-     * attribute/objectclass maps relative to this config
-     */
-    void *ldc_at_map;
-    void *ldc_oc_map;
+  /*
+   * attribute/objectclass maps relative to this config
+   */
+  void *ldc_at_map;
+  void *ldc_oc_map;
 
-    /*
-     * is userPassword "userPassword" or not? 
-     * ie. do we need {crypt} to be stripped
-     */
-    ldap_userpassword_selector_t ldc_password_type;
-#endif /* AT_OC_MAP */
+  /*
+   * is userPassword "userPassword" or not? 
+   * ie. do we need {crypt} to be stripped
+   */
+  ldap_userpassword_selector_t ldc_password_type;
+#endif				/* AT_OC_MAP */
 
-    /* 
-     * attribute table for ldap search requensts
-     */
-    const char **ldc_attrtab[LM_NONE];
+  /* 
+   * attribute table for ldap search requensts
+   */
+  const char **ldc_attrtab[LM_NONE];
 
-    struct ldap_config *ldc_next;
-  };
+  struct ldap_config *ldc_next;
+};
 
 typedef struct ldap_config ldap_config_t;
 
@@ -274,14 +274,14 @@ typedef struct ldap_config ldap_config_t;
  * connection to an LDAP server.
  */
 struct ldap_session
-  {
-    /* the connection */
-    LDAP *ls_conn;
-    /* pointer into config table */
-    ldap_config_t *ls_config;
-    /* timestamp of last activity */
-    time_t ls_timestamp;
-  };
+{
+  /* the connection */
+  LDAP *ls_conn;
+  /* pointer into config table */
+  ldap_config_t *ls_config;
+  /* timestamp of last activity */
+  time_t ls_timestamp;
+};
 
 typedef struct ldap_session ldap_session_t;
 
@@ -295,30 +295,30 @@ typedef struct ldap_session ldap_session_t;
 #endif
 
 enum ldap_args_types
-  {
-    LA_TYPE_STRING,
-    LA_TYPE_NUMBER,
-    LA_TYPE_STRING_AND_STRING,
-    LA_TYPE_NUMBER_AND_STRING
-  };
+{
+  LA_TYPE_STRING,
+  LA_TYPE_NUMBER,
+  LA_TYPE_STRING_AND_STRING,
+  LA_TYPE_NUMBER_AND_STRING
+};
 
 typedef enum ldap_args_types ldap_args_types_t;
 
 struct ldap_args
+{
+  ldap_args_types_t la_type;
+  union
   {
-    ldap_args_types_t la_type;
-    union
-      {
-	const char *la_string;
-	long la_number;
-      }
-    la_arg1;
-    union
-      {
-	const char *la_string;
-      }
-    la_arg2;
-  };
+    const char *la_string;
+    long la_number;
+  }
+  la_arg1;
+  union
+  {
+    const char *la_string;
+  }
+  la_arg2;
+};
 
 typedef struct ldap_args ldap_args_t;
 
@@ -346,21 +346,21 @@ typedef struct ldap_args ldap_args_t;
  * instances of ent_context_t. The latter contains the former.
  */
 struct ldap_state
-  {
-    int ls_type;
-    int ls_retry;
+{
+  int ls_type;
+  int ls_retry;
 #define LS_TYPE_KEY	(0)
 #define LS_TYPE_INDEX	(1)
-    union
-      {
-	/* ls_key is the requested attribute value.
-	   ls_index is the desired offset into the value list.
-	 */
-	const char *ls_key;
-	int ls_index;
-      }
-    ls_info;
-  };
+  union
+  {
+    /* ls_key is the requested attribute value.
+       ls_index is the desired offset into the value list.
+     */
+    const char *ls_key;
+    int ls_index;
+  }
+  ls_info;
+};
 
 typedef struct ldap_state ldap_state_t;
 /*
@@ -372,22 +372,22 @@ typedef struct ldap_state ldap_state_t;
  * thread specific context: result chain, and state data
  */
 struct ent_context
-  {
-    ldap_state_t ec_state;	/* eg. for services */
-    int ec_msgid;		/* message ID */
-    LDAPMessage *ec_res;	/* result chain */
-  };
+{
+  ldap_state_t ec_state;	/* eg. for services */
+  int ec_msgid;			/* message ID */
+  LDAPMessage *ec_res;		/* result chain */
+};
 
 typedef struct ent_context ent_context_t;
 
 #ifdef HAVE_NSSWITCH_H
 
 struct nss_ldap_backend
-  {
-    nss_backend_op_t *ops;
-    int n_ops;
-    ent_context_t *state;
-  };
+{
+  nss_backend_op_t *ops;
+  int n_ops;
+  ent_context_t *state;
+};
 
 typedef struct nss_ldap_backend nss_ldap_backend_t;
 
@@ -396,12 +396,12 @@ typedef nss_status_t NSS_STATUS;
 #elif defined(HAVE_IRS_H)
 
 typedef enum
-  {
-    NSS_SUCCESS,
-    NSS_NOTFOUND,
-    NSS_UNAVAIL,
-    NSS_TRYAGAIN
-  }
+{
+  NSS_SUCCESS,
+  NSS_NOTFOUND,
+  NSS_UNAVAIL,
+  NSS_TRYAGAIN
+}
 NSS_STATUS;
 /* #define HAVE_NSS_H  */
 
@@ -447,11 +447,11 @@ typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *,
  */
 
 struct ldap_error
-  {
-    int le_errno;
-    char *le_matched;
-    char *le_errmsg;
-  };
+{
+  int le_errno;
+  char *le_matched;
+  char *le_errmsg;
+};
 
 typedef struct ldap_error ldap_error_t;
 
@@ -497,7 +497,7 @@ LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
  */
 NSS_STATUS _nss_ldap_search_s (const ldap_args_t * args,	/* IN */
 			       const char *filterprot,	/* IN */
-			       ldap_map_selector_t sel,		/* IN */
+			       ldap_map_selector_t sel,	/* IN */
 			       int sizelimit,	/* IN */
 			       LDAPMessage ** pRes /* OUT */ );
 
@@ -542,21 +542,21 @@ NSS_STATUS _nss_ldap_getbyname (ldap_args_t * args,	/* IN/OUT */
 				char *buffer,	/* IN */
 				size_t buflen,	/* IN */
 				int *errnop,	/* OUT */
-				const char *filterprot,		/* IN */
+				const char *filterprot,	/* IN */
 				ldap_map_selector_t sel,	/* IN */
 				parser_t parser /* IN */ );
 
 /* parsing utility functions */
 NSS_STATUS _nss_ldap_assign_attrvals (LDAP * ld,	/* IN */
 				      LDAPMessage * e,	/* IN */
-				      const char *attr,		/* IN */
+				      const char *attr,	/* IN */
 				      const char *omitvalue,	/* IN */
 				      char ***valptr,	/* OUT */
 				      char **buffer,	/* IN/OUT */
 				      size_t * buflen,	/* IN/OUT */
 				      size_t * pvalcount /* OUT */ );
 
-NSS_STATUS _nss_ldap_assign_attrval (LDAP * ld,		/* IN */
+NSS_STATUS _nss_ldap_assign_attrval (LDAP * ld,	/* IN */
 				     LDAPMessage * e,	/* IN */
 				     const char *attr,	/* IN */
 				     char **valptr,	/* OUT */
@@ -579,24 +579,24 @@ NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc);
  * relative to an ldap_config as proposed by Luke Howard
  * in his eMail from Nov 15 2000
  */
-NSS_STATUS _nss_ldap_atmap_put (ldap_config_t *config,
+NSS_STATUS _nss_ldap_atmap_put (ldap_config_t * config,
 				const char *rfc2307attribute,
 				const char *attribute);
 
-NSS_STATUS _nss_ldap_ocmap_put (ldap_config_t *config,
+NSS_STATUS _nss_ldap_ocmap_put (ldap_config_t * config,
 				const char *rfc2307objectclass,
-				const char* objectclass);
+				const char *objectclass);
 
-NSS_STATUS _nss_ldap_atmap_get (ldap_config_t *config,
+NSS_STATUS _nss_ldap_atmap_get (ldap_config_t * config,
 				const char *rfc2307attribute,
 				const char **attribute);
 
-NSS_STATUS _nss_ldap_ocmap_get (ldap_config_t *config,
+NSS_STATUS _nss_ldap_ocmap_get (ldap_config_t * config,
 				const char *rfc2307objectclass,
 				const char **objectclass);
 
-const char *_nss_ldap_map_at(const char *pChar);
-const char *_nss_ldap_map_oc(const char *pChar);
+const char *_nss_ldap_map_at (const char *pChar);
+const char *_nss_ldap_map_oc (const char *pChar);
 #endif /* AT_OC_MAP */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

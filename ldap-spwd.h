@@ -23,23 +23,21 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_SPWD_H
 #define _LDAP_NSS_LDAP_LDAP_SPWD_H
 
-     static NSS_STATUS _nss_ldap_parse_sp (
-					    LDAP * ld,
-					    LDAPMessage * e,
-					    ldap_state_t * pvt,
-					    void *result,
-					    char *buffer,
-					    size_t buflen);
+static NSS_STATUS _nss_ldap_parse_sp (LDAP * ld,
+				      LDAPMessage * e,
+				      ldap_state_t * pvt,
+				      void *result,
+				      char *buffer, size_t buflen);
 
 #ifdef HAVE_NSSWITCH_H
-     static NSS_STATUS _nss_ldap_getspnam_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_setspent_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_endspent_r (nss_backend_t * be, void *fakeargs);
-     static NSS_STATUS _nss_ldap_getspent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getspnam_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_setspent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_endspent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getspent_r (nss_backend_t * be, void *fakeargs);
 
-     nss_backend_t *_nss_ldap_shadow_constr (const char *db_name,
-					     const char *src_name,
-					     const char *cfg_args);
+nss_backend_t *_nss_ldap_shadow_constr (const char *db_name,
+					const char *src_name,
+					const char *cfg_args);
 #endif /* !HAVE_NSS_H */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_SPWD_H */

@@ -40,12 +40,11 @@
 XX **NO VARARGS ** XX
 #endif
 #endif
-
 /* you can have ANSI C definitions */
 #ifdef HAVE_STDARGS
-int snprintf (char *str, size_t count, const char *fmt,...);
+int snprintf (char *str, size_t count, const char *fmt, ...);
 int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
-void setproctitle (char *fmt,...);
+void setproctitle (char *fmt, ...);
 #else
 int snprintf ();
 int vsnprintf ();

@@ -244,7 +244,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 
 #ifdef RFC2307BIS
   /* lookup the user's DN. XXX: import this filter from somewhere else */
-  snprintf(filt, LDAP_FILT_MAXSIZ, "(%s=%s)", AT(uid), "%s");
+  snprintf (filt, LDAP_FILT_MAXSIZ, "(%s=%s)", AT (uid), "%s");
   stat = _nss_ldap_search_s (&a, filt, LM_NONE, 1, &res);
   if (stat == NSS_SUCCESS)
     {
@@ -421,12 +421,14 @@ _nss_ldap_getgrgid_r (gid_t gid,
 static NSS_STATUS
 _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NUMBER (args, key.gid, _nss_ldap_filt_getgrgid, LM_GROUP, _nss_ldap_parse_gr);
+  LOOKUP_NUMBER (args, key.gid, _nss_ldap_filt_getgrgid, LM_GROUP,
+		 _nss_ldap_parse_gr);
 }
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS _nss_ldap_setgrent (void)
+NSS_STATUS
+_nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -439,7 +441,8 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS _nss_ldap_endgrent (void)
+NSS_STATUS
+_nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
@@ -456,8 +459,8 @@ NSS_STATUS
 _nss_ldap_getgrent_r (struct group *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop, _nss_ldap_filt_getgrent,
-		 LM_GROUP, _nss_ldap_parse_gr);
+  LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop,
+		 _nss_ldap_filt_getgrent, LM_GROUP, _nss_ldap_parse_gr);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
