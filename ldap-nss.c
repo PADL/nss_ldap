@@ -805,6 +805,9 @@ do_open (void)
       else
 	{
 	  debug ("TLS startup failed");
+	  do_close ();
+	  debug ("<== do_open");
+	  return NSS_UNAVAIL;
 	}
       debug ("<== start_tls");
     }
