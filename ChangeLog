@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+140	Luke Howard <lukeh@padl.com>
+
+	* fix configure bug for DISABLE_SO_KEEPALIVE
+
 139	Luke Howard <lukeh@padl.com>
 
 	* updated INSTALL file with boilerplate 

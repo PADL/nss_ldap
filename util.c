@@ -459,7 +459,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
     return NSS_UNAVAIL;
 
   /* align so we can put a descriptor in here */
-  p = *t = (ldap_service_search_descriptor_t *) * buffer;
+  p = *t = (ldap_service_search_descriptor_t *) *buffer;
   *t += alignof (ldap_service_search_descriptor_t) - 1;
   *t -=
     ((*t - (ldap_service_search_descriptor_t *) NULL) %
@@ -470,7 +470,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   *buffer += len;
   *buflen -= len;
 
-  *t = (ldap_service_search_descriptor_t *) * buffer;
+  *t = (ldap_service_search_descriptor_t *) *buffer;
 
   *buffer += sizeof (ldap_service_search_descriptor_t);
   *buflen -= sizeof (ldap_service_search_descriptor_t);
