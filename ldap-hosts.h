@@ -41,7 +41,7 @@ static NSS_STATUS _nss_ldap_parse_host (LDAP * ld,
 					LDAPMessage * e,
 					ldap_state_t * pvt,
 					void *result,
-					char *buffer, size_t buflen);
+					char *buffer, size_t buflen, int af);
 
 #ifdef HAVE_NSSWITCH_H
 static NSS_STATUS _nss_ldap_gethostbyname_r (nss_backend_t * be,

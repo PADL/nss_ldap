@@ -7,6 +7,7 @@ $Header$
 	* Multiple service search descriptor support from
 	  Symas
 	* Don't require homeDirectory to be present
+	* IPv6 patch from Thorsten Kukuk at SuSE
 
 203	Luke Howard <lukeh@padl.com>
 

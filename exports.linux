@@ -21,6 +21,7 @@ EXPORTED {
 		_nss_ldap_getgrnam_r;
 		_nss_ldap_gethostbyaddr_r;
 		_nss_ldap_gethostbyname_r;
+		_nss_ldap_gethostbyname2_r;
 		_nss_ldap_gethostent_r;
 		_nss_ldap_gethostton_r;
 		_nss_ldap_getnetbyaddr_r;
