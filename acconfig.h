@@ -18,3 +18,6 @@
 
 /* define to enable authPassword checking code */
 #undef AUTHPASSWORD
+
+/* define to enable ActiveDirectory user schema support */
+#undef MSSFU_SCHEMA

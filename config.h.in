@@ -21,6 +21,9 @@
 /* define to enable authPassword checking code */
 #undef AUTHPASSWORD
 
+/* define to enable ActiveDirectory user schema support */
+#undef MSSFU_SCHEMA
+
 /* Define if you have the dn_expand function.  */
 #undef HAVE_DN_EXPAND
 
@@ -45,6 +48,9 @@
 /* Define if you have the ldap_init function.  */
 #undef HAVE_LDAP_INIT
 
+/* Define if you have the ldap_initialize function.  */
+#undef HAVE_LDAP_INITIALIZE
+
 /* Define if you have the ldap_ld_free function.  */
 #undef HAVE_LDAP_LD_FREE
 
@@ -53,6 +59,9 @@
 
 /* Define if you have the ldap_parse_result function.  */
 #undef HAVE_LDAP_PARSE_RESULT
+
+/* Define if you have the ldap_pvt_tls_set_option function.  */
+#undef HAVE_LDAP_PVT_TLS_SET_OPTION
 
 /* Define if you have the ldap_set_option function.  */
 #undef HAVE_LDAP_SET_OPTION
