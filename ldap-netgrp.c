@@ -73,6 +73,8 @@ static char rcsId[] =
 
 #ifdef HAVE_NSS_H
 static ent_context_t *_ngbe = NULL;
+#else
+static nss_backend_op_t netgroup_ops[];
 #endif
 
 /*
@@ -675,25 +677,6 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
   return parseStat;
 }
 
-static NSS_STATUS
-_nss_ldap_getnetgroup_destr (nss_backend_t * _ngbe, void *args)
-{
-  nss_ldap_netgr_backend_t *ngbe =
-    (nss_ldap_netgr_backend_t *) _ngbe;
-
-  /* free list of nested netgroups */
-  nn_destroy (&ngbe->namelist);
-
-  return _nss_ldap_default_destr (_ngbe, args);
-}
-
-static nss_backend_op_t getnetgroup_ops[] = {
-  _nss_ldap_getnetgroup_destr,	/* NSS_DBOP_DESTRUCTOR */
-  _nss_ldap_getnetgroup_endent,	/* NSS_DBOP_ENDENT */
-  _nss_ldap_getnetgroup_setent,	/* NSS_DBOP_SETENT */
-  _nss_ldap_getnetgroup_getent	/* NSS_DBOP_GETENT */
-};
-
 /*
  * Test a 4-tuple
  */
@@ -986,8 +969,8 @@ _nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
       return NSS_UNAVAIL;
     }
 
-  ngbe->ops = getnetgroup_ops;
-  ngbe->n_ops = sizeof (getnetgroup_ops) / sizeof (nss_backend_op_t);
+  ngbe->ops = netgroup_ops;
+  ngbe->n_ops = 6;
   ngbe->state = NULL;
   ngbe->namelist = NULL;
 
@@ -1031,22 +1014,19 @@ _nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
 static NSS_STATUS
 _nss_ldap_netgroup_destr (nss_backend_t * _ngbe, void *args)
 {
+  nss_ldap_netgr_backend_t *ngbe = (nss_ldap_netgr_backend_t *) _ngbe;
+
+  /* free list of nested netgroups */
+  nn_destroy (&ngbe->namelist);
+
   return _nss_ldap_default_destr (_ngbe, args);
-}
-
-static NSS_STATUS
-_nss_ldap_netgroup_noop (nss_backend_t * _ngbe, void *args)
-{
-  assert ("_nss_ldap_netgroup_noop" == NULL);
-
-  return NSS_UNAVAIL;
 }
 
 static nss_backend_op_t netgroup_ops[] = {
   _nss_ldap_netgroup_destr,	/* NSS_DBOP_DESTRUCTOR */
-  _nss_ldap_netgroup_noop,	/* NSS_DBOP_ENDENT */
-  _nss_ldap_netgroup_noop,	/* NSS_DBOP_SETENT */
-  _nss_ldap_netgroup_noop,	/* NSS_DBOP_GETENT */
+  _nss_ldap_getnetgroup_endent,	/* NSS_DBOP_ENDENT */
+  _nss_ldap_getnetgroup_setent,	/* NSS_DBOP_SETENT */
+  _nss_ldap_getnetgroup_getent,	/* NSS_DBOP_GETENT */
   _nss_ldap_innetgr,		/* NSS_DBOP_NETGROUP_IN */
   _nss_ldap_setnetgrent		/* NSS_DBOP_NETGROUP_SET */
 };
@@ -1055,16 +1035,20 @@ nss_backend_t *
 _nss_ldap_netgroup_constr (const char *db_name,
 			   const char *src_name, const char *cfg_args)
 {
-  nss_ldap_backend_t *be;
+  nss_ldap_netgr_backend_t *be;
 
-  if (!(be = (nss_ldap_backend_t *) malloc (sizeof (*be))))
+  if (!(be = (nss_ldap_netgr_backend_t *) malloc (sizeof (*be))))
     return NULL;
 
   be->ops = netgroup_ops;
   be->n_ops = sizeof (netgroup_ops) / sizeof (nss_backend_op_t);
+  be->namelist = NULL;
 
-  if (_nss_ldap_default_constr (be) != NSS_SUCCESS)
+  if (_nss_ldap_default_constr ((nss_ldap_backend_t *)be) != NSS_SUCCESS)
+   {
+    free(be);
     return NULL;
+   }
 
   return (nss_backend_t *) be;
 }
