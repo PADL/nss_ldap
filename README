@@ -63,9 +63,23 @@ ldap_ld_free: referenced symbol not found", then undefine
 HAVE_LDAP_LD_FREE at the top of ldap-nss.c. This is exported on
 Linux but _NOT_ Solaris with Netscape's C SDK.
 
+To discuss nss_ldap and related technologies, you may
+subscribe to the following mailing lists:    
+
+        <URL:mailto:nssldap-request@padl.com>
+and
+        <URL:mailto:ldap-nis-request@padl.com>
+
+Send an electronic mail message with "subscribe" in the
+message body to join the list.
+
+Note that PADL now offer commercial support on a
+per-incident basis.      
+
+To request a support incident, send email to: nssldap-support@padl.com
 
 --
-[ PADL Software Pty Ltd ]
-Email: dev@padl.com
-Internet: http://www.padl.com
+PADL Software Pty Ltd
+nssldap-support@padl.com
+http://www.padl.com/
 
