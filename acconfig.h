@@ -19,6 +19,12 @@
 /* define to enable paged results control */
 #undef PAGE_RESULTS
 
+/* define to enable struct ether_addr definition */
+#undef HAVE_STRUCT_ETHER_ADDR
+
+/* path to LDAP configuration file */
 #define NSS_LDAP_PATH_CONF              "/etc/ldap.conf"
+
+/* path to LDAP root secret file */
 #define NSS_LDAP_PATH_ROOTPASSWD        "/etc/ldap.secret"
 

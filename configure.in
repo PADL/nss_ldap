@@ -134,7 +134,11 @@ AC_CHECK_FUNCS(ether_aton)
 AC_CHECK_FUNCS(ether_ntoa)
 
 AC_MSG_CHECKING(for struct ether_addr)
-AC_TRY_COMPILE([#include <netinet/if_ether.h>],
+AC_TRY_COMPILE([#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <net/if.h>
+	#include <netinet/in.h>
+	#include <netinet/if_ether.h>],
 	[struct ether_addr x;],
 	[
 		AC_MSG_RESULT(yes)

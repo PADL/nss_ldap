@@ -18,11 +18,23 @@
 /* define to enable paged results control */
 #undef PAGE_RESULTS
 
+/* define to enable struct ether_addr definition */
+#undef HAVE_STRUCT_ETHER_ADDR
+
+/* path to LDAP configuration file */
 #define NSS_LDAP_PATH_CONF              "/etc/ldap.conf"
+
+/* path to LDAP root secret file */
 #define NSS_LDAP_PATH_ROOTPASSWD        "/etc/ldap.secret"
 
 /* Define if you have the dn_expand function.  */
 #undef HAVE_DN_EXPAND
+
+/* Define if you have the ether_aton function.  */
+#undef HAVE_ETHER_ATON
+
+/* Define if you have the ether_ntoa function.  */
+#undef HAVE_ETHER_NTOA
 
 /* Define if you have the gethostbyname function.  */
 #undef HAVE_GETHOSTBYNAME
