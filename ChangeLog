@@ -4,6 +4,9 @@ $Id$
 220	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#169: getntohost() on Solaris
+	* fix for BUG#170: _nss_ldap_getgroupsbymember_r fails
+	  to return all groups when NSCD is running and
+	  attribute mapping is enabled on Solaris
 
 218	Luke Howard <lukeh@padl.com>
 
