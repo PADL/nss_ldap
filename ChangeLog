@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.51	Luke Howard <lukeh@padl.com>
+
+	* added stuff for RC
+
 2.49	Luke Howard <lukeh@padl.com>
 
 	* configuration file is now case insensitive
