@@ -18,8 +18,7 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] =
-"$Id$";
+static char rcsId[] = "$Id$";
 
 #include "config.h"
 
@@ -56,7 +55,7 @@ static char rcsId[] =
 #endif
 
 #ifdef HAVE_NSS_H
-static ent_context_t * pw_context = NULL;
+static ent_context_t *pw_context = NULL;
 #endif
 
 static INLINE NSS_STATUS _nss_ldap_assign_emptystring (char **valptr,
@@ -100,35 +99,37 @@ _nss_ldap_parse_pw (LDAP * ld,
   char *at;
 #endif /* IDS_UID */
 
-  if (_nss_ldap_oc_check(ld, e, "shadowAccount") == NSS_SUCCESS)
+  if (_nss_ldap_oc_check (ld, e, "shadowAccount") == NSS_SUCCESS)
     {
-	/* don't include password for shadowAccount */
-	if (buflen < 3)
-	   return NSS_TRYAGAIN;
-	
-	pw->pw_passwd = buffer;
-	strcpy(buffer, "x");
-	buffer += 2;
-	buflen -= 2;
+      /* don't include password for shadowAccount */
+      if (buflen < 3)
+	return NSS_TRYAGAIN;
+
+      pw->pw_passwd = buffer;
+      strcpy (buffer, "x");
+      buffer += 2;
+      buflen -= 2;
     }
   else
     {
 #ifdef AUTHPASSWORD
-	stat = _nss_ldap_assign_authpassword(ld, e, AT(authPassword), &pw->pw_passwd, &buffer, &buflen);
-	if (stat == NSS_NOTFOUND)
+      stat =
+	_nss_ldap_assign_authpassword (ld, e, AT (authPassword),
+				       &pw->pw_passwd, &buffer, &buflen);
+      if (stat == NSS_NOTFOUND)
 	{
-         stat =
-	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &pw->pw_passwd,
-			     &buffer, &buflen);
+	  stat =
+	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword),
+					   &pw->pw_passwd, &buffer, &buflen);
 	}
 #else
-         stat =
-	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &pw->pw_passwd,
-			     &buffer, &buflen);
+      stat =
+	_nss_ldap_assign_userpassword (ld, e, AT (userPassword),
+				       &pw->pw_passwd, &buffer, &buflen);
 #endif /* AUTHPASSWORD */
-	 if (stat != NSS_SUCCESS)
-	    return stat;
-     }
+      if (stat != NSS_SUCCESS)
+	return stat;
+    }
 
 #ifdef IDS_UID
   if ((at = strchr (pw->pw_passwd, '@')) != NULL)
@@ -229,14 +230,12 @@ _nss_ldap_getpwuid_r (uid_t uid,
 static NSS_STATUS
 _nss_ldap_getpwuid_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NUMBER (args, key.uid, filt_getpwuid, LM_PASSWD,
-		 _nss_ldap_parse_pw);
+  LOOKUP_NUMBER (args, key.uid, filt_getpwuid, LM_PASSWD, _nss_ldap_parse_pw);
 }
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_setpwent (void)
+NSS_STATUS _nss_ldap_setpwent (void)
 {
   LOOKUP_SETENT (pw_context);
 }
@@ -249,8 +248,7 @@ _nss_ldap_setpwent_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_endpwent (void)
+NSS_STATUS _nss_ldap_endpwent (void)
 {
   LOOKUP_ENDENT (pw_context);
 }
@@ -285,8 +283,7 @@ _nss_ldap_passwd_destr (nss_backend_t * pw_context, void *args)
   return _nss_ldap_default_destr (pw_context, args);
 }
 
-static nss_backend_op_t passwd_ops[] =
-{
+static nss_backend_op_t passwd_ops[] = {
   _nss_ldap_passwd_destr,
   _nss_ldap_endpwent_r,		/* NSS_DBOP_ENDENT */
   _nss_ldap_setpwent_r,		/* NSS_DBOP_SETENT */

@@ -87,17 +87,19 @@ _nss_ldap_parse_gr (LDAP * ld,
     return stat;
 
 #ifdef AUTHPASSWORD
-	stat = _nss_ldap_assign_authpassword(ld, e, AT(authPassword), &gr->gr_passwd, &buffer, &buflen);
-	if (stat == NSS_NOTFOUND)
-	{
-         stat =
-	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &gr->gr_passwd,
-			     &buffer, &buflen);
-	}
+  stat =
+    _nss_ldap_assign_authpassword (ld, e, AT (authPassword), &gr->gr_passwd,
+				   &buffer, &buflen);
+  if (stat == NSS_NOTFOUND)
+    {
+      stat =
+	_nss_ldap_assign_userpassword (ld, e, AT (userPassword),
+				       &gr->gr_passwd, &buffer, &buflen);
+    }
 #else
   stat =
     _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &gr->gr_passwd,
-			     &buffer, &buflen);
+				   &buffer, &buflen);
 #endif /* AUTHPASSWORD */
   if (stat != NSS_SUCCESS)
     return stat;
@@ -197,8 +199,8 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 #elif defined(HAVE_NSS_H)
   NSS_STATUS
 _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
-		      long int *size, gid_t ** groupsp, long int limit,
-		      int *errnop)
+			  long int *size, gid_t ** groupsp, long int limit,
+			  int *errnop)
 #elif defined(_AIX)
      char *_nss_ldap_getgrset (char *user)
 #endif
@@ -219,7 +221,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #endif /* _AIX */
 
   gid_t *groups = *groupsp;
-    
+
   LA_INIT (a);
 #if defined(HAVE_NSS_H) || defined(_AIX)
   LA_STRING (a) = user;
@@ -411,7 +413,8 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS _nss_ldap_setgrent (void)
+NSS_STATUS
+_nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -424,7 +427,8 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS _nss_ldap_endgrent (void)
+NSS_STATUS
+_nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
