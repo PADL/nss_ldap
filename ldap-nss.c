@@ -394,14 +394,16 @@ NSS_STATUS _nss_ldap_getent(
 		return NSS_UNAVAIL;
 		}
 
-	/* we need to lock here as the context may not be thread-specific
+	/*
+	 * we need to lock here as the context may not be thread-specific
 	 * data (under glibc, for example). Maybe we should make the lock part
 	 * of the context.
 	 */
 
 	nss_context_lock(); 
 
-	/* if ec_state.ls_info.ls_index is non-zero, then we don't collect another
+	/*
+	 * if ec_state.ls_info.ls_index is non-zero, then we don't collect another
 	 * entry off the LDAP chain, and instead refeed the existing result to
 	 * the parser. Once the parser has finished with it, it will return
 	 * NSS_NOTFOUND and reset the index to -1, at which point we'll retrieve
@@ -474,6 +476,10 @@ NSS_STATUS _nss_ldap_getbyname(
 	/* XXX paranoia */
 	nss_context_lock();
 
+	/*
+	 * Don't like session being part of the args struct. What if we
+	 * want, say, a per backend session?
+	 */
 	res = _nss_ldap_lookup(&args->la_session, args, filterprot, attrs, 1);
 	if (res == NULL)
 		{

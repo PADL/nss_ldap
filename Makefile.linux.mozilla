@@ -1,4 +1,7 @@
-# Makefile for Linux nss_ldap
+# Makefile for Linux nss_ldap using Netscape's Mozilla LDAP
+# client library. We've used their thread wrappers in ltf.c
+# and define NETSCAPE_SDK, like we do with their C LDAP SDK.
+#
 
 # Copyright (C) 1997 Luke Howard.
 # This file is part of the nss_ldap Library.
@@ -67,7 +70,7 @@ SRCS=	ldap-nss.c \
 OBJS=${SRCS:.c=.o}
 LIB=${MODULE}.so.1
 
-# uncomment NSFLAGS if you are using the Netscape SDK
+# uncomment NSFLAGS if you are using the Netscape SDK (or Mozilla)
 NSFLAGS=-I/usr/local/nsldap/include -DNETSCAPE_SDK 
 
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module

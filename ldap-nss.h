@@ -126,7 +126,8 @@ struct ldap_config
 
 typedef struct ldap_config ldap_config_t;
 
-/* convenient wrapper around pointer into global config list, and a
+/*
+ * convenient wrapper around pointer into global config list, and a
    connection to an LDAP server.
  */
 struct ldap_session
@@ -139,9 +140,10 @@ struct ldap_session
 
 typedef struct ldap_session ldap_session_t;
 
-/* glibc supports MD5 encryption. So we should recognise it. This
-   is configurable at runtime by putting crypt [md5|crypt|sha] in
-   /etc/ldap.conf.
+/*
+ * glibc supports MD5 encryption. So we should recognise it. This
+ *  is configurable at runtime by putting crypt [md5|crypt|sha] in
+ * /etc/ldap.conf.
  */
 
 enum crypt_prefix

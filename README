@@ -1,7 +1,4 @@
 
-[ Don't know why this file is here. ANNOUNCE seems to be the right 
-  one. ]
-
 LDAP NAMESERVICE SWITCH LIBRARY
 ===============================
 
@@ -23,9 +20,9 @@ The source code is distributed under the GNU General Library Public Licence
 
 Platforms this has been built under:
 
-	o Linux 2.0 (tested by Greg)
-	o Solaris 2.4 and 2.6 (tested)
-	o NEXTSTEP 4.2 (part tested)
+	o Linux 2.0 (tested by Greg and Luke)
+	o Solaris 2.4 and 2.6 (tested by Luke)
+	o NEXTSTEP 4.2 (part tested; does it matter?)
 
 Platforms this ought to be tested under:
 
@@ -33,10 +30,8 @@ Platforms this ought to be tested under:
 	o BSD/OS
 	o FreeBSD
 
-To install, type
-
-	$ Configure (yeah, right...)
-	$ make [-f Makefile.<platform>]
+To install, pick a makefile and type make. You'll need to fiddle around
+a bit...
 
 You need to ensure libnss_ldap.so.1 (or nss_ldap.so.1, for Solaris) is in
 /usr/lib. Under IRIX, you'll need to set _RLD_LIST to
@@ -45,10 +40,14 @@ You need to ensure libnss_ldap.so.1 (or nss_ldap.so.1, for Solaris) is in
 
 (Netscape's SDK has libldap.so if you don't want to build your own.)
 
-*** Instructions for building under PDO 4.0 for Solaris
-- rename the gcc include directory
-- compile with -nopdolib
-
+Makefile.bsd			- ???
+Makefile.gnu			- GNU makefile, never used
+Makefile.linux			- up to date, UMich libldap
+Makefile.linux.mozilla		- up to date, Mozilla libldap
+Makefile.next			- ??? should work
+Makefile.osf			- out of date
+Makefile.sgi			- out of date
+Makefile.solaris		- up to date 
 --
 Luke Howard
 Xedoc Software Development Inc.
