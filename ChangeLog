@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+189	Luke Howard <lukeh@padl.com>
+
+	* patch for building on OpenLDAP 1.x from Nalin
+	  at RedHat
+
 188	Luke Howard <lukeh@padl.com>
 
 	* specify runtime path for LDAP library correctly to

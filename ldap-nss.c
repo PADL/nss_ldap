@@ -613,7 +613,7 @@ do_close_no_unbind (void)
 #if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
   if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 #else
-  if ((sd = ld->ld_sb.sb_sd) > 0)
+  if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_OPT_DESC */
     {
       struct sockaddr sockname;
