@@ -486,7 +486,7 @@ RFC 2307      Using LDAP as a Network Information Service     March 1998
                This class maps an ONC RPC number to a name.
                The distinguished value of the cn attribute denotes
                the RPC service's canonical name'
-          MUST ( cn $ oncRpcNumber $ description )
+          MUST ( cn $ oncRpcNumber )
           MAY description )
 
         ( nisSchema.2.6 NAME 'ipHost' SUP top AUXILIARY
