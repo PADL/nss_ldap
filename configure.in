@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 213)
+AM_INIT_AUTOMAKE(nss_ldap, 214)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -22,8 +22,9 @@ AC_ARG_WITH(gssapi-dir, [  --with-gssapi-dir=DIR     base directory of gssapi SD
 
 if test "$ac_cv_prog_gcc" = "yes"; then CFLAGS="$CFLAGS -Wall -fPIC"; fi
 
-dnl This is needed for the native Solaris LDAP SDK
-DEFS="-DLDAP_REFERRALS"
+dnl This is needed for the native Solaris LDAP SDK and
+dnl OpenLDAP 2.2, respectively
+CPPFLAGS="-DLDAP_REFERRALS -DLDAP_DEPRECATED"
 
 case "$target_os" in
 freebsd*) CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
