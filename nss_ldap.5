@@ -13,7 +13,7 @@ information. (Name service information typically includes users,
 hosts, groups, and other such data historically stored in flat files
 or NIS.)
 .LP
-Key benefits of the PADL nss_ldap module include support for both the
+Features of the PADL nss_ldap module include support for both the
 RFC 2307 and RFC 2307bis schema, a common implementation across multiple
 platforms, Kerberos and SSL security, configurable schema mapping,
 and configuration file compatability with the
@@ -65,7 +65,7 @@ file. (It should be noted that some LDAP client libraries, such as
 OpenLDAP, also use a configuration file of the same name.
 .B
 nss_ldap
-supports many of the same configuration file directives as OpenLDAP,
+supports many of the same configuration file options as OpenLDAP,
 but it adds several that are specific to the functionality it provides.
 Unlike OpenLDAP, nss_ldap configuration file keywords are not case
 sensitive. Additionally, it is not guaranteed that
@@ -74,8 +74,8 @@ nss_ldap
 will continue to match the configuration file semantics of OpenLDAP.
 You may wish to use different files.)
 .LP
-Configuration file directives consist of a keyword followed by a
-space and any arguments. The following directives are supported by
+Configuration file options consist of a keyword followed by a
+space and any arguments. The following options are supported by
 both
 .B
 nss_ldap
@@ -104,7 +104,7 @@ client library supports configurable network or connect timeouts
 (see
 .B
 bind_timelimit
-) below.
+below).
 .TP
 .B base <base>
 Specifies the default base distinguished name (DN) to use for searches.
@@ -122,9 +122,13 @@ ldapi,
 or
 .B
 ldaps,
-specifying LDAP over TCP, SSL and IPC respectively. If applicable,
+specifying LDAP over TCP, IPC and SSL respectively. If applicable,
 a port number can be specified; the default port number for the
-selected protocol is used if omitted.
+selected protocol is used if omitted. This directive takes
+precedence over the
+.B
+host
+directive; it is not possible to combine the two.
 .TP
 .B
 ldap_version <version>
@@ -174,7 +178,7 @@ directive.
 .TP
 .B scope <sub|one|base>
 Specifies the search scope (subtree, one level or base object). The
-default is subtree scope; base scope is almost never useful for
+default scope is subtree; base scope is almost never useful for
 nameservice lookups.
 .TP
 .B timelimit <timelimit>
@@ -191,37 +195,6 @@ are otherwise cached.) Only some
 LDAP
 client libraries have the underlying functionality necessary to
 support this directive. The default bind timelimit is 30 seconds.
-.TP
-.B reconnect_policy <hard_open|hard_init|soft>
-Specifies the policy to use for reconnecting to a failed
-.I
-LDAP
-server. The default is
-.B hard_open,
-which reconnects if opening the connection to the directory server
-failed. By contrast,
-.B hard_init,
-reconnects if initializing the connection failed. Initializing may not
-actually contact the directory server, and it is possible that a
-malformed configuration file will cause
-.B nss_ldap
-to reconnect. If
-.B soft
-is specified, then
-.B nss_ldap
-will return immediately on server failure. All "hard" reconnect
-policies block with exponential backoff before retrying. At present
-the backoff parameters are not configurable at runtime.
-.TP
-.B idle_timelimit <timelimit>
-Specifies the time (in seconds) after which
-.B
-nss_ldap
-will close connections to the directory server. This directive is
-presently not supported by the
-.B
-pam_ldap
-module.
 .TP
 .B ssl <on|off|start_tls>
 Specifies whether to use SSL/TLS or not (the default is not to). If
@@ -273,7 +246,34 @@ client TLS authentication.
 Specifies the path to the file containing the private key for client
 TLS authentication.
 .TP
-The following configuration directives apply to nss_ldap only:
+The following configuration options apply to nss_ldap only:
+.TP
+.B reconnect_policy <hard_open|hard_init|soft>
+Specifies the policy to use for reconnecting to a failed
+.I
+LDAP
+server. The default is
+.B hard_open,
+which reconnects if opening the connection to the directory server
+failed. By contrast,
+.B hard_init,
+reconnects if initializing the connection failed. Initializing may not
+actually contact the directory server, and it is possible that a
+malformed configuration file will cause
+.B nss_ldap
+to reconnect. If
+.B soft
+is specified, then
+.B nss_ldap
+will return immediately on server failure. All "hard" reconnect
+policies block with exponential backoff before retrying. At present
+the backoff parameters are not configurable at runtime.
+.TP
+.B idle_timelimit <timelimit>
+Specifies the time (in seconds) after which
+.B
+nss_ldap
+will close connections to the directory server.
 .TP
 .B sasl_secprops <properties>
 Specifies Cyrus SASL security properties. Allowed values are described
@@ -305,7 +305,7 @@ The syntax of
 .B basedn
 and
 .B scope
-are the same as for the configuration file directives of the same
+are the same as for the configuration file options of the same
 name, with the addition of being able to omit the trailing suffix
 of the base DN (in which case the global base DN will be appended
 instead).  The
@@ -331,8 +331,9 @@ If
 .B nss_ldap
 was built without schema mapping support, then this directive
 is ignored.
+.TP
 .B nss_map_obejctclass <from_objectclass> <to_objectclass>
-This directive may be specified multiple times, and directs
+This option may be specified multiple times, and directs
 .B nss_ldap
 to use the object class
 .B to_objectclass
@@ -340,7 +341,7 @@ instead of the RFC 2307 object class
 .B from_objectclass
 in all lookups. If
 .B nss_ldap
-was built without schema mapping support, then this directive
+was built without schema mapping support, then this option
 is ignored.
 
 .SH AUTHOR
