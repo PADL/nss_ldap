@@ -1519,7 +1519,7 @@ do_with_reconnect (const char *base, int scope,
     case NSS_SUCCESS:
       if (tries)
 	{
-	  syslog (LOG_ERR,
+	  syslog (LOG_INFO,
 		  "nss_ldap: reconnected to LDAP server after %d attempt(s)",
 		  tries);}
       time (&__session.ls_timestamp);
