@@ -4,6 +4,8 @@ $Header$
 204	Luke Howard <lukeh@padl.com>
 
 	* Linux netgroup implementation from Larry Lile
+	* Multiple service search descriptor support from
+	  Symas
 
 203	Luke Howard <lukeh@padl.com>
 

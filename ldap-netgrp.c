@@ -186,26 +186,26 @@ _nss_ldap_parse_netgr (void *vresultp, char *buffer, size_t buflen)
 
     	    return NSS_SUCCESS;
 	      }
-      return result->first ? NSS_NOTFOUND : NSS_STATUS_RETURN;
+      return result->first ? NSS_NOTFOUND : NSS_RETURN;
     }
 
   /* Match host name. */
   host = ++cp;
   while (*cp != ',')
    if (*cp++ == '\0')
-     return result->first ? NSS_NOTFOUND : NSS_STATUS_RETURN;
+     return result->first ? NSS_NOTFOUND : NSS_RETURN;
   
   /* Match user name. */
   user = ++cp;
   while (*cp != ',')
    if (*cp++ == '\0')
-     return result->first ? NSS_NOTFOUND : NSS_STATUS_RETURN;
+     return result->first ? NSS_NOTFOUND : NSS_RETURN;
   
   /* Match domain name. */
   domain = ++cp;
   while (*cp != ')')
    if (*cp++ == '\0')
-     return result->first ? NSS_NOTFOUND : NSS_STATUS_RETURN;
+     return result->first ? NSS_NOTFOUND : NSS_RETURN;
   ++cp;
 
   /* When we got here we have found an entry.  Before we can copy it
@@ -283,19 +283,12 @@ _nss_ldap_endnetgrent (struct __netgrent *result)
   LOOKUP_ENDENT (netgroup_context);
 }
 #elif defined(HAVE_NSSWITCH_H)
+#if 0
 static NSS_STATUS
-_nss_ldap_endnetgrent_r(nss_backend_t * be, struct __netgrent *result)
+_nss_ldap_endnetgrent_r(nss_backend_t * be, void *result)
 {
-  if (result->data != NULL)
-    {
-      free(result->data);
-      result->data = NULL;
-      result->data_size = 0;
-      result->cursor = NULL;
-    }
-
-  LOOKUP_ENDENT (be);
 }
+#endif
 #endif
 
 #if defined(HAVE_NSS_H)
@@ -331,34 +324,12 @@ _nss_ldap_setnetgrent (char *group, struct __netgrent *result)
   LOOKUP_SETENT(netgroup_context);
 }
 #elif defined(HAVE_NSSWITCH_H)
+#if 0
 static NSS_STATUS
 _nss_ldap_setnetgrent_r (nss_backend_t * be, void *result)
 {
-  int errnop = 0, buflen	= 0;
-  char *buffer = (char *)NULL;
-  ldap_args_t a;
-  NSS_STATUS stat = NSS_SUCCESS;
-
-  if (group[0] == '\0')
-    return NSS_UNAVAIL;
-
-  if (result->data != NULL)
-      free(result->data);
-
-  result->data = result->cursor = strdup(group);
-  result->data_size = strlen(group) + 1;
-  result->cursor += strlen(group) + 1;
-
-  LA_INIT (a);
-  LA_STRING (a) = group; 
-  LA_TYPE (a) = LA_TYPE_STRING;
-
-  stat =
-    _nss_ldap_getbyname(&a, result, buffer, buflen, &errnop,
-			_nss_ldap_filt_getnetgrent, LM_NETGROUP, _nss_ldap_load_netgr);
-
-  LOOKUP_SETENT (be);
 }
+#endif
 #endif
 
 #if defined(HAVE_NSS_H)
@@ -369,21 +340,19 @@ _nss_ldap_getnetgrent_r (struct __netgrent *result,
   return _nss_ldap_parse_netgr(result, buffer, buflen);
 }
 #elif defined(HAVE_NSSWITCH_H)
+#if 0
 static NSS_STATUS
-_nss_ldap_getnetgrent_r (nss_backend_t * be, struct __netgrent *result)
+_nss_ldap_getnetgrent_r (nss_backend_t * be, void *result)
 {
-  ldap_args_t a;
-
-  LA_INIT (a);
-  LA_STRING (a) = result->data;
-  LA_TYPE (a) = LA_TYPE_STRING;
-
-  return _nss_ldap_getbyname(&a, result, buffer, buflen, errnop,
-           _nss_ldap_filt_getnetgrent, LM_NETGROUP, _nss_ldap_parse_netgr);
 }
+#endif
 #endif
 
 #ifdef HAVE_NSSWITCH_H
+
+#if 1
+#warning Netgroups unimplemented for ONC+ nameservice switch
+#else
 static NSS_STATUS
 _nss_ldap_netgroup_destr (nss_backend_t * netgroup_context, void *args)
 {
@@ -415,4 +384,6 @@ _nss_ldap_netgroup_constr (const char *db_name,
 
   return (nss_backend_t *) be;
 }
+#endif 
+
 #endif /* !HAVE_NSS_H */

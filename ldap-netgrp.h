@@ -28,6 +28,7 @@ static NSS_STATUS _nss_ldap_parse_netgr (void *result,
 					 char *buffer, size_t buflen);
 
 #ifdef HAVE_NSSWITCH_H
+#if 0
 static NSS_STATUS _nss_ldap_setnetgrent_r (nss_backend_t * be,
 					   void *fakeargs);
 static NSS_STATUS _nss_ldap_endnetgrent_r (nss_backend_t * be,
@@ -38,6 +39,7 @@ static NSS_STATUS _nss_ldap_getnetgrent_r (nss_backend_t * be,
 nss_backend_t *_nss_ldap_netgroup_constr (const char *db_name,
 					  const char *src_name,
 					  const char *cfg_args);
+#endif
 #endif /* !HAVE_NSS_H */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NETGRP_H */

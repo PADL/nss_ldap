@@ -431,14 +431,17 @@ typedef struct nss_ldap_backend nss_ldap_backend_t;
 
 typedef nss_status_t NSS_STATUS;
 
+#define NSS_RETURN		NSS_UNAVAIL
+
 #elif defined(HAVE_IRS_H)
 
 typedef enum
 {
-  NSS_SUCCESS,
-  NSS_NOTFOUND,
+  NSS_TRYAGAIN = -2,
   NSS_UNAVAIL,
-  NSS_TRYAGAIN
+  NSS_NOTFOUND,
+  NSS_SUCCESS,
+  NSS_RETURN
 }
 NSS_STATUS;
 /* #define HAVE_NSS_H  */
@@ -451,6 +454,7 @@ typedef enum nss_status NSS_STATUS;
 #define NSS_NOTFOUND	NSS_STATUS_NOTFOUND
 #define NSS_UNAVAIL		NSS_STATUS_UNAVAIL
 #define NSS_TRYAGAIN	NSS_STATUS_TRYAGAIN
+#define NSS_RETURN		NSS_STATUS_RETURN
 
 /* to let us index a lookup table on NSS_STATUSes */
 
