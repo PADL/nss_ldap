@@ -246,6 +246,12 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       return NSS_SUCCESS;
     }
 
+  if (values[0] == NULL)
+    {
+      ldap_value_free (values);
+      return NSS_SUCCESS;
+    }
+
 #ifdef AIX
   i = strlen (values[0]);
   lia->grplist = realloc (lia->grplist, lia->listlen + i + 2);
@@ -261,6 +267,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
 #else
   gid = strtoul (values[0], (char **) NULL, 10);
   ldap_value_free (values);
+
   if (gid == LONG_MAX && errno == ERANGE)
     {
       /* invalid group, skip it */
@@ -289,7 +296,15 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       return NSS_SUCCESS;
     }
 
-  if (*(lia->start) == *(lia->size) && lia->limit <= 0)
+  if (lia->limit > 0)
+    {
+      if (*(lia->start) >= lia->limit)
+	{
+	  /* can't fit any more */
+	  return NSS_TRYAGAIN;
+	}
+    }
+  else if (*(lia->start) == *(lia->size))
     {
       /* Need a bigger buffer */
       *(lia->groups) = (gid_t *) realloc (*(lia->groups),
@@ -301,6 +316,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
 	}
       *(lia->size) *= 2;
     }
+
   /* weed out duplicates; is this really our responsibility? */
   for (i = 0; i < *(lia->start); i++)
     {
@@ -311,14 +327,8 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
     }
 
   /* add to group list */
-  *(lia->groups)[*(lia->start)] = gid;
-  *(lia->start) += 1;
-
-  if (*(lia->start) == lia->limit)
-    {
-      /* can't fit any more */
-      return NSS_SUCCESS;
-    }
+  (*(lia->groups))[*(lia->start)] = gid;
+  (*(lia->start)) += 1;
 # endif				/* HAVE_NSSWITCH_H */
 #endif /* AIX */
 
