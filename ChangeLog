@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+230	Luke Howard <lukeh@padl.com>
+
+	* don't free gss_krb5_ccache_name() output (Heimdal)
+
 229	Luke Howard <lukeh@padl.com>
 
 	* more debugging in initgroups and _nss_ldap_getentry()

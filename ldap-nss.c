@@ -1644,10 +1644,6 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
               debug("do_bind: unable to restore default credential cache");
               return -1;
             }
-#  ifdef HAVE_GSSAPI_H
-	  /* Heimdal returns malloced memory - not sure about MIT */
-	  free ((void *)oldccname);
-#  endif /* HAVE_GSSAPI_H */
 # endif
         }
 # endif				/* CONFIGURE_KRB5_CCNAME */
