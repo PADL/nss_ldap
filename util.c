@@ -480,6 +480,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   result->ldc_bind_timelimit = 30;
   result->ldc_ssl_on = SSL_OFF;
   result->ldc_sslpath = NULL;
+  result->ldc_referrals = 1;
+  result->ldc_restart = 1;
   result->ldc_next = result;
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
@@ -592,7 +594,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SSL))
 	{
-	  if (!strcasecmp (v, "yes"))
+	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes") || !strcasecmp (v, "true"))
 	    {
 	      result->ldc_ssl_on = SSL_LDAPS;
 	    }
@@ -600,6 +602,14 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	    {
 	      result->ldc_ssl_on = SSL_START_TLS;
 	    }
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_REFERRALS))
+	{
+	  result->ldc_referrals = (!strcasecmp(v, "on") || !strcasecmp(v, "yes") || !strcasecmp(v, "true"));
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_RESTART))
+	{
+	  result->ldc_restart = (!strcasecmp(v, "on") || !strcasecmp(v, "yes") || !strcasecmp(v, "true"));
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_VERSION))
 	{

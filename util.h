@@ -70,8 +70,14 @@ NSS_STATUS _nss_ldap_dn2uid (
 #define NSS_LDAP_KEY_BIND_TIMELIMIT	"bind_timelimit"
 #define NSS_LDAP_KEY_SSL		"ssl"
 #define NSS_LDAP_KEY_SSLPATH		"sslpath"
+#define NSS_LDAP_KEY_REFERRALS		"referrals"
+#define NSS_LDAP_KEY_RESTART		"restart"
 
-/* support separate naming contexts for each map */
+/*
+ * support separate naming contexts for each map 
+ * eventually this will support the syntax defined in
+ * the DUAConfigProfile searchDescriptor attribute
+ */
 #define NSS_LDAP_KEY_NSS_BASE_PASSWD		"nss_base_passwd"
 #define NSS_LDAP_KEY_NSS_BASE_SHADOW		"nss_base_shadow"
 #define NSS_LDAP_KEY_NSS_BASE_GROUP		"nss_base_group"

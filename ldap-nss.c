@@ -571,25 +571,33 @@ do_open (void)
   ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind);
 #endif /* NETSCAPE_API_EXTENSIONS */
 
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_PROTOCOL_VERSION
   ldap_set_option (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
 		   &cfg->ldc_version);
 #else
   __session.ls_conn->ld_version = cfg->ldc_version;
 #endif /* LDAP_VERSION3_API */
 
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_DEREF
   ldap_set_option (__session.ls_conn, LDAP_OPT_DEREF, &cfg->ldc_deref);
 #else
   __session.ls_conn->ld_deref = cfg->ldc_deref;
 #endif /* LDAP_VERSION3_API */
 
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_TIMELIMIT
   ldap_set_option (__session.ls_conn, LDAP_OPT_TIMELIMIT,
 		   &cfg->ldc_timelimit);
 #else
   __session.ls_conn->ld_timelimit = cfg->ldc_timelimit;
 #endif /* LDAP_VERSION3_API */
+
+#ifdef LDAP_OPT_REFERRALS
+  ldap_set_option (__session.ls_conn, LDAP_OPT_REFERRALS, cfg->ldc_referrals ? LDAP_OPT_ON : LDAP_OPT_OFF);
+#endif
+
+#ifdef LDAP_OPT_RESTART
+  ldap_set_option (__session.ls_conn, LDAP_OPT_RESTART, cfg->ldc_restart ? LDAP_OPT_ON : LDAP_OPT_OFF);
+#endif
 
 #ifdef TLS
   if (cfg->ldc_ssl_on == SSL_START_TLS)

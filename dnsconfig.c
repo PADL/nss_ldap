@@ -158,14 +158,6 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
       *presult = (ldap_config_t *) calloc (1, sizeof (*result));
       if (*presult == NULL)
 	return NSS_UNAVAIL;
-
-      /* set all namingcontexts to NULL for now */
-      (*presult)->ldc_sds = (ldap_service_search_descriptor_t **) calloc (LM_NONE, sizeof (ldap_service_search_descriptor_t *));
-     if ((*presult)->ldc_sds == NULL)
-        {
-          free (*presult);
-          return NSS_UNAVAIL;
-        }
     }
 
   result = *presult;
@@ -182,6 +174,8 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   result->ldc_bind_timelimit = 30;
   result->ldc_ssl_on = SSL_OFF;
   result->ldc_sslpath = NULL;
+  result->ldc_referrals = 1;
+  result->ldc_restart = 1;
   result->ldc_next = result;
 
   __nss_dns_lock ();
@@ -189,6 +183,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   if ((_res.options & RES_INIT) == 0 && res_init () == -1)
     {
       __nss_dns_unlock ();
+      free (*presult);
       return NSS_UNAVAIL;
     }
 
@@ -202,6 +197,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   if (r == NULL)
     {
       __nss_dns_unlock ();
+      free (*presult);
       return NSS_NOTFOUND;
     }
 
@@ -221,6 +217,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 		{
 		  dns_free_data( r );
                   __nss_dns_unlock ();
+      		  free (*presult);
 		  return NSS_UNAVAIL;
 		}
 	      result = result->ldc_next;
@@ -256,6 +253,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	    {
 	      dns_free_data( r );
 	      __nss_dns_unlock ();
+      	 free (*presult);
 	      return stat;
 	    }
 	}

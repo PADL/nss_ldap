@@ -212,6 +212,9 @@ struct ldap_config
     int ldc_ssl_on;
     /* SSL certificate path */
     char *ldc_sslpath;
+    /* Chase referrals */
+    int ldc_referrals;
+    int ldc_restart;
     /* naming contexts */
     ldap_service_search_descriptor_t *ldc_sds[LM_NONE];
     /* next configuration. loops back onto itself for last entry */
