@@ -20,7 +20,7 @@
    $Id$
  */
 
-/* This is purely experimental. *
+/* This is purely experimental. */
 
 #ifndef _LDAP_NSS_LDAP_DL_H
 #define _LDAP_NSS_LDAP_DL_H
