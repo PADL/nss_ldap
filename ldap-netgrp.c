@@ -73,7 +73,9 @@ static char rcsId[] =
 
 #ifdef HAVE_NSS_H
 static ent_context_t *_ngbe = NULL;
-#else
+#endif
+
+#ifdef HAVE_NSSWITCH_H
 static nss_backend_op_t netgroup_ops[];
 #endif
 
