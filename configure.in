@@ -185,6 +185,23 @@ AC_TRY_COMPILE([#include <sys/types.h>
 	],
 	AC_MSG_RESULT(no))
 
+AC_MSG_CHECKING(for pw_change in struct passwd)
+AC_TRY_COMPILE([#include <pwd.h>],
+	[struct passwd pwd; time_t t = pwd.pw_change],
+	[
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_PASSWD_PW_CHANGE, 1)
+	],
+	AC_MSG_RESULT(no))
+AC_MSG_CHECKING(for pw_expire in struct passwd)
+AC_TRY_COMPILE([#include <pwd.h>],
+	[struct passwd pwd; time_t t = pwd.pw_expire],
+	[
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_PASSWD_PW_EXPIRE, 1)
+	],
+	AC_MSG_RESULT(no))
+
 dnl check which ldap library we have
 dnl check which ldap library we have
 if test -z "$with_ldap_lib"; then

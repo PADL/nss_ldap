@@ -38,6 +38,12 @@
 /* define to enable socklen_t definition */
 #undef HAVE_SOCKLEN_T
 
+/* define if struct passwd has a pw_change member */
+#undef HAVE_PASSWD_PW_CHANGE
+
+/* define if struct passwd has a pw_expire member */
+#undef HAVE_PASSWD_PW_EXPIRE
+
 /* path to LDAP configuration file */
 #define NSS_LDAP_PATH_CONF              "/etc/ldap.conf"
 

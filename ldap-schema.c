@@ -298,21 +298,29 @@ _nss_ldap_init_attributes (const char ***attrtab)
 void
 init_pwd_attributes (const char ***pwd_attrs)
 {
+  int i = 0;
   static const char *__pwd_attrs[ATTRTAB_SIZE + 1];
 
   (*pwd_attrs) = __pwd_attrs;
 
-  (*pwd_attrs)[0] = ATM (passwd, uid);
-  (*pwd_attrs)[1] = ATM (passwd, userPassword);
-  (*pwd_attrs)[2] = AT (uidNumber);
-  (*pwd_attrs)[3] = ATM (passwd, gidNumber);
-  (*pwd_attrs)[4] = ATM (passwd, cn);
-  (*pwd_attrs)[5] = AT (homeDirectory);
-  (*pwd_attrs)[6] = AT (loginShell);
-  (*pwd_attrs)[7] = AT (gecos);
-  (*pwd_attrs)[8] = ATM (passwd, description);
-  (*pwd_attrs)[9] = AT (objectClass);
-  (*pwd_attrs)[10] = NULL;
+  (*pwd_attrs)[i++] = ATM (passwd, uid);
+  (*pwd_attrs)[i++] = ATM (passwd, userPassword);
+  (*pwd_attrs)[i++] = AT (uidNumber);
+  (*pwd_attrs)[i++] = ATM (passwd, gidNumber);
+  (*pwd_attrs)[i++] = ATM (passwd, cn);
+  (*pwd_attrs)[i++] = AT (homeDirectory);
+  (*pwd_attrs)[i++] = AT (loginShell);
+  (*pwd_attrs)[i++] = AT (gecos);
+  (*pwd_attrs)[i++] = ATM (passwd, description);
+  (*pwd_attrs)[i++] = AT (objectClass);
+#ifdef HAVE_PASSWD_PW_CHANGE
+  (*pwd_attrs)[i++] = AT (shadowLastChange);
+  (*pwd_attrs)[i++] = AT (shadowMax);
+#endif /* HAVE_PASSWD_PW_CHANGE */
+#ifdef HAVE_PASSWD_PW_EXPIRE
+  (*pwd_attrs)[i++] = AT (shadowExpire);
+#endif /* HAVE_PASSWD_PW_EXPIRE */
+  (*pwd_attrs)[i] = NULL;
 }
 
 void

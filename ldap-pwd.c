@@ -172,6 +172,32 @@ _nss_ldap_parse_pw (LDAPMessage * e,
   (void) _nss_ldap_assign_emptystring (&pw->pw_age, &buffer, &buflen);
 #endif /* HAVE_NSSWITCH_H */
 
+#ifdef HAVE_PASSWD_PW_CHANGE
+ tmp = NULL;
+  stat =
+    _nss_ldap_assign_attrval (e, AT (shadowMax), &tmp, &buffer, &buflen);
+  pw->pw_change = (stat == NSS_SUCCESS) ? atol(tmp) * (24*60*60) : 0;
+
+  if (pw->pw_change > 0)
+    {
+      tmp = NULL;
+      stat =
+        _nss_ldap_assign_attrval (e, AT (shadowLastChange), &tmp, &buffer,
+		    	          &buflen);
+      if (stat == NSS_SUCCESS)
+        pw->pw_change += atol(tmp);
+      else
+	pw->pw_change = 0;
+    }
+#endif /* HAVE_PASSWD_PW_CHANGE */
+
+#ifdef HAVE_PASSWD_PW_EXPIRE
+  tmp = NULL;
+  stat =
+    _nss_ldap_assign_attrval (e, AT (shadowExpire), &tmp, &buffer, &buflen);
+  pw->pw_expire = (stat == NSS_SUCCESS) ? atol(tmp) * (24*60*60) : 0;
+#endif /* HAVE_PASSWD_PW_EXPIRE */
+
   return NSS_SUCCESS;
 }
 

@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+227	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#183: support pw_change and pw_expire
+	  on BSD
+
 226	Luke Howard <lukeh@padl.com>
 
 	* make LDAP_NSS_NGROUPS configurable with
