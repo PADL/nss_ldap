@@ -2755,7 +2755,7 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
 			     LM_PASSWD, 1, &res);
   if (stat == NSS_SUCCESS)
     {
-      e = ldap_first_entry (__session.ls_conn, res);
+      e = _nss_ldap_first_entry (res);
       if (e != NULL)
 	{
 	  proxy_args->binddn = _nss_ldap_get_dn (e);
