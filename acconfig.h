@@ -16,6 +16,9 @@
 /* define to enable proxy authentication for AIX */
 #undef PROXY_AUTH
 
+/* define to enable paged results control */
+#undef PAGE_RESULTS
+
 #define NSS_LDAP_PATH_CONF              "/etc/ldap.conf"
 #define NSS_LDAP_PATH_ROOTPASSWD        "/etc/ldap.secret"
 

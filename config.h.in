@@ -18,6 +18,9 @@
 /* define to enable proxy authentication for AIX */
 #undef PROXY_AUTH
 
+/* define to enable paged results control */
+#undef PAGE_RESULTS
+
 #define NSS_LDAP_PATH_CONF              "/etc/ldap.conf"
 #define NSS_LDAP_PATH_ROOTPASSWD        "/etc/ldap.secret"
 
@@ -32,6 +35,9 @@
 
 /* Define if you have the ldap_controls_free function.  */
 #undef HAVE_LDAP_CONTROLS_FREE
+
+/* Define if you have the ldap_create_page_control function.  */
+#undef HAVE_LDAP_CREATE_PAGE_CONTROL
 
 /* Define if you have the ldap_explode_rdn function.  */
 #undef HAVE_LDAP_EXPLODE_RDN
@@ -53,6 +59,9 @@
 
 /* Define if you have the ldap_memfree function.  */
 #undef HAVE_LDAP_MEMFREE
+
+/* Define if you have the ldap_parse_page_control function.  */
+#undef HAVE_LDAP_PARSE_PAGE_CONTROL
 
 /* Define if you have the ldap_parse_result function.  */
 #undef HAVE_LDAP_PARSE_RESULT

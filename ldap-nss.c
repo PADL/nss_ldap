@@ -1298,12 +1298,21 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 	{
 	  ldap_msgfree (ctx->ec_res);
 	}
+#ifdef PAGE_RESULTS
+      if (ctx->ec_cookie != NULL)
+        {
+          ber_bvfree(ctx->ec_cookie);
+        }
+#endif /* PAGE_RESULTS */
       if (ctx->ec_msgid > -1 && _nss_ldap_result (ctx) == NSS_SUCCESS)
 	{
 	  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
 	}
     }
 
+#ifdef PAGE_RESULTS
+  ctx->ec_cookie = NULL;
+#endif /* PAGE_RESULTS */
   ctx->ec_res = NULL;
   ctx->ec_msgid = -1;
 
@@ -1335,6 +1344,13 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
       ldap_msgfree (ctx->ec_res);
       ctx->ec_res = NULL;
     }
+#ifdef PAGE_RESULTS
+    if (ctx->ec_cookie != NULL)
+      {
+        ber_bvfree(ctx->ec_cookie);
+        ctx->ec_cookie = NULL;
+      }
+#endif /* PAGE_RESULTS */
 
   /*
    * Abandon the search if there were more results to fetch.
@@ -1516,9 +1532,19 @@ do_result (ent_context_t * ctx, int all)
 #ifdef LDAP_MORE_RESULTS_TO_RETURN
 	      int parserc;
 	      /* NB: this frees ctx->ec_res */
+#ifdef PAGE_RESULTS
+	      LDAPControl **resultControls = NULL;
+#endif /* PAGE_RESULTS */
+
+#ifdef PAGE_RESULTS
+	      parserc =
+		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
+				   NULL, NULL, &resultControls, 1);
+#else
 	      parserc =
 		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
 				   NULL, NULL, NULL, 1);
+#endif /* PAGE_RESULTS */
 	      if (parserc != LDAP_SUCCESS
 		  && parserc != LDAP_MORE_RESULTS_TO_RETURN)
 		{
@@ -1528,6 +1554,16 @@ do_result (ent_context_t * ctx, int all)
 			  "nss_ldap: could not get LDAP result - %s",
 			  ldap_err2string (rc));
 		}
+#ifdef PAGE_RESULTS
+	      else if (resultControls != NULL)
+		{
+                /* See if there are any more pages to come */
+	          parserc = ldap_parse_page_control(__session.ls_conn,
+	                           resultControls, NULL, &(ctx->ec_cookie));
+		  ldap_controls_free(resultControls);
+                  stat = NSS_NOTFOUND;
+		}
+#endif /* PAGE_RESULTS */
 	      else
 		{
 		  stat = NSS_NOTFOUND;
@@ -1721,9 +1757,20 @@ do_search (const char *base, int scope,
 	   const char *filter, const char **attrs, int sizelimit, int *msgid)
 {
   int rc;
-
+#ifdef PAGE_RESULTS
+  LDAPControl *serverctrls[2] = { NULL, NULL };
+#endif /* PAGE_RESULTS */
   debug ("==> do_search");
 
+#ifdef PAGE_RESULTS
+  rc = ldap_create_page_control(__session.ls_conn, LDAP_PAGESIZE, NULL, 0, 
+                                &serverctrls[0]);
+  if (rc != LDAP_SUCCESS) return rc;
+  rc = ldap_search_ext (__session.ls_conn, base, scope, filter,
+			(char **) attrs, 0, serverctrls, NULL, LDAP_NO_LIMIT,
+			sizelimit, msgid);
+  ldap_control_free(serverctrls[0]);
+#else
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_SIZELIMIT)
   ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
 		   (void *) &sizelimit);
@@ -1733,7 +1780,6 @@ do_search (const char *base, int scope,
 
   *msgid = ldap_search (__session.ls_conn, base, scope, filter,
 			(char **) attrs, 0);
-
   if (*msgid < 0)
     {
 #if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
@@ -1750,6 +1796,7 @@ do_search (const char *base, int scope,
     {
       rc = LDAP_SUCCESS;
     }
+#endif /* PAGE_RESULTS */
 
   debug ("<== do_search");
 
@@ -2130,6 +2177,75 @@ _nss_ldap_search (const ldap_args_t * args,
   return stat;
 }
 
+#ifdef PAGE_RESULTS
+static NSS_STATUS
+do_next_page (const ldap_args_t * args,
+                  const char *filterprot,
+                  ldap_map_selector_t sel,
+                  int sizelimit,
+                  int *msgid,
+                  struct berval *pCookie)
+{
+  char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
+  char filterBuf[LDAP_FILT_MAXSIZ];
+  const char **attrs, *filter;
+  int scope;
+  NSS_STATUS stat;
+  ldap_service_search_descriptor_t *sd = NULL;
+  LDAPControl *serverctrls[2] = { NULL, NULL };
+
+  /* Set some reasonable defaults. */
+  base = __session.ls_config->ldc_base;
+  scope = __session.ls_config->ldc_scope;
+  attrs = NULL;
+
+  if (sel < LM_NONE)
+    {
+      sd = __session.ls_config->ldc_sds[sel];
+      if (sd != NULL)
+	{
+	  size_t len = strlen (sd->lsd_base);
+	  if (sd->lsd_base[len - 1] == ',')
+	    {
+	      /* is relative */
+	      snprintf (sdBase, sizeof (sdBase), "%s%s", sd->lsd_base,
+			__session.ls_config->ldc_base);
+	      base = sdBase;
+	    }
+	  else
+	    {
+	      base = sd->lsd_base;
+	    }
+
+	  if (sd->lsd_scope != -1)
+	    {
+	      scope = sd->lsd_scope;
+	    }
+	}
+      attrs = __session.ls_config->ldc_attrtab[sel];
+    }
+
+  stat =
+    do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf), &filter);
+  if (stat != NSS_SUCCESS)
+    return stat;
+
+  stat = ldap_create_page_control(__session.ls_conn, LDAP_PAGESIZE, pCookie, 0,
+                                  &serverctrls[0]);
+  if (stat != LDAP_SUCCESS)
+    return NSS_UNAVAIL;
+    
+  stat = ldap_search_ext(__session.ls_conn, base, __session.ls_config->ldc_scope,
+                         (args == NULL) ? (char *) filterprot : filter,
+                         (char **)attrs, 0, serverctrls, NULL, LDAP_NO_LIMIT,
+                         sizelimit, msgid);
+  ldap_control_free(serverctrls[0]);
+                           
+  return (*msgid < 0) ? NSS_UNAVAIL : NSS_SUCCESS;
+  
+}
+#endif /* PAGE_RESULTS */
+
 /*
  * General entry point for enumeration routines.
  * This should really use the asynchronous LDAP search API to avoid
@@ -2194,6 +2310,28 @@ _nss_ldap_getent (ent_context_t ** ctx,
 
   stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
 
+#ifdef PAGE_RESULTS
+  if (stat == NSS_NOTFOUND)
+    {
+      /* Is there another page of results? */
+      if ((*ctx)->ec_cookie != NULL && (*ctx)->ec_cookie->bv_len != 0)
+        {
+          int msgid;
+          
+          _nss_ldap_enter ();  /* Better get back the lock */
+          stat = do_next_page (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid, (*ctx)->ec_cookie);
+          _nss_ldap_leave ();
+          if (stat != NSS_SUCCESS)
+   	    {
+	      debug ("<== _nss_ldap_getent");
+	      return stat;
+	    }
+          (*ctx)->ec_msgid = msgid;
+          stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
+        }
+    }
+#endif /* PAGE_RESULTS */
+
   debug ("<== _nss_ldap_getent");
 
   return stat;
@@ -2220,6 +2358,9 @@ _nss_ldap_getbyname (ldap_args_t * args,
   debug ("==> _nss_ldap_getbyname");
 
   ctx.ec_msgid = -1;
+#ifdef PAGE_RESULTS
+  ctx.ec_cookie = NULL;
+#endif /* PAGE_RESULTS */
 
   stat = _nss_ldap_search_s (args, filterprot, sel, 1, &ctx.ec_res);
   if (stat != NSS_SUCCESS)

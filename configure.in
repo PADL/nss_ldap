@@ -14,6 +14,7 @@ AC_ARG_ENABLE(schema-mapping, [  --enable-schema-mapping   enable attribute/obje
 AC_ARG_ENABLE(proxy-auth, [  --enable-proxy-auth       enable proxy authentication for AIX ], [AC_DEFINE(PROXY_AUTH)])
 AC_ARG_ENABLE(debugging, [  --enable-debugging        enable debug code ], [AC_DEFINE(DEBUG)])
 AC_ARG_ENABLE(ssl, [  --disable-ssl             disable SSL/TSL support])
+AC_ARG_ENABLE(paged-results, [  --enable-paged-results    enable paged results control ], [AC_DEFINE(PAGE_RESULTS)])
 AC_ARG_WITH(ldap-lib, [  --with-ldap-lib=type      select ldap library [auto|netscape5|netscape4|netscape3|umich|openldap]])
 AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of ldap SDK])
 AC_ARG_WITH(ldap-conf-file, [  --with-ldap-conf-file     path to LDAP configuration file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_CONF, "$with_ldap_conf_file")])
@@ -145,11 +146,13 @@ if test "$need_pthread" = "yes"; then
   AC_CHECK_LIB(pthread, main)
 fi
 
-AC_CHECK_FUNCS(ldap_init ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free ldap_ld_free ldap_explode_rdn ldap_set_option ldap_get_option ldap_sasl_interactive_bind_s)
+AC_CHECK_FUNCS(ldap_init ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free)
+AC_CHECK_FUNCS(ldap_ld_free ldap_explode_rdn ldap_set_option ldap_get_option)
+AC_CHECK_FUNCS(ldap_sasl_interactive_bind_s ldap_initialize)
+AC_CHECK_FUNCS( ldap_create_page_control ldap_parse_page_control)
 if test "$enable_ssl" \!= "no"; then
   AC_CHECK_FUNCS(ldapssl_client_init ldap_start_tls_s ldap_pvt_tls_set_option)
 fi
-AC_CHECK_FUNCS(ldap_initialize)
 AC_CHECK_FUNCS(gethostbyname_r)
 
 if test "$ac_cv_func_gethostbyname_r" = "yes"; then

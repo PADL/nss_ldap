@@ -89,14 +89,14 @@ nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-rpc.c \
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
 	ldap-bp.c util.c globals.c ltf.c snprintf.c resolve.c \
-	dnsconfig.c irs-nss.c sasl.c
+	dnsconfig.c irs-nss.c sasl.c pagectrl.c
 
 
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c \
 	util.c globals.c ltf.c snprintf.c resolve.c dnsconfig.c \
-	irs-nss.c sasl.c aix_authmeth.c
+	irs-nss.c sasl.c pagectrl.c aix_authmeth.c
 
 
 NSS_LDAP_LDFLAGS = -enss_ldap_initialize -lsys -lcsys -lc
@@ -120,14 +120,14 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 am_NSS_LDAP_OBJECTS =  ldap-nss.o ldap-grp.o ldap-pwd.o ldap-schema.o \
 util.o globals.o ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o \
-sasl.o aix_authmeth.o
+sasl.o pagectrl.o aix_authmeth.o
 NSS_LDAP_OBJECTS =  $(am_NSS_LDAP_OBJECTS)
 NSS_LDAP_LDADD = $(LDADD)
 NSS_LDAP_DEPENDENCIES = 
 am_nss_ldap_so_OBJECTS =  ldap-nss.o ldap-pwd.o ldap-grp.o ldap-rpc.o \
 ldap-hosts.o ldap-network.o ldap-proto.o ldap-spwd.o ldap-alias.o \
 ldap-service.o ldap-schema.o ldap-ethers.o ldap-bp.o util.o globals.o \
-ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o sasl.o
+ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o sasl.o pagectrl.o
 nss_ldap_so_OBJECTS =  $(am_nss_ldap_so_OBJECTS)
 nss_ldap_so_LDADD = $(LDADD)
 nss_ldap_so_DEPENDENCIES = 
@@ -145,6 +145,13 @@ mkinstalldirs
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 
 GZIP_ENV = --best
+DEP_FILES =  .deps/aix_authmeth.P .deps/dnsconfig.P .deps/globals.P \
+.deps/irs-nss.P .deps/ldap-alias.P .deps/ldap-bp.P .deps/ldap-ethers.P \
+.deps/ldap-grp.P .deps/ldap-hosts.P .deps/ldap-network.P \
+.deps/ldap-nss.P .deps/ldap-proto.P .deps/ldap-pwd.P .deps/ldap-rpc.P \
+.deps/ldap-schema.P .deps/ldap-service.P .deps/ldap-spwd.P .deps/ltf.P \
+.deps/pagectrl.P .deps/resolve.P .deps/sasl.P .deps/snprintf.P \
+.deps/util.P
 SOURCES = $(NSS_LDAP_SOURCES) $(nss_ldap_so_SOURCES)
 OBJECTS = $(am_NSS_LDAP_OBJECTS) $(am_nss_ldap_so_OBJECTS)
 
@@ -152,9 +159,9 @@ all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .c .o
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/$(altdir)configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -303,6 +310,11 @@ dist-all: distdir
 distdir: $(DISTFILES)
 	-rm -rf $(distdir)
 	mkdir $(distdir)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -313,6 +325,38 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c -o $@ $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*D)/$(*F).pp -c -o $@ $<
+	@-cp .deps/$(*D)/$(*F).pp .deps/$(*D)/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*D)/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*D)/$(*F).P; \
+	rm .deps/$(*D)/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c -o $@ $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*D)/$(*F).pp -c -o $@ $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*D)/$(*F).pp > .deps/$(*D)/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*D)/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*D)/$(*F).P; \
+	rm -f .deps/$(*D)/$(*F).pp
 info-am:
 info: info-am
 dvi-am:
@@ -352,18 +396,19 @@ distclean-generic:
 
 maintainer-clean-generic:
 mostlyclean-am:  mostlyclean-hdr mostlyclean-noinstPROGRAMS \
-		mostlyclean-compile mostlyclean-tags \
+		mostlyclean-compile mostlyclean-tags mostlyclean-depend \
 		mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
 clean-am:  clean-hdr clean-noinstPROGRAMS clean-compile clean-tags \
-		clean-generic mostlyclean-am
+		clean-depend clean-generic mostlyclean-am
 
 clean: clean-am
 
 distclean-am:  distclean-hdr distclean-noinstPROGRAMS distclean-compile \
-		distclean-tags distclean-generic clean-am
+		distclean-tags distclean-depend distclean-generic \
+		clean-am
 
 distclean: distclean-am
 	-rm -f config.status
@@ -371,7 +416,8 @@ distclean: distclean-am
 maintainer-clean-am:  maintainer-clean-hdr \
 		maintainer-clean-noinstPROGRAMS \
 		maintainer-clean-compile maintainer-clean-tags \
-		maintainer-clean-generic distclean-am
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
@@ -383,8 +429,9 @@ mostlyclean-noinstPROGRAMS distclean-noinstPROGRAMS \
 clean-noinstPROGRAMS maintainer-clean-noinstPROGRAMS \
 mostlyclean-compile distclean-compile clean-compile \
 maintainer-clean-compile tags mostlyclean-tags distclean-tags \
-clean-tags maintainer-clean-tags distdir info-am info dvi-am dvi check \
-check-am installcheck-am installcheck all-recursive-am \
+clean-tags maintainer-clean-tags distdir mostlyclean-depend \
+distclean-depend clean-depend maintainer-clean-depend info-am info \
+dvi-am dvi check check-am installcheck-am installcheck all-recursive-am \
 install-exec-local install-exec-am install-exec install-data-local \
 install-data-am install-data install-am install uninstall-local \
 uninstall-am uninstall all-redirect all-am all install-strip \

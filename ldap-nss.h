@@ -74,6 +74,10 @@
 #define LDAP_NSS_MAXSLEEPTIME    64	/* maximum seconds to sleep */
 #define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
 
+#ifdef PAGE_RESULTS
+#define LDAP_PAGESIZE 1000
+#endif /* PAGE_RESULTS */
+
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
 #ifdef HAVE_NSSWITCH_H
@@ -84,6 +88,7 @@
 #else
 #ifndef __GNUC__
 #include <stdarg.h>
+#include <stdio.h>
 static void
 debug (char *fmt, ...)
 {
@@ -391,6 +396,9 @@ struct ent_context
   ldap_state_t ec_state;	/* eg. for services */
   int ec_msgid;			/* message ID */
   LDAPMessage *ec_res;		/* result chain */
+#ifdef PAGE_RESULTS
+  struct berval *ec_cookie;     /* cookie for paged searches */
+#endif /* PAGE_RESULTS */
 };
 
 typedef struct ent_context ent_context_t;
