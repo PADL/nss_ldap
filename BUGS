@@ -1,3 +1,4 @@
+#ident $Id$
 
 Please contact PADL Software Development Support <dev@padl.com>
 if you wish to contribute.
@@ -82,5 +83,80 @@ BUGS 18, 19, 20, 34 would be good to fix soon.
 [BUG#34]
 - shells hang on Solaris for LDAP users
 
-$Id$
 
+To: linux-ldap@rage.net
+Cc: ldap-nis@padl.com
+Subject: Re: Netgroups [in nss_ldap]
+Fcc: +outgoing
+Reply-To: lukeh@padl.com
+
+[ ldap-nis readers may find this interesting. ]
+
+Matt,
+
+>Ok, i am going to see if I can do something with netgroups. Which of
+>the services would be best to model ldap-netgrp.c after?
+>
+>I am not familiar with adding a new service to nss_ldap. What is
+>involved? Do you think you could give a general overview of what has
+>to happen to get the netgroup service doing SOMETHING?
+
+First, you need to familiarize yourself with the netgroup resolution
+APIs. It's important that you implement something that works for both
+Solaris and the GNU C Library (and, possibly, the BIND IRS, although
+no one seems to be particularly interested in that switch).  I haven't
+looked into them in great detail. You'll need to create ldap-netgrp.c
+(rip off ldap-pwd.c for starters). and implement the following:
+
+Linux
+=====
+
+NSS_STATUS
+_nss_ldap_setnetgrent(const char *group, struct __netgrent *result);
+
+NSS_STATUS
+_nss_ldap_endnetgrent(struct __netgrent *result);
+
+NSS_STATUS
+_nss_ldap_getnetgrent_r(struct __netgrent *result, char *buffer,
+	size_t buflen, int *errnop);
+
+Because netgroups are just triples in LDAP, you should be able to avail
+yourself of the _nss_netgroup_parseline() helper function. (Having
+the glibc source handy would be helpful.) Call this from the parser
+(see below) for values of the "nisNetgroupTriple" attribute.
+
+Solaris
+=======
+
+Check out /usr/include/nss_dbdefs.h. It looks pretty hairy:
+FYI, let's look at how a user is resolved:
+
+NSS_STATUS
+_nss_ldap_getpwnam_r (
+                       const char *name,
+                       struct passwd * result,
+                       char *buffer,
+                       size_t buflen,
+                       int *errnop)
+{
+  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getpwnam, pw_attributes, _nss_ldap_parse_pw);
+}
+
+The LOOKUP_NAME macro marshalls arguments to pass to
+_nss_ldap_getbyname(), which is responsible for searching in the
+directory. If the search is successful, this function will call
+the parser (_nss_ldap_parse_pw()) with the LDAP result, and
+the buffers supplied by the user. The parser is responsible
+for mapping the LDAP entry into a struct pwent or whatever.
+There are helper functions provided for doing such, for example
+_nss_ldap_assign_attrval():
+
+  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_USERNAME, &pw->pw_name, &buffer, &buflen);
+  if (stat != NSS_SUCCESS)
+
+This model works well when there is a 1:1 mapping between LDAP
+entries and entities that the host API is responsible for. Things
+get a bit trickier for things like getgroupsbymember(). Hope
+this helps. Note that for Solaris, each backend has a dispatch
+table, a "constructor" (_nss_ldap_passwd_constr, for example).
