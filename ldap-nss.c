@@ -203,6 +203,11 @@ static int do_ssl_options (ldap_config_t * cfg);
 #endif
 
 /*
+ * Read configuration file and initialize schema
+ */
+static NSS_STATUS do_init (ldap_config_t **, uid_t *pEuid);
+
+/*
  * Open the global session
  */
 static NSS_STATUS do_open (void);
@@ -868,32 +873,31 @@ do_close_no_unbind (void)
  */
 NSS_STATUS _nss_ldap_init (void)
 {
-  return do_open ();
+  return do_init (NULL, NULL);
 }
 
-/*
- * Opens connection to an LDAP server.
- * As with do_close(), this assumes ownership of sess.
- * It also wants to own __config: is there a potential deadlock here? XXX
- */
-static NSS_STATUS
-do_open (void)
+static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
 {
-  ldap_config_t *cfg = NULL;
-  uid_t euid;
+  ldap_config_t *cfg;
 #ifndef HAVE_PTHREAD_ATFORK
   pid_t pid;
 #endif
 #ifdef LDAP_X_OPT_CONNECT_TIMEOUT
   int timeout;
 #endif
-#ifdef LDAP_OPT_NETWORK_TIMEOUT
-  struct timeval tv;
-#endif
-  int usesasl;
-  char *bindarg;
+  uid_t euid;
 
-  debug ("==> do_open");
+  debug ("==> do_init");
+
+  if (pConfig != NULL)
+    {
+      *pConfig = NULL;
+    }
+
+  if (*pEuid != NULL)
+    {
+      *pEuid = UID_NOBODY;
+    }
 
 #ifndef HAVE_PTHREAD_ATFORK
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
@@ -997,15 +1001,17 @@ do_open (void)
        */
       if (__session.ls_conn != NULL)
 	{
-	  debug ("<== do_open");
+	  debug ("<== do_init");
 	  return NSS_SUCCESS;
 	}
     }
 
+  __session.ls_conn = NULL;
+
 #ifdef HAVE_PTHREAD_ATFORK
   if (pthread_once (&__once, do_atfork_setup) != 0)
     {
-      debug ("<== do_open");
+      debug ("<== do_init");
       return NSS_UNAVAIL;
     }
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
@@ -1025,6 +1031,7 @@ do_open (void)
   __euid = euid;
   memset (&__session, 0, sizeof (__session));
 
+  /* Initialize schema and LDAP handle (but do not connect) */
   if (__config == NULL)
     {
       NSS_STATUS stat;
@@ -1042,8 +1049,7 @@ do_open (void)
 
       if (stat != NSS_SUCCESS)
 	{
-	  __config = NULL;
-	  debug ("<== do_open");
+	  debug ("<== do_init");
 	  return NSS_UNAVAIL;
 	}
     }
@@ -1061,24 +1067,22 @@ do_open (void)
 # ifdef LBER_OPT_LOG_PRINT_FILE
       if (cfg->ldc_logdir && !__debugfile)
         {
-          char *name = malloc(strlen(cfg->ldc_logdir)+18);
-          if (name)
-            {
-              sprintf(name, "%s/ldap.%d", cfg->ldc_logdir, (int)getpid());
-              __debugfile = fopen(name, "a");
-              free(name);
-            }
+	  char namebuf[PATH_MAX];
+
+          snprintf(namebuf, sizeof(namebuf), "%s/ldap.%d", cfg->ldc_logdir, (int)getpid());
+          __debugfile = fopen(namebuf, "a");
+
           if (__debugfile != NULL)
             {
-              ber_set_option( NULL, LBER_OPT_LOG_PRINT_FILE, __debugfile );
+              ber_set_option (NULL, LBER_OPT_LOG_PRINT_FILE, __debugfile);
             }
         }
 # endif /* LBER_OPT_LOG_PRINT_FILE */
 # ifdef LBER_OPT_DEBUG_LEVEL
       if (cfg->ldc_debug)
         {
-          ber_set_option( NULL, LBER_OPT_DEBUG_LEVEL, &cfg->ldc_debug );
-          ldap_set_option( NULL, LDAP_OPT_DEBUG_LEVEL, &cfg->ldc_debug );
+          ber_set_option (NULL, LBER_OPT_DEBUG_LEVEL, &cfg->ldc_debug);
+          ldap_set_option (NULL, LDAP_OPT_DEBUG_LEVEL, &cfg->ldc_debug);
         }
 # endif /* LBER_OPT_DEBUG_LEVEL */
     }
@@ -1135,9 +1139,55 @@ do_open (void)
 
   if (__session.ls_conn == NULL)
     {
-      debug ("<== do_open");
+      debug ("<== do_init");
       return NSS_UNAVAIL;
     }
+
+  if (pConfig != NULL)
+    {
+      *pConfig = cfg;
+    }
+  if (pEuid != NULL)
+    {
+      *pEuid = euid;
+    }
+
+  debug ("<== do_init");
+
+  return NSS_SUCCESS;
+}
+
+/*
+ * Opens connection to an LDAP server - should only be called from search
+ * API. Other API that just needs access to configuration and schema should
+ * call do_init().
+ *
+ * As with do_close(), this assumes ownership of sess.
+ * It also wants to own __config: is there a potential deadlock here? XXX
+ */
+static NSS_STATUS
+do_open (void)
+{
+  ldap_config_t *cfg = NULL;
+  int usesasl;
+  char *bindarg;
+  NSS_STATUS stat;
+  uid_t euid;
+#ifdef LDAP_OPT_NETWORK_TIMEOUT
+  struct timeval tv;
+#endif
+
+  debug ("==> do_open");
+
+  /* Moved the head part of do_open() into do_init() */
+  stat = do_init (&cfg, &euid);
+  if (stat != NSS_SUCCESS)
+    {
+      debug ("<== do_open");
+      return stat;
+    }
+
+  assert (__session.ls_conn != NULL);
 
 #ifdef LDAP_OPT_THREAD_FN_PTRS
   if (_nss_ldap_ltf_thread_init (__session.ls_conn) != NSS_SUCCESS)
@@ -1559,6 +1609,8 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
 					 do_sasl_interact, (void *) pw);
+      syslog (LOG_INFO, "nss_ldap: ldap_sasl_interactive_bind_s returned %d (%s)",
+		rc, ldap_err2string(rc));
 
 # ifdef CONFIGURE_KRB5_CCNAME
       /* Restore default Kerberos ticket cache. */
@@ -2553,10 +2605,9 @@ _nss_ldap_search_s (const ldap_args_t * args,
 
   debug ("==> _nss_ldap_search_s");
 
-  stat = do_open ();
+  stat = do_init (NULL, NULL);
   if (stat != NSS_SUCCESS)
     {
-      __session.ls_conn = NULL;
       debug ("<== _nss_ldap_search_s");
       return stat;
     }
@@ -2643,10 +2694,9 @@ _nss_ldap_search (const ldap_args_t * args,
 
   *msgid = -1;
 
-  stat = do_open ();
+  stat = do_init (NULL, NULL);
   if (stat != NSS_SUCCESS)
     {
-      __session.ls_conn = NULL;
       debug ("<== _nss_ldap_search");
       return stat;
     }

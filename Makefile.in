@@ -91,10 +91,10 @@ NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c 
 NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
 DEFS = @DEFS@
 
-@GLIBC_TRUE@LIBC_VERS = `ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
+@GLIBC_TRUE@LIBC_VERS = `ls /lib/libc-*.so | tail -n 1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 @GLIBC_TRUE@NSS_LDAP_LIBC_VERSIONED = libnss_ldap-$(LIBC_VERS).so
 
-@GLIBC_TRUE@NSS_VERS = $(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
+@GLIBC_TRUE@NSS_VERS = $(shell ls /lib/libnss_files.so.? | tail -n 1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 @GLIBC_TRUE@NSS_LDAP_NSS_VERSIONED = libnss_ldap.so.$(NSS_VERS)
 
 @USE_NATIVE_LINKER_TRUE@NATIVE_LINK = $(nss_ldap_so_LD) $(AM_LDFLAGS) -o $@ 
