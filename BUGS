@@ -31,10 +31,7 @@ BUGZILLA BUGS:
   by resolving the IP addresses ourselves).
 
 [BUG#15]
-- support getgroupsbymember() in ldap-group.c. There's a skeleton in this
-  closet :-) but no code written yet. It should be implemented as it's a lot
-  faster to do (&(objectclass=posixGroup)(memberUid=lukeh)) than looking up every group.
-  Tricky to do with RFC2307BIS support this.
+- check rfc2307bis support in getgroupsbymember()
 
 [BUG#16]
 - finish implementing dl-*.c  (LOW priority). In fact I'm tempted to remove
