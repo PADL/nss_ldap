@@ -4,7 +4,7 @@ $Id$
 224	Luke Howard <lukeh@padl.com>
 
 	* don't double-free on realloc() failure in
-	  do_pasre_group_members()
+	  do_parse_group_members()
 	* don't pass LDAP session as an argument, as
 	  it may refer to a stale LDAP handle. If this
 	  does not work we will need to replace LDAPMessage
