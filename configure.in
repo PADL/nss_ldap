@@ -18,15 +18,10 @@ AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of ldap SDK])
 AC_ARG_WITH(ldap-conf-file, [  --with-ldap-conf-file     path to LDAP configuration file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_CONF, "$with_ldap_conf_file")])
 AC_ARG_WITH(ldap-secret-file, [  --with-ldap-secret-file   path to LDAP root secret file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_ROOTPASSWD, "$with_ldap_secret_file")])
 
-AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu")
-AM_CONDITIONAL(AIX, test "$target_os" = aix)
-AM_CONDITIONAL(HPUX, test "$target_os" = hpux)
-AM_CONDITIONAL(SOLARIS, test "$target_os" = solaris)
-
 if test "$ac_cv_prog_gcc" = "yes"; then CFLAGS="$CFLAGS -Wall -fPIC"; fi
 
 dnl This is needed for the native Solaris LDAP SDK
-CPPFLAGS="-DLDAP_REFERRALS"
+DEFS="-DLDAP_REFERRALS"
 
 case "$target_os" in
 freebsd*) CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
@@ -44,7 +39,8 @@ aix*) if test "$ac_cv_prog_gcc" = "yes"; then
   nss_ldap_so_LDFLAGS="-bM:SRE -bnoentry -bE:\$(srcdir)/exports.aix -lc"
   NSS_LDAP_LDFLAGS="-bM:SRE -enss_ldap_initialize -lsys -lcsys -lc"
   CPPFLAGS="$CPPFLAGS -DAIX -I."
-  need_pthread=yes ;;
+  need_pthread=yes
+  TARGET_OS=AIX ;;
 solaris*) if test "$ac_cv_prog_gcc" = yes; then
     nss_ldap_so_LD="/usr/ccs/bin/ld"
   fi
@@ -53,10 +49,15 @@ solaris*) if test "$ac_cv_prog_gcc" = yes; then
 hpux*) if test "$ac_cv_prog_gcc" = yes; then
     nss_ldap_so_LD="/bin/ld"
   fi
-  nss_ldap_so_LDFLAGS="-dynamic -G"
-  CPPFLAGS="$CPPFLAGS -DHPUX -I." ;;
+  nss_ldap_so_LDFLAGS="-b -dynamic -G"
+  CPPFLAGS="$CPPFLAGS -DHPUX -I."
+  TARGET_OS=HPUX ;;
 *) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic" ;;
 esac
+
+AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu")
+AM_CONDITIONAL(AIX, test "$TARGET_OS" = AIX)
+AM_CONDITIONAL(HPUX, test "$TARGET_OS" = HPUX)
 
 AM_CONDITIONAL(USE_NATIVE_LINKER, test -n "$nss_ldap_so_LD")
 

@@ -466,7 +466,7 @@ maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 @AIX_FALSE@@GLIBC_TRUE@	(cd $(DESTDIR)$(libdir); ln -sf $(NSS_LDAP_LIBC_VERSIONED) $(NSS_LDAP_NSS_VERSIONED))
 @AIX_FALSE@@GLIBC_TRUE@	$(mkinstalldirs) $(DESTDIR)/usr$(libdir)
 @AIX_FALSE@@GLIBC_TRUE@	(cd $(DESTDIR)/usr$(libdir); ln -sf ../..$(libdir)/$(NSS_LDAP_NSS_VERSIONED) .)
-@AIX_FALSE@@GLIBC_FALSE@@HPUX_TRUE@	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.1
+@AIX_FALSE@@GLIBC_FALSE@@HPUX_TRUE@	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/libnss_ldap.1
 @AIX_FALSE@@GLIBC_FALSE@@HPUX_FALSE@	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.so.1
 @AIX_FALSE@@GLIBC_FALSE@@HPUX_FALSE@	-rm -f $(DESTDIR)$(libdir)/nss_ldap.so
 @AIX_FALSE@@GLIBC_FALSE@@HPUX_FALSE@	-ln -s $(DESTDIR)$(libdir)/nss_ldap.so.1 $(DESTDIR)$(libdir)/nss_ldap.so
