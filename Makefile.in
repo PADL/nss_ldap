@@ -104,6 +104,7 @@ NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c \
 
 
 NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
+DEFS = @DEFS@
 
 @GLIBC_TRUE@LIBC_VERS = @GLIBC_TRUE@`ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 @GLIBC_TRUE@NSS_LDAP_LIBC_VERSIONED = @GLIBC_TRUE@libnss_ldap-$(LIBC_VERS).so
@@ -124,8 +125,6 @@ CONFIG_HEADER = config.h
 CONFIG_CLEAN_FILES = 
 PROGRAMS =  $(noinst_PROGRAMS)
 
-
-DEFS = @DEFS@ -I. -I$(srcdir) -I.
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@

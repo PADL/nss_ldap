@@ -29,6 +29,7 @@ NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c \
 	irs-nss.c sasl.c pagectrl.c aix_authmeth.c
 
 NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
+DEFS = @DEFS@
 
 if GLIBC
 LIBC_VERS = `ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`

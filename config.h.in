@@ -183,6 +183,9 @@
 /* Define if you have the <port_before.h> header file.  */
 #undef HAVE_PORT_BEFORE_H
 
+/* Define if you have the <prot.h> header file.  */
+#undef HAVE_PROT_H
+
 /* Define if you have the <pthread.h> header file.  */
 #undef HAVE_PTHREAD_H
 

@@ -37,6 +37,9 @@ static char rcsId[] =
 
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_PROT_H
+#define _PROT_INCLUDED
+#endif
 #include <shadow.h>
 
 #ifdef HAVE_LBER_H
