@@ -1,5 +1,5 @@
 
-                      ANNOUNCING NSS_LDAP 2.60
+                      ANNOUNCING NSS_LDAP 2.61
                       ========================
 
 e. What is nss_ldap?
@@ -12,11 +12,10 @@ passwords (instead of or in addition to using flat files or NIS).
 
 nss_ldap nominally supports the following operating system libraries:
 
-	o the Nameservice Switch in Solaris 2.4-2.6
-	o the Nameservice Switch in the GNU C Library 2.0 (as
+	o the Nameservice Switch in Solaris 2.4-2.7
+	o the Nameservice Switch in the GNU C Library 2.1 (as
           in libc.so.6 under Linux)
 	o the Information Retrieval Service (IRS) in BIND 
-	o preliminary support for generic SVR4 Unix, eg. IRIX
 
 nss_ldap is an implementation of the schema specified in RFC 2307
 and is compatible with that used in PADL Software Pty Ltd's
@@ -115,5 +114,5 @@ see:
 7. Who wrote it?
 ----------------
 
-nss_ldap was written by Luke Howard <lukeh@padl.com>.
+nss_ldap was written by PADL Software Pty Ltd <dev@padl.com>.
 

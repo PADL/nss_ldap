@@ -113,7 +113,7 @@ Resource assignments are suggested only.
   + Configure.
 
 - add support for DHCP and coldstart configuration. Coldstart should
-  update /etc/ldap.conf (/etc/ns/ldap.conf?) as in Solaris 8.
+  update /etc/ldap.conf (/var/ldap/LDAP_CLIENT_CACHE?).
 
 
 $Id$
