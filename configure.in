@@ -29,7 +29,7 @@ CPPFLAGS="$CPPFLAGS -DLDAP_REFERRALS -DLDAP_DEPRECATED"
 
 case "$target_os" in
 freebsd*) CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
-aix*) CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -D_POSIX_SOURCE" ;;
+aix*) CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE -D_AIX_PTHREADS_D7" ;;
 *) CPPFLAGS="$CPPFLAGS -D_REENTRANT" ;;
 esac
 
@@ -41,7 +41,7 @@ aix*) if test "$ac_cv_prog_gcc" = "yes"; then
     nss_ldap_so_LD="/usr/bin/ld"
   fi
   nss_ldap_so_LDFLAGS="-bM:SRE -bnoentry -bE:\$(srcdir)/exports.aix -lc"
-  NSS_LDAP_LDFLAGS="-bM:SRE -enss_ldap_initialize -lsys -lcsys -lc"
+  NSS_LDAP_LDFLAGS="-bM:SRE -enss_ldap_initialize -lc"
   CPPFLAGS="$CPPFLAGS -I."
   need_pthread=yes
   TARGET_OS=AIX ;;

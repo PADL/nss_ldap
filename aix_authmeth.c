@@ -29,6 +29,8 @@ static char rcsId[] =
 
 #ifdef HAVE_USERSEC_H
 
+/* #define UESS_EXPERIMENTAL 1 */
+
 #include <stdlib.h>
 #include <string.h>
 #include <usersec.h>
@@ -138,7 +140,7 @@ _nss_ldap_open (const char *name, const char *domain,
   return NULL;
 }
 
-static int
+static void
 _nss_ldap_close (void *token)
 {
   if (uess_gr_be != NULL)
@@ -152,8 +154,6 @@ _nss_ldap_close (void *token)
       (uess_pw_be->close) (uess_pw_be);
       uess_pw_be = NULL;
     }
-
-  return AUTH_SUCCESS;
 }
 
 static struct group *
@@ -968,13 +968,8 @@ nss_ldap_initialize (struct secmethod_table *meths)
   meths->method_getgrusers = _nss_ldap_getgrusers;
 #endif /* UESS_EXPERIMENTAL */
 /*  meths->method_normalize = _nss_ldap_normalize; */
-
-  /*
-   * These casts are necessary because the prototypes 
-   * in the AIX headers are wrong.
-   */
-  meths->method_getgracct = (int (*)(void *, int)) _nss_ldap_getgracct;
-  meths->method_getpasswd = (int (*)(char *)) _nss_ldap_getpasswd;
+  meths->method_getgracct = _nss_ldap_getgracct;
+  meths->method_getpasswd = _nss_ldap_getpasswd;
 
   /* Support methods */
   meths->method_open = _nss_ldap_open;
