@@ -229,8 +229,13 @@ static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw);
  */
 
 #if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+#if LDAP_SET_REBIND_PROC_ARGS == 3
+static int
+do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid, void *arg)
+#else
 static int
 do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
+#endif
 {
   char *who, *cred;
 
