@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+153	Luke Howard <lukeh@padl.com>
+
+	* SSL fix
+
 152	Luke Howard <lukeh@padl.com>
 
 	* further patch from Jarkko for TLS/SSL auth:

@@ -153,7 +153,10 @@ static void do_disable_keepalive (LDAP * ld);
 /*
  * TLS routines
  */
+
+#if defined HAVE_LDAP_START_TLS_S || (defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS))
 static int set_ssl_options(ldap_config_t **);
+#endif
 
 /*
  * Open the global session
@@ -930,6 +933,7 @@ do_open (void)
   return NSS_SUCCESS;
 }
 
+#if defined HAVE_LDAP_START_TLS_S || (defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS))
 static int
 set_ssl_options(ldap_config_t ** presult)
 {
@@ -990,6 +994,7 @@ set_ssl_options(ldap_config_t ** presult)
     }
   return LDAP_SUCCESS;
 }
+#endif
 
 static int
 do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw)
