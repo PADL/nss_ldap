@@ -1,10 +1,11 @@
-$Id$
+$Header$
 ===============================================================
 
 109	Luke Howard <lukeh@padl.com>
 
 	* omit socket check for -DSSL; it doesn't work
 	* updated CONTRIBUTORS
+	* updated README re HAVE_LDAP_LD_FREE
 
 108	Luke Howard <lukeh@padl.com>
 

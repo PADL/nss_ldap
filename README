@@ -57,6 +57,11 @@ NOTE: There seem to be problems linking against the libraries included
 with Netscape's Directory Server 4.1. You may wish to try Netscape's
 LDAP SDK 3.0 instead.
 
+If ldap-nss.c doesn't link because ldap_ld_free() isn't defined (or
+the module fails at runtime with a "relocation error: symbol 
+ldap_ld_free: referenced symbol not found", then undefine 
+HAVE_LDAP_LD_FREE at the top of ldap-nss.c. This is exported on
+Linux but _NOT_ Solaris with Netscape's C SDK.
 
 
 --
