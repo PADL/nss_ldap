@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+173	Luke Howard <lukeh@padl.com>
+
+	* notes on IRS in doc/README.IRS
+
 172	Luke Howard <lukeh@padl.com>
 
 	* fixed schema mapping bug by storing a copy of the
@@ -8,7 +12,8 @@ $Header$
 	  element itself. Because the DB library returns
 	  static storage, this was causing problems where
 	  the schema mapping calls were used to build the
-	  attribute table in ldap-schema.c.
+	  attribute table in ldap-schema.c. This bugfix was
+	  sponsored by n2h2.com; thanks!
 
 171	Luke Howard <lukeh@padl.com>
 

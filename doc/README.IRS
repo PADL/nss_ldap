@@ -2,6 +2,77 @@
 Using nss-ldap with BIND/IRS under FreeBSD / Quick'n'Dirty guide
 ================================================================
 
+[ Notes by Luke Howard <lukeh@padl.com> Sep 2001 ]
+
+Emile's patch was a little unclean, and I'm not able to generate
+a clean diff, so here is a list of the modifications you need to
+make to the IRS to get things to compile "right". You will 
+need to apply these diffs by hand, sorry.
+
+- Edit gen.c and add "ldap" to the two stanzas, I suggest between
+  irs_nis and irs_irp.
+
+diff -u --recursive --new-file bind/src/lib/irs/gen.c bind-nss/src/lib/irs/gen.c
+--- bind/src/lib/irs/gen.c      Wed Oct 13 18:39:29 1999
++++ bind-nss/src/lib/irs/gen.c  Fri Sep  1 15:31:09 2000
+@@ -66,6 +66,7 @@
+        { "local", irs_lcl },
+        { "dns", irs_dns },
+        { "nis", irs_nis },
++       { "ldap", irs_ldap },
+        { "irp", irs_irp },
+        { NULL, irs_nacc }
+ };
+
+and also:
+
+@@ -80,6 +81,7 @@
+ #else
+        NULL,
+ #endif
++       irs_ldap_acc,
+        irs_irp_acc,
+        NULL
+ };
+
+- Edit gen_p.h and add irs_ldap between irs_nis and irs_irp:
+
+diff -u --recursive --new-file bind/src/lib/irs/gen_p.h bind-nss/src/lib/irs/gen_p.h
+--- bind/src/lib/irs/gen_p.h    Mon Jan 18 08:46:50 1999
++++ bind-nss/src/lib/irs/gen_p.h        Fri Sep  1 15:31:23 2000
+@@ -43,6 +43,7 @@
+        irs_lcl,        /* Local. */
+        irs_dns,        /* DNS or Hesiod. */
+        irs_nis,        /* Sun NIS ("YP"). */
++       irs_ldap,       /* LDAP */
+
+- Edit the Makefile and add the full path to each object file
+  in nss_ldap, eg:
+
+diff -u --recursive --new-file bind/src/lib/irs/Makefile bind-nss/src/lib/irs/Makefile
+--- bind/src/lib/irs/Makefile   Mon Feb 22 03:47:58 1999
++++ bind-nss/src/lib/irs/Makefile       Thu Aug 31 18:18:52 2000
+@@ -42,6 +42,8 @@
+ INSTALL_LIB=-o bin -g bin
+ THREADED= threaded
+
++LDAP=/usr/local/src/nss_ldap
++
+ SRCS=  dns.c dns_gr.c dns_ho.c dns_nw.c dns_pr.c dns_pw.c \
+        dns_sv.c gai_strerror.c gen.c gen_gr.c gen_ho.c \
+        gen_ng.c gen_nw.c gen_pr.c gen_pw.c gen_sv.c \
+@@ -70,7 +72,12 @@
+        lcl.${O} lcl_gr.${O} \
+        lcl_ho.${O} lcl_ng.${O} lcl_nw.${O} lcl_pr.${O} lcl_pw.${O} \
+        lcl_sv.${O} nis.${O} nis_gr.${O} nis_ho.${O} nis_ng.${O} nis_nw.${O} \
+-       nis_pr.${O} nis_pw.${O} nis_sv.${O} nul_ng.${O} util.${O}
++       nis_pr.${O} nis_pw.${O} nis_sv.${O} nul_ng.${O} util.${O} \
++       ${LDAP}/ldap-nss.o ${LDAP}/ldap-pwd.o ${LDAP}/ldap-grp.o \
++       ${LDAP}/ldap-hosts.o ${LDAP}/ldap-network.o ${LDAP}/ldap-proto.o \
++       ${LDAP}/ldap-service.o ${LDAP}/util.o ${LDAP}/globals.o \
++       ${LDAP}/ltf.o ${LDAP}/resolve.o ${LDAP}/dnsconfig.o ${LDAP}/irs-nss.o \
++       ${LDAP}/snprintf.o
+
 [ Instructions from Emile Heitor <eheitor@isdnet.net> ]
 
 Tested under FreeBSD 4.1, but should work under 3.x & 4.x.
