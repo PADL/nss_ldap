@@ -342,8 +342,9 @@ static int
 do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 	   int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-static int
-do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
+     static int
+       do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+		  int freeit)
 #endif
 {
   if (freeit)
@@ -398,8 +399,7 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -424,8 +424,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -531,7 +530,7 @@ _nss_ldap_leave (void)
       (void) sigset (SIGPIPE, __sigpipe_handler);
 # else
       (void) signal (SIGPIPE, __sigpipe_handler);
-# endif	/* HAVE_SIGSET */
+# endif				/* HAVE_SIGSET */
     }
 #endif /* HAVE_SIGPROCMASK */
 
@@ -862,8 +861,7 @@ do_close_no_unbind (void)
 /*
  * A simple alias around do_open().
  */
-NSS_STATUS
-_nss_ldap_init (void)
+NSS_STATUS _nss_ldap_init (void)
 {
   return do_open ();
 }
@@ -1476,7 +1474,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 # ifdef CONFIGURE_KRB5_CCNAME
       char tmpbuf[256];
       static char envbuf[256];
-# endif	/* CONFIGURE_KRB5_CCNAME */
+# endif				/* CONFIGURE_KRB5_CCNAME */
 
       if (__config->ldc_sasl_secprops != NULL)
 	{
@@ -1511,7 +1509,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 		    __config->ldc_krb5_ccname);
 	  putenv (envbuf);
 	}
-# endif	/* CONFIGURE_KRB5_CCNAME */
+# endif				/* CONFIGURE_KRB5_CCNAME */
 
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
@@ -1524,7 +1522,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s", tmpbuf);
 	  putenv (envbuf);
 	}
-# endif	/* CONFIGURE_KRB5_CCNAME */
+# endif				/* CONFIGURE_KRB5_CCNAME */
 
       return rc;
 #endif /* HAVE_LDAP_GSS_BIND */
@@ -1650,26 +1648,26 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
  */
 static NSS_STATUS
 do_triple_permutations (const char *machine, const char *user,
-		        const char *domain, char *bufptr, size_t buflen)
+			const char *domain, char *bufptr, size_t buflen)
 {
-	/*
-	 * Map a triple
-	 *
-	 *	(M,U,D)
-	 *
-	 * to the filter
-	 *
-	 *	(|(nisNetgroupTriple=P1)...(nisNetgroupTriple=PN))
-	 *
-	 * where P1..PN are all permutations of triples that may match
-	 * ie. including wildcards. Certainly this would be preferable
-	 * to do server-side with an appropriate matching rule.
-	 */
-	char escaped_machine[3 * (MAXHOSTNAMELEN + 1)];
-	char escaped_user[3 * (LOGNAME_MAX + 1)];
-	char escaped_domain[3 * (MAXHOSTNAMELEN + 1)];
-	const char *AT_NISNETGROUPTRIPLE = AT(nisNetgroupTriple);
-	NSS_STATUS stat;
+  /*
+   * Map a triple
+   *
+   *      (M,U,D)
+   *
+   * to the filter
+   *
+   *      (|(nisNetgroupTriple=P1)...(nisNetgroupTriple=PN))
+   *
+   * where P1..PN are all permutations of triples that may match
+   * ie. including wildcards. Certainly this would be preferable
+   * to do server-side with an appropriate matching rule.
+   */
+  char escaped_machine[3 * (MAXHOSTNAMELEN + 1)];
+  char escaped_user[3 * (LOGNAME_MAX + 1)];
+  char escaped_domain[3 * (MAXHOSTNAMELEN + 1)];
+  const char *AT_NISNETGROUPTRIPLE = AT (nisNetgroupTriple);
+  NSS_STATUS stat;
 
 #define ESCAPE_TRIPLE_COMPONENT(component) do { \
 		if ((component) == NULL) \
@@ -1686,9 +1684,9 @@ do_triple_permutations (const char *machine, const char *user,
 		} \
 	} while (0)
 
-	ESCAPE_TRIPLE_COMPONENT(machine);
-	ESCAPE_TRIPLE_COMPONENT(user);
-	ESCAPE_TRIPLE_COMPONENT(domain);
+  ESCAPE_TRIPLE_COMPONENT (machine);
+  ESCAPE_TRIPLE_COMPONENT (user);
+  ESCAPE_TRIPLE_COMPONENT (domain);
 
 #define _APPEND_STRING(_buffer, _buflen, _s, _len) do { \
 		if ((_buflen) < (size_t)((_len) + 1)) \
@@ -1725,23 +1723,24 @@ do_triple_permutations (const char *machine, const char *user,
 		} \
 		APPEND_CONSTANT_STRING((_buffer), (_buflen), "))"); \
 	} while (0)
- 
-	APPEND_CONSTANT_STRING(bufptr, buflen, "(&(objectclass=");
-	APPEND_STRING(bufptr, buflen, OC(nisNetgroup));
-	APPEND_CONSTANT_STRING(bufptr, buflen, ")(|");
 
-	APPEND_TRIPLE(bufptr, buflen, escaped_machine, escaped_user, escaped_domain);
-	APPEND_TRIPLE(bufptr, buflen, escaped_machine, escaped_user, NULL);
-	APPEND_TRIPLE(bufptr, buflen, escaped_machine, NULL,         NULL);
-	APPEND_TRIPLE(bufptr, buflen, NULL,            escaped_user, escaped_domain);
-	APPEND_TRIPLE(bufptr, buflen, NULL,            escaped_user, NULL);
-	APPEND_TRIPLE(bufptr, buflen, escaped_machine, NULL,         escaped_domain);
-	APPEND_TRIPLE(bufptr, buflen, NULL,            NULL,         escaped_domain);
-	APPEND_TRIPLE(bufptr, buflen, NULL,            NULL,         NULL);
+  APPEND_CONSTANT_STRING (bufptr, buflen, "(&(objectclass=");
+  APPEND_STRING (bufptr, buflen, OC (nisNetgroup));
+  APPEND_CONSTANT_STRING (bufptr, buflen, ")(|");
 
-	APPEND_CONSTANT_STRING(bufptr, buflen, "))");
+  APPEND_TRIPLE (bufptr, buflen, escaped_machine, escaped_user,
+		 escaped_domain);
+  APPEND_TRIPLE (bufptr, buflen, escaped_machine, escaped_user, NULL);
+  APPEND_TRIPLE (bufptr, buflen, escaped_machine, NULL, NULL);
+  APPEND_TRIPLE (bufptr, buflen, NULL, escaped_user, escaped_domain);
+  APPEND_TRIPLE (bufptr, buflen, NULL, escaped_user, NULL);
+  APPEND_TRIPLE (bufptr, buflen, escaped_machine, NULL, escaped_domain);
+  APPEND_TRIPLE (bufptr, buflen, NULL, NULL, escaped_domain);
+  APPEND_TRIPLE (bufptr, buflen, NULL, NULL, NULL);
 
-	return NSS_SUCCESS;
+  APPEND_CONSTANT_STRING (bufptr, buflen, "))");
+
+  return NSS_SUCCESS;
 }
 
 /*
@@ -1809,8 +1808,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  stat = do_triple_permutations (args->la_arg1.la_triple.host,
 					 args->la_arg1.la_triple.user,
 					 args->la_arg1.la_triple.domain,
-					 filterBufP,
-					 filterSiz);
+					 filterBufP, filterSiz);
 	  if (stat != NSS_SUCCESS)
 	    return stat;
 	  break;
@@ -2364,7 +2362,8 @@ do_parse_s (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
 NSS_STATUS
 _nss_ldap_read (const char *dn, const char **attributes, LDAPMessage ** res)
 {
-  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes, 1,	/* sizelimit */
+  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)",
+			    attributes, 1,	/* sizelimit */
 			    res, (search_func_t) do_search_s);
 }
 
@@ -2427,8 +2426,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   if (__session.ls_conn == NULL)
     {
@@ -3122,8 +3120,7 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -3426,9 +3423,9 @@ static int
 do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		 int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-static int
-do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-		 int freeit)
+     static int
+       do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+			int freeit)
 #endif
 {
 #if LDAP_SET_REBIND_PROC_ARGS == 3
@@ -3453,8 +3450,7 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-NSS_STATUS
-_nss_ldap_proxy_bind (const char *user, const char *password)
+NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password)
 {
   ldap_args_t args;
   LDAPMessage *res, *e;

@@ -315,8 +315,7 @@ out:
   return stat;
 }
 
-NSS_STATUS
-_nss_ldap_endnetgrent (struct __netgrent * result)
+NSS_STATUS _nss_ldap_endnetgrent (struct __netgrent * result)
 {
   if (result->data != NULL)
     {
@@ -329,8 +328,7 @@ _nss_ldap_endnetgrent (struct __netgrent * result)
   LOOKUP_ENDENT (_ngbe);
 }
 
-NSS_STATUS
-_nss_ldap_setnetgrent (char *group, struct __netgrent *result)
+NSS_STATUS _nss_ldap_setnetgrent (char *group, struct __netgrent *result)
 {
   int errnop = 0, buflen = 0;
   char *buffer = (char *) NULL;
@@ -460,7 +458,7 @@ nn_check (struct name_list *head, const char *netgroup)
 
   for (p = head; p != NULL; p = p->next)
     {
-      if (strcasecmp(p->name, netgroup) == 0)
+      if (strcasecmp (p->name, netgroup) == 0)
 	{
 	  found++;
 	  break;
@@ -494,11 +492,11 @@ nn_chase (nss_ldap_netgr_backend_t * ngbe, LDAPMessage ** pEntry)
   while (ngbe->needed_groups != NULL)
     {
       /* If this netgroup has already been seen, avoid it  */
-      if (nn_check(ngbe->known_groups, ngbe->needed_groups->name))
+      if (nn_check (ngbe->known_groups, ngbe->needed_groups->name))
 	{
 	  nn_pop (&ngbe->needed_groups);
 	  continue;
-	}	
+	}
 
       LA_INIT (a);
       LA_TYPE (a) = LA_TYPE_STRING;
@@ -628,12 +626,12 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 		{
 		  parseStat = nn_push (&be->needed_groups, *p);
 		  if (parseStat != NSS_SUCCESS)
-		      break;
+		    break;
 		}
 	      ldap_value_free (vals);
 
 	      if (parseStat != NSS_SUCCESS)
-		  break;	/* out of memory */
+		break;		/* out of memory */
 	    }
 	}
       else
@@ -689,7 +687,8 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 	    }
 	  args->retp[NSS_NETGR_MACHINE] = (char *) __netgrent.val.triple.host;
 	  args->retp[NSS_NETGR_USER] = (char *) __netgrent.val.triple.user;
-	  args->retp[NSS_NETGR_DOMAIN] = (char *) __netgrent.val.triple.domain;
+	  args->retp[NSS_NETGR_DOMAIN] =
+	    (char *) __netgrent.val.triple.domain;
 	  break;
 	}
 
@@ -725,7 +724,8 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 
 static NSS_STATUS
 do_innetgr_nested (const char *netgroup,
-	     const char *nested, enum nss_netgr_status *status, int *depth)
+		   const char *nested, enum nss_netgr_status *status,
+		   int *depth)
 {
   NSS_STATUS stat;
   ldap_args_t a;
@@ -750,7 +750,8 @@ do_innetgr_nested (const char *netgroup,
 			     LM_NETGROUP, 1, &res);
   if (stat != NSS_SUCCESS)
     {
-      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
+      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat,
+	     *status);
       return stat;
     }
 
@@ -758,7 +759,8 @@ do_innetgr_nested (const char *netgroup,
   if (e == NULL)
     {
       stat = NSS_NOTFOUND;
-      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
+      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat,
+	     *status);
       ldap_msgfree (res);
       return stat;
     }
@@ -767,7 +769,8 @@ do_innetgr_nested (const char *netgroup,
   if (values == NULL)
     {
       stat = NSS_NOTFOUND;
-      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
+      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat,
+	     *status);
       ldap_msgfree (res);
       return stat;
     }
@@ -820,8 +823,7 @@ do_innetgr (const char *netgroup,
   LA_TRIPLE (a).host = machine;
   LA_TRIPLE (a).domain = domain;
 
-  stat = _nss_ldap_search_s (&a, NULL,
-			     LM_NETGROUP, 1, &res);
+  stat = _nss_ldap_search_s (&a, NULL, LM_NETGROUP, 1, &res);
   if (stat != NSS_SUCCESS)
     {
       debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
@@ -884,11 +886,10 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
    * component matching to be done efficiently.
    */
 
-  debug ("==> _nss_ldap_innetgr MACHINE.argc=%d USER.argc=%d DOMAIN.argc=%d groups.argc=%d",
-	args->arg[NSS_NETGR_MACHINE].argc,
-	args->arg[NSS_NETGR_USER].argc,
-	args->arg[NSS_NETGR_DOMAIN].argc,
-	args->groups.argc);
+  debug
+    ("==> _nss_ldap_innetgr MACHINE.argc=%d USER.argc=%d DOMAIN.argc=%d groups.argc=%d",
+     args->arg[NSS_NETGR_MACHINE].argc, args->arg[NSS_NETGR_USER].argc,
+     args->arg[NSS_NETGR_DOMAIN].argc, args->groups.argc);
 
   /* Presume these are harmonized -- this is a strange interface */
   assert (args->arg[NSS_NETGR_MACHINE].argc == 0 ||
@@ -1050,11 +1051,11 @@ _nss_ldap_netgroup_constr (const char *db_name,
   be->known_groups = NULL;
   be->needed_groups = NULL;
 
-  if (_nss_ldap_default_constr ((nss_ldap_backend_t *)be) != NSS_SUCCESS)
-   {
-    free(be);
-    return NULL;
-   }
+  if (_nss_ldap_default_constr ((nss_ldap_backend_t *) be) != NSS_SUCCESS)
+    {
+      free (be);
+      return NULL;
+    }
 
   return (nss_backend_t *) be;
 }
