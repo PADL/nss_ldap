@@ -1,4 +1,4 @@
-/* Copyright (C) 1999-2002 PADL Software Pty Ltd.
+/* Copyright (C) 1997-2002 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1999.
 
