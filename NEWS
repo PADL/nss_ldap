@@ -46,29 +46,6 @@ BUGS 18, 19, 20, 34 would be good to fix soon.
 - implement gethostbyname2() and
   debug IPv6 support in ldap-hosts.c (and ldap-network.c?) (Uli?)
 
-[BUG#18]
-- write ldap-netgrp.c and irs-netgrp.c (Uli, +Luke IRS) -- note that netgroups
-  are now supported on Linux
-  This is a lot easier now that the schema supports triples:
-
-  squid> ldapsearch -L objectclass=nisnetgroup
-  dn: cn=nightfly, o=Xedoc Software Development, c=AU
-  cn: nightfly
-  ttl: 86400
-  objectclass: nisNetgroup
-  objectclass: cacheObject
-  objectclass: top
-  membernisnetgroup: kamakiriad
-  membernisnetgroup: ruby-baby
-  nisnetgrouptriple: (lukeh,penguin,yp.padl.com)
-  nisnetgrouptriple: (fagen,grep.next.com,yp.padl.com)
-
-  You should be able to (a) rip out the flat file parser under Solaris -- the semantics
-  are complicated, which is why I haven't done it (!), but basically you get a function
-  pointer which will parse a flatfile entry into whatever struct and (b) use the glibc
-  NIS code for the glibc part of the NSS. Or use (b) for both. It's up to you, but the
-  netgroup structs will be different...
-
 [BUG#19]
 - add support for DHCP and coldstart configuration. Coldstart should
   update /etc/ldap.conf (/var/ldap/LDAP_CLIENT_CACHE?). Should probably
