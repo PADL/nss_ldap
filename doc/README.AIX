@@ -16,6 +16,10 @@ tested it with IBM's LDAP libraries.
 I'm using AIX 4.3.3. It may work with 4.[12]. It won't work with 3.x. I
 see no reason why it shouldn't work with 5.x.
 
+You need to ensure that bos.adt.syscalls has been installed for -lsys
+and -lcsys to work as the /lib/syscalls.exp file (this is found
+on the Kernel Extensions developer kit). [Kyle_Chapman@G1.com]
+
 You will need irs.h to build nss_ldap on AIX. IBM did not provide it (what a
 surprise). You have two options: cut the pieces from the AIX documentation
 ("System Management Guide: Communications and Networks", Chapter 3, "Dynamic
