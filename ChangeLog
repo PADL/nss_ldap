@@ -1,6 +1,13 @@
 $Header$
 ===============================================================
 
+158	Luke Howard <lukeh@padl.com>
+
+	* in the distinguished name to login cache (dn2uid)
+	  make sure we use the AT(uid) macro for the uid 
+	  attribute rather than the hard-coded value of "uid"
+	  This should enable the cache for MSSFU support.
+
 157	Luke Howard <lukeh@padl.com>
 
 	* for MSSFU, use posixMember for group memberships

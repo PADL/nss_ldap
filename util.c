@@ -175,7 +175,7 @@ _nss_ldap_dn2uid (LDAP * ld,
 
   debug ("==> _nss_ldap_dn2uid");
 
-  status = do_getrdnvalue (dn, "uid", uid, buffer, buflen);
+  status = do_getrdnvalue (dn, AT (uid), uid, buffer, buflen);
   if (status != NSS_SUCCESS)
     {
 #ifdef DN2UID_CACHE
@@ -184,7 +184,7 @@ _nss_ldap_dn2uid (LDAP * ld,
 	{
 #endif /* DN2UID_CACHE */
 	  const char *attrs[] =
-	  {"uid", NULL};
+	  {AT (uid), NULL};
 	  LDAPMessage *res;
 
 	  status = NSS_NOTFOUND;
@@ -195,7 +195,7 @@ _nss_ldap_dn2uid (LDAP * ld,
 	      if (e != NULL)
 		{
 		  status =
-		    _nss_ldap_assign_attrval (ld, e, "uid", uid, buffer,
+		    _nss_ldap_assign_attrval (ld, e, AT (uid), uid, buffer,
 					      buflen);
 #ifdef DN2UID_CACHE
 		  if (status == NSS_SUCCESS)
