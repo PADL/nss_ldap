@@ -65,7 +65,7 @@ union nss_XbyY_key {
 	const char *name;
 	int number;
 	struct {
-		long net;
+		long net; /* int on Solaris */
 		int type;
 	} netaddr;
 	struct {
@@ -81,10 +81,11 @@ union nss_XbyY_key {
 		const char *proto;
 	} serv;
 	void *ether;
+	/* Solaris has private key args here */
 };
  
 typedef struct nss_XbyY_args {
-	nss_XbyY_buf_t  buf;
+	nss_XbyY_buf_t buf;
 	int stayopen;
 	/*
 	 * Support for setXXXent(stayopen)
