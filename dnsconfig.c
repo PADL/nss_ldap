@@ -155,15 +155,15 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 
 	bptr = buf;
 
-        if (*presult == NULL)
-                {
-                *presult = (ldap_config_t *)malloc(sizeof(*result));
-                if (*presult == NULL)
-                        return NSS_UNAVAIL;
-                }
+	/* Bogus... this never gets freed... */
+	if (*presult == NULL)
+		{
+		*presult = (ldap_config_t *)calloc(1, sizeof(*result));
+		if (*presult == NULL)
+			return NSS_UNAVAIL;
+		}
 
-        result = *presult;
-
+	result = *presult;
 	result->ldc_scope = LDAP_SCOPE_SUBTREE;
 	result->ldc_host = NULL;
 	result->ldc_base = NULL;

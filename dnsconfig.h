@@ -36,8 +36,10 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
         char *buf,
         size_t buflen);
 
-/* These are unnecessary for the moment, as there is a coarser
- * lock around readconfig. */
+/*
+ * These are unnecessary for the moment, as there is a coarser
+ * lock around readconfig.
+ */
 #define __nss_dns_lock()
 #define __nss_dns_unlock()
 
