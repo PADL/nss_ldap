@@ -66,6 +66,30 @@
 
 #include "ldap-schema.h"
 
+#ifndef NSS_BUFSIZ
+#define NSS_BUFSIZ              1024
+#endif
+
+#ifndef NSS_BUFLEN_GROUP
+#define NSS_BUFLEN_GROUP        LDAP_NSS_BUFLEN_GROUP
+#endif
+
+#ifndef NSS_BUFLEN_PASSWD
+#define NSS_BUFLEN_PASSWD       NSS_BUFSIZ
+#endif
+
+#ifndef HAVE_NSSWITCH_H
+#define NSS_BUFLEN_HOSTS        (NSS_BUFSIZ + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
+#define NSS_BUFLEN_NETGROUP     (MAXHOSTNAMELEN * 2 + LOGNAME_MAX + 3)
+#define NSS_BUFLEN_NETWORKS     NSS_BUFSIZ
+#define NSS_BUFLEN_PROTOCOLS    NSS_BUFSIZ
+#define NSS_BUFLEN_RPC          NSS_BUFSIZ
+#define NSS_BUFLEN_SERVICES     NSS_BUFSIZ
+#define NSS_BUFLEN_SHADOW       NSS_BUFSIZ
+#define NSS_BUFLEN_ETHERS       NSS_BUFSIZ
+#define NSS_BUFLEN_BOOTPARAMS   NSS_BUFSIZ
+#endif /* HAVE_NSSWITCH_H */
+
 /*
  * Timeouts for reconnecting code. Similar to rebind
  * logic in Darwin NetInfo. Some may find sleeping
@@ -82,9 +106,16 @@
 #endif /* HAVE_NSSWITCH_H */
 
 #define LDAP_NSS_MAXGR_DEPTH     16     /* maximum depth of group nesting for getgrent()/initgroups() */
-#define LDAP_NSS_NGROUPS	 256	/* maximum number of group members in static buffer */
 
-#define LDAP_NSS_BUFLEN_GROUP	(NSS_BUFSIZ + (LDAP_NSS_NGROUPS * (sizeof (char *) + LOGNAME_MAX)))
+#define LDAP_NSS_NGROUPS	 256	/* maximum number of group members in static buffer */
+					/* tune if you have very big groups in your directory */
+
+#if LDAP_NSS_NGROUPS > 256
+#define LDAP_NSS_BUFLEN_GROUP	(NSS_BUFSIZ + (LDAP_NSS_NGROUPS * (sizeof (char *) + LOGNAME_MAX))) 
+#else
+#define LDAP_NSS_BUFLEN_GROUP	NSS_BUFSIZ
+#endif /* LDAP_NSS_NGROUPS > 256 */
+
 #define LDAP_NSS_BUFLEN_DEFAULT	0
 
 #ifdef HAVE_USERSEC_H
@@ -106,31 +137,6 @@
 #ifndef MAP_KEY_MAXSIZ
 #define MAP_KEY_MAXSIZ 64
 #endif
-
-#ifndef NSS_BUFSIZ
-#define NSS_BUFSIZ              1024
-#endif
-
-#ifndef NSS_BUFLEN_GROUP
-#define NSS_BUFLEN_GROUP        LDAP_NSS_BUFLEN_GROUP
-#endif
-
-#ifndef NSS_BUFLEN_PASSWD
-#define NSS_BUFLEN_PASSWD       NSS_BUFSIZ
-#endif
-
-#ifndef HAVE_NSSWITCH_H
-#define NSS_BUFLEN_HOSTS        \
-        (NSS_BUFSIZ + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
-#define NSS_BUFLEN_NETGROUP     (MAXHOSTNAMELEN * 2 + LOGNAME_MAX + 3)
-#define NSS_BUFLEN_NETWORKS     NSS_BUFSIZ
-#define NSS_BUFLEN_PROTOCOLS    NSS_BUFSIZ
-#define NSS_BUFLEN_RPC          NSS_BUFSIZ
-#define NSS_BUFLEN_SERVICES     NSS_BUFSIZ
-#define NSS_BUFLEN_SHADOW       NSS_BUFSIZ
-#define NSS_BUFLEN_ETHERS       NSS_BUFSIZ
-#define NSS_BUFLEN_BOOTPARAMS   NSS_BUFSIZ
-#endif /* HAVE_NSSWITCH_H */
 
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
