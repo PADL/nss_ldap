@@ -73,7 +73,7 @@ OBJS=$(SRCS:.c=.o)
 #NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
 
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module
-GNUFLAGS=-DGNU_NSS -DHAVE_SNPRINTF -D_REENTRANT -DLDAP_VERSION3_API
+GNUFLAGS=-DGNU_NSS -DHAVE_SNPRINTF -D_REENTRANT #-DLDAP_VERSION3_API
 LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 NSSLIBVER=$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 

@@ -829,11 +829,12 @@ do_result (ent_context_t * ctx, int all)
 	    }
 	  else
 	    {
+#ifdef LDAP_VERSION3_API
 	      /* NB: this frees ctx->ec_res */
 	      parserc =
 		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
 				   NULL, NULL, NULL, 1);
-	      if (parserc != LDAP_SUCCESS)
+	      if (parserc != LDAP_SUCCESS && parserc != LDAP_MORE_RESULTS_TO_RETURN)
 		{
 		  stat = NSS_UNAVAIL;
 		  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
@@ -844,6 +845,9 @@ do_result (ent_context_t * ctx, int all)
 		{
 		  stat = NSS_NOTFOUND;
 		}
+#else
+	      stat = NSS_UNAVAIL;
+#endif /* LDAP_VERSION3_API */
 	      ctx->ec_res = NULL;
 	      ctx->ec_msgid = -1;
 	    }
