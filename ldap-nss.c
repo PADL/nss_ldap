@@ -271,7 +271,7 @@ do_open (void)
       if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_VERSION3_API */
 	{
-	  void (*old_handler) (int sig) = NULL;
+	  void (*old_handler) (int sig);
 	  int len;
 
 #ifdef SUN_NSS
@@ -286,7 +286,7 @@ do_open (void)
 	       */
 	      do_close ();
 	    }
-	  if (old_handler != NULL && old_handler != SIG_ERR)
+	  if (old_handler != SIG_ERR && old_handler != SIG_IGN)
 	    {
 #ifdef SUN_NSS
 	      (void) sigset (SIGPIPE, old_handler);
@@ -344,7 +344,7 @@ do_open (void)
        */
       if (cfg->ldc_ssl_on)
 	{
-	  if (ldapssl_client_init (cfg->ldc_ssl_path, NULL) != LDAP_SUCCESS)
+	  if (ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
 	    {
 	      continue;
 	    }
