@@ -514,6 +514,7 @@ do_disable_keepalive (LDAP * ld)
     {
       int off = 0;
       (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, &off, sizeof off);
+      fcntl(sd, F_SETFD, FD_CLOEXEC);
     }
   debug ("<== do_disable_keepalive");
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
