@@ -124,11 +124,11 @@ or
 ldaps,
 specifying LDAP over TCP, IPC and SSL respectively. If applicable,
 a port number can be specified; the default port number for the
-selected protocol is used if omitted. This directive takes
+selected protocol is used if omitted. This option takes
 precedence over the
 .B
 host
-directive; it is not possible to combine the two.
+option; it is not possible to combine the two.
 .TP
 .B
 ldap_version <version>
@@ -143,11 +143,11 @@ by the client library.
 .TP
 .B binddn <binddn>
 Specifies the distinguished name with which to bind to the directory
-server(s). This directive is optional; the default is to bind
+server(s). This option is optional; the default is to bind
 anonymously.
 .TP
 .B bindpw <bindpw>
-Specifies the cleartext credentials with which to bind. This directive
+Specifies the cleartext credentials with which to bind. This option
 is only applicable when used with
 .B binddn
 above. The default is no credential (anonymous bind). When binding to
@@ -155,12 +155,12 @@ the directory using
 .I
 SASL
 or other authentication mechanisms apart from simple binds, this
-directive is not used.
+option is not used.
 .TP
 .B rootbinddn <binddn>
-This directive has the same syntax and effect as the
+This option has the same syntax and effect as the
 .B binddn
-directive above, except it applies when the effective user ID is
+option above, except it applies when the effective user ID is
 zero. If not specified, then the identity specified in
 .B binddn
 is used instead. Because the configuration file may be readable by
@@ -170,11 +170,11 @@ file instead. This file is usually in the same directory as the
 configuration file.
 .TP
 .B port <port>
-Specifies the port to connect to; this directive is used with the
+Specifies the port to connect to; this option is used with the
 .B host
-directive, and is ignored with the
+option, and is ignored with the
 .B uri
-directive.
+option.
 .TP
 .B scope <sub|one|base>
 Specifies the search scope (subtree, one level or base object). The
@@ -189,6 +189,7 @@ to never dereference aliases.
 Specifies the time limit (in seconds) to use when performing searches. A value
 of zero (0), which is the default, is to wait indefinitely for
 searches to be completed.
+.TP
 .B bind_timelimit <timelimit>
 Specifies the time limit (in seconds) to use when connecting to the directory
 server. This is distinct from the time limit specified in
@@ -198,7 +199,7 @@ are otherwise cached.) Only some
 .I
 LDAP
 client libraries have the underlying functionality necessary to
-support this directive. The default bind timelimit is 30 seconds.
+support this option. The default bind timelimit is 30 seconds.
 .TP
 .B referrals <yes|no>
 Specifies whether automatic referral chasing should be enabled. The
@@ -226,7 +227,12 @@ libraries.
 Specifies the debug level used for logging by the
 .I LDAP
 client library. This feature is not supported by all client
-libraries.
+libraries, and does not apply to the
+.B nss_ldap
+and
+.B pam_ldap
+modules themselves (debugging, if any, is configured separately
+and usually at compile time).
 .TP
 .B ssl <on|off|start_tls>
 Specifies whether to use SSL/TLS or not (the default is not to). If
@@ -281,25 +287,23 @@ TLS authentication.
 The following configuration options apply to nss_ldap only:
 .TP
 .B reconnect_policy <hard_open|hard_init|soft>
-Specifies the policy to use for reconnecting to a failed
+Specifies the policy to use for reconnecting to an unavailable
 .I
 LDAP
 server. The default is
 .B hard_open,
 which reconnects if opening the connection to the directory server
 failed. By contrast,
-.B hard_init,
+.B hard_init
 reconnects if initializing the connection failed. Initializing may not
 actually contact the directory server, and it is possible that a
-malformed configuration file will cause
-.B nss_ldap
-to reconnect. If
+malformed configuration file will trigger reconnection. If
 .B soft
 is specified, then
 .B nss_ldap
 will return immediately on server failure. All "hard" reconnect
 policies block with exponential backoff before retrying. At present
-the backoff parameters are not configurable at runtime.
+the backoff parameters are configurable at compile time only.
 .TP
 .B idle_timelimit <timelimit>
 Specifies the time (in seconds) after which
@@ -364,7 +368,7 @@ ldapprofile
 tool.
 .TP
 .B nss_map_attribute <from_attribute> <to_attribute>
-This directive may be specified multiple times, and directs
+This option may be specified multiple times, and directs
 .B nss_ldap
 to use the attribute
 .B to_attribute
@@ -373,7 +377,7 @@ instead of the RFC 2307 attribute
 in all lookups.
 If 
 .B nss_ldap
-was built without schema mapping support, then this directive
+was built without schema mapping support, then this option
 is ignored.
 .TP
 .B nss_map_objectclass <from_objectclass> <to_objectclass>
@@ -416,4 +420,4 @@ module was developed by PADL Software Pty Ltd (www.padl.com).
 .TP
 /etc/ldap.conf, /etc/ldap.secret, /etc/nsswitch.conf
 .SH SEE ALSO
-.BR pam_ldap (5)
+.BR nsswitch.conf (5)
