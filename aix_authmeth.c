@@ -123,7 +123,6 @@ _nss_ldap_authenticate (char *user, char *response, int **reenter,
   int rc;
 
   *reenter = 0;
-  *message = NULL;
 
   stat = _nss_ldap_proxy_bind (user, response);
 
@@ -143,6 +142,9 @@ _nss_ldap_authenticate (char *user, char *response, int **reenter,
       rc = AUTH_UNAVAIL;
       break;
     }
+
+  if (rc == AUTH_FAILURE)
+    *reenter = 1;
 
   return rc;
 }

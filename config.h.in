@@ -165,6 +165,9 @@
 /* Define if you have the <shadow.h> header file.  */
 #undef HAVE_SHADOW_H
 
+/* Define if you have the <strings.h> header file.  */
+#undef HAVE_STRINGS_H
+
 /* Define if you have the <sys/byteorder.h> header file.  */
 #undef HAVE_SYS_BYTEORDER_H
 

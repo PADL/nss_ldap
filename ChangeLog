@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+179	Luke Howard <lukeh@padl.com>
+
+	* a couple more patches for AIX
+
 178	Luke Howard <lukeh@padl.com>
 
 	* patch from Gabor Gombas for AIX support
