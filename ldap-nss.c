@@ -29,6 +29,7 @@ static char rcsId[] =
 
 #ifdef HAVE_THREAD_H
 #include <thread.h>
+#undef HAVE_PTHREAD_ATFORK
 #elif defined(HAVE_PTHREAD_H)
 #include <pthread.h>
 #endif
