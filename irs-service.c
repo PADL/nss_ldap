@@ -37,7 +37,7 @@ struct pvt
   {
     struct servent result;
     char buffer[NSS_BUFLEN_PROTOCOLS];
-    context_handle_t state;
+    ent_context_t * state;
   };
 
 static struct servent *

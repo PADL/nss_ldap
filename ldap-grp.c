@@ -56,7 +56,7 @@ static char rcsId[] =
 #endif
 
 #ifdef GNU_NSS
-static context_handle_t gr_context = NULL;
+static ent_context_t * gr_context = NULL;
 #endif
 
 static NSS_STATUS
@@ -212,7 +212,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 
 #ifdef RFC2307BIS
   /* lookup the user's DN. XXX: import this filter from somewhere else */
-  stat = _nss_ldap_lookup (&a, "(" AT (uid) "=%s)", attrs, 1, &res);
+  stat = _nss_ldap_search_s (&a, "(" AT (uid) "=%s)", attrs, 1, &res);
   if (stat == NSS_SUCCESS)
     {
       e = _nss_ldap_first_entry (res);
@@ -232,7 +232,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
     {
       filter = filt_getgroupsbymember;
     }
-  stat = _nss_ldap_lookup (&a, filter, gr_attributes, LDAP_NO_LIMIT, &res);
+  stat = _nss_ldap_search_s (&a, filter, gr_attributes, LDAP_NO_LIMIT, &res);
   if (userdn != NULL)
     {
 #ifdef LDAP_VERSION3_API
@@ -243,7 +243,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
     }
 #else
   stat =
-    _nss_ldap_lookup (&a, filt_getgroupsbymember, gr_attributes,
+    _nss_ldap_search_s (&a, filt_getgroupsbymember, gr_attributes,
 		      LDAP_NO_LIMIT, &res);
 #endif /* RFC2307BIS */
 

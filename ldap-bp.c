@@ -64,7 +64,7 @@ static char rcsId[] = "$Id$";
 #endif
 
 #ifdef GNU_NSS
-static context_handle_t bp_context = NULL;
+static ent_context_t * bp_context = NULL;
 #endif
 
 static NSS_STATUS

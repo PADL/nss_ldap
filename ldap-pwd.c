@@ -55,7 +55,7 @@ static char rcsId[] =
 #endif
 
 #ifdef GNU_NSS
-static context_handle_t pw_context = NULL;
+static ent_context_t * pw_context = NULL;
 #endif
 
 static INLINE NSS_STATUS _nss_ldap_assign_emptystring (char **valptr,

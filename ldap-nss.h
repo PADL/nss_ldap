@@ -243,26 +243,18 @@ typedef struct ldap_state ldap_state_t;
 struct ent_context
   {
     ldap_state_t ec_state;	/* eg. for services */
+    int ec_msgid;		/* message ID */
     LDAPMessage *ec_res;	/* result chain */
-    LDAPMessage *ec_last;	/* current result pointer */
   };
 
 typedef struct ent_context ent_context_t;
-
-/*
- * this is just a pointer to a context, used by the allocation and 
- * destruction functions, so we can allocate it properly and maybe
- * destroy it & reset the pointer to NULL. (We don't free the memory
- * at the moment, we reuse it next time.)
- */
-typedef ent_context_t *context_handle_t;
 
 #ifdef SUN_NSS
 struct nss_ldap_backend
   {
     nss_backend_op_t *ops;
     int n_ops;
-    context_handle_t state;
+    ent_context_t *state;
   };
 
 typedef struct nss_ldap_backend nss_ldap_backend_t;
@@ -382,8 +374,9 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t *, void *);
 NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be);
 #endif
 
-ent_context_t *_nss_ldap_ent_context_init (context_handle_t *);
-void _nss_ldap_ent_context_free (context_handle_t *);
+ent_context_t *_nss_ldap_ent_context_init (ent_context_t **);
+void _nss_ldap_ent_context_zero (ent_context_t *);
+void _nss_ldap_ent_context_free (ent_context_t **);
 
 /*
  * these are helper functions for ldap-grp.c only on Solaris
@@ -393,17 +386,39 @@ char *_nss_ldap_get_dn (LDAPMessage * e);
 LDAPMessage *_nss_ldap_first_entry (LDAPMessage * res);
 LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
 
-NSS_STATUS _nss_ldap_lookup (const ldap_args_t * args,	/* IN */
+/*
+ * Synchronous search cover.
+ */
+NSS_STATUS _nss_ldap_search_s (const ldap_args_t * args,	/* IN */
 			     const char *filterprot,	/* IN */
 			     const char **attributes,	/* IN */
 			     int sizelimit,	/* IN */
 			     LDAPMessage ** pRes /* OUT */ );
 
+/*
+ * Asynchronous search cover.
+ */
+NSS_STATUS _nss_ldap_search (const ldap_args_t * args,	/* IN */
+			     const char *filterprot,	/* IN */
+			     const char **attributes,	/* IN */
+			     int sizelimit,	/* IN */
+			     int * pMsgid /* OUT */ );
+
+/*
+ * Retrieve next result.
+ */
+NSS_STATUS _nss_ldap_result (ent_context_t *ctx);
+
+/*
+ * Emulate X.500 read operation.
+ */ 
 NSS_STATUS _nss_ldap_read (const char *dn,	/* IN */
 			   const char **attributes,	/* IN */
 			   LDAPMessage ** pRes /* OUT */ );
 
-/* common enumeration routine */
+/*
+ * common enumeration routine; uses asynchronous API.
+ */
 NSS_STATUS _nss_ldap_getent (ent_context_t * key,	/* IN/OUT */
 			     void *result,	/* IN/OUT */
 			     char *buffer,	/* IN */
@@ -413,7 +428,9 @@ NSS_STATUS _nss_ldap_getent (ent_context_t * key,	/* IN/OUT */
 			     const char **attrs,	/* IN */
 			     parser_t parser /* IN */ );
 
-/* common lookup routine */
+/*
+ * common lookup routine; uses synchronous API.
+ */
 NSS_STATUS _nss_ldap_getbyname (ldap_args_t * args,	/* IN/OUT */
 				void *result,	/* IN/OUT */
 				char *buffer,	/* IN */

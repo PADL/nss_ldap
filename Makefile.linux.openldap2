@@ -80,7 +80,7 @@ NSSLIBVER=$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_
 
 LIBDIRS=-L.
 
-LIBS=-lldap -llber -lnsl -lpthread -lresolv
+LIBS=-lldap -llber -lnsl -lpthread -lresolv -lsasl
 
 GCCFLAGS=-O -g -Wall -fPIC
 DEBUGFLAGS=

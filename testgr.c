@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <grp.h>
+#include <signal.h>
 
 void
 main (int argc, char **argv)
@@ -43,6 +44,7 @@ scan_group ()
 {
   struct group *g;
 
+  signal(SIGPIPE, SIG_IGN);
 
   setgrent ();
 
@@ -53,14 +55,17 @@ scan_group ()
 
   endgrent ();
 
+	sleep(10);
+
   printf ("==> getgrnam(qmail)\n");
   g = getgrnam ("qmail");
   if (g != NULL)
     dump (g);
-
+#if 0
   printf ("==> getgrnam(testgroup)\n");
   g = getgrnam ("testgroup");
   if (g != NULL)
     dump (g);
+#endif
 
 }

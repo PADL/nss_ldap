@@ -71,9 +71,6 @@ BUGS 18, 19, 20, 34 would be good to fix soon.
   update /etc/ldap.conf (/var/ldap/LDAP_CLIENT_CACHE?). Should probably
   add support for the HP/Sun server profile schema.
 
-[BUG#20]
-- use asynchronous search API
-
 [BUG#21]
 - write testsuite. 
 

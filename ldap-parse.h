@@ -146,7 +146,7 @@
 	(void) _nss_ldap_ent_context_init(&pvt->state)
 #define LOOKUP_ENDENT(this) \
 	struct pvt *pvt = (struct pvt *)this->private; \
-	_nss_ldap_ent_context_free(&pvt->state)
+	_nss_ldap_ent_context_zero(pvt->state)
 
 #elif defined(SUN_NSS)
 
@@ -155,7 +155,7 @@
 		return NSS_UNAVAIL; \
 	return NSS_SUCCESS
 #define LOOKUP_ENDENT(key) \
-	_nss_ldap_ent_context_free(&((nss_ldap_backend_t *)key)->state); \
+	_nss_ldap_ent_context_zero(((nss_ldap_backend_t *)key)->state); \
 	return NSS_SUCCESS
 
 #else
@@ -165,7 +165,7 @@
 		return NSS_UNAVAIL; \
 	return NSS_SUCCESS
 #define LOOKUP_ENDENT(key) \
-	_nss_ldap_ent_context_free(&key); \
+	_nss_ldap_ent_context_zero(key); \
 	return NSS_SUCCESS
 #endif
 

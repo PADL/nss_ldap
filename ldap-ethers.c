@@ -68,7 +68,7 @@ static char rcsId[] =
 #endif
 
 #ifdef GNU_NSS
-static context_handle_t ether_context = NULL;
+static ent_context_t * ether_context = NULL;
 #endif
 
 #ifdef SUN_NSS

@@ -1,5 +1,5 @@
 
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997, 1998, 1999, 2000 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -20,12 +20,13 @@
  */
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #ifdef SUN_NSS
 #include <thread.h>
 #endif
 
+#include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -78,8 +79,7 @@ static ldap_config_t *__config = NULL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session =
-{NULL, NULL};
+static ldap_session_t __session = { NULL, NULL };
 
 /* 
  * Process ID that opened the session.
@@ -87,13 +87,75 @@ static ldap_session_t __session =
 static pid_t __pid = -1;
 static uid_t __euid = -1;
 
+/*
+ * Close the global session, sending an unbind.
+ */
 static void do_close (void);
+
+/*
+ * Close the global session without sending an unbind.
+ */
 static void do_close_no_unbind (void);
+
+#ifdef DISABLE_SO_KEEPALIVE
+/*
+ * Disable keepalive on a LDAP connection's socket.
+ */
 static void do_disable_keepalive (LDAP * ld);
+#endif
+
+/*
+ * Open the global session
+ */
 static NSS_STATUS do_open (void);
+
+/*
+ * Perform an asynchronous search.
+ */
+static NSS_STATUS do_search (const char *base, int scope,
+			     const char *filter, const char **attrs,
+			     int sizelimit, int *);
+
+/*
+ * Perform a synchronous search (layered on do_search()).
+ */
 static NSS_STATUS do_search_s (const char *base, int scope,
 			       const char *filter, const char **attrs,
-			       int sizelimit, LDAPMessage ** res);
+			       int sizelimit, LDAPMessage **);
+
+/*
+ * Fetch an LDAP result.
+ */
+static NSS_STATUS do_result (ent_context_t * ctx, int all);
+
+/*
+ * Format a filter given a prototype.
+ */
+static void do_filter (const ldap_args_t * args, const char *filterprot,
+		       const char **attrs, char *filter, size_t filterlen);
+
+/*
+ * Parse a result, fetching new results until a successful parse
+ * or exceptional condition.
+ */
+static NSS_STATUS do_parse (ent_context_t * ctx, void *result, char *buffer,
+			    size_t buflen, int *errnop, parser_t parser);
+
+/*
+ * Function to be braced by reconnect harness. Used so we
+ * can apply the reconnect code to both asynchronous and
+ * synchronous searches.
+ */
+typedef NSS_STATUS (*search_func_t) (const char *, int, const char *,
+				     const char **, int, void *);
+
+/*
+ * Do a search with a reconnect harness.
+ */
+static NSS_STATUS
+do_with_reconnect (const char *base, int scope,
+		   const char *filter, const char **attrs, int sizelimit,
+		   void *private, search_func_t func);
 
 /*
  * Rebind functions.
@@ -138,23 +200,16 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
-  ent_context_t *ctx = ((nss_ldap_backend_t *) be)->state;
-
   debug ("==> _nss_ldap_default_destr");
 
   nss_context_lock ();
 
-  if (ctx != NULL)
+  if ((((nss_ldap_backend_t *) be)->state) != NULL)
     {
-      if (ctx->ec_res != NULL)
-	{
-	  ldap_msgfree (ctx->ec_res);
-	}
-      free (ctx);
-      ((nss_ldap_backend_t *) be)->state = NULL;
+      _nss_ldap_ent_context_free ((ent_context_t **)
+				  (&((nss_ldap_backend_t *) be)->state));
     }
 
   /* Ditch the backend. */
@@ -173,8 +228,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -232,7 +286,10 @@ do_close_no_unbind (void)
       syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
 	      __session.ls_conn);
 #endif /* DEBUG */
+    }
 
+  if (__session.ls_conn != NULL)
+    {
 #ifdef HAVE_LDAP_LD_FREE
 
 # if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
@@ -242,7 +299,7 @@ do_close_no_unbind (void)
 # else
       extern int ldap_ld_free (LDAP * ld, int close);
       (void) ldap_ld_free (__session.ls_conn, 0);
-# endif /* OPENLDAP 2.x */
+# endif				/* OPENLDAP 2.x */
 
 #else
       /*
@@ -253,20 +310,20 @@ do_close_no_unbind (void)
 # ifdef LDAP_VERSION3_API
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 # else
-      if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-# endif /* LDAP_VERSION3_API */
-	{
-	  close (sd);
-	  sd = -1;
+	if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
+# endif				/* LDAP_VERSION3_API */
+	  {
+	    close (sd);
+	    sd = -1;
 # ifdef LDAP_VERSION3_API
-	  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
+	    (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
 # else
-	  __session.ls_conn->ld_sb.sb_sd = sd;
-# endif /*  LDAP_VERSION3_API */
-	}
+	    __session.ls_conn->ld_sb.sb_sd = sd;
+# endif				/*  LDAP_VERSION3_API */
+	  }
 
-	/* hope we closed it OK! */
-	ldap_unbind(__session.ls_conn);
+      /* hope we closed it OK! */
+      ldap_unbind (__session.ls_conn);
 
 #endif /* HAVE_LDAP_LD_FREE */
 
@@ -277,6 +334,7 @@ do_close_no_unbind (void)
   return;
 }
 
+#ifdef DISABLE_SO_KEEPALIVE
 static INLINE void
 do_disable_keepalive (LDAP * ld)
 {
@@ -296,6 +354,7 @@ do_disable_keepalive (LDAP * ld)
 
   return;
 }
+#endif /* DISABLE_SO_KEEPALIVE */
 
 /*
  * Opens connection to an LDAP server.
@@ -316,7 +375,7 @@ do_open (void)
 
 #ifdef DEBUG
   syslog (LOG_DEBUG,
-     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif /* DEBUG */
 
@@ -338,9 +397,7 @@ do_open (void)
       /*
        * Otherwise we can hand back this process' global
        * LDAP session.
-       */
-#ifdef TEST_SERVER_UP /* experimental */
-      /*
+       *
        * Ensure we save signal handler for sigpipe and restore after
        * LDAP connection is confirmed to be up or a new connection
        * is opened. This prevents Solaris nscd and other apps from
@@ -376,6 +433,7 @@ do_open (void)
 	      /*
 	       * The other end has died. Close the connection.
 	       */
+	      debug ("other end dead!\n");
 	      do_close ();
 	    }
 	  if (old_handler != SIG_ERR && old_handler != SIG_IGN)
@@ -397,13 +455,6 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_SUCCESS;
 	}
-#else
-      /*
-       * Just return.
-       */
-      debug ("<== do_open");
-      return NSS_SUCCESS;
-#endif /* TEST_SERVER_UP */
     }
 
   __pid = pid;
@@ -545,10 +596,12 @@ do_open (void)
 	}
     }
 
+#ifdef DISABLE_SO_KEEPALIVE
   /*
    * Disable SO_KEEPALIVE on the session's socket.
    */
   do_disable_keepalive (__session.ls_conn);
+#endif /* DISABLE_SO_KEEPALIVE */
 
   __session.ls_config = cfg;
 
@@ -566,7 +619,7 @@ do_open (void)
  * delay it until the setXXent() function is called.
  */
 ent_context_t *
-_nss_ldap_ent_context_init (context_handle_t * key)
+_nss_ldap_ent_context_init (ent_context_t ** pctx)
 {
   ent_context_t *ctx;
 
@@ -574,7 +627,7 @@ _nss_ldap_ent_context_init (context_handle_t * key)
 
   nss_context_lock ();
 
-  ctx = *key;
+  ctx = *pctx;
 
   if (ctx == NULL)
     {
@@ -585,16 +638,23 @@ _nss_ldap_ent_context_init (context_handle_t * key)
 	  debug ("<== _nss_ldap_ent_context_init");
 	  return NULL;
 	}
-      ctx->ec_res = NULL;
-      *key = ctx;
+      *pctx = ctx;
     }
-  else if (ctx->ec_res != NULL)
+  else
     {
-      ldap_msgfree (ctx->ec_res);
+      if (ctx->ec_res != NULL)
+	{
+	  ldap_msgfree (ctx->ec_res);
+	}
+      if (ctx->ec_msgid > -1 && _nss_ldap_result (ctx) == NSS_SUCCESS)
+	{
+	  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
+	}
     }
 
   ctx->ec_res = NULL;
-  ctx->ec_last = NULL;
+  ctx->ec_msgid = -1;
+
   LS_INIT (ctx->ec_state);
 
   nss_context_unlock ();
@@ -604,52 +664,211 @@ _nss_ldap_ent_context_init (context_handle_t * key)
 }
 
 /*
- * Frees a given context; this is called from endXXent() and so we
+ * Clears a given context; this is called from endXXent() and so we
  * can grab the lock.
  */
 void
-_nss_ldap_ent_context_free (context_handle_t * key)
+_nss_ldap_ent_context_zero (ent_context_t * ctx)
 {
-  ent_context_t *ctx = *key;
-
-  debug ("==> _nss_ldap_ent_context_free");
+  debug ("==> _nss_ldap_ent_context_zero");
 
   nss_context_lock ();
 
   if (ctx == NULL)
     {
       nss_context_unlock ();
-      debug ("<== _nss_ldap_ent_context_free");
+      debug ("<== _nss_ldap_ent_context_zero");
       return;
     }
 
   if (ctx->ec_res != NULL)
     {
       ldap_msgfree (ctx->ec_res);
+      ctx->ec_res = NULL;
     }
 
-  ctx->ec_res = NULL;
-  ctx->ec_last = NULL;
+  /*
+   * Abandon the search if there were more results to fetch.
+   */
+  if (ctx->ec_msgid > -1 && _nss_ldap_result (ctx) == NSS_SUCCESS)
+    {
+      ldap_abandon (__session.ls_conn, ctx->ec_msgid);
+      ctx->ec_msgid = -1;
+    }
+
   LS_INIT (ctx->ec_state);
 
   nss_context_unlock ();
+
+  debug ("<== _nss_ldap_ent_context_zero");
+
+  return;
+}
+
+/*
+ * Frees an enumeration context. This is presently
+ * only used on Solaris.
+ */
+void
+_nss_ldap_ent_context_free (ent_context_t ** ctx)
+{
+  debug ("==> _nss_ldap_ent_context_free");
+
+  _nss_ldap_ent_context_zero (*ctx);
+  free (*ctx);
+  *ctx = NULL;
 
   debug ("<== _nss_ldap_ent_context_free");
 
   return;
 }
 
-static NSS_STATUS
-do_search_s (const char *base, int scope,
-	     const char *filter, const char **attrs, int sizelimit,
-	     LDAPMessage ** res)
+/*
+ * Do the necessary formatting to create a string filter.
+ */
+static void
+do_filter (const ldap_args_t * args, const char *filterprot,
+	   const char **attrs, char *filter, size_t filterlen)
 {
-  int lstatus = LDAP_UNAVAILABLE, tries = 0, backoff = 0;
-  NSS_STATUS nstatus = NSS_TRYAGAIN;
+  debug ("==> do_filter");
 
-  debug ("==> do_search_s");
+  if (args != NULL)
+    {
+      switch (args->la_type)
+	{
+	case LA_TYPE_STRING:
+#ifdef HAVE_SNPRINTF
+	  snprintf (filter, filterlen, filterprot, args->la_arg1.la_string);
+#else
+	  sprintf (filter, filterprot, args->la_arg1.la_string);
+#endif
+	  break;
+	case LA_TYPE_NUMBER:
+#ifdef HAVE_SNPRINTF
+	  snprintf (filter, filterlen, filterprot, args->la_arg1.la_number);
+#else
+	  sprintf (filter, filterprot, args->la_arg1.la_number);
+#endif
+	  break;
+	case LA_TYPE_STRING_AND_STRING:
+#ifdef HAVE_SNPRINTF
+	  snprintf (filter, filterlen, filterprot,
+		    args->la_arg1.la_string, args->la_arg2.la_string);
+#else
+	  sprintf (filter, filterprot, args->la_arg1.la_string,
+		   args->la_arg2.la_string);
+#endif
+	  break;
+	case LA_TYPE_NUMBER_AND_STRING:
+#ifdef HAVE_SNPRINTF
+	  snprintf (filter, filterlen, filterprot,
+		    args->la_arg1.la_number, args->la_arg2.la_string);
+#else
+	  sprintf (filter, filterprot, args->la_arg1.la_number,
+		   args->la_arg2.la_string);
+#endif
+	  break;
+	}
+    }
 
-  while (nstatus == NSS_TRYAGAIN &&
+  debug ("<== do_filter");
+}
+
+/*
+ * Wrapper around ldap_result() to skip over search references
+ * and deal transparently with the last entry.
+ */
+static NSS_STATUS
+do_result (ent_context_t * ctx, int all)
+{
+  int parserc, rc = LDAP_UNAVAILABLE;
+  NSS_STATUS stat = NSS_TRYAGAIN;
+
+  debug ("==> do_result");
+  do
+    {
+      rc =
+	ldap_result (__session.ls_conn, ctx->ec_msgid, all, NULL,
+		     &ctx->ec_res);
+      switch (rc)
+	{
+	case -1:
+	case 0:
+#ifdef LDAP_VERSION3_API
+	  if (ldap_get_option
+	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+	    {
+	      rc = LDAP_UNAVAILABLE;
+	    }
+#else
+	  rc = __session.ls_conn->ld_errno;
+#endif /* LDAP_VERSION3_API */
+	  syslog (LOG_ERR, "nss_ldap: could not get LDAP result - %s",
+		  ldap_err2string (rc));
+	  stat = NSS_UNAVAIL;
+	  break;
+	case LDAP_RES_SEARCH_ENTRY:
+	  stat = NSS_SUCCESS;
+	  break;
+	case LDAP_RES_SEARCH_RESULT:
+	  if (all == LDAP_MSG_ALL)
+	    {
+	      /* we asked for the result chain, we got it. */
+	      stat = NSS_SUCCESS;
+	    }
+	  else
+	    {
+	      /* NB: this frees ctx->ec_res */
+	      parserc =
+		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
+				   NULL, NULL, NULL, 1);
+	      if (parserc != LDAP_SUCCESS
+		  && parserc != LDAP_MORE_RESULTS_TO_RETURN)
+		{
+		  stat = NSS_UNAVAIL;
+		  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
+		  syslog (LOG_ERR, "nss_ldap: could not get LDAP result - %s",
+			  ldap_err2string (rc));
+		}
+	      else
+		{
+		  stat = NSS_NOTFOUND;
+		}
+	      ctx->ec_res = NULL;
+	      ctx->ec_msgid = -1;
+	    }
+	  break;
+	default:
+	  stat = NSS_UNAVAIL;
+	  break;
+	}
+    }
+#ifdef LDAP_VERSION3_API
+  while (rc == LDAP_RES_SEARCH_REFERENCE);
+#else
+  while (0);
+#endif /* LDAP_VERSION3_API */
+
+  debug ("<== do_result");
+
+  return stat;
+}
+
+/*
+ * Function to call either do_search() or do_search_s() with
+ * reconnection logic.
+ */
+static NSS_STATUS
+do_with_reconnect (const char *base, int scope,
+		   const char *filter, const char **attrs, int sizelimit,
+		   void *private, search_func_t search_func)
+{
+  int rc = LDAP_UNAVAILABLE, tries = 0, backoff = 0;
+  NSS_STATUS stat = NSS_TRYAGAIN;
+
+  debug ("==> do_with_reconnect");
+
+  while (stat == NSS_TRYAGAIN &&
 	 tries < LDAP_NSS_MAXCONNTRIES + LDAP_NSS_TRIES)
     {
       if (tries > LDAP_NSS_MAXCONNTRIES)
@@ -660,7 +879,7 @@ do_search_s (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-	   "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
 		  backoff);
 	  (void) sleep (backoff);
 	}
@@ -677,48 +896,56 @@ do_search_s (const char *base, int scope,
 	  continue;
 	}
 
-#ifdef LDAP_VERSION3_API
-      ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
-		       (void *) &sizelimit);
-#else
-      __session.ls_conn->ld_sizelimit = sizelimit;
-#endif /* LDAP_VERSION3_API */
-
-      lstatus = ldap_search_s (__session.ls_conn, base, scope, filter,
-			       (char **) attrs, 0, res);
-
-      switch (lstatus)
+      if (search_func (base, scope, filter, attrs, sizelimit, private) ==
+	  NSS_SUCCESS)
 	{
-	case LDAP_SUCCESS:
+	  rc = LDAP_SUCCESS;
+	}
+      else
+	{
+#ifdef LDAP_VERSION3_API
+	  if (ldap_get_option
+	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+	    {
+	      rc = LDAP_UNAVAILABLE;
+	    }
+#else
+	  rc = __session.ls_conn->ld_errno;
+#endif
+	}
+      switch (rc)
+	{
+	case LDAP_SUCCESS:	/* Huh? */
 	case LDAP_SIZELIMIT_EXCEEDED:
 	case LDAP_TIMELIMIT_EXCEEDED:
-	  nstatus = NSS_SUCCESS;
+	  stat = NSS_SUCCESS;
 	  break;
 	case LDAP_SERVER_DOWN:
 	case LDAP_TIMEOUT:
 	case LDAP_UNAVAILABLE:
 	case LDAP_BUSY:
 	  do_close ();
-	  nstatus = NSS_TRYAGAIN;
+	  stat = NSS_TRYAGAIN;
 	  ++tries;
 	  continue;
 	  break;
 	default:
-	  nstatus = NSS_UNAVAIL;
+	  stat = NSS_UNAVAIL;
 	  break;
 	}
     }
 
-  switch (nstatus)
+  switch (stat)
     {
     case NSS_UNAVAIL:
       syslog (LOG_ERR, "nss_ldap: could not search LDAP server - %s",
-	      ldap_err2string (lstatus));
+	      ldap_err2string (rc));
       break;
     case NSS_TRYAGAIN:
-      syslog (LOG_ERR, "nss_ldap: could not reconnect to LDAP server - %s",
-	      ldap_err2string (lstatus));
-      nstatus = NSS_UNAVAIL;
+      syslog (LOG_ERR,
+	      "nss_ldap: could not reconnect to LDAP server - %s",
+	      ldap_err2string (rc));
+      stat = NSS_UNAVAIL;
       break;
     case NSS_SUCCESS:
       if (tries)
@@ -730,18 +957,158 @@ do_search_s (const char *base, int scope,
       break;
     }
 
-  debug ("<== do_search_s");
-
-  return nstatus;
+  debug ("<== do_with_reconnect");
+  return stat;
 }
 
+/*
+ * Synchronous search function. Don't call this directly;
+ * always wrap calls to this with do_with_reconnect(), or,
+ * better still, use _nss_ldap_search_s().
+ */
+static NSS_STATUS
+do_search_s (const char *base, int scope,
+	     const char *filter, const char **attrs, int sizelimit,
+	     LDAPMessage ** res)
+{
+  ent_context_t ctx;
+  NSS_STATUS stat;
+
+  debug ("==> do_search_s");
+
+  ctx.ec_msgid = -1;
+  ctx.ec_res = NULL;
+
+  stat = do_search (base, scope, filter, attrs, sizelimit, &ctx.ec_msgid);
+
+  if (stat == NSS_SUCCESS)
+    {
+      stat = do_result (&ctx, LDAP_MSG_ALL);
+      if (stat == NSS_SUCCESS)
+	{
+	  *res = ctx.ec_res;
+	}
+    }
+
+  debug ("<== do_search_s");
+
+  return stat;
+}
+
+/*
+ * Asynchronous search function. Don't call this directly;
+ * always wrap calls to this with do_with_reconnect(), or,
+ * better still, use _nss_ldap_search().
+ */
+static NSS_STATUS
+do_search (const char *base, int scope,
+	   const char *filter, const char **attrs, int sizelimit, int *msgid)
+{
+  NSS_STATUS stat;
+
+  debug ("==> do_search");
+
+#ifdef LDAP_VERSION3_API
+  ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
+		   (void *) &sizelimit);
+#else
+  __session.ls_conn->ld_sizelimit = sizelimit;
+#endif /* LDAP_VERSION3_API */
+
+  *msgid = ldap_search (__session.ls_conn, base, scope, filter,
+			(char **) attrs, 0);
+
+
+  stat = (*msgid < 0) ? NSS_UNAVAIL : NSS_SUCCESS;
+
+  debug ("<== do_search");
+
+  return stat;
+}
+
+/*
+ * Tries parser function "parser" on entries, calling do_result()
+ * to retrieve them from the LDAP server until one parsers
+ * correctly or there is an exceptional condition.
+ */
+static NSS_STATUS
+do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
+	  int *errnop, parser_t parser)
+{
+  NSS_STATUS stat = NSS_SUCCESS;
+
+  debug ("==> do_parse");
+
+  /*
+   * if ec_state.ls_info.ls_index is non-zero, then we don't collect another
+   * entry off the LDAP chain, and instead refeed the existing result to
+   * the parser. Once the parser has finished with it, it will return
+   * NSS_NOTFOUND and reset the index to -1, at which point we'll retrieve
+   * another entry.
+   */
+  while (stat == NSS_SUCCESS)
+    {
+      if (ctx->ec_state.ls_type == LS_TYPE_KEY
+	  || ctx->ec_state.ls_info.ls_index == -1)
+	{
+	  stat = do_result (ctx, LDAP_MSG_ONE);
+	}
+
+      if (stat == NSS_SUCCESS)
+	{
+	  /* we have an entry, try to parse it */
+
+	  stat =
+	    parser (__session.ls_conn, ctx->ec_res, &ctx->ec_state, result,
+		    buffer, buflen);
+
+	  if (ctx->ec_state.ls_type == LS_TYPE_KEY
+	      || ctx->ec_state.ls_info.ls_index == -1)
+	    {
+	      /* we don't need the result anymore, ditch it. */
+	      ldap_msgfree (ctx->ec_res);
+	      ctx->ec_res = NULL;
+	    }
+	  if (stat == NSS_SUCCESS)
+	    {
+	      /* yay. we parsed successfully. break */
+	      break;
+	    }
+	}
+    }
+
+  if (stat == NSS_TRYAGAIN)
+    {
+#ifdef SUN_NSS
+      errno = ERANGE;
+      *errnop = 1;		/* this is really erange */
+#else
+      *errnop = ERANGE;
+#endif /* SUN_NSS */
+    }
+
+  debug ("<== do_parse");
+
+  return stat;
+}
+
+/*
+ * Read an entry from the directory, a la X.500. This is used
+ * for functions that need to retrieve attributes from a DN,
+ * such as the RFC2307bis group expansion function.
+ */
 NSS_STATUS
 _nss_ldap_read (const char *dn, const char **attributes, LDAPMessage ** res)
 {
-  return do_search_s (dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes, 1,	/* sizelimit */
-		      res);
+  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)",
+			    attributes, 1,	/* sizelimit */
+			    res, (search_func_t) do_search_s);
 }
 
+/*
+ * Simple wrapper around ldap_get_values(). Requires that
+ * session is already established.
+ */
 char **
 _nss_ldap_get_values (LDAPMessage * e, char *attr)
 {
@@ -752,6 +1119,10 @@ _nss_ldap_get_values (LDAPMessage * e, char *attr)
   return ldap_get_values (__session.ls_conn, e, attr);
 }
 
+/*
+ * Simple wrapper around ldap_get_dn(). Requires that
+ * session is already established.
+ */
 char *
 _nss_ldap_get_dn (LDAPMessage * e)
 {
@@ -762,6 +1133,10 @@ _nss_ldap_get_dn (LDAPMessage * e)
   return ldap_get_dn (__session.ls_conn, e);
 }
 
+/*
+ * Simple wrapper around ldap_first_entry(). Requires that
+ * session is already established.
+ */
 LDAPMessage *
 _nss_ldap_first_entry (LDAPMessage * res)
 {
@@ -772,6 +1147,10 @@ _nss_ldap_first_entry (LDAPMessage * res)
   return ldap_first_entry (__session.ls_conn, res);
 }
 
+/*
+ * Simple wrapper around ldap_next_entry(). Requires that
+ * session is already established.
+ */
 LDAPMessage *
 _nss_ldap_next_entry (LDAPMessage * res)
 {
@@ -783,74 +1162,79 @@ _nss_ldap_next_entry (LDAPMessage * res)
 }
 
 /*
- * The generic lookup cover function.
+ * Calls ldap_result() with LDAP_MSG_ONE.
+ */
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
+{
+  return do_result (ctx, LDAP_MSG_ONE);
+}
+
+/*
+ * The generic synchronous lookup cover function. 
  * Assumes caller holds lock.
  */
 NSS_STATUS
-_nss_ldap_lookup (const ldap_args_t * args,
-		  const char *filterprot, const char **attrs, int sizelimit,
-		  LDAPMessage ** res)
+_nss_ldap_search_s (const ldap_args_t * args,
+		    const char *filterprot, const char **attrs,
+		    int sizelimit, LDAPMessage ** res)
 {
   char filter[LDAP_FILT_MAXSIZ + 1];
   NSS_STATUS stat;
 
-  debug ("==> _nss_ldap_lookup");
+  debug ("==> _nss_ldap_search_s");
 
   stat = do_open ();
   if (stat != NSS_SUCCESS)
     {
       __session.ls_conn = NULL;
-      debug ("<== _nss_ldap_lookup");
+      debug ("<== _nss_ldap_search_s");
       return stat;
     }
 
-  if (args != NULL)
+  do_filter (args, filterprot, attrs, filter, sizeof (filter));
+
+  stat = do_with_reconnect (__session.ls_config->ldc_base,
+			    __session.ls_config->ldc_scope,
+			    (args == NULL) ? (char *) filterprot : filter,
+			    attrs, sizelimit, res,
+			    (search_func_t) do_search_s);
+
+  debug ("<== _nss_ldap_search_s");
+
+  return stat;
+}
+
+/*
+ * The generic lookup cover function (asynchronous).
+ * Assumes caller holds lock.
+ */
+NSS_STATUS
+_nss_ldap_search (const ldap_args_t * args, const char *filterprot,
+		  const char **attrs, int sizelimit, int *msgid)
+{
+  char filter[LDAP_FILT_MAXSIZ + 1];
+  NSS_STATUS stat;
+
+  debug ("==> _nss_ldap_search");
+
+  stat = do_open ();
+  if (stat != NSS_SUCCESS)
     {
-      switch (args->la_type)
-	{
-	case LA_TYPE_STRING:
-#ifdef HAVE_SNPRINTF
-	  snprintf (filter, sizeof (filter), filterprot,
-		    args->la_arg1.la_string);
-#else
-	  sprintf (filter, filterprot, args->la_arg1.la_string);
-#endif
-	  break;
-	case LA_TYPE_NUMBER:
-#ifdef HAVE_SNPRINTF
-	  snprintf (filter, sizeof (filter), filterprot,
-		    args->la_arg1.la_number);
-#else
-	  sprintf (filter, filterprot, args->la_arg1.la_number);
-#endif
-	  break;
-	case LA_TYPE_STRING_AND_STRING:
-#ifdef HAVE_SNPRINTF
-	  snprintf (filter, sizeof (filter), filterprot,
-		    args->la_arg1.la_string, args->la_arg2.la_string);
-#else
-	  sprintf (filter, filterprot, args->la_arg1.la_string,
-		   args->la_arg2.la_string);
-#endif
-	  break;
-	case LA_TYPE_NUMBER_AND_STRING:
-#ifdef HAVE_SNPRINTF
-	  snprintf (filter, sizeof (filter), filterprot,
-		    args->la_arg1.la_number, args->la_arg2.la_string);
-#else
-	  sprintf (filter, filterprot, args->la_arg1.la_number,
-		   args->la_arg2.la_string);
-#endif
-	  break;
-	}
+      __session.ls_conn = NULL;
+      debug ("<== _nss_ldap_search");
+      return stat;
     }
 
-  stat = do_search_s (__session.ls_config->ldc_base,
-		      __session.ls_config->ldc_scope,
-		      (args == NULL) ? (char *) filterprot : filter,
-		      attrs, sizelimit, res);
+  do_filter (args, filterprot, attrs, filter, sizeof (filter));
 
-  debug ("<== _nss_ldap_lookup");
+  stat = do_with_reconnect (__session.ls_config->ldc_base,
+			    __session.ls_config->ldc_scope,
+			    (args == NULL) ? (char *) filterprot : filter,
+			    attrs, sizelimit, msgid,
+			    (search_func_t) do_search);
+
+  debug ("<== _nss_ldap_search");
 
   return stat;
 }
@@ -868,12 +1252,14 @@ _nss_ldap_getent (ent_context_t * ctx,
 		  char *buffer,
 		  size_t buflen,
 		  int *errnop,
-		const char *filterprot, const char **attrs, parser_t parser)
+		  const char *filterprot, const char **attrs, parser_t parser)
 {
-  NSS_STATUS stat = NSS_NOTFOUND;
+  NSS_STATUS stat = NSS_SUCCESS;
 
+  debug ("==> _nss_ldap_getent");
   if (ctx == NULL)
     {
+      debug ("<== _nss_ldap_getent");
       return NSS_UNAVAIL;
     }
 
@@ -886,67 +1272,31 @@ _nss_ldap_getent (ent_context_t * ctx,
   nss_context_lock ();
 
   /*
-   * if ec_state.ls_info.ls_index is non-zero, then we don't collect another
-   * entry off the LDAP chain, and instead refeed the existing result to
-   * the parser. Once the parser has finished with it, it will return
-   * NSS_NOTFOUND and reset the index to -1, at which point we'll retrieve
-   * another entry.
+   * If ctx->ec_msgid < 0, then we haven't searched yet. Let's do it!
    */
-  if (ctx->ec_res == NULL)
+  if (ctx->ec_msgid < 0)
     {
-      LDAPMessage *res;
+      int msgid;
 
-      stat = _nss_ldap_lookup (NULL, filterprot, attrs, LDAP_NO_LIMIT, &res);
+      stat =
+	_nss_ldap_search (NULL, filterprot, attrs, LDAP_NO_LIMIT, &msgid);
       if (stat != NSS_SUCCESS)
 	{
 	  nss_context_unlock ();
+	  debug ("<== _nss_ldap_getent");
 	  return stat;
 	}
-      stat = NSS_NOTFOUND;
 
-      ctx->ec_res = res;
-      ctx->ec_last = ldap_first_entry (__session.ls_conn, ctx->ec_res);
-    }
-  else
-    {
-      if (ctx->ec_state.ls_info.ls_index == -1)
-	{
-	  ctx->ec_last = ldap_next_entry (__session.ls_conn, ctx->ec_last);
-	}
+      ctx->ec_msgid = msgid;
     }
 
-  while (ctx->ec_last != NULL)
-    {
-      stat =
-	parser (__session.ls_conn, ctx->ec_last, &ctx->ec_state, result,
-		buffer, buflen);
-      if (stat == NSS_SUCCESS)
-	{
-	  break;
-	}
-      if (ctx->ec_state.ls_info.ls_index == -1)
-	{
-	  ctx->ec_last = ldap_next_entry (__session.ls_conn, ctx->ec_last);
-	}
-    }
-
-  if (ctx->ec_last == NULL)
-    {
-      ldap_msgfree (ctx->ec_res);
-      ctx->ec_res = NULL;
-    }
 
   nss_context_unlock ();
 
-  if (stat == NSS_TRYAGAIN)
-    {
-#ifdef SUN_NSS
-      errno = ERANGE;
-      *errnop = 1;		/* this is really erange */
-#else
-      *errnop = ERANGE;
-#endif /* SUN_NSS */
-    }
+  stat = do_parse (ctx, result, buffer, buflen, errnop, parser);
+
+  debug ("<== _nss_ldap_getent");
+
   return stat;
 }
 
@@ -963,25 +1313,20 @@ _nss_ldap_getbyname (ldap_args_t * args,
 		     const char *filterprot,
 		     const char **attrs, parser_t parser)
 {
-  LDAPMessage *res;
-  LDAPMessage *e;
   NSS_STATUS stat = NSS_NOTFOUND;
-  ldap_state_t state;
+  ent_context_t ctx;
 
   nss_context_lock ();
 
-  stat = _nss_ldap_lookup (args, filterprot, attrs, 1, &res);
+  debug ("==> _nss_ldap_getbyname");
+
+  stat = _nss_ldap_search (args, filterprot, attrs, 1, &ctx.ec_msgid);
   if (stat != NSS_SUCCESS)
     {
       nss_context_unlock ();
+      debug ("<== _nss_ldap_getbyname");
       return stat;
     }
-
-  /*
-   * Reset stat. Otherwise we might just return NSS_SUCCESS
-   * for no entries which could be a huge security hole.
-   */
-  stat = NSS_NOTFOUND;
 
   /*
    * we pass this along for the benefit of the services parser,
@@ -989,30 +1334,18 @@ _nss_ldap_getbyname (ldap_args_t * args,
    * we only pass the second argument along, as that's what we need
    * in services.
    */
-  state.ls_type = LS_TYPE_KEY;
-  state.ls_info.ls_key = args->la_arg2.la_string;
+  LS_INIT (ctx.ec_state);
+  ctx.ec_state.ls_type = LS_TYPE_KEY;
+  ctx.ec_state.ls_info.ls_key = args->la_arg2.la_string;
 
-  for (e = ldap_first_entry (__session.ls_conn, res);
-       e != NULL; e = ldap_next_entry (__session.ls_conn, e))
-    {
-      stat = parser (__session.ls_conn, e, &state, result, buffer, buflen);
-      if (stat == NSS_SUCCESS)
-	break;
-    }
+  stat = do_parse (&ctx, result, buffer, buflen, errnop, parser);
 
-  ldap_msgfree (res);
-
+  /* is there a race condition here? */
   nss_context_unlock ();
 
-  if (stat == NSS_TRYAGAIN)
-    {
-#ifdef SUN_NSS
-      errno = ERANGE;
-      *errnop = 1;		/* this is really erange */
-#else
-      *errnop = ERANGE;
-#endif /* SUN_NSS */
-    }
+  _nss_ldap_ent_context_zero (&ctx);
+
+  debug ("<== _nss_ldap_getbyname");
 
   return stat;
 }
@@ -1175,8 +1508,7 @@ _nss_ldap_assign_passwd (LDAP * ld,
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
 	  if (strncasecmp (*valiter,
-			   "{CRYPT}",
-			   (sizeof("{CRYPT}") - 1)) == 0)
+			   "{CRYPT}", (sizeof ("{CRYPT}") - 1)) == 0)
 	    {
 	      pwd = *valiter;
 	      break;
@@ -1190,7 +1522,7 @@ _nss_ldap_assign_passwd (LDAP * ld,
     }
   else
     {
-      pwd += (sizeof("{CRYPT}") - 1);
+      pwd += (sizeof ("{CRYPT}") - 1);
     }
 
   vallen = strlen (pwd);

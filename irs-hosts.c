@@ -46,7 +46,7 @@ struct pvt
   {
     struct hostent result;
     char buffer[NSS_BUFLEN_HOSTS];
-    context_handle_t state;
+    ent_context_t * state;
   };
 
 static struct hostent *
