@@ -190,7 +190,12 @@ fi
 
 AC_CHECK_LIB(dl, dlopen,[LIBS="-ldl $LIBS"],,$LIBS)
 AC_CHECK_LIB(db, main,[LIBS="-ldb $LIBS"],,$LIBS)
-AC_CHECK_LIB(gssapi_krb5, gss_krb5_ccache_name,[LIBS="-lgssapi_krb5 $LIBS"],,$LIBS)
+
+AC_CHECK_LIB(gssapi, gss_krb5_ccache_name,[LIBS="-lgssapi" found_gssapi_lib=yes],,$LIBS)
+if test -z "$found_gssapi_lib"; then
+  AC_CHECK_LIB(gssapi_krb5, gss_krb5_ccache_name,[LIBS="-lgssapi_krb5 $LIBS"],,$LIBS)
+fi
+
 dnl Following checks probably not strictly necessary.
 dnl AC_CHECK_LIB(crypto, main,[LIBS="-lcrypto $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(ssl, main,[LIBS="-lssl $LIBS"],,$LIBS)

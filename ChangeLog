@@ -4,6 +4,7 @@ $Id$
 218	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#168: set errnop to ENOENT if not found
+	* check for -lgssapi before -lgssapi_krb5
 
 217	Luke Howard <lukeh@padl.com>
 	
