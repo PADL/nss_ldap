@@ -597,7 +597,7 @@ do_open (void)
 	    {
 	      version = LDAP_VERSION3;
 	      ldap_set_option (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
-			       &v ersion);
+			       &version);
 	    }
 	}
       debug ("==> start_tls");
