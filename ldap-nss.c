@@ -1542,12 +1542,12 @@ do_search (const char *base, int scope,
 
   if (*msgid < 0)
     {
-      stat = NSS_SUCCESS;
-      time (&__session.ls_timestamp);
+      stat = NSS_UNAVAIL;
     }
   else
     {
-      stat = NSS_UNAVAIL;
+      stat = NSS_SUCCESS;
+      time (&__session.ls_timestamp);
     }
 
   debug ("<== do_search");

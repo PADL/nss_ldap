@@ -3,6 +3,8 @@ $Header$
 
 156	Luke Howard <lukeh@padl.com>
 
+	* logic was around the wrong way in do_search(), 
+	  all searches were broken!
 	* --disable-ssl option for configure
 	* removed "Obsoletes: pam_ldap" from spec file
 
