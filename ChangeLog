@@ -7,12 +7,14 @@ $Header$
 	* added "timelimit" and "bind_timelimit"
 	  directives to ldap.conf
 	* fixed bug with dereferencing aliases
-	* preliminary support for profiles
+	* preliminary support for profiles; recognise
+	  profile semantics in ldap-nss.c/util.c
 	* parity with pam_ldap; "ssl" directive in
 	  ldap.conf can now specify "yes" or
 	  "start_tls" for Start TLS
 	* hopefully fixed Berkeley DB include 
 	  mess in util.c
+	* fixed leaks in util.c
  
 126	Luke Howard <lukeh@padl.com>
 

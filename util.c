@@ -373,9 +373,11 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 			   char **buffer, size_t * buflen)
 {
   ldap_service_search_descriptor_t **t = NULL, *p;
-  char *base, *filter;
+  char *base;
+#ifdef notyet
+  char *filter, *s;
   int scope;
-  char *s;
+#endif
 
   if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
     t = &result[LM_PASSWD];
