@@ -1,6 +1,6 @@
 
-                      ANNOUNCING NSS_LDAP 0.2
-                      =======================
+                      ANNOUNCING NSS_LDAP 2.55
+                      ========================
 
 e. What is nss_ldap?
 --------------------
@@ -94,7 +94,13 @@ join the list.
 
 To contact the developers, email:
 
+	<URL:mailto:dev@padl.com>
+
+For deployment-related support, email:
+
 	<URL:mailto:support@padl.com>
+
+Note that PADL offer commercial support on a per-incident basis.
 
 For more information on using LDAP for name resolution, and related software,
 see:

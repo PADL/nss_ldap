@@ -2,9 +2,14 @@
 LDAP NAMESERVICE SWITCH LIBRARY
 ===============================
 
-This is version 0.2 of nss_ldap, an LDAP module for the Solaris Nameservice
+This is version 2.55 of nss_ldap, an LDAP module for the Solaris Nameservice
 Switch (NSS). This should be compatible with the GNU glibc if GNU_NSS is
 defined, and the ISC BIND IRS if IRS_NSS is defined.
+
+****************************IMPORTANT NOTE *********************************
+Versions 2.55 an above of the nss_ldap library are designed to work with
+glibc 2.1, not glibc 2.0. They _may_ work with glibc 2.0. YMMV.
+****************************************************************************
 
 The LDAP schema used is described in RFC 2307
 

@@ -19,6 +19,8 @@
 # Boston, MA 02111-1307, USA.
 
 #
+# $Id$
+#
 
 MODULE=nss_ldap
 HDRS=	\

@@ -1,26 +1,28 @@
 LDAP NAMESERVICE SWITCH LIBRARY
+===============================
+
 Linux notes from Greg <greg@rage.net>
 
 INSTALLING
+----------
 Install a working ldap server.
 Populate your database with the appropriate entries, use the
 MigrationTools, which can be found at:
 http://www.padl.com/
 
 Build the software. Under Linux this is done with:
-make -f Makefile.linux
+
+$ make -f Makefile.linux
+
 Then install....
-make -f Makefile.linux install
+
+$ make -f Makefile.linux install
+
 Edit the /etc/ldap.conf file to reflect your organization and search base,
 The ldap.conf file we use is included as an example (ldap.conf.ragenet)
 Next copy /etc/nsswitch.ldap to /etc/nsswitch.conf.
 
-A perl test script has been included. To perform the tests, run
-make -f Makefile.linux test.pl
-This test script will replace your system's nsswitch.conf file while
-the test is running. It's recomended not to use this in a production
-environment.
-
 REPORTING BUGS
-Please report bugs to support@padl.com.
+--------------
+Please report bugs to dev@padl.com.
 
