@@ -259,46 +259,38 @@ void _nss_ldap_init_attributes(const char*** attrtab)
 
 void init_pwd_attributes(const char ***pwd_attrs)
 {
-  int i = 0;
   static const char *__pwd_attrs[ATTRTAB_SIZE + 1];
 
   (*pwd_attrs) = __pwd_attrs;
 
-  (*pwd_attrs)[i++] = AT(uid);
-  (*pwd_attrs)[i++] = AT(userPassword);
-#ifdef AUTHPASSWORD
-  (*pwd_attrs)[i++] = AT(authPassword);
-#endif   /* AUTHPASSWORD */
-  (*pwd_attrs)[i++] = AT(uidNumber);
-  (*pwd_attrs)[i++] = AT(gidNumber);
-  (*pwd_attrs)[i++] = AT(cn);
-  (*pwd_attrs)[i++] = AT(homeDirectory);
-  (*pwd_attrs)[i++] = AT(loginShell);
-  (*pwd_attrs)[i++] = AT(gecos);
-  (*pwd_attrs)[i++] = AT(description);
-  (*pwd_attrs)[i++] = AT(objectClass);
-  (*pwd_attrs)[i]   = NULL;
+  (*pwd_attrs)[0] = AT(uid);
+  (*pwd_attrs)[1] = AT(userPassword);
+  (*pwd_attrs)[2] = AT(uidNumber);
+  (*pwd_attrs)[3] = AT(gidNumber);
+  (*pwd_attrs)[4] = AT(cn);
+  (*pwd_attrs)[5] = AT(homeDirectory);
+  (*pwd_attrs)[6] = AT(loginShell);
+  (*pwd_attrs)[7] = AT(gecos);
+  (*pwd_attrs)[8] = AT(description);
+  (*pwd_attrs)[9] = AT(objectClass);
+  (*pwd_attrs)[10]   = NULL;
 }
 
 void init_sp_attributes(const char ***sp_attrs)
 {
-  int i = 0;
   static const char *__sp_attrs[ATTRTAB_SIZE + 1];
 
   (*sp_attrs) = __sp_attrs;
 
-  (*sp_attrs)[i++] = (char*)AT (uid);
-  (*sp_attrs)[i++] = (char*)AT (userPassword);
-#ifdef AUTHPASSWORD
-  (*sp_attrs)[i++] = (char*)AT (authPassword);
-#endif /* AUTHPASSWORD */
-  (*sp_attrs)[i++] = (char*)AT (shadowLastChange);
-  (*sp_attrs)[i++] = (char*)AT (shadowMax);
-  (*sp_attrs)[i++] = (char*)AT (shadowMin);
-  (*sp_attrs)[i++] = (char*)AT (shadowWarning);
-  (*sp_attrs)[i++] = (char*)AT (shadowInactive);
-  (*sp_attrs)[i++] = (char*)AT (shadowExpire);
-  (*sp_attrs)[i]   = NULL;
+  (*sp_attrs)[0] = (char*)AT (uid);
+  (*sp_attrs)[1] = (char*)AT (userPassword);
+  (*sp_attrs)[2] = (char*)AT (shadowLastChange);
+  (*sp_attrs)[3] = (char*)AT (shadowMax);
+  (*sp_attrs)[4] = (char*)AT (shadowMin);
+  (*sp_attrs)[5] = (char*)AT (shadowWarning);
+  (*sp_attrs)[6] = (char*)AT (shadowInactive);
+  (*sp_attrs)[7] = (char*)AT (shadowExpire);
+  (*sp_attrs)[8]   = NULL;
 }
 
 void init_grp_attributes(const char ***grp_attrs)
@@ -310,9 +302,6 @@ void init_grp_attributes(const char ***grp_attrs)
 
   (*grp_attrs)[i++] = (char*)AT (cn);
   (*grp_attrs)[i++] = (char*)AT (userPassword);
-#ifdef AUTHPASSWORD
-  (*grp_attrs)[i++] = (char*)AT (authPassword);
-#endif /* AUTHPASSWORD */
   (*grp_attrs)[i++] = (char*)AT (memberUid);
 #ifdef RFC2307BIS
   (*grp_attrs)[i++] = (char*)AT (uniqueMember);
@@ -427,9 +416,6 @@ void init_netgrp_attributes(const char ***netgrp_attrs)
 
 static const char *pwd_attributes[] =
 {AT (uid), AT (userPassword),
-#ifdef AUTHPASSWORD
- AT (authPassword),
-#endif				/* AUTHPASSWORD */
  AT (uidNumber), AT (gidNumber),
  AT (cn), AT (homeDirectory),
  AT (loginShell), AT (gecos),
@@ -438,9 +424,6 @@ static const char *pwd_attributes[] =
 
 static const char *sp_attributes[] =
 {AT (uid), AT (userPassword),
-#ifdef AUTHPASSWORD
- AT (authPassword),
-#endif				/* AUTHPASSWORD */
  AT (shadowLastChange), AT (shadowMax),
  AT (shadowMin), AT (shadowWarning),
  AT (shadowInactive), AT (shadowExpire),
@@ -448,9 +431,6 @@ static const char *sp_attributes[] =
 
 static const char *grp_attributes[] =
 {AT (cn), AT (userPassword),
-#ifdef AUTHPASSWORD
- AT (authPassword),
-#endif				/* AUTHPASSWORD */
  AT (memberUid),
 #ifdef RFC2307BIS
  AT (uniqueMember),

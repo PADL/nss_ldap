@@ -13,12 +13,6 @@
 /* define to enable debug code */
 #undef DEBUG
 
-/* define to enable authPassword checking code */
-#undef AUTHPASSWORD
-
-/* define to enable ActiveDirectory user schema support */
-#undef MSSFU_SCHEMA
-
 /* define to enable attribute/objectclass mapping */
 #undef AT_OC_MAP
 

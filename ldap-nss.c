@@ -2296,17 +2296,29 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   char **valiter;
   char *pwd = NULL;
   int vallen;
+  static char *__crypt_token = "{CRYPT}";
+  static size_t __crypt_token_length = sizeof("{CRYPT}") - 1;
+  const char *token = __crypt_token;
+  size_t token_length = __crypt_token_length;
 
 #ifdef AT_OC_MAP
-  /*
-   * if the userPassword attribute is not "userPassword" then
-   * don't bother about stripping the {crypt} prefix. Treat it
-   * like any other attribute, garbage in, garbage out.
-   */
-  if (__config != NULL && __config->ldc_crypt_prefix == 0)
-    {
-      return _nss_ldap_assign_attrval(ld, e, attr, valptr, buffer, buflen);
-    }
+  if (__config != NULL)
+  {
+	switch (__config->ldc_password_type)
+	{
+		case LU_RFC2307_USERPASSWORD:
+			token = "{CRYPT}";
+			token_length = sizeof("{CRYPT}") - 1;
+			break;
+		case LU_RFC3112_AUTHPASSWORD:
+			token = "CRYPT$";
+			token_length = sizeof("CRYPT$") - 1;
+			break;
+		case LU_OTHER_PASSWORD:
+			return _nss_ldap_assign_attrval(ld, e, attr, valptr, buffer, buflen);
+			break;
+	}
+  }
 #endif /* AT_OC_MAP */
 
   vals = ldap_get_values (ld, e, (char *) attr);
@@ -2314,8 +2326,7 @@ _nss_ldap_assign_userpassword (LDAP * ld,
     {
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
-	  if (strncasecmp (*valiter,
-			   "{CRYPT}", (sizeof ("{CRYPT}") - 1)) == 0)
+	  if (strncasecmp (*valiter, token, token_length) == 0)
 	    {
 	      pwd = *valiter;
 	      break;
@@ -2329,70 +2340,9 @@ _nss_ldap_assign_userpassword (LDAP * ld,
     }
   else
     {
-      pwd += (sizeof ("{CRYPT}") - 1);
+      pwd += token_length;
     }
 
-  vallen = strlen (pwd);
-
-  if (*buflen < (size_t) (vallen + 1))
-    {
-      if (vals != NULL)
-	{
-	  ldap_value_free (vals);
-	}
-      return NSS_TRYAGAIN;
-    }
-
-  *valptr = *buffer;
-
-  strncpy (*valptr, pwd, vallen);
-  (*valptr)[vallen] = '\0';
-
-  *buffer += vallen + 1;
-  *buflen -= vallen + 1;
-
-  if (vals != NULL)
-    {
-      ldap_value_free (vals);
-    }
-
-  return NSS_SUCCESS;
-}
-
-/*
- * Assign a single value to *valptr, after examining authPassword for
- * a syntactically suitable value. 
- */
-NSS_STATUS
-_nss_ldap_assign_authpassword (LDAP * ld,
-			       LDAPMessage * e,
-			       const char *attr,
-			       char **valptr, char **buffer, size_t * buflen)
-{
-  char **vals;
-  char **valiter;
-  char *pwd = NULL;
-  int vallen;
-
-  vals = ldap_get_values (ld, e, (char *) attr);
-  if (vals != NULL)
-    {
-      for (valiter = vals; *valiter != NULL; valiter++)
-	{
-	  if (strncasecmp (*valiter, "CRYPT$", (sizeof ("CRYPT$") - 1)) == 0)
-	    {
-	      pwd = *valiter;
-	      break;
-	    }
-	}
-    }
-
-  if (pwd == NULL)
-    {
-      return NSS_NOTFOUND;
-    }
-
-  pwd += (sizeof ("CRYPT$") - 1);
   vallen = strlen (pwd);
 
   if (*buflen < (size_t) (vallen + 1))
@@ -2486,9 +2436,14 @@ _nss_ldap_atmap_put (ldap_config_t *config,
 	}
     }
 
-  if (strcmp(rfc2307attribute, "userPassword") == 0 &&
-      strcasecmp(rfc2307attribute, attribute) != 0)
-        config->ldc_crypt_prefix = 0;
+  if (strcmp(rfc2307attribute, "userPassword") == 0) {
+	if (strcasecmp(attribute, "userPassword") == 0)
+		config->ldc_password_type = LU_RFC2307_USERPASSWORD;
+	else if (strcasecmp(attribute, "authPassword") == 0)
+		config->ldc_password_type = LU_RFC3112_AUTHPASSWORD;
+	else
+		config->ldc_password_type = LU_OTHER_PASSWORD;
+  }
 
   key.data = (void *) rfc2307attribute;
   key.size = strlen (rfc2307attribute);

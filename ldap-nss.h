@@ -149,9 +149,24 @@ enum ldap_map_selector
 typedef enum ldap_map_selector ldap_map_selector_t;
 
 #ifdef AT_OC_MAP
-extern const char* _nss_ldap_map_at(const char* pChar);
-extern const char* _nss_ldap_map_oc(const char* pChar);
+enum ldap_userpassword_selector
+  {
+    LU_RFC2307_USERPASSWORD,
+    LU_RFC3112_AUTHPASSWORD,
+    LU_OTHER_PASSWORD
+  };
+
+typedef enum ldap_userpassword_selector ldap_userpassword_selector_t;
 #endif /* AT_OC_MAP */
+
+enum ldap_ssl_options
+  {
+    SSL_OFF,
+    SSL_LDAPS,
+    SSL_START_TLS
+  };
+
+typedef enum ldap_ssl_options ldap_ssl_options_t;
 
 /*
  * POSIX profile information (not used yet)
@@ -171,10 +186,6 @@ struct ldap_service_search_descriptor
 
 typedef struct ldap_service_search_descriptor
   ldap_service_search_descriptor_t;
-
-#define SSL_OFF        0
-#define SSL_LDAPS      1
-#define SSL_START_TLS  2
 
 /*
  * linked list of configurations pointing to LDAP servers. The first
@@ -210,7 +221,7 @@ struct ldap_config
     /* bind timelimit */
     int ldc_bind_timelimit;
     /* SSL enabled */
-    int ldc_ssl_on;
+    ldap_ssl_options_t ldc_ssl_on;
     /* SSL certificate path */
     char *ldc_sslpath;
     /* Chase referrals */
@@ -245,7 +256,7 @@ struct ldap_config
      * is userPassword "userPassword" or not? 
      * ie. do we need {crypt} to be stripped
      */
-    int ldc_crypt_prefix;
+    ldap_userpassword_selector_t ldc_password_type;
 #endif /* AT_OC_MAP */
 
     /* 
@@ -560,13 +571,6 @@ NSS_STATUS _nss_ldap_assign_userpassword (LDAP * ld,	/* IN */
 					  char **buffer,	/* IN/OUT */
 					  size_t * buflen);	/* IN/OUT */
 
-NSS_STATUS _nss_ldap_assign_authpassword (LDAP * ld,	/* IN */
-					  LDAPMessage * e,	/* IN */
-					  const char *attr,	/* IN */
-					  char **valptr,	/* OUT */
-					  char **buffer,	/* IN/OUT */
-					  size_t * buflen);	/* IN/OUT */
-
 NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc);
 
 #ifdef AT_OC_MAP
@@ -590,6 +594,9 @@ NSS_STATUS _nss_ldap_atmap_get (ldap_config_t *config,
 NSS_STATUS _nss_ldap_ocmap_get (ldap_config_t *config,
 				const char *rfc2307objectclass,
 				const char **objectclass);
+
+const char *_nss_ldap_map_at(const char *pChar);
+const char *_nss_ldap_map_oc(const char *pChar);
 #endif /* AT_OC_MAP */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

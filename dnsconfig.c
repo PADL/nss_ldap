@@ -184,7 +184,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 #ifdef AT_OC_MAP
   result->ldc_at_map = NULL;
   result->ldc_oc_map = NULL;
-  result->ldc_crypt_prefix = 1;
+  result->ldc_password_type = LU_RFC2307_USERPASSWORD;
 #endif /* AT_OC_MAP */
   result->ldc_next = result;
 

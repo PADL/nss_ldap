@@ -105,21 +105,9 @@ _nss_ldap_parse_pw (LDAP * ld,
     }
   else
     {
-#if defined(AUTHPASSWORD)
-      stat =
-	_nss_ldap_assign_authpassword (ld, e, AT (authPassword),
-				       &pw->pw_passwd, &buffer, &buflen);
-      if (stat == NSS_NOTFOUND)
-	{
-	  stat =
-	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword),
-					   &pw->pw_passwd, &buffer, &buflen);
-	}
-#else
       stat =
 	_nss_ldap_assign_userpassword (ld, e, AT (userPassword),
 				       &pw->pw_passwd, &buffer, &buflen);
-#endif /* AUTHPASSWORD */
       if (stat != NSS_SUCCESS)
 	return stat;
     }

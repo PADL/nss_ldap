@@ -13,7 +13,6 @@ AC_ARG_ENABLE(rfc2307bis, [  --enable-rfc2307bis       use RFC2307bis schema ], 
 AC_ARG_ENABLE(schema-mapping, [  --enable-schema-mapping   enable attribute/objectclass mapping ], [AC_DEFINE(AT_OC_MAP)])
 AC_ARG_ENABLE(no-so-keepalive, [  --enable-no-so-keepalive  disable SO_KEEPALIVE ], [AC_DEFINE(DISABLE_SO_KEEPALIVE)])
 AC_ARG_ENABLE(debugging, [  --enable-debugging        enable debug code ], [AC_DEFINE(DEBUG)])
-AC_ARG_ENABLE(authpassword, [  --enable-authpassword     enable checking of authPassword attribute ], [AC_DEFINE(AUTHPASSWORD)])
 AC_ARG_ENABLE(ssl, [  --disable-ssl             disable SSL/TSL support])
 AC_ARG_WITH(ldap-lib, [  --with-ldap-lib=type      select ldap library [auto|netscape5|netscape4|netscape3|umich|openldap]])
 AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of ldap SDK])
