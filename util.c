@@ -574,11 +574,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       return NSS_TRYAGAIN;
     }
   align (buffer, buflen, ldap_config_t *);
-  *presult = (ldap_config_t *) buffer;
+  result = *presult = (ldap_config_t *) buffer;
   buffer += sizeof (ldap_config_t);
   buflen -= sizeof (ldap_config_t);
 
-  result = *presult;
   _nss_ldap_defaultconfig (result);
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");

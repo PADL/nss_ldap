@@ -132,7 +132,7 @@ _nss_ldap_getdnsdn (char *src_domain,
 
 NSS_STATUS
 _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
-			     char *buf, size_t buflen)
+			     char *buffer, size_t buflen)
 {
   NSS_STATUS stat = NSS_SUCCESS;
   struct dns_reply *r;
@@ -161,15 +161,15 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	  int len;
 	  ldap_config_t *last = result;
 
-	  if (bytesleft (buf, buflen, ldap_config_t *) <
+	  if (bytesleft (buffer, buflen, ldap_config_t *) <
 	      sizeof (ldap_config_t))
 	    {
 	      dns_free_data (r);
 	      return NSS_TRYAGAIN;
 	    }
-	  align (buf, buflen, ldap_config_t *);
-	  result = (ldap_config_t *) buf;
-	  buf += sizeof (ldap_config_t);
+	  align (buffer, buflen, ldap_config_t *);
+	  result = (ldap_config_t *) buffer;
+	  buffer += sizeof (ldap_config_t);
 	  buflen -= sizeof (ldap_config_t);
 	  _nss_ldap_defaultconfig (result);
 	  if (last != NULL)
@@ -188,9 +188,9 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	      return NSS_TRYAGAIN;
 	    }
 	  /* Server Host */
-	  memcpy (buf, rr->u.srv->target, len);
-	  result->ldc_host = buf;
-	  buf += len;
+	  memcpy (buffer, rr->u.srv->target, len);
+	  result->ldc_host = buffer;
+	  buffer += len;
 	  buflen -= len;
 
 	  /* Port */
@@ -205,7 +205,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 
 	  /* DN */
 	  stat = _nss_ldap_getdnsdn (_res.defdname,
-				     &result->ldc_base, &buf, &buflen);
+				     &result->ldc_base, &buffer, &buflen);
 	  if (stat != NSS_SUCCESS)
 	    {
 	      dns_free_data (r);
