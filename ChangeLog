@@ -7,6 +7,8 @@ $Id$
 	  SSL options
 	* fix for BUG#189: do not configure tls_checkpeer
 	  unless it is explicitly specifier in ldap.conf
+	* fix for BUG#190: set ls_state to LS_UNINITIALIZED
+	  after fork
 
 227	Luke Howard <lukeh@padl.com>
 
