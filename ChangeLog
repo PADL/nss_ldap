@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+129	Luke Howard <lukeh@padl.com>
+
+	* fixed build bug on Solaris
+
 128	Luke Howard <lukeh@padl.com>
 
 	* fixed logic bug in util.c introduced in
