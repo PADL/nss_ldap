@@ -65,7 +65,9 @@ static char rcsId[] =
 static ent_context_t *gr_context = NULL;
 #endif
 
+#ifdef RFC2307BIS
 static char *_nss_ldap_no_members[] = { NULL };
+#endif
 
 static NSS_STATUS
 _nss_ldap_parse_gr (LDAP * ld,

@@ -11,6 +11,8 @@ $Header$
 	  server
 	* include local copy of irs.h under AIX
 	* general cleanup of locking code
+	* _nss_ldap_no_members appears to only need defining for
+	  when RFC2307bis is enabled
 
 180	Luke Howard <lukeh@padl.com>
 
