@@ -60,6 +60,12 @@ static char rcsId[] =
 #ifdef HAVE_LDAP_SSL_H
 #include <ldap_ssl.h>
 #endif
+#ifdef HAVE_GSSLDAP_H
+#include <gssldap.h>
+#endif
+#ifdef HAVE_GSSSASL_H
+#include <gsssasl.h>
+#endif
 
 #include "ldap-lutil.h"
 
@@ -379,7 +385,8 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -404,7 +411,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -813,7 +821,8 @@ do_close_no_unbind (void)
 /*
  * A simple alias around do_open().
  */
-NSS_STATUS _nss_ldap_init (void)
+NSS_STATUS
+_nss_ldap_init (void)
 {
   return do_open ();
 }
@@ -1354,7 +1363,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
   tv.tv_sec = timelimit;
   tv.tv_usec = 0;
 
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if (defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)) || defined(HAVE_LDAP_GSS_BIND)
   if (!with_sasl)
     {
 #endif
@@ -1388,10 +1397,14 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 	{
 	  ldap_abandon (ld, msgid);
 	}
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if (defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)) || defined(HAVE_LDAP_GSS_BIND)
     }
   else
     {
+#ifdef HAVE_LDAP_GSS_BIND
+      return ldap_gss_bind (ld, dn, pw, GSSSASL_NO_SECURITY_LAYER,
+			    LDAP_SASL_GSSAPI);
+#else
       void *defaults;
 
       /* FIXME: a little configurability here, perhaps? */
@@ -1404,6 +1417,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       ber_memfree (defaults);
 
       return rc;
+#endif
     }
 #endif
 
@@ -2190,7 +2204,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2797,7 +2812,8 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -3043,7 +3059,8 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password)
+NSS_STATUS
+_nss_ldap_proxy_bind (const char *user, const char *password)
 {
   ldap_args_t args;
   LDAPMessage *res, *e;

@@ -129,6 +129,12 @@
 /* Define if you have the <db_185.h> header file.  */
 #undef HAVE_DB_185_H
 
+/* Define if you have the <gssldap.h> header file.  */
+#undef HAVE_GSSLDAP_H
+
+/* Define if you have the <gsssasl.h> header file.  */
+#undef HAVE_GSSSASL_H
+
 /* Define if you have the <irs.h> header file.  */
 #undef HAVE_IRS_H
 

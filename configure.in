@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 192)
+AM_INIT_AUTOMAKE(nss_ldap, 193)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -103,6 +103,8 @@ AC_CHECK_HEADERS(libc-lock.h)
 AC_CHECK_HEADERS(bits/libc-lock.h)
 AC_CHECK_HEADERS(sasl.h)
 AC_CHECK_HEADERS(strings.h)
+AC_CHECK_HEADERS(gssldap.h)
+AC_CHECK_HEADERS(gsssasl.h)
 
 AC_CHECK_LIB(resolv, main)
 AC_CHECK_LIB(nsl, main)
@@ -161,6 +163,8 @@ fi
 if test "$need_pthread" = "yes"; then
   AC_CHECK_LIB(pthread, main)
 fi
+
+AC_CHECK_LIB(gssldap, ldap_gss_bind,[LIBS="-lgssldap $LIBS"],,$LIBS)
 
 AC_CHECK_FUNCS(ldap_init ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free)
 AC_CHECK_FUNCS(ldap_ld_free ldap_explode_rdn ldap_set_option ldap_get_option)
