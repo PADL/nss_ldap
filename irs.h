@@ -24,10 +24,13 @@
 
 #include <sys/types.h>
 
+#include <sys/types.h>
+#include <netinet/in.h> 
 #include <arpa/nameser.h>
 
 #include <grp.h>
 #include <netdb.h>
+
 #include <resolv.h>
 #include <pwd.h>
 
@@ -53,7 +56,7 @@ struct irs_gr {
 	void		(*rewind) __P((struct irs_gr *));
 	void		(*minimize) __P((struct irs_gr *));
 	struct __res_state * (*res_get) __P((struct irs_gr *));
-	void		(*res_set) __P((struct irs_gr *, res_state,
+	void		(*res_set) __P((struct irs_gr *, struct __res_state *,
 					void (*)(void *)));
 };
 
@@ -69,7 +72,7 @@ struct irs_pw {
 	void		(*rewind) __P((struct irs_pw *));
 	void		(*minimize) __P((struct irs_pw *));
 	struct __res_state * (*res_get) __P((struct irs_pw *));
-	void		(*res_set) __P((struct irs_pw *, res_state,
+	void		(*res_set) __P((struct irs_pw *, struct __res_state *,
 					void (*)(void *)));
 };
 
@@ -86,7 +89,7 @@ struct irs_sv {
 	void		(*rewind) __P((struct irs_sv *));
 	void		(*minimize) __P((struct irs_sv *));
 	struct __res_state * (*res_get) __P((struct irs_sv *));
-	void		(*res_set) __P((struct irs_sv *, res_state,
+	void		(*res_set) __P((struct irs_sv *, struct __res_state *,
 					void (*)(void *)));
 };
 
@@ -102,7 +105,7 @@ struct irs_pr {
 	void		(*rewind) __P((struct irs_pr *));
 	void		(*minimize) __P((struct irs_pr *));
 	struct __res_state * (*res_get) __P((struct irs_pr *));
-	void		(*res_set) __P((struct irs_pr *, res_state,
+	void		(*res_set) __P((struct irs_pr *, struct __res_state *,
 					void (*)(void *)));
 };
 
@@ -120,7 +123,7 @@ struct irs_ho {
 	void		(*rewind) __P((struct irs_ho *));
 	void		(*minimize) __P((struct irs_ho *));
 	struct __res_state * (*res_get) __P((struct irs_ho *));
-	void		(*res_set) __P((struct irs_ho *, res_state,
+	void		(*res_set) __P((struct irs_ho *, struct __res_state *,
 					void (*)(void *)));
 };
 
@@ -136,7 +139,7 @@ struct irs_nw {
 	void		(*rewind) __P((struct irs_nw *));
 	void		(*minimize) __P((struct irs_nw *));
 	struct __res_state * (*res_get) __P((struct irs_nw *));
-	void		(*res_set) __P((struct irs_nw *, res_state,
+	void		(*res_set) __P((struct irs_nw *, struct __res_state *,
 					void (*)(void *)));
 };
 
@@ -178,7 +181,7 @@ struct irs_acc {
 	struct irs_nw *	(*nw_map) __P((struct irs_acc *));
 	struct irs_ng *	(*ng_map) __P((struct irs_acc *));
 	struct __res_state * (*res_get) __P((struct irs_acc *));
-	void		(*res_set) __P((struct irs_acc *, res_state,
+	void		(*res_set) __P((struct irs_acc *, struct __res_state *,
 					void (*)(void *)));
 };
 
