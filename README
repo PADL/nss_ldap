@@ -138,7 +138,13 @@ Joerg Paysen notes:
 > that without shadowAccount nss_ldap does not work on
 > solaris!!
 
-7. Mailing lists
+7. Secret file
+--------------
+
+If using /etc/ldap.secret, it must have a newline at the end
+of the secret.
+
+8. Mailing lists
 ----------------
 
 To discuss nss_ldap and related technologies, you may
@@ -151,7 +157,7 @@ and
 Send an electronic mail message with "subscribe" in the
 message body to join the list.
 
-8. Commercial support
+9. Commercial support
 ---------------------
 
 Note that PADL now offer commercial support on a

@@ -1,9 +1,13 @@
 $Header$
 ===============================================================
 
+177	Luke Howard <lukeh@padl.com>
+
+	* patch for building on AIX from IBM
+
 176	Luke Howard <lukeh@padl.com>
 
-	* fixed bug in SASL patch which had reauired
+	* fixed bug in SASL patch which had required
 	  OpenLDAP headers
 	
 175	Luke Howard <lukeh@padl.com>

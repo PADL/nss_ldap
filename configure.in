@@ -38,7 +38,7 @@ aix*) CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" ;;
 esac
 
 case "$target_os" in
-aix*) nss_ldap_so_LDFLAGS="-bM:SRE -bnoentry -bE:\$(srcdir)/exports.aix" ;;
+aix*) nss_ldap_so_LDFLAGS="-Wl,-G -Wl,-bnoentry -Wl,-bE:$(srcdir)/exports.aix" ;;
 solaris*) nss_ldap_so_LDFLAGS="-Wl,-M -Wl,\$(srcdir)/mapfile -Wl,-G" ;;
 *) nss_ldap_so_LDFLAGS="-shared" ;;
 esac
@@ -98,7 +98,7 @@ fi
 
 AC_CHECK_LIB(dl, dlopen,[LIBS="-ldl $LIBS"],,$LIBS)
 AC_CHECK_LIB(db, main,[LIBS="-ldb $LIBS"],,$LIBS)
-LIBS="-Wl,-Bdynamic $LIBS"
+LIBS="-Wl,-bdynamic $LIBS"
 dnl Following checks probably not strictly necessary.
 dnl AC_CHECK_LIB(crypto, main,[LIBS="-lcrypto $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(ssl, main,[LIBS="-lssl $LIBS"],,$LIBS)
