@@ -524,7 +524,7 @@ do_set_sockopts (void)
       int off = 0;
       int namelen = sizeof (struct sockaddr);
 
-      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, &off, sizeof (off));
+      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *)&off, sizeof (off));
       (void) fcntl (sd, F_SETFD, FD_CLOEXEC);
       /*
        * NSS modules shouldn't open file descriptors that the program/utility

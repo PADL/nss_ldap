@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+190	Luke Howard <lukeh@padl.com>
+
+	* check for Netscape 4 SDK without SSL; don't require
+	  pthreads for these
+
 189	Luke Howard <lukeh@padl.com>
 
 	* patch for building on OpenLDAP 1.x from Nalin
