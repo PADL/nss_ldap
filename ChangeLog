@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.72	Luke Howard <lukeh@padl.com>
+
+	* GNU-indentified
+
 2.71	Luke Howard <lukeh@padl.com>
 
 	* removed -DDEBUG as default build flag
