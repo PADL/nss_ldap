@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+135	Luke Howard <lukeh@padl.com>
+
+	* merged ldap.conf
+
 134	Luke Howard <lukeh@padl.com>
 
 	* fixed Makefile.am
