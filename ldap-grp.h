@@ -29,7 +29,7 @@
 #define LDAP_ATTR_UIDMEMBERS		"memberUid"
 #define LDAP_ATTR_GROUP_GID		"gidNumber"
 #ifdef RFC2307BIS
-#define LDAP_ATTR_DNMEMBERS		"member"
+#define LDAP_ATTR_DNMEMBERS		"uniqueMember"
 #endif /* RFC2307BIS */
 
 static const char *gr_attributes[] =
