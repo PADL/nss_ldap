@@ -2358,8 +2358,9 @@ do_search (const char *base, int scope,
   debug ("==> do_search");
 
 #ifdef PAGE_RESULTS
-  rc = ldap_create_page_control (__session.ls_conn, LDAP_PAGESIZE, NULL, 0,
-				 &serverctrls[0]);
+  rc = ldap_create_page_control (__session.ls_conn, 
+				 __session.ls_config->ldc_pagesize, 
+				 NULL, 0, &serverctrls[0]);
   if (rc != LDAP_SUCCESS)
     return rc;
   rc = ldap_search_ext (__session.ls_conn, base, scope, filter,
@@ -2890,8 +2891,8 @@ do_next_page (const ldap_args_t * args,
     }
 
   stat =
-    ldap_create_page_control (__session.ls_conn, LDAP_PAGESIZE, pCookie, 0,
-			      &serverctrls[0]);
+    ldap_create_page_control (__session.ls_conn, __session.ls_config->ldc_pagesize, 
+			      pCookie, 0, &serverctrls[0]);
   if (stat != LDAP_SUCCESS)
     {
       return NSS_UNAVAIL;

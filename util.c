@@ -557,6 +557,9 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_sasl_secprops = NULL;
   result->ldc_logdir = NULL;
   result->ldc_debug = 0;
+#ifdef PAGE_RESULTS
+  result->ldc_pagesize = LDAP_PAGESIZE;
+#endif /* PAGE_RESULTS */
 #ifdef CONFIGURE_KRB5_CCNAME
   result->ldc_krb5_ccname = NULL;
 #endif /* CONFIGURE_KRB5_CCNAME */
@@ -805,6 +808,12 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	{
 	  result->ldc_debug = atoi (v);
 	}
+#ifdef PAGE_RESULTS
+      else if (!strcasecmp (k, NSS_LDAP_KEY_PAGESIZE))
+	{
+	  result->ldc_pagesize = atoi (v);
+	}
+#endif /* PAGE_RESULTS */
 #ifdef CONFIGURE_KRB5_CCNAME
       else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_CCNAME))
 	{
@@ -914,7 +923,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 
 	      len = strlen (b);
 	      /* BUG#138: check for newline before removing */
-	      if (len > 0 && b[len] == '\n')
+	      if (len > 0 && b[len - 1] == '\n')
 		len--;
 
 	      if (buflen < (size_t) (len + 1))

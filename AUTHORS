@@ -1,6 +1,7 @@
 
 nss_ldap was written by Luke Howard <lukeh@padl.com>.
-Development commenced in mid-1997 and continues to this day!
+
+Development commenced in mid-1997 and continues to this day.
 
 Special thanks go to people who have volunteered their time, effort,
 and ideas to make this software available.
@@ -18,6 +19,7 @@ Luke Howard retains copyright in all contributed code.
 	Howard Chu <hyc@symas.com>
 	Ben Collins <bcollins@debian.org>
 	Stephan Cremer <scremer@dohle.com>
+	Guenther Deschner <gd@samba.org>
 	Luca Filipozzi <lucaf+nssldap@ece.ubc.ca>
 	Andrew Findlay <Andrew.Findlay@skills-1st.co.uk>
 	Cristian Gafton <gafton@redhat.com>
@@ -27,7 +29,7 @@ Luke Howard retains copyright in all contributed code.
 	Daniel Hanks <hanksdc@plug.org>
 	Leif Hedstrom <leif@ogre.com>
 	Emile Heitor <eheitor@isdnet.net>
-	Geert Jansen <>
+	Geert Jansen <undisclosed>
 	Szymon Juraszczyk <szymon@ssk.pl>
 	Anselm Kruis <kruis@till-photonics.com>
 	Thorsten Kukuk <kukuk@suse.de>
@@ -58,14 +60,9 @@ Luke Howard retains copyright in all contributed code.
 
 If I've forgotton anyone, please let me know.
 
-Thanks also to Stanford University and Penguin Computing, and
-the PADL customers that have sponsored feature enhancements to
-nss_ldap.
-
 Contributors should appraise themselves of the document at
 http://www.padl.com/Articles/GuidelinesforContributing.html.
 
 -- 
-Luke Howard
-lukeh@padl.com
+Luke Howard <lukeh@padl.com>
 

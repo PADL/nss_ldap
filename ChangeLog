@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+235	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#198: make pagesize configurable
+	* fix for BUG#199: correct fix for BUG#138
+	  (blind last char remove in ldap.secret)
+
 234	Luke Howard <lukeh@padl.com>
 
 	* don't reacquire global lock in do_next_page()

@@ -350,6 +350,9 @@ struct ldap_config
   char *ldc_logdir;
   /* LDAP debug level */
   int ldc_debug;
+#ifdef PAGE_RESULTS
+  int ldc_pagesize;
+#endif /* PAGE_RESULTS */
 #ifdef CONFIGURE_KRB5_CCNAME
   /* krb5 ccache name */
   char *ldc_krb5_ccname;
