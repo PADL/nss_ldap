@@ -7,6 +7,7 @@ EXPORTED {
 		_nss_ldap_endgrent;
 		_nss_ldap_endhostent;
 		_nss_ldap_endnetent;
+		_nss_ldap_endnetgrent_r;
 		_nss_ldap_endprotoent;
 		_nss_ldap_endpwent;
 		_nss_ldap_endrpcent;
@@ -25,6 +26,7 @@ EXPORTED {
 		_nss_ldap_getnetbyaddr_r;
 		_nss_ldap_getnetbyname_r;
 		_nss_ldap_getnetent_r;
+		_nss_ldap_getnetgrent_r;
 		_nss_ldap_getntohost_r;
 		_nss_ldap_getprotobyname_r;
 		_nss_ldap_getprotobynumber_r;
@@ -47,6 +49,7 @@ EXPORTED {
 		_nss_ldap_setgrent;
 		_nss_ldap_sethostent;
 		_nss_ldap_setnetent;
+		_nss_ldap_setnetgrent_r;
 		_nss_ldap_setprotoent;
 		_nss_ldap_setpwent;
 		_nss_ldap_setrpcent;
