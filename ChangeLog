@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+171	Luke Howard <lukeh@padl.com>
+
+	* added ldap.conf stanza for AIX
+
 170	Luke Howard <lukeh@padl.com>
 
 	* use _nss_ldap_getrdnvalue() for determining canonical	
