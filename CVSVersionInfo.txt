@@ -2,7 +2,7 @@
 # $Id$
 # $Name$
 ProjectName: nss_ldap
-ProjectVersion: 2.51
+ProjectVersion: 2.52
 #
 # run this before building in RC. @@@PLATFORM@@@ is
 # substituted for our platform names (linux, solaris etc)
