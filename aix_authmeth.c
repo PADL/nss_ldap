@@ -917,6 +917,7 @@ _nss_ldap_getgrusers (char *group, void *result, int type, int *size)
   return AUTH_SUCCESS;
 }
 
+#if 0
 /*
  * Additional attributes supported
  */
@@ -942,6 +943,7 @@ _nss_ldap_attrlist(void)
 
   return a;
 }
+#endif /* notdef */
 
 #if 0
 /* not implemented yet */
