@@ -5,7 +5,7 @@ $Header$
 
 	* fix potential buffer overflow in dnsconfig.c
 	  (could be triggered if no flat file configuration
-	  for nss_ldap and a large number of DNS SRV records)
+	  for nss_ldap and large DNS SRV data for domain)
 	* do not malloc() configuration structure; use 
 	  buffer
 
