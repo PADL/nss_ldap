@@ -343,6 +343,19 @@ struct ldap_config
 
 typedef struct ldap_config ldap_config_t;
 
+#ifdef HAVE_SOCKLEN_T
+typedef socklen_t SOCKLEN_T;
+#else
+typedef int SOCKLEN_T;
+#endif /* HAVE_SOCKLEN_T */
+
+#ifdef __GLIBC__
+typedef struct sockaddr_storage SOCKADDR_STORAGE;
+#else
+typedef struct sockaddr SOCKADDR_STORAGE;
+#define ss_family sa_family
+#endif /* __GLIBC__ */
+
 /*
  * convenient wrapper around pointer into global config list, and a
  * connection to an LDAP server.
@@ -356,8 +369,8 @@ struct ldap_session
   /* timestamp of last activity */
   time_t ls_timestamp;
   /* keep track of the LDAP sockets */
-  struct sockaddr ls_sockname;
-  struct sockaddr ls_peername;
+  SOCKADDR_STORAGE ls_sockname;
+  SOCKADDR_STORAGE ls_peername;
 };
 
 typedef struct ldap_session ldap_session_t;

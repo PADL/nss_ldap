@@ -550,11 +550,8 @@ do_set_sockopts (void)
 #endif /* LDAP_OPT_DESC */
     {
       int off = 0;
-#ifdef HAVE_SOCKLEN_T
-      socklen_t namelen = sizeof (struct sockaddr);
-#else
-      int namelen = sizeof (struct sockaddr);
-#endif
+      SOCKLEN_T socknamelen = sizeof (SOCKADDR_STORAGE);
+      SOCKLEN_T peernamelen = sizeof (SOCKADDR_STORAGE);
 
       (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *) &off,
 			 sizeof (off));
@@ -571,8 +568,10 @@ do_set_sockopts (void)
        * this isn't "our" socket descriptor is to save the local and remote
        * sockaddr_in structures for later comparison in do_close_no_unbind ().
        */
-      (void) getsockname (sd, &__session.ls_sockname, &namelen);
-      (void) getpeername (sd, &__session.ls_peername, &namelen);
+      (void) getsockname (sd, (struct sockaddr *)&__session.ls_sockname,
+			  &socknamelen);
+      (void) getpeername (sd, (struct sockaddr *)&__session.ls_peername,
+			  &peernamelen);
     }
   debug ("<== do_set_sockopts");
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
@@ -651,33 +650,28 @@ do_close_no_unbind (void)
   if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_OPT_DESC */
     {
-      struct sockaddr sockname;
-      struct sockaddr peername;
-#ifdef HAVE_SOCKLEN_T
-      socklen_t socknamelen = sizeof (sockname);
-      socklen_t peernamelen = sizeof (peername);
-#else
-      int socknamelen = sizeof (sockname);
-      int peernamelen = sizeof (peername);
-#endif /* HAVE_SOCKLEN_T */
+      SOCKADDR_STORAGE sockname;
+      SOCKADDR_STORAGE peername;
+      SOCKLEN_T socknamelen = sizeof (sockname);
+      SOCKLEN_T peernamelen = sizeof (peername);
 
       /*
        * Important to perform comparison "family-aware" to not count
        * sin_zero padding as significant.
        */
-      if (getsockname (sd, &sockname, &socknamelen) != 0)
+      if (getsockname (sd, (struct sockaddr *)&sockname, &socknamelen) != 0)
 	{
 	  __session.ls_conn = NULL;
 	  debug ("<== do_close_no_unbind (could not get socket name)");
 	  return;
 	}
-      if (sockname.sa_family != __session.ls_sockname.sa_family)
+      if (sockname.ss_family != __session.ls_sockname.ss_family)
 	{
 	  __session.ls_conn = NULL;
 	  debug ("<== do_close_no_unbind (socket family differs)");
 	  return;
 	}
-      switch (sockname.sa_family)
+      switch (sockname.ss_family)
 	{
 	case AF_INET:
 	  if (((struct sockaddr_in *) &sockname)->sin_port !=
@@ -744,13 +738,13 @@ do_close_no_unbind (void)
 	    }
 	  break;
 	}
-      if (getpeername (sd, &peername, &peernamelen) != 0)
+      if (getpeername (sd, (struct sockaddr *)&peername, &peernamelen) != 0)
 	{
 	  __session.ls_conn = NULL;
 	  debug ("<== do_close_no_unbind (could not get peer name)");
 	  return;
 	}
-      switch (peername.sa_family)
+      switch (peername.ss_family)
 	{
 	case AF_INET:
 	  if (((struct sockaddr_in *) &peername)->sin_port !=
@@ -889,7 +883,7 @@ do_open (void)
    * This bogosity is necessary because Linux uses different
    * PIDs for different threads (like IRIX, which we don't
    * support). We can tell whether we are linked against
-   * libpthreads by whether __pthread_atfork is NULL or
+   * libpthreads by whether __pthread_once is NULL or
    * not. If it is NULL, then we're not linked with the
    * threading library, and we need to compare the current
    * process ID against the saved one to figure out
@@ -905,7 +899,7 @@ do_open (void)
    * will wreak all sorts of havoc or inefficiencies,
    * respectively.
    */
-  if (__pthread_atfork == NULL)
+  if (__pthread_once == NULL)
     pid = getpid ();
   else
     pid = -1;			/* linked against libpthreads, don't care */
@@ -924,10 +918,10 @@ do_open (void)
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   syslog (LOG_DEBUG,
 	  "nss_ldap: libpthreads=%s, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
-	  (__pthread_atfork == NULL ? "FALSE" : "TRUE"),
+	  (__pthread_once == NULL ? "FALSE" : "TRUE"),
 	  __session.ls_conn,
-	  (__pthread_atfork == NULL ? __pid : -1),
-	  (__pthread_atfork == NULL ? pid : -1), __euid, euid);
+	  (__pthread_once == NULL ? __pid : -1),
+	  (__pthread_once == NULL ? pid : -1), __euid, euid);
 #else
   syslog (LOG_DEBUG,
 	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
@@ -937,7 +931,7 @@ do_open (void)
 
 #ifndef HAVE_PTHREAD_ATFORK
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  if (__pthread_atfork == NULL && __pid != pid)
+  if (__pthread_once == NULL && __pid != pid)
 #else
   if (__pid != pid)
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
@@ -1002,7 +996,7 @@ do_open (void)
    * we are linked against libpthreads. Otherwise,
    * do close the session when the PID changes.
    */
-  if (__pthread_atfork == NULL)
+  if (__pthread_once == NULL)
     __pid = pid;
   else
     __libc_once (__once, do_atfork_setup);
