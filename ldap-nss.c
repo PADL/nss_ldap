@@ -20,7 +20,7 @@
  */
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #ifdef SUN_NSS
 #include <thread.h>
@@ -68,8 +68,7 @@ static ldap_config_t *__config = NULL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session =
-{NULL, NULL};
+static ldap_session_t __session = { NULL, NULL };
 
 /* 
  * Process ID that opened the session.
@@ -82,7 +81,6 @@ static NSS_STATUS do_open (void);
 static NSS_STATUS do_search_s (const char *base, int scope,
 			       const char *filter, const char **attrs,
 			       int sizelimit, LDAPMessage ** res);
-static void (*old_handler) (int sig) = NULL;
 
 /*
  * Rebind functions.
@@ -127,8 +125,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   ent_context_t *ctx = ((nss_ldap_backend_t *) be)->state;
 
@@ -162,8 +159,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -217,7 +213,7 @@ do_open (void)
   pid = getpid ();
 #ifdef DEBUG
   syslog (LOG_DEBUG,
-     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif /* DEBUG */
 
@@ -239,7 +235,7 @@ do_open (void)
        * ldap_unbind on the same connection repeatedly :-)
        * XXX not calling do_close() could be a leak. Perhaps
        * we should dup the underlying descriptor and then
-       * call do_close()?
+       * call do_close()? Isn't this what happens on fork?
        */
 /*      do_close (); */
       __session.ls_conn = NULL;
@@ -253,30 +249,56 @@ do_open (void)
        * Ensure we save signal handler for sigpipe and restore after
        * LDAP connection is confirmed to be up or a new connection
        * is opened. This prevents Solaris nscd and other apps from
-       * dying on a SIGPIPE.
+       * dying on a SIGPIPE. I'm not entirely convinced that we
+       * ought not to block SIGPIPE elsewhere, but at least this is
+       * the entry point where connections get woken up.
+       *
+       * The W2K client library sends an ICMP echo to the server to
+       * check it is up. Perhaps we shold do the same.
        */
       struct sockaddr_in sin;
-      int len, sd;
+      int sd = -1;
+
 #ifdef LDAP_VERSION3_API
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 #else
       if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_VERSION3_API */
 	{
+	  void (*old_handler) (int sig) = NULL;
+	  int len;
+
+#ifdef SUN_NSS
+	  old_handler = sigset (SIGPIPE, SIG_IGN);
+#else
 	  old_handler = signal (SIGPIPE, SIG_IGN);
-	  if (getpeername (sd, (struct sockaddr *) &sin, &len) == 0)
+#endif /* SUN_NSS */
+	  if (getpeername (sd, (struct sockaddr *) &sin, &len) < 0)
 	    {
-	      debug ("<== do_open");
-	      if (old_handler != NULL)
-		{
-		  (void) signal (SIGPIPE, old_handler);
-		}
-	      return NSS_SUCCESS;
+	      /*
+	       * The other end has died. Close the connection.
+	       */
+	      do_close ();
+	    }
+	  if (old_handler != NULL && old_handler != SIG_ERR)
+	    {
+#ifdef SUN_NSS
+	      (void) sigset (SIGPIPE, old_handler);
+#else
+	      (void) signal (SIGPIPE, old_handler);
+#endif /* SUN_NSS */
 	    }
 	}
 
-      debug ("<== do_open");
-      return NSS_SUCCESS;
+      /*
+       * If the connection is still there (ie. do_close() wasn't
+       * called) then we can return the cached connection.
+       */
+      if (__session.ls_conn != NULL)
+	{
+	  debug ("<== do_open");
+	  return NSS_SUCCESS;
+	}
     }
 
   __pid = pid;
@@ -301,11 +323,6 @@ do_open (void)
 	{
 	  __config = NULL;
 	  debug ("<== do_open");
-	  if (old_handler != NULL)
-	    {
-	      (void) signal (SIGPIPE, old_handler);
-	    }
-
 	  return status;
 	}
     }
@@ -314,6 +331,20 @@ do_open (void)
 
   while (1)
     {
+#ifdef SSL
+      /*
+       * Initialize the SSL library. Should be one-time, but 
+       * things could change between config files.
+       */
+      if (cfg->ldc_ssl_on)
+	{
+	  if (ldapssl_client_init (cfg->ldc_ssl_path, NULL) != LDAP_SUCCESS)
+	    {
+		continue;
+	    }
+	}
+#endif /* SSL */
+
 #ifdef LDAP_VERSION3_API
       debug ("==> ldap_init");
       __session.ls_conn = ldap_init (cfg->ldc_host, cfg->ldc_port);
@@ -333,11 +364,6 @@ do_open (void)
   if (__session.ls_conn == NULL)
     {
       debug ("<== do_open");
-      if (old_handler != NULL)
-	{
-	  (void) signal (SIGPIPE, old_handler);
-	}
-
       return NSS_UNAVAIL;
     }
 
@@ -346,11 +372,6 @@ do_open (void)
     {
       do_close ();
       debug ("<== do_open");
-      if (old_handler != NULL)
-	{
-	  (void) signal (SIGPIPE, old_handler);
-	}
-
       return NSS_UNAVAIL;
     }
 #endif /* NETSCAPE_API_EXTENSIONS */
@@ -368,6 +389,28 @@ do_open (void)
   __session.ls_conn->ld_version = cfg->ldc_version;
 #endif /* LDAP_VERSION3_API */
 
+#ifdef SSL
+  /*
+   * If SSL is desired, then enable it.
+   */
+  if (cfg->ldc_ssl_on)
+    {
+      if (ldapssl_install_routines (__session.ls_conn) != LDAP_SUCCESS)
+	{
+	  do_close ();
+	  debug ("<== do_open");
+	  return NSS_UNAVAIL;
+	}
+      if (ldap_set_option (__session.ls_conn, LDAP_OPT_SSL, LDAP_OPT_ON) !=
+	  LDAP_SUCCESS)
+	{
+	  do_close ();
+	  debug ("<== do_open");
+	  return NSS_UNAVAIL;
+	}
+    }
+#endif /* SSL */
+
   /*
    * If we're running as root, let us bind as a special
    * user, so we can fake shadow passwords.
@@ -382,10 +425,6 @@ do_open (void)
 	{
 	  do_close ();
 	  debug ("<== do_open");
-	  if (old_handler != NULL)
-	    {
-	      (void) signal (SIGPIPE, old_handler);
-	    }
 	  return NSS_UNAVAIL;
 	}
     }
@@ -397,10 +436,6 @@ do_open (void)
 	{
 	  do_close ();
 	  debug ("<== do_open");
-	  if (old_handler != NULL)
-	    {
-	      (void) signal (SIGPIPE, old_handler);
-	    }
 	  return NSS_UNAVAIL;
 	}
     }
@@ -515,7 +550,7 @@ do_search_s (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-	   "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
 		  backoff);
 	  (void) sleep (backoff);
 	}
@@ -723,7 +758,7 @@ _nss_ldap_getent (ent_context_t * ctx,
 		  char *buffer,
 		  size_t buflen,
 		  int *errnop,
-		const char *filterprot, const char **attrs, parser_t parser)
+		  const char *filterprot, const char **attrs, parser_t parser)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
 

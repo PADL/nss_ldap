@@ -167,6 +167,10 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   result->ldc_port = LDAP_PORT;
   result->ldc_binddn = NULL;
   result->ldc_bindpw = NULL;
+  result->ldc_rootbinddn = NULL;
+  result->ldc_rootbindpw = NULL;
+  result->ldc_ssl_on = 0;
+  result->ldc_sslpath = NULL;
   result->ldc_next = result;
 
   __nss_dns_lock ();
@@ -224,6 +228,12 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 
 	  /* Port */
 	  result->ldc_port = rr->u.srv->port;
+#ifdef SSL
+	  /* Hack: if the port is the registered SSL port, enable SSL. */
+	  if (result->ldc_port == LDAPS_PORT) {
+		result->ldc_ssl_on = 1;
+	  }
+#endif /* SSL */
 
 	  /* DN */
 	  stat = _nss_ldap_getdnsdn (_res.defdname,

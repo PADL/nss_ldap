@@ -7,6 +7,8 @@ Please see http://bugzilla.padl.com for more information!
 BUGZILLA BUGS:
 ==============
 
+BUGS 18, 19, 20, 34 would be good to fix soon.
+
 [BUG#12]
 - we should probably put the session, under Solaris, in the backend. 
   We need to do so in a way that remains compatible with the GNU NSS,
@@ -65,7 +67,8 @@ BUGZILLA BUGS:
 
 [BUG#19]
 - add support for DHCP and coldstart configuration. Coldstart should
-  update /etc/ldap.conf (/var/ldap/LDAP_CLIENT_CACHE?).
+  update /etc/ldap.conf (/var/ldap/LDAP_CLIENT_CACHE?). Should probably
+  add support for the HP/Sun server profile schema.
 
 [BUG#20]
 - use asynchronous search API

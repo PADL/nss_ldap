@@ -155,8 +155,7 @@ _nss_ldap_dn2uid (LDAP * ld,
       if (status != NSS_SUCCESS)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[] =
-	  {"uid", NULL};
+	  const char *attrs[] = { "uid", NULL };
 	  LDAPMessage *res = _nss_ldap_read (dn, attrs);
 	  status = NSS_NOTFOUND;
 	  if (res != NULL)
@@ -374,12 +373,14 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
   result->ldc_host = NULL;
   result->ldc_base = NULL;
-  result->ldc_port = LDAP_PORT;
+  result->ldc_port = 0;
   result->ldc_binddn = NULL;
   result->ldc_bindpw = NULL;
   result->ldc_rootbinddn = NULL;
   result->ldc_rootbindpw = NULL;
   result->ldc_version = LDAP_VERSION2;
+  result->ldc_ssl_on = 0;
+  result->ldc_sslpath = NULL;
   result->ldc_next = result;
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
@@ -439,6 +440,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	{
 	  t = &result->ldc_rootbinddn;
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_SSLPATH))
+	{
+	  t = &result->ldc_sslpath;
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_CRYPT))
 	{
 	  if (!strcasecmp (v, "md5"))
@@ -473,6 +478,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	{
 	  result->ldc_port = atoi (v);
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_SSL))
+	{
+	  result->ldc_ssl_on = 1;
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_VERSION))
 	{
 	  result->ldc_version = atoi (v);
@@ -497,7 +506,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	  int len;
 
 	  len = strlen (b);
-	  if (*b != '\0')
+	  if (len > 0)
 	    len--;
 
 	  strncpy (p, b, len);
@@ -516,6 +525,19 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
     {
       return NSS_NOTFOUND;
     }
+
+  if (result->ldc_port == 0)
+    {
+#ifdef SSL
+      if (result->ldc_ssl_on)
+	{
+	  result->ldc_port = LDAPS_PORT;
+	}
+      else
+#endif /* SSL */
+	result->ldc_port = LDAP_PORT;
+    }
+
 
   return stat;
 }

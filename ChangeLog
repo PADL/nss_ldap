@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+91	Luke Howard <lukeh@padl.com>
+
+	* reorganized SIGPIPE blocking code
+	* added SSL support
+
 90	Luke Howard <lukeh@padl.com>
 
 	* only reconnect if we've changed to/from root

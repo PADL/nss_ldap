@@ -131,6 +131,10 @@ struct ldap_config
     char *ldc_rootbindpw;
     /* protocol version */
     int ldc_version;
+    /* SSL enabled */
+    int ldc_ssl_on;
+    /* SSL certificate path */
+    char *ldc_sslpath;
     /* next configuration. loops back onto itself for last entry */
     struct ldap_config *ldc_next;
   };
