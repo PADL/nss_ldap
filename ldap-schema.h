@@ -145,7 +145,6 @@ extern char _nss_ldap_filt_getspent[];
 #define OC_posixAccount           "posixAccount"
 #define AT_uid                    "uid"
 #define AT_userPassword           "userPassword"
-#define AT_authPassword           "authPassword"
 #define AT_uidNumber              "uidNumber"
 #define AT_gidNumber              "gidNumber"
 #define AT_loginShell             "loginShell"
