@@ -21,6 +21,8 @@ surprise). You have two options: cut the pieces from the AIX documentation
 ("System Management Guide: Communications and Networks", Chapter 3, "Dynamic
 Load API") and make your own version, or you just copy it from the BIND 8.x
 distribution. Anyway, be sure that it will be found by the configure script.
+[lukeh Sep01: I just added it to the nss_ldap distribution. So, as long as
+you do something like CFLAGS=-I. ./configure it should be picked up.]
 
 Run "configure" and "make" as usual. If everything went OK, you will get two
 objects: nss_ldap.so and NSS_LDAP.
