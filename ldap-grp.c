@@ -193,6 +193,16 @@ _nss_ldap_parse_gr (LDAP * ld,
 }
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(_AIX)
+#ifdef HAVE_NSS_H
+NSS_STATUS
+_nss_ldap_initgroups (const char *user, gid_t group, long int *start,
+		      long int *size, gid_t * groups, long int limit,
+		      int *errnop)
+{
+  return (_nss_ldap_initgroups_dyn (user, group, start, size, &groups, limit,
+				    errnop));
+}
+#endif
 #ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
@@ -413,8 +423,7 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_setgrent (void)
+NSS_STATUS _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -427,8 +436,7 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_endgrent (void)
+NSS_STATUS _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
