@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+236	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#201: typo in ldap-schema.c causing build
+	  to fail
+	* add manual page for nss_ldap
+
 235	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#198: make pagesize configurable

@@ -16,6 +16,8 @@ EXTRA_DIST = CVSVersionInfo.txt ChangeLog \
 	     AUTHORS ANNOUNCE NEWS INSTALL README LICENSE.OpenLDAP COPYING\
 	     ldap.conf nss_ldap.spec nsswitch.ldap 
 
+nss_ldap_so_MANS = nss_ldap.5
+
 nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c \
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
@@ -30,6 +32,7 @@ NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c 
 
 NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
 DEFS = @DEFS@
+#INCLUDES = -I$(top_builddir) -I$(srcdir)
 
 if GLIBC
 LIBC_VERS = `ls /lib/libc-*.so | tail -n 1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
