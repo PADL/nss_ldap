@@ -30,7 +30,8 @@ void *ng_pvtinit (void);
 #endif
 IRS_EXPORT void ng_close (struct irs_ng *);
 IRS_EXPORT int ng_next (struct irs_ng *, char **, char **, char **);
-IRS_EXPORT int ng_test (struct irs_ng *, const char *, const char *, const char *, const char *);
+IRS_EXPORT int ng_test (struct irs_ng *, const char *, const char *,
+			const char *, const char *);
 IRS_EXPORT void ng_rewind (struct irs_ng *, const char *);
 IRS_EXPORT void ng_minimize (struct irs_ng *);
 
@@ -41,7 +42,7 @@ ng_test (struct irs_ng *this,
 {
   NSS_STATUS parseStat;
   ldap_innetgr_args_t li_args;
-                                                                                                                             
+
   li_args.lia_netgroup = name;
   li_args.lia_netgr_status = NSS_NETGR_NO;
   li_args.lia_depth = 0;
@@ -66,7 +67,7 @@ ng_rewind (struct irs_ng *this, const char *group)
   ldap_args_t a;
   NSS_STATUS stat;
 
-  ngbe = (nss_ldap_netgr_backend_t *)this->private;
+  ngbe = (nss_ldap_netgr_backend_t *) this->private;
 
   /* clear out old state */
   nn_destroy (&ngbe->known_groups);
@@ -81,8 +82,7 @@ ng_rewind (struct irs_ng *this, const char *group)
 
   _nss_ldap_enter ();
   stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getgrent,
-			     LM_NETGROUP, NULL, 1,
-			     &ngbe->state->ec_res);  
+			     LM_NETGROUP, NULL, 1, &ngbe->state->ec_res);
 
   if (stat == NSS_SUCCESS)
     nn_push (&ngbe->known_groups, group);
@@ -106,14 +106,14 @@ ng_next (struct irs_ng *this, char **host, char **user, char **domain)
   char *buffer;
   size_t buflen;
 
-  ngbe = (nss_ldap_netgr_backend_t *)this->private;
+  ngbe = (nss_ldap_netgr_backend_t *) this->private;
 
   ctx = ngbe->state;
   if (ctx == NULL)
-      return 0;
+    return 0;
 
   buffer = ngbe->buffer;
-  buflen = NSS_BUFLEN_NETGROUP;  
+  buflen = NSS_BUFLEN_NETGROUP;
 
   do
     {
@@ -254,7 +254,7 @@ ng_close (struct irs_ng *this)
 #ifdef HAVE_USERSEC_H
   nss_ldap_netgr_backend_t *ngbe;
 
-  ngbe = (nss_ldap_netgr_backend_t *)this->private;
+  ngbe = (nss_ldap_netgr_backend_t *) this->private;
   if (ngbe != NULL)
     {
       if (ngbe->state != NULL)
