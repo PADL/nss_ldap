@@ -513,9 +513,6 @@ _nss_ldap_getnetgroup_endent (nss_backend_t * be, void *_args)
 static NSS_STATUS
 _nss_ldap_getnetgroup_setent (nss_backend_t * be, void *_args)
 {
-  debug ("==> _nss_ldap_getnetgroup_setent");
-  debug ("<== _nss_ldap_getnetgroup_setent");
-
   return NSS_SUCCESS;
 }
 
@@ -648,8 +645,7 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 	    }
 	  args->retp[NSS_NETGR_MACHINE] = (char *) __netgrent.val.triple.host;
 	  args->retp[NSS_NETGR_USER] = (char *) __netgrent.val.triple.user;
-	  args->retp[NSS_NETGR_DOMAIN] =
-	    (char *) __netgrent.val.triple.domain;
+	  args->retp[NSS_NETGR_DOMAIN] = (char *) __netgrent.val.triple.domain;
 	  break;
 	}
 
