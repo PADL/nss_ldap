@@ -150,7 +150,9 @@ static ldap_session_t __session = { NULL, NULL, 0 };
 static pthread_once_t __once = PTHREAD_ONCE_INIT;
 #endif
 
-static FILE *debugfile;
+#ifdef LBER_OPT_LOG_PRINT_FILE
+static FILE *__debugfile;
+#endif /* LBER_OPT_LOG_PRINT_FILE */
 
 #ifndef HAVE_PTHREAD_ATFORK
 /* 
@@ -1059,18 +1061,18 @@ do_open (void)
   if (cfg->ldc_debug)
     {
 # ifdef LBER_OPT_LOG_PRINT_FILE
-      if (cfg->ldc_logdir && !debugfile)
+      if (cfg->ldc_logdir && !__debugfile)
         {
           char *name = malloc(strlen(cfg->ldc_logdir)+18);
           if (name)
             {
               sprintf(name, "%s/ldap.%d", cfg->ldc_logdir, (int)getpid());
-              debugfile = fopen(name, "a");
+              __debugfile = fopen(name, "a");
               free(name);
             }
-          if (debugfile)
+          if (__debugfile != NULL)
             {
-              ber_set_option( NULL, LBER_OPT_LOG_PRINT_FILE, debugfile );
+              ber_set_option( NULL, LBER_OPT_LOG_PRINT_FILE, __debugfile );
             }
         }
 # endif /* LBER_OPT_LOG_PRINT_FILE */
@@ -2507,7 +2509,8 @@ _nss_ldap_search_s (const ldap_args_t * args,
   if (sel < LM_NONE)
     {
       sd = __session.ls_config->ldc_sds[sel];
-    next:if (sd != NULL)
+next:
+      if (sd != NULL)
 	{
 	  size_t len = strlen (sd->lsd_base);
 	  if (sd->lsd_base[len - 1] == ',')
@@ -2539,15 +2542,19 @@ _nss_ldap_search_s (const ldap_args_t * args,
 			    attrs, sizelimit, res,
 			    (search_func_t) do_search_s);
 
-  /* if we got no entry, try the next base */
-  if (stat == NSS_SUCCESS && sd && sd->lsd_next &&
-      (ldap_first_entry (__session.ls_conn, *res) == NULL))
+  /* If no entry was returned, try the next search descriptor. */
+  if (sd != NULL && sd->lsd_next != NULL)
     {
-      sd = sd->lsd_next;
-      if (sd)
-	goto next;
+      if (stat == NSS_NOTFOUND ||
+	  (stat == NSS_SUCCESS &&
+	   ldap_first_entry (__session.ls_conn, *res) == NULL))
+	{
+	  sd = sd->lsd_next;
+	  if (sd != NULL)
+	    goto next;
+	}
     }
-
+      
   debug ("<== _nss_ldap_search_s");
 
   return stat;

@@ -9,6 +9,8 @@ SHX-8	Luke Howard <lukeh@padl.com>
 	* do_sasl_interact() needs to strdup() result for
 	  Cyrus SASL 1.x but not 2.x
 	* merge in LDAP debug patch from Howard Chu
+	* try alternate search descriptors on NSS_NOTFOUND
+	  as well as NSS_SUCCESS
 
 211	Luke Howard <lukeh@padl.com>
 
