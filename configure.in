@@ -74,6 +74,7 @@ AC_CHECK_HEADERS(ctype.h)
 AC_CHECK_HEADERS(db.h)
 AC_CHECK_HEADERS(db1/db.h)
 AC_CHECK_HEADERS(db_185.h)
+AC_CHECK_HEADERS(db3/db_185.h)
 AC_CHECK_HEADERS(alignof.h)
 AC_CHECK_HEADERS(rpc/rpcent.h)
 AC_CHECK_HEADERS(sys/byteorder.h)
@@ -97,9 +98,20 @@ if test -z "$with_ldap_lib"; then
   with_ldap_lib=auto
 fi
 
+AC_CHECK_LIB(dl, dlopen,[LIBS="-ldl $LIBS"],,$LIBS)
+AC_CHECK_LIB(db, main,[LIBS="-ldb $LIBS"],,$LIBS)
+LIBS="-Wl,-Bdynamic $LIBS"
+dnl Following checks probably not strictly necessary.
+dnl AC_CHECK_LIB(crypto, main,[LIBS="-lcrypto $LIBS"],,$LIBS)
+dnl AC_CHECK_LIB(ssl, main,[LIBS="-lssl $LIBS"],,$LIBS)
+dnl AC_CHECK_LIB(com_err, main,[LIBS="-lcom_err $LIBS"],,$LIBS)
+dnl AC_CHECK_LIB(k5crypto, main,[LIBS="-lk5crypto $LIBS"],,$LIBS)
+dnl AC_CHECK_LIB(krb5, main,[LIBS="-lkrb5 $LIBS"],,$LIBS)
+dnl AC_CHECK_LIB(krb4, main,[LIBS="-lkrb4 $LIBS"],,$LIBS)
+dnl AC_CHECK_LIB(sasl, sasl_client_init,[LIBS="-lsasl $LIBS"],,$LIBS)
 if test -z "$found_ldap_lib" -a \( $with_ldap_lib = auto -o $with_ldap_lib = umich -o $with_ldap_lib = openldap \); then
   AC_CHECK_LIB(lber, main)
-  AC_CHECK_LIB(ldap, main, LIBS="-lldap $LIBS" found_ldap_lib=yes)
+  AC_CHECK_LIB(ldap, main, [LIBS="-lldap $LIBS" found_ldap_lib=yes],,$LIBS)
 fi
 if test -z "$found_ldap_lib" -a \( $with_ldap_lib = auto -o $with_ldap_lib = netscape5 \); then
 AC_CHECK_LIB(ldap50, main, LIBS="-lldap50 -lssldap50 -lssl3 -lnss3 -lnspr4 -lprldap50 -lplc4 -lplds4 $LIBS" found_ldap_lib=yes need_pthread=true,, -lpthread)
