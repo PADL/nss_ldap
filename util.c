@@ -517,7 +517,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 }
 
 void
-_nss_ldap_defaultconfig (ldap_config_t * result)
+_nss_ldap_init_config (ldap_config_t * result)
 {
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
   result->ldc_deref = LDAP_DEREF_NEVER;
@@ -578,7 +578,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   buffer += sizeof (ldap_config_t);
   buflen -= sizeof (ldap_config_t);
 
-  _nss_ldap_defaultconfig (result);
+  _nss_ldap_init_config (result);
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
   if (fp == NULL)

@@ -171,7 +171,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	  result = (ldap_config_t *) buffer;
 	  buffer += sizeof (ldap_config_t);
 	  buflen -= sizeof (ldap_config_t);
-	  _nss_ldap_defaultconfig (result);
+	  _nss_ldap_init_config (result);
 	  if (last != NULL)
 	    {
 	      last->ldc_next = result;
