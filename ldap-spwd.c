@@ -70,9 +70,21 @@ _nss_ldap_parse_sp (LDAP * ld,
   NSS_STATUS stat;
   char *tmp = NULL;
 
+#ifdef AUTHPASSWORD
+      stat =
+	_nss_ldap_assign_authpassword (ld, e, AT (authPassword),
+				       &sp->sp_pwdp, &buffer, &buflen);
+      if (stat == NSS_NOTFOUND)
+	{
+	  stat =
+	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword),
+					   &sp->sp_pwdp, &buffer, &buflen);
+	}
+#else
   stat =
     _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &sp->sp_pwdp, &buffer,
 			     &buflen);
+#endif /* AUTHPASSWORD */
   if (stat != NSS_SUCCESS)
     return stat;
 

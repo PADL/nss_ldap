@@ -6,6 +6,9 @@ $Header$
 	* patch from Simon Wilkinson <sxw@sxw.org.uk>
 	  for compatibility with old initgroups entry
 	  point
+	* request authPassword attribute if 
+	  --enable-authpassword
+	* authPassword support in ldap-spwd.c (shadow)
 
 145	Luke Howard <lukeh@padl.com>
 

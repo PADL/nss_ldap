@@ -194,6 +194,10 @@ _nss_ldap_parse_gr (LDAP * ld,
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(_AIX)
 #ifdef HAVE_NSS_H
+NSS_STATUS _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
+                          long int *size, gid_t ** groupsp, long int limit,
+                          int *errnop);
+
 NSS_STATUS
 _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 		      long int *size, gid_t * groups, long int limit,
