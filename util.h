@@ -47,8 +47,7 @@ NSS_STATUS _nss_ldap_getrdnvalue (LDAP * ld,
 NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 			     const char *dn,
 			     char **uid, char **buf, size_t * len,
-			     int *pIsNestedGroup,
-			     LDAPMessage **pRes);
+			     int *pIsNestedGroup, LDAPMessage ** pRes);
 #endif /* RFC2307BIS */
 
 #ifdef AT_OC_MAP
@@ -173,8 +172,8 @@ NSS_STATUS _nss_ldap_escape_string (const char *str,
 
 struct ldap_datum
 {
-	void *data;
-	size_t size;
+  void *data;
+  size_t size;
 };
 
 typedef struct ldap_datum ldap_datum_t;
@@ -184,10 +183,11 @@ typedef struct ldap_datum ldap_datum_t;
 		(d)->size = 0; \
 	} while (0)
 
-void *_nss_ldap_db_open(void);
-void _nss_ldap_db_close(void *db);
-NSS_STATUS _nss_ldap_db_put(void *db, const ldap_datum_t *key, const ldap_datum_t *value);
-NSS_STATUS _nss_ldap_db_get(void *db, const ldap_datum_t *key, ldap_datum_t *value);
+void *_nss_ldap_db_open (void);
+void _nss_ldap_db_close (void *db);
+NSS_STATUS _nss_ldap_db_put (void *db, const ldap_datum_t * key,
+			     const ldap_datum_t * value);
+NSS_STATUS _nss_ldap_db_get (void *db, const ldap_datum_t * key,
+			     ldap_datum_t * value);
 
 #endif /* _LDAP_NSS_LDAP_UTIL_H */
-

@@ -97,7 +97,7 @@ dn2uid_cache_put (const char *dn, const char *uid)
 
   if (__cache == NULL)
     {
-      __cache = _nss_ldap_db_open();
+      __cache = _nss_ldap_db_open ();
       if (__cache == NULL)
 	{
 	  cache_unlock ();
@@ -105,12 +105,12 @@ dn2uid_cache_put (const char *dn, const char *uid)
 	}
     }
 
-  key.data = (void *)dn;
-  key.size = strlen(dn);
-  val.data = (void *)uid;
-  val.size = strlen(uid);
+  key.data = (void *) dn;
+  key.size = strlen (dn);
+  val.data = (void *) uid;
+  val.size = strlen (uid);
 
-  stat = _nss_ldap_db_put(__cache, &key, &val);
+  stat = _nss_ldap_db_put (__cache, &key, &val);
 
   cache_unlock ();
 
@@ -134,7 +134,7 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
   key.data = (void *) dn;
   key.size = strlen (dn);
 
-  stat = _nss_ldap_db_get(__cache, &key, &val);
+  stat = _nss_ldap_db_get (__cache, &key, &val);
   if (stat != NSS_SUCCESS)
     {
       cache_unlock ();
@@ -164,7 +164,7 @@ static int lock_inited = 0;
 NSS_STATUS
 _nss_ldap_dn2uid (LDAP * ld,
 		  const char *dn, char **uid, char **buffer, size_t * buflen,
-		  int *pIsNestedGroup, LDAPMessage **pRes)
+		  int *pIsNestedGroup, LDAPMessage ** pRes)
 {
   NSS_STATUS stat;
 
@@ -176,44 +176,44 @@ _nss_ldap_dn2uid (LDAP * ld,
   /* XXX this is not thread-safe */
   if (!lock_inited)
     {
-      __thread_mutex_init(&__cache_lock, NULL);
+      __thread_mutex_init (&__cache_lock, NULL);
       lock_inited = 1;
     }
 #endif
 
-      stat = dn2uid_cache_get (dn, uid, buffer, buflen);
-      if (stat == NSS_NOTFOUND)
+  stat = dn2uid_cache_get (dn, uid, buffer, buflen);
+  if (stat == NSS_NOTFOUND)
+    {
+      const char *attrs[4];
+      LDAPMessage *res;
+
+      attrs[0] = ATM (passwd, uid);
+      attrs[1] = ATM (group, uniqueMember);
+      attrs[2] = AT (objectClass);
+      attrs[3] = NULL;
+
+      if (_nss_ldap_read (dn, attrs, &res) == NSS_SUCCESS)
 	{
-	  const char *attrs[4];
-	  LDAPMessage *res;
-
-	  attrs[0] = ATM (passwd, uid);
-	  attrs[1] = ATM (group, uniqueMember);
-	  attrs[2] = AT (objectClass);
-	  attrs[3] = NULL;
-
-	  if (_nss_ldap_read (dn, attrs, &res) == NSS_SUCCESS)
+	  LDAPMessage *e = ldap_first_entry (ld, res);
+	  if (e != NULL)
 	    {
-	      LDAPMessage *e = ldap_first_entry (ld, res);
-	      if (e != NULL)
+	      if (_nss_ldap_oc_check (ld, e, OC (posixGroup)) == NSS_SUCCESS)
 		{
-		  if (_nss_ldap_oc_check(ld, e, OC (posixGroup)) == NSS_SUCCESS)
-		    {
-		      *pIsNestedGroup = 1;
-		      *pRes = res;
-		      debug ("<== _nss_ldap_dn2uid (nested group)");
-		      return NSS_SUCCESS;
-		    }
-
-		  stat =
-		    _nss_ldap_assign_attrval (ld, e, ATM (passwd, uid), uid,
-                                              buffer, buflen);
-		  if (stat == NSS_SUCCESS)
-		    dn2uid_cache_put (dn, *uid);
+		  *pIsNestedGroup = 1;
+		  *pRes = res;
+		  debug ("<== _nss_ldap_dn2uid (nested group)");
+		  return NSS_SUCCESS;
 		}
+
+	      stat =
+		_nss_ldap_assign_attrval (ld, e, ATM (passwd, uid), uid,
+					  buffer, buflen);
+	      if (stat == NSS_SUCCESS)
+		dn2uid_cache_put (dn, *uid);
 	    }
-	  ldap_msgfree (res);
 	}
+      ldap_msgfree (res);
+    }
 
   debug ("<== _nss_ldap_dn2uid");
 
@@ -491,7 +491,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 
   align (*buffer, *buflen, ldap_service_search_descriptor_t);
 
-  for (cur = *t; cur && cur->lsd_next; cur=cur->lsd_next);
+  for (cur = *t; cur && cur->lsd_next; cur = cur->lsd_next);
   if (!cur)
     {
       *t = (ldap_service_search_descriptor_t *) * buffer;
@@ -514,14 +514,13 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_init_config (ldap_config_t * result)
+NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
 {
 #ifdef AT_OC_MAP
   int i;
 #endif
 
-  memset (result, 0, sizeof(*result));
+  memset (result, 0, sizeof (*result));
 
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
   result->ldc_deref = LDAP_DEREF_NEVER;
@@ -567,7 +566,7 @@ _nss_ldap_init_config (ldap_config_t * result)
 #ifdef AT_OC_MAP
   for (i = 0; i <= MAP_MAX; i++)
     {
-      result->ldc_maps[i] = _nss_ldap_db_open();
+      result->ldc_maps[i] = _nss_ldap_db_open ();
       if (result->ldc_maps[i] == NULL)
 	{
 	  return NSS_UNAVAIL;
@@ -952,7 +951,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   return stat;
 }
 
-NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+NSS_STATUS
+_nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
   int ret = NSS_TRYAGAIN;
   char *p = buf;
@@ -1000,127 +1000,143 @@ NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 
 struct ldap_dictionary
 {
-	ldap_datum_t key;
-	ldap_datum_t value;
-	struct ldap_dictionary *next;
+  ldap_datum_t key;
+  ldap_datum_t value;
+  struct ldap_dictionary *next;
 };
 
-static struct ldap_dictionary *do_alloc_dictionary(void)
+static struct ldap_dictionary *
+do_alloc_dictionary (void)
 {
-	struct ldap_dictionary *dict;
+  struct ldap_dictionary *dict;
 
-	dict = malloc(sizeof(*dict));
-	if (dict == NULL) {
-		return NULL;
+  dict = malloc (sizeof (*dict));
+  if (dict == NULL)
+    {
+      return NULL;
+    }
+  NSS_LDAP_DATUM_ZERO (&dict->key);
+  NSS_LDAP_DATUM_ZERO (&dict->value);
+  dict->next = NULL;
+
+  return dict;
+}
+
+static void
+do_free_datum (ldap_datum_t * datum)
+{
+  if (datum->data != NULL)
+    {
+      free (datum->data);
+      datum->data = NULL;
+    }
+  datum->size = 0;
+}
+
+static struct ldap_dictionary *
+do_find_last (struct ldap_dictionary *dict)
+{
+  struct ldap_dictionary *p;
+
+  for (p = dict; p->next != NULL; p = p->next)
+    ;
+
+  return p;
+}
+
+static void
+do_free_dictionary (struct ldap_dictionary *dict)
+{
+  do_free_datum (&dict->key);
+  do_free_datum (&dict->value);
+  free (dict);
+}
+
+static NSS_STATUS
+do_dup_datum (ldap_datum_t * dst, const ldap_datum_t * src)
+{
+  dst->data = malloc (src->size);
+  if (dst->data == NULL)
+    return NSS_TRYAGAIN;
+
+  memcpy (dst->data, src->data, src->size);
+  dst->size = src->size;
+
+  return NSS_SUCCESS;
+}
+
+void *
+_nss_ldap_db_open (void)
+{
+  return (void *) do_alloc_dictionary ();
+}
+
+void
+_nss_ldap_db_close (void *db)
+{
+  struct ldap_dictionary *dict;
+
+  dict = (struct ldap_dictionary *) db;
+
+  while (dict != NULL)
+    {
+      struct ldap_dictionary *next = dict->next;
+
+      do_free_dictionary (dict);
+
+      dict = next;
+    }
+}
+
+NSS_STATUS
+_nss_ldap_db_get (void *db, const ldap_datum_t * key, ldap_datum_t * value)
+{
+  struct ldap_dictionary *dict = (struct ldap_dictionary *) db;
+  struct ldap_dictionary *p;
+
+  for (p = dict; p != NULL; p = p->next)
+    {
+      if (p->key.size == key->size &&
+	  memcmp (p->key.data, key->data, key->size) == 0)
+	{
+	  value->data = p->value.data;
+	  value->size = p->value.size;
+
+	  return NSS_SUCCESS;
 	}
-	NSS_LDAP_DATUM_ZERO(&dict->key);
-	NSS_LDAP_DATUM_ZERO(&dict->value);
-	dict->next = NULL;
+    }
 
-	return dict;
+  return NSS_NOTFOUND;
 }
 
-static void do_free_datum(ldap_datum_t *datum)
+NSS_STATUS
+_nss_ldap_db_put (void *db, const ldap_datum_t * key,
+		  const ldap_datum_t * value)
 {
-	if (datum->data != NULL) {
-		free(datum->data);
-		datum->data = NULL;
-	}
-	datum->size = 0;
+  struct ldap_dictionary *dict = (struct ldap_dictionary *) db;
+  struct ldap_dictionary *p, *q;
+
+  p = do_find_last (dict);
+  assert (p != NULL);
+  assert (p->next == NULL);
+
+  q = do_alloc_dictionary ();
+  if (q == NULL)
+    return NSS_TRYAGAIN;
+
+  if (do_dup_datum (&q->key, key) != NSS_SUCCESS)
+    {
+      do_free_dictionary (q);
+      return NSS_TRYAGAIN;
+    }
+
+  if (do_dup_datum (&q->value, value) != NSS_SUCCESS)
+    {
+      do_free_dictionary (q);
+      return NSS_TRYAGAIN;
+    }
+
+  p->next = q;
+
+  return NSS_SUCCESS;
 }
-
-static struct ldap_dictionary *do_find_last(struct ldap_dictionary *dict)
-{
-	struct ldap_dictionary *p;
-
-	for (p = dict; p->next != NULL; p = p->next)
-		;
-
-	return p;
-}
-
-static void do_free_dictionary(struct ldap_dictionary *dict)
-{
-	do_free_datum(&dict->key);
-	do_free_datum(&dict->value);
-	free(dict);
-}
-
-static NSS_STATUS do_dup_datum(ldap_datum_t *dst, const ldap_datum_t *src)
-{
-	dst->data = malloc(src->size);
-	if (dst->data == NULL)
-		return NSS_TRYAGAIN;
-
-	memcpy(dst->data, src->data, src->size);
-	dst->size = src->size;
-
-	return NSS_SUCCESS;
-}
-
-void *_nss_ldap_db_open(void)
-{
-	return (void *)do_alloc_dictionary();
-}
-
-void _nss_ldap_db_close(void *db)
-{
-	struct ldap_dictionary *dict;
-
-	dict = (struct ldap_dictionary *)db;
-
-	while (dict != NULL) {
-		struct ldap_dictionary *next = dict->next;
-
-		do_free_dictionary(dict);
-
-		dict = next;
-	}
-}
-
-NSS_STATUS _nss_ldap_db_get(void *db, const ldap_datum_t *key, ldap_datum_t *value)
-{
-	struct ldap_dictionary *dict = (struct ldap_dictionary *)db;
-	struct ldap_dictionary *p;
-
-	for (p = dict; p != NULL; p = p->next) {
-		if (p->key.size == key->size &&
-		    memcmp(p->key.data, key->data, key->size) == 0) {
-			value->data = p->value.data;
-			value->size = p->value.size;
-
-			return NSS_SUCCESS;
-		}
-	}
-
-	return NSS_NOTFOUND;
-}
-
-NSS_STATUS _nss_ldap_db_put(void *db, const ldap_datum_t *key, const ldap_datum_t *value)
-{
-	struct ldap_dictionary *dict = (struct ldap_dictionary *)db;
-	struct ldap_dictionary *p, *q;
-
-	p = do_find_last(dict);
-	assert(p != NULL);
-	assert(p->next == NULL);
-
-	q = do_alloc_dictionary();
-	if (q == NULL)
-		return NSS_TRYAGAIN;
-
-	if (do_dup_datum(&q->key, key) != NSS_SUCCESS) {
-		do_free_dictionary(q);
-		return NSS_TRYAGAIN;
-	}
-
-	if (do_dup_datum(&q->value, value) != NSS_SUCCESS) {
-		do_free_dictionary(q);
-		return NSS_TRYAGAIN;
-	}
-
-	p->next = q;
-
-	return NSS_SUCCESS;
-}
-
