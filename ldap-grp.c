@@ -846,15 +846,13 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 }
 #endif
 
-#ifdef DEBUG
-# ifdef HAVE_NSSWITCH_H
-# define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_getgroupsbymember_r"
-# elif defined(HAVE_NSS_H)
-# define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_initgroups_dyn"
-# elif defined(HAVE_USERSEC_H)
-# define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_getgrset"
-# endif
-#endif /* DEBUG */
+#ifdef HAVE_NSSWITCH_H
+#define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_getgroupsbymember_r"
+#elif defined(HAVE_NSS_H)
+#define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_initgroups_dyn"
+#elif defined(HAVE_USERSEC_H)
+#define NSS_LDAP_INITGROUPS_FUNCTION	"_nss_ldap_getgrset"
+#endif
 
 #ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
