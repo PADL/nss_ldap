@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+96	Luke Howard <lukeh@padl.com>
+
+	* re-orged
+
 95	Luke Howard <lukeh@padl.com>
 
 	* disable SO_KEEPALIVE on socket rather than blocking

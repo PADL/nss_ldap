@@ -332,16 +332,11 @@ do_open (void)
   else if (__session.ls_conn != NULL && __session.ls_config != NULL)
     {
       /*
-       * Commented out for the moment -- see whether disabling
-       * SO_KEEPALIVE fixes this. Just return.
-       */
-      debug ("<== do_open");
-      return NSS_SUCCESS;
-#ifdef notdef
-      /*
        * Otherwise we can hand back this process' global
        * LDAP session.
-       *
+       */
+#ifdef TEST_SERVER_UP /* experimental */
+      /*
        * Ensure we save signal handler for sigpipe and restore after
        * LDAP connection is confirmed to be up or a new connection
        * is opened. This prevents Solaris nscd and other apps from
@@ -398,7 +393,13 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_SUCCESS;
 	}
-#endif /* notdef */
+#else
+      /*
+       * Just return.
+       */
+      debug ("<== do_open");
+      return NSS_SUCCESS;
+#endif /* TEST_SERVER_UP */
     }
 
   __pid = pid;
