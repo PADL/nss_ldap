@@ -71,7 +71,7 @@ OBJS=$(SRCS:.c=.o)
 
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module
 GNUFLAGS=-DGNU_NSS -DHAVE_SNPRINTF -D_REENTRANT
-LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
+LIBCVERS= `ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 NSSLIBVER=$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 
 SOLIB=lib$(MODULE).so.$(NSSLIBVER)
@@ -102,11 +102,11 @@ $(MODULE): $(OBJS)
 	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(NSSLIB) $(OBJS) $(LIBS)
 
 install:
-	install -m 644 -o root -g root $(NSSLIB) /lib/$(NSSLIB)
+	install -m 755 -o root -g root $(NSSLIB) /lib/$(NSSLIB)
 	ln -sf $(NSSLIB) /lib/$(SOLIB)
 	ln -sf /lib/$(NSSLIB) /usr/lib/$(MODULE).so
-	cp nsswitch.ldap /etc/nsswitch.ldap
-	cp ldap.conf	/etc/ldap.conf
+	if [ ! -f /etc/nsswitch.ldap ]; then cp nsswitch.ldap /etc/nsswitch.ldap; fi
+	if [ ! -f /etc/ldap.conf ]; then cp ldap.conf /etc/ldap.conf; fi
 
 clean:
 	rm -f $(OBJS) $(NSSLIB) core

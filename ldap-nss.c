@@ -73,7 +73,8 @@ static ldap_session_t __session = { NULL, NULL };
 /* 
  * Process ID that opened the session.
  */
-static int __pid = -1;
+static pid_t __pid = -1;
+static uid_t __euid = -1;
 
 static void do_close (void);
 static NSS_STATUS do_open (void);
@@ -186,6 +187,10 @@ do_close (void)
 
   if (__session.ls_conn != NULL)
     {
+#ifdef DEBUG
+      syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
+	      __session.ls_conn);
+#endif /* DEBUG */
       ldap_unbind (__session.ls_conn);
       __session.ls_conn = NULL;
     }
@@ -202,18 +207,33 @@ static NSS_STATUS
 do_open (void)
 {
   ldap_config_t *cfg = NULL;
-  int pid;
+  pid_t pid;
+  uid_t euid;
 
   debug ("==> do_open");
 
+  euid = geteuid ();
   pid = getpid ();
-
+#ifdef DEBUG
+  syslog (LOG_DEBUG,
+	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  __session.ls_conn, __pid, pid, __euid, euid);
+#endif /* DEBUG */
   if (__pid != pid)
     {
       /*
-       * If we've forked, then we need to close the session.
+       * If we've forked, then we need to open a new session.
+       * Don't actually close the connection as this buggers up our parent process and 
+       * seems to crash when we call ldap_unbind on the same connection repeatedly :-)
        */
-      __pid = pid;
+/*      do_close (); */
+      __session.ls_conn = NULL;
+    }
+  else if (__euid != euid)
+    {
+      /*
+       * If we've changed user ids, close the session so we can rebind as the correct user.
+       */
       do_close ();
     }
   else if (__session.ls_conn != NULL && __session.ls_config != NULL)
@@ -251,6 +271,8 @@ do_open (void)
       return NSS_SUCCESS;
     }
 
+  __pid = pid;
+  __euid = euid;
   __session.ls_config = NULL;
 
   if (__config == NULL)
@@ -338,17 +360,41 @@ do_open (void)
   __session.ls_conn->ld_version = cfg->ldc_version;
 #endif /* LDAP_VERSION3_API */
 
-  if (ldap_simple_bind_s (__session.ls_conn, cfg->ldc_binddn, cfg->ldc_bindpw)
-      != LDAP_SUCCESS)
+  /*
+   * If we're running as root, let us bind as a special
+   * user, so we can fake shadow passwords.
+   * Thanks to Doug Nazar <nazard@dragoninc.on.ca> for this
+   * patch.
+   */
+  if (euid == 0 && cfg->ldc_rootbinddn != NULL)
     {
-      do_close ();
-      debug ("<== do_open");
-      if (old_handler != NULL)
+      if (ldap_simple_bind_s
+	  (__session.ls_conn, cfg->ldc_rootbinddn,
+	   cfg->ldc_rootbindpw) != LDAP_SUCCESS)
 	{
-	  (void) signal (SIGPIPE, old_handler);
+	  do_close ();
+	  debug ("<== do_open");
+	  if (old_handler != NULL)
+	    {
+	      (void) signal (SIGPIPE, old_handler);
+	    }
+	  return NSS_UNAVAIL;
 	}
-
-      return NSS_UNAVAIL;
+    }
+  else
+    {
+      if (ldap_simple_bind_s
+	  (__session.ls_conn, cfg->ldc_binddn,
+	   cfg->ldc_bindpw) != LDAP_SUCCESS)
+	{
+	  do_close ();
+	  debug ("<== do_open");
+	  if (old_handler != NULL)
+	    {
+	      (void) signal (SIGPIPE, old_handler);
+	    }
+	  return NSS_UNAVAIL;
+	}
     }
 
   __session.ls_config = cfg;
@@ -536,18 +582,11 @@ do_search_s (const char *base, int scope,
   return nstatus;
 }
 
-LDAPMessage *
-_nss_ldap_read (const char *dn, const char **attributes)
+NSS_STATUS
+_nss_ldap_read (const char *dn, const char **attributes, LDAPMessage ** res)
 {
-  LDAPMessage *res;
-
-  if (do_search_s (dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes, 1,	/* sizelimit */
-		   &res) != NSS_SUCCESS)
-    {
-      res = NULL;
-    }
-
-  return res;
+  return do_search_s (dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes, 1,	/* sizelimit */
+		      res);
 }
 
 char **
@@ -594,12 +633,13 @@ _nss_ldap_next_entry (LDAPMessage * res)
  * The generic lookup cover function.
  * Assumes caller holds lock.
  */
-LDAPMessage *
+NSS_STATUS
 _nss_ldap_lookup (const ldap_args_t * args,
-		  const char *filterprot, const char **attrs, int sizelimit)
+		  const char *filterprot, const char **attrs, int sizelimit,
+		  LDAPMessage ** res)
 {
   char filter[LDAP_FILT_MAXSIZ + 1];
-  LDAPMessage *res;
+  NSS_STATUS stat;
 
   debug ("==> _nss_ldap_lookup");
 
@@ -607,7 +647,7 @@ _nss_ldap_lookup (const ldap_args_t * args,
     {
       __session.ls_conn = NULL;
       debug ("<== _nss_ldap_lookup");
-      return NULL;
+      return NSS_UNAVAIL;
     }
 
   if (args != NULL)
@@ -651,17 +691,14 @@ _nss_ldap_lookup (const ldap_args_t * args,
 	}
     }
 
-  if (do_search_s (__session.ls_config->ldc_base,
-		   __session.ls_config->ldc_scope,
-		   (args == NULL) ? (char *) filterprot : filter,
-		   attrs, sizelimit, &res) != NSS_SUCCESS)
-    {
-      res = NULL;
-    }
+  stat = do_search_s (__session.ls_config->ldc_base,
+		      __session.ls_config->ldc_scope,
+		      (args == NULL) ? (char *) filterprot : filter,
+		      attrs, sizelimit, res);
 
   debug ("<== _nss_ldap_lookup");
 
-  return res;
+  return stat;
 }
 
 /*
@@ -705,11 +742,11 @@ _nss_ldap_getent (ent_context_t * ctx,
     {
       LDAPMessage *res;
 
-      res = _nss_ldap_lookup (NULL, filterprot, attrs, LDAP_NO_LIMIT);
-      if (res == NULL)
+      stat = _nss_ldap_lookup (NULL, filterprot, attrs, LDAP_NO_LIMIT, &res);
+      if (stat != NSS_SUCCESS)
 	{
 	  nss_context_unlock ();
-	  return NSS_NOTFOUND;
+	  return stat;
 	}
 
       ctx->ec_res = res;
@@ -778,8 +815,8 @@ _nss_ldap_getbyname (ldap_args_t * args,
 
   nss_context_lock ();
 
-  res = _nss_ldap_lookup (args, filterprot, attrs, 1);
-  if (res == NULL)
+  stat = _nss_ldap_lookup (args, filterprot, attrs, 1, &res);
+  if (stat != NSS_SUCCESS)
     {
       nss_context_unlock ();
       return stat;

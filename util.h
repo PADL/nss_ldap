@@ -63,9 +63,11 @@ NSS_STATUS _nss_ldap_dn2uid (
 #define NSS_LDAP_KEY_PORT	"port"
 #define NSS_LDAP_KEY_CRYPT	"crypt"
 #define NSS_LDAP_KEY_BINDDN	"binddn"
-#define NSS_LDAP_KEY_BINDPW	"bindpw"
+#define NSS_LDAP_KEY_BINDPW     "bindpw"
+#define NSS_LDAP_KEY_ROOTBINDDN	"rootbinddn"
 #define NSS_LDAP_KEY_LDAP_VERSION	"ldap_version"
 #define NSS_LDAP_PATH_CONF	"/etc/ldap.conf"
+#define NSS_LDAP_PATH_ROOTPASSWD	"/etc/nss_ldap.secret"
 
 /*
  * There are a number of means of obtaining configuration information.

@@ -37,14 +37,18 @@
  * unacceptable, in which case you may wish to adjust
  * the constants below.
  */
-#define LDAP_NSS_TRIES           5    /* number of sleeping reconnect attempts */
-#define LDAP_NSS_SLEEPTIME       4    /* seconds to sleep; doubled until max */
-#define LDAP_NSS_MAXSLEEPTIME    64   /* maximum seconds to sleep */
-#define LDAP_NSS_MAXCONNTRIES    2    /* reconnect attempts before sleeping */
+#define LDAP_NSS_TRIES           5	/* number of sleeping reconnect attempts */
+#define LDAP_NSS_SLEEPTIME       4	/* seconds to sleep; doubled until max */
+#define LDAP_NSS_MAXSLEEPTIME    64	/* maximum seconds to sleep */
+#define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
 
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
-#define debug(str) syslog(LOG_DEBUG, "nss_ldap - thread %u  - %s", thr_self(), str)
+#ifdef SUN_NSS
+#define debug(str) syslog(LOG_DEBUG, "nss_ldap: thread %u - %s", thr_self(), str);
+#else
+#define debug(str) syslog(LOG_DEBUG, "nss_ldap: thread %u - %s", pthread_self(), str)
+#endif /* SUN_NSS */
 #else
 #define debug(str) fprintf(stderr, "%s\n", str)
 #endif /* DEBUG_SYSLOG */
@@ -108,24 +112,28 @@
  * could be used after a failed or exhausted search.
  */
 struct ldap_config
-  {
-    /* space delimited list of servers */
-    char *ldc_host;
-    /* port, expected to be common to all servers */
-    int ldc_port;
-    /* base DN, eg. dc=gnu,dc=org */
-    char *ldc_base;
-    /* scope for searches */
-    int ldc_scope;
-    char *ldc_binddn;
-    char *ldc_bindpw;
-    /* protocol version */
-    int ldc_version;
-    /* next configuration. loops back onto itself for last
-       entry
-     */
-    struct ldap_config *ldc_next;
-  };
+{
+  /* space delimited list of servers */
+  char *ldc_host;
+  /* port, expected to be common to all servers */
+  int ldc_port;
+  /* base DN, eg. dc=gnu,dc=org */
+  char *ldc_base;
+  /* scope for searches */
+  int ldc_scope;
+  /* bind DN */
+  char *ldc_binddn;
+  /* bind cred */
+  char *ldc_bindpw;
+  /* shadow bind DN */
+  char *ldc_rootbinddn;
+  /* shadow bind cred */
+  char *ldc_rootbindpw;
+  /* protocol version */
+  int ldc_version;
+  /* next configuration. loops back onto itself for last entry */
+  struct ldap_config *ldc_next;
+};
 
 typedef struct ldap_config ldap_config_t;
 
@@ -134,12 +142,12 @@ typedef struct ldap_config ldap_config_t;
  * connection to an LDAP server.
  */
 struct ldap_session
-  {
-    /* the connection */
-    LDAP *ls_conn;
-    /* pointer into config table */
-    ldap_config_t *ls_config;
-  };
+{
+  /* the connection */
+  LDAP *ls_conn;
+  /* pointer into config table */
+  ldap_config_t *ls_config;
+};
 
 typedef struct ldap_session ldap_session_t;
 
@@ -149,11 +157,11 @@ typedef struct ldap_session ldap_session_t;
  * /etc/ldap.conf.
  */
 enum crypt_prefix
-  {
-    UNIX_CRYPT,
-    SHA_CRYPT,
-    MD5_CRYPT
-  };
+{
+  UNIX_CRYPT,
+  SHA_CRYPT,
+  MD5_CRYPT
+};
 
 typedef enum crypt_prefix crypt_prefix_t;
 
@@ -167,30 +175,30 @@ typedef enum crypt_prefix crypt_prefix_t;
 #endif
 
 enum ldap_args_types
-  {
-    LA_TYPE_STRING,
-    LA_TYPE_NUMBER,
-    LA_TYPE_STRING_AND_STRING,
-    LA_TYPE_NUMBER_AND_STRING
-  };
+{
+  LA_TYPE_STRING,
+  LA_TYPE_NUMBER,
+  LA_TYPE_STRING_AND_STRING,
+  LA_TYPE_NUMBER_AND_STRING
+};
 
 typedef enum ldap_args_types ldap_args_types_t;
 
 struct ldap_args
+{
+  ldap_args_types_t la_type;
+  union
   {
-    ldap_args_types_t la_type;
-    union
-      {
-	const char *la_string;
-	long la_number;
-      }
-    la_arg1;
-    union
-      {
-	const char *la_string;
-      }
-    la_arg2;
-  };
+    const char *la_string;
+    long la_number;
+  }
+  la_arg1;
+  union
+  {
+    const char *la_string;
+  }
+  la_arg2;
+};
 
 typedef struct ldap_args ldap_args_t;
 
@@ -218,20 +226,20 @@ typedef struct ldap_args ldap_args_t;
  * instances of ent_context_t. The latter contains the former.
  */
 struct ldap_state
-  {
-    int ls_type;
+{
+  int ls_type;
 #define LS_TYPE_KEY	(0)
 #define LS_TYPE_INDEX	(1)
-    union
-      {
-	/* ls_key is the requested attribute value.
-	   ls_index is the desired offset into the value list.
-	 */
-	const char *ls_key;
-	int ls_index;
-      }
-    ls_info;
-  };
+  union
+  {
+    /* ls_key is the requested attribute value.
+       ls_index is the desired offset into the value list.
+     */
+    const char *ls_key;
+    int ls_index;
+  }
+  ls_info;
+};
 
 typedef struct ldap_state ldap_state_t;
 /*
@@ -243,11 +251,11 @@ typedef struct ldap_state ldap_state_t;
  * thread specific context: result chain, and state data
  */
 struct ent_context
-  {
-    ldap_state_t ec_state;	/* eg. for services */
-    LDAPMessage *ec_res;	/* result chain */
-    LDAPMessage *ec_last;	/* current result pointer */
-  };
+{
+  ldap_state_t ec_state;	/* eg. for services */
+  LDAPMessage *ec_res;		/* result chain */
+  LDAPMessage *ec_last;		/* current result pointer */
+};
 
 typedef struct ent_context ent_context_t;
 
@@ -261,11 +269,11 @@ typedef ent_context_t *context_handle_t;
 
 #ifdef SUN_NSS
 struct nss_ldap_backend
-  {
-    nss_backend_op_t *ops;
-    int n_ops;
-    context_handle_t state;
-  };
+{
+  nss_backend_op_t *ops;
+  int n_ops;
+  context_handle_t state;
+};
 
 typedef struct nss_ldap_backend nss_ldap_backend_t;
 #endif
@@ -273,12 +281,12 @@ typedef struct nss_ldap_backend nss_ldap_backend_t;
 #if defined(IRS_NSS) || defined(DL_NSS)
 
 typedef enum
-  {
-    NSS_SUCCESS,
-    NSS_NOTFOUND,
-    NSS_UNAVAIL,
-    NSS_TRYAGAIN
-  }
+{
+  NSS_SUCCESS,
+  NSS_NOTFOUND,
+  NSS_UNAVAIL,
+  NSS_TRYAGAIN
+}
 NSS_STATUS;
 
 #elif defined(GNU_NSS)
@@ -325,7 +333,8 @@ typedef nss_status_t NSS_STATUS;
 				} while (0)
 #endif
 
-typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *, char *, size_t);
+typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *,
+				char *, size_t);
 
 #ifdef LDAP_VERSION3_API
 /*
@@ -333,11 +342,11 @@ typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *, c
  */
 
 struct ldap_error
-  {
-    int le_errno;
-    char *le_matched;
-    char *le_errmsg;
-  };
+{
+  int le_errno;
+  char *le_matched;
+  char *le_errmsg;
+};
 
 typedef struct ldap_error ldap_error_t;
 
@@ -394,64 +403,59 @@ char *_nss_ldap_get_dn (LDAPMessage * e);
 LDAPMessage *_nss_ldap_first_entry (LDAPMessage * res);
 LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
 
-LDAPMessage *_nss_ldap_lookup (
-				const ldap_args_t * args,	/* IN */
-				const char *filterprot,		/* IN */
-				const char **attributes /* IN */ ,
-				int sizelimit);
+NSS_STATUS _nss_ldap_lookup (const ldap_args_t * args,	/* IN */
+			     const char *filterprot,	/* IN */
+			     const char **attributes,	/* IN */
+			     int sizelimit,	/* IN */
+			     LDAPMessage ** pRes /* OUT */ );
 
-LDAPMessage *_nss_ldap_read (
-			      const char *dn,
-			      const char **attributes);
+NSS_STATUS _nss_ldap_read (const char *dn,	/* IN */
+			   const char **attributes,	/* IN */
+			   LDAPMessage ** pRes /* OUT */ );
 
 /* common enumeration routine */
-NSS_STATUS _nss_ldap_getent (
-			      ent_context_t * key,	/* IN/OUT */
-			      void *result,	/* IN/OUT */
-			      char *buffer,	/* IN */
-			      size_t buflen,	/* IN */
-			      int *errnop,	/* OUT */
-			      const char *filterprot,	/* IN */
-			      const char **attrs,	/* IN */
-			      parser_t parser /* IN */ );
+NSS_STATUS _nss_ldap_getent (ent_context_t * key,	/* IN/OUT */
+			     void *result,	/* IN/OUT */
+			     char *buffer,	/* IN */
+			     size_t buflen,	/* IN */
+			     int *errnop,	/* OUT */
+			     const char *filterprot,	/* IN */
+			     const char **attrs,	/* IN */
+			     parser_t parser /* IN */ );
 
 /* common lookup routine */
-NSS_STATUS _nss_ldap_getbyname (
-				 ldap_args_t * args,	/* IN/OUT */
-				 void *result,	/* IN/OUT */
-				 char *buffer,	/* IN */
-				 size_t buflen,		/* IN */
-				 int *errnop,	/* OUT */
-				 const char *filterprot,	/* IN */
-				 const char **attrs,	/* IN */
-				 parser_t parser /* IN */ );
+NSS_STATUS _nss_ldap_getbyname (ldap_args_t * args,	/* IN/OUT */
+				void *result,	/* IN/OUT */
+				char *buffer,	/* IN */
+				size_t buflen,	/* IN */
+				int *errnop,	/* OUT */
+				const char *filterprot,	/* IN */
+				const char **attrs,	/* IN */
+				parser_t parser /* IN */ );
 
 /* parsing utility functions */
-NSS_STATUS _nss_ldap_assign_attrvals (
-				       LDAP * ld,	/* IN */
-				       LDAPMessage * e,		/* IN */
-				       const char *attr,	/* IN */
-				       const char *omitvalue,	/* IN */
-				       char ***valptr,	/* OUT */
-				       char **buffer,	/* IN/OUT */
-				       size_t * buflen,		/* IN/OUT */
-				       size_t * pvalcount /* OUT */ );
-
-NSS_STATUS _nss_ldap_assign_attrval (
-				      LDAP * ld,	/* IN */
+NSS_STATUS _nss_ldap_assign_attrvals (LDAP * ld,	/* IN */
 				      LDAPMessage * e,	/* IN */
-				      const char *attr,		/* IN */
-				      char **valptr,	/* OUT */
+				      const char *attr,	/* IN */
+				      const char *omitvalue,	/* IN */
+				      char ***valptr,	/* OUT */
 				      char **buffer,	/* IN/OUT */
-				      size_t * buflen /* IN/OUT */ );
+				      size_t * buflen,	/* IN/OUT */
+				      size_t * pvalcount /* OUT */ );
 
-
-NSS_STATUS _nss_ldap_assign_passwd (
-				     LDAP * ld,		/* IN */
+NSS_STATUS _nss_ldap_assign_attrval (LDAP * ld,	/* IN */
 				     LDAPMessage * e,	/* IN */
 				     const char *attr,	/* IN */
 				     char **valptr,	/* OUT */
 				     char **buffer,	/* IN/OUT */
-				     size_t * buflen);	/* IN/OUT */
+				     size_t * buflen /* IN/OUT */ );
+
+
+NSS_STATUS _nss_ldap_assign_passwd (LDAP * ld,	/* IN */
+				    LDAPMessage * e,	/* IN */
+				    const char *attr,	/* IN */
+				    char **valptr,	/* OUT */
+				    char **buffer,	/* IN/OUT */
+				    size_t * buflen);	/* IN/OUT */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

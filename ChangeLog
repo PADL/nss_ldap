@@ -6,11 +6,24 @@ $Id$
 	* added breaks to switch in _nss_ldap_lookup
 	  (thanks to Mike.Shelton@FMR.COM for pointing
 	   this out)
-	* incorporated patch from rpatel@globix.com:
-	  save signal handler and ignore SIGPIPE for
+	* save signal handler and ignore SIGPIPE for
 	  appropriate sections of do_open() and confirm
-	  connection is still active.
-
+	  connection is still active (patch from
+	  rpatel@globix.com)
+	* allow root users to bind as a different user,
+	  to provide quasi-shadow password support (patch
+	  from nazard@dragoninc.on.ca)
+	* under Linux, make Makefile look at last libc
+	  version (patch from nazard@dragoninc.on.ca)
+	* never clobber nsswitch.ldap/ldap.conf when
+	  making install (patch from nazard@dragoninc.on.ca)
+	* change do_open() to not unbind the parent ldap
+	  connection when the pid changes but simply open a
+	  new connection (patch from nazard@dragoninc.on.ca)
+	* changed _nss_ldap_lookup() and _nss_ldap_read()
+	  prototypes to return NSS_STATUS error codes,
+	  so that NSS_UNAVAIL percolates as appropriate.
+	
 87	Luke Howard <lukeh@padl.com>
 
 	* fixed looking up DN-membered groups by member. Thanks

@@ -198,6 +198,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
   const char *filter;
 #endif /* RFC2307BIS */
   ldap_args_t a;
+  NSS_STATUS stat;
   LDAPMessage *res, *e;
 
   LA_INIT (a);
@@ -210,8 +211,8 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 
 #ifdef RFC2307BIS
   /* lookup the user's DN. XXX: import this filter from somewhere else */
-  res = _nss_ldap_lookup (&a, "(" AT (uid) "=%s)", attrs, 1);
-  if (res != NULL)
+  stat = _nss_ldap_lookup (&a, "(" AT (uid) "=%s)", attrs, 1, &res);
+  if (stat == NSS_SUCCESS)
     {
       e = _nss_ldap_first_entry (res);
       if (e != NULL)
@@ -230,7 +231,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
     {
       filter = filt_getgroupsbymember;
     }
-  res = _nss_ldap_lookup (&a, filter, gr_attributes, LDAP_NO_LIMIT);
+  stat = _nss_ldap_lookup (&a, filter, gr_attributes, LDAP_NO_LIMIT, &res);
   if (userdn != NULL)
     {
 #ifdef LDAP_VERSION3_API
@@ -240,14 +241,14 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 #endif /* LDAP_VERSION3_API */
     }
 #else
-  res =
+  stat =
     _nss_ldap_lookup (&a, filt_getgroupsbymember, gr_attributes,
-		      LDAP_NO_LIMIT);
+		      LDAP_NO_LIMIT, &res);
 #endif /* RFC2307BIS */
 
-  if (res == NULL)
+  if (stat != NSS_SUCCESS)
     {
-      return NSS_NOTFOUND;
+      return stat;
     }
   for (e = _nss_ldap_first_entry (res);
        e != NULL; e = _nss_ldap_next_entry (e))

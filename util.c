@@ -376,6 +376,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   result->ldc_port = LDAP_PORT;
   result->ldc_binddn = NULL;
   result->ldc_bindpw = NULL;
+  result->ldc_rootbinddn = NULL;
+  result->ldc_rootbindpw = NULL;
   result->ldc_version = LDAP_VERSION2;
   result->ldc_next = result;
 
@@ -432,6 +434,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	{
 	  t = &result->ldc_bindpw;
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_ROOTBINDDN))
+        {
+          t = &result->ldc_rootbinddn;
+        }
       else if (!strcasecmp (k, NSS_LDAP_KEY_CRYPT))
 	{
 	  if (!strcasecmp (v, "md5"))
@@ -482,6 +488,29 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 
   fclose (fp);
 
+  fp = fopen(NSS_LDAP_PATH_ROOTPASSWD, "r");
+  if (fp)
+    {
+      if (fgets(b, sizeof(b), fp) != NULL)
+	{
+	  int len;
+	   
+	  len = strlen(b);
+	  if (*b != '\0')
+	    len--;
+	  
+	  strncpy(p, b, len);
+	  p[len] = '\0';
+	  result->ldc_rootbindpw = p;
+	  p += len + 1;
+	}
+      fclose(fp);
+    }
+  else
+    {
+       result->ldc_rootbinddn = NULL;
+    }
+    
   if (result->ldc_host == NULL)
     {
       return NSS_NOTFOUND;
