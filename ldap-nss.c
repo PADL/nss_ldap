@@ -29,9 +29,6 @@ static char rcsId[] =
 
 #ifdef HAVE_THREAD_H
 #include <thread.h>
-#ifdef HAVE_PTHREAD_ATFORK
-#undef HAVE_PTHREAD_ATFORK
-#endif
 #elif defined(HAVE_PTHREAD_H)
 #include <pthread.h>
 #endif
@@ -67,6 +64,12 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 #include "dnsconfig.h"
+
+#ifdef HAVE_THREAD_H
+#ifdef HAVE_PTHREAD_ATFORK
+#undef HAVE_PTHREAD_ATFORK
+#endif
+#endif
 
 /* how many messages to retrieve results for */
 #ifndef LDAP_MSG_ONE
