@@ -3,6 +3,8 @@ $Header$
 
 199	Luke Howard <lukeh@padl.com>
 
+	* HP-UX port
+
 198	 Luke Howard <lukeh@padl.com>
 
 	* BUG#108: fix potential buffer overflow in dnsconfig.c
