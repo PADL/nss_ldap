@@ -585,7 +585,9 @@ static void
 do_close_no_unbind (void)
 {
   int sd;
+#ifndef HAVE_LDAP_LD_FREE
   int bogusSd = -1;
+#endif /* HAVE_LDAP_LD_FREE */
 
   debug ("==> do_close_no_unbind");
 
