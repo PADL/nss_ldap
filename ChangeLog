@@ -7,6 +7,7 @@ $Id$
 	  Supplementary groups should be initialized now.
 	  (NB: doesn't appear to be quite working for
 	  RFC2307bis yet.)
+ 	* GNU indent-ified
 
 2.71	Luke Howard <lukeh@padl.com>
 
