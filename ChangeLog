@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+134	Luke Howard <lukeh@padl.com>
+
+	* fixed Makefile.am
+	* reordered DB search order in util.c
+
 133	Luke Howard <lukeh@padl.com>
 
 	* make /usr/lib directory in Makefile.am
