@@ -78,6 +78,10 @@
 #define LDAP_PAGESIZE 1000
 #endif /* PAGE_RESULTS */
 
+#ifndef LDAP_FILT_MAXSIZ
+#define LDAP_FILT_MAXSIZ 1024
+#endif /* !LDAP_FILT_MAXSIZE */
+
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
 #ifdef HAVE_NSSWITCH_H

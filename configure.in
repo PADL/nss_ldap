@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 199)
+AM_INIT_AUTOMAKE(nss_ldap, 200)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -130,6 +130,7 @@ AC_CHECK_LIB(nsl, main)
 
 AC_CHECK_FUNCS(strtok_r)
 AC_CHECK_FUNCS(sigset)
+AC_CHECK_FUNCS(sigprocmask)
 AC_CHECK_FUNCS(res_search)
 AC_CHECK_FUNCS(dn_expand)
 AC_CHECK_FUNCS(snprintf)
