@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+214	Luke Howard <lukeh@padl.com>
+
+	* define LDAP_DEPRECATED for compiling against
+	  OpenLDAP 2.2
+
 213	Luke Howard <lukeh@padl.com>
 
 	* fix netgroup compilation error when debugging is

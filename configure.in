@@ -24,7 +24,7 @@ if test "$ac_cv_prog_gcc" = "yes"; then CFLAGS="$CFLAGS -Wall -fPIC"; fi
 
 dnl This is needed for the native Solaris LDAP SDK and
 dnl OpenLDAP 2.2, respectively
-CPPFLAGS="-DLDAP_REFERRALS -DLDAP_DEPRECATED"
+CPPFLAGS="$CPPFLAGS -DLDAP_REFERRALS -DLDAP_DEPRECATED"
 
 case "$target_os" in
 freebsd*) CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
