@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+203	Luke Howard <lukeh@padl.com>
+
+	* fix for bug #115
+
 202	Luke Howard <lukeh@padl.com>
 
 	* getsockname() fixes from Howard Chu
