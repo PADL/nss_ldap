@@ -684,11 +684,6 @@ NSS_STATUS _nss_ldap_search (const ldap_args_t * args,	/* IN */
   			     ldap_service_search_descriptor_t **s /*IN/OUT*/ );
 
 /*
- * Retrieve next result.
- */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx);
-
-/*
  * Emulate X.500 read operation.
  */
 NSS_STATUS _nss_ldap_read (const char *dn,	/* IN */

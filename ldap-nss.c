@@ -1624,7 +1624,7 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
 	  ber_bvfree (ctx->ec_cookie);
 	}
 #endif /* PAGE_RESULTS */
-      if (ctx->ec_msgid > -1 && _nss_ldap_result (ctx) == NSS_SUCCESS)
+      if (ctx->ec_msgid > -1 && do_result (ctx, LDAP_MSG_ONE) == NSS_SUCCESS)
 	{
 	  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
 	}
@@ -1675,7 +1675,7 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
   /*
    * Abandon the search if there were more results to fetch.
    */
-  if (ctx->ec_msgid > -1 && _nss_ldap_result (ctx) == NSS_SUCCESS)
+  if (ctx->ec_msgid > -1 && do_result (ctx, LDAP_MSG_ONE) == NSS_SUCCESS)
     {
       ldap_abandon (__session.ls_conn, ctx->ec_msgid);
       ctx->ec_msgid = -1;
@@ -2472,18 +2472,6 @@ _nss_ldap_next_entry (LDAPMessage * res)
       return NULL;
     }
   return ldap_next_entry (__session.ls_conn, res);
-}
-
-/*
- * Calls ldap_result() with LDAP_MSG_ONE.
- */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
-{
-  if (__session.ls_conn == NULL)
-    {
-      return NSS_UNAVAIL;
-    }
-  return do_result (ctx, LDAP_MSG_ONE);
 }
 
 /*
