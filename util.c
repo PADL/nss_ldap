@@ -664,11 +664,13 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       else
 	{
 	  /* check whether the key is a naming context key */
-	  if (do_searchdescriptorconfig
-	      (k, v, len, result->ldc_sds, &buffer, &buflen) != NSS_SUCCESS)
+	  stat =
+	    do_searchdescriptorconfig (k, v, len, result->ldc_sds, &buffer,
+				       &buflen);
+	  if (stat == NSS_UNAVAIL)
 	    {
 	      free (result);
-	      return NSS_UNAVAIL;
+	      return stat;
 	    }
 	}
 
@@ -748,8 +750,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   return stat;
 }
 
-NSS_STATUS
-_nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
   int ret = NSS_TRYAGAIN;
   char *p = buf;
