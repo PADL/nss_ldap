@@ -421,22 +421,22 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   *buflen -= len + 1;
 
   /* probably is some funky escaping needed here. later... */
-  filter = strchr (base, '?');
-  if (filter != NULL)
+  s = strchr (base, '?');
+  if (s != NULL)
     {
-      *filter = '\0';
-      filter++;
-      s = strchr (filter, '?');
-      if (s != NULL)
+      *s = '\0';
+      s++;
+      if (!strcasecmp (s, "sub"))
+	scope = LDAP_SCOPE_SUBTREE;
+      else if (!strcasecmp (s, "one"))
+	scope = LDAP_SCOPE_ONELEVEL;
+      else if (!strcasecmp (s, "base"))
+	scope = LDAP_SCOPE_BASE;
+      filter = strchr (s, '?');
+      if (filter != NULL)
 	{
-	  *s = '\0';
-	  s++;
-	  if (!strcasecmp (s, "sub"))
-	    scope = LDAP_SCOPE_SUBTREE;
-	  else if (!strcasecmp (s, "one"))
-	    scope = LDAP_SCOPE_ONELEVEL;
-	  else if (!strcasecmp (s, "base"))
-	    scope = LDAP_SCOPE_BASE;
+	  *filter = '\0';
+	  filter++;
 	}
     }
 
@@ -722,7 +722,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   return stat;
 }
 
-NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+NSS_STATUS
+_nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
   int ret = NSS_TRYAGAIN;
   char *p = buf;
