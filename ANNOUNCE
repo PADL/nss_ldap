@@ -114,4 +114,8 @@ see:
 nss_ldap was written by PADL Software Pty Ltd <dev@padl.com>. Many
 others have contributed, see the file AUTHORS in this directory.
 
+Please read the following document before submitting any
+contributions:
+
+	<URL:http://www.padl.com/Articles/GuidelinesforContributing.html>
 

@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+196	Luke Howard <lukeh@padl.com>
+
+	* return NSS_TRYAGAIN not NSS_NOTFOUND for insufficient
+	  buffer space in dn2uid_cache_get()
+
 195	Luke Howard <lukeh@padl.com>
 
 	* fixed BUG#98: large groups cause buffer length

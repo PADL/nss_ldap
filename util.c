@@ -163,10 +163,11 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
       cache_unlock ();
       return NSS_NOTFOUND;
     }
-  if ((val.size + 1) > *buflen)
+
+  if (*buflen <= val.size)
     {
       cache_unlock ();
-      return NSS_NOTFOUND;
+      return NSS_TRYAGAIN;
     }
 
   *uid = *buffer;
@@ -193,7 +194,7 @@ _nss_ldap_dn2uid (LDAP * ld,
     {
 #ifdef DN2UID_CACHE
       status = dn2uid_cache_get (dn, uid, buffer, buflen);
-      if (status != NSS_SUCCESS)
+      if (status == NSS_NOTFOUND)
 	{
 #endif /* DN2UID_CACHE */
 	  const char *attrs[2];
@@ -201,8 +202,6 @@ _nss_ldap_dn2uid (LDAP * ld,
 
 	  attrs[0] = AT (uid);
 	  attrs[1] = NULL;
-
-	  status = NSS_NOTFOUND;
 
 	  if (_nss_ldap_read (dn, attrs, &res) == NSS_SUCCESS)
 	    {
