@@ -33,13 +33,14 @@
 
 /*
  * Timeouts for reconnecting code. Similar to rebind
- * logic in Darwin NetInfo.
+ * logic in Darwin NetInfo. Some may find sleeping
+ * unacceptable, in which case you may wish to adjust
+ * the constants below.
  */
-/* #define LDAP_NSS_TIMEOUT         5 */
-#define LDAP_NSS_TRIES           5
-#define LDAP_NSS_SLEEPTIME       4
-#define LDAP_NSS_MAXSLEEPTIME    64
-#define LDAP_NSS_MAXCONNTRIES    2
+#define LDAP_NSS_TRIES           5    /* number of sleeping reconnect attempts */
+#define LDAP_NSS_SLEEPTIME       4    /* seconds to sleep; doubled until max */
+#define LDAP_NSS_MAXSLEEPTIME    64   /* maximum seconds to sleep */
+#define LDAP_NSS_MAXCONNTRIES    2    /* reconnect attempts before sleeping */
 
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG

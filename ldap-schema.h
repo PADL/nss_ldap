@@ -36,7 +36,7 @@
 #define AT_cn                     "cn"
 #define AT_uid                    "uid"
 #define AT_description            "description"
-/* #define AT_member                 "member" */
+#define AT_member                 "member" 
 #define AT_uniqueMember           "uniqueMember"
 #define AT_l                      "l"
 #define AT_manager                "manager"
