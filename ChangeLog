@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+86	Luke Howard <lukeh@padl.com>
+
+	* member for NDS vs uniqueMember (needs further
+	  investigation; -DNDS)
+
 85	Luke Howard <lukeh@padl.com>
 
 	* check non-NULLity of userdn before freeing
