@@ -68,6 +68,17 @@ static char rcsId[] =
  */
 #define HAVE_LDAP_LD_FREE
 
+/* how many messages to retrieve results for */
+#ifndef LDAP_MSG_ONE
+#define LDAP_MSG_ONE            0x00
+#endif
+#ifndef LDAP_MSG_ALL
+#define LDAP_MSG_ALL            0x01
+#endif
+#ifndef LDAP_MSG_RECEIVED
+#define LDAP_MSG_RECEIVED       0x02
+#endif
+
 /*
  * the configuration is read by the first call to do_open().
  * Pointers to elements of the list are passed around but should not
@@ -822,8 +833,7 @@ do_result (ent_context_t * ctx, int all)
 	      parserc =
 		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
 				   NULL, NULL, NULL, 1);
-	      if (parserc != LDAP_SUCCESS
-		  && parserc != LDAP_MORE_RESULTS_TO_RETURN)
+	      if (parserc != LDAP_SUCCESS)
 		{
 		  stat = NSS_UNAVAIL;
 		  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
