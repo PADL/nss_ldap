@@ -62,14 +62,16 @@
 
 #ifndef alignof
 
-#define align(ptr)
+#define align(ptr, blen)
 #define bytesleft(ptr, blen)    (blen)
 
 #else
 
-#define align(ptr)              do { \
+#define align(ptr, blen)              do { \
+					char *qtr = ptr; \
 					ptr += alignof(char *) - 1; \
 					ptr -= ((ptr - (char *)NULL) % alignof(char *)); \
+					blen -= (ptr - qtr); \
 				} while (0)
 
 /* worst case */
@@ -368,6 +370,10 @@ LDAPMessage *_nss_ldap_lookup(
 	const char *filterprot, /* IN */
 	const char **attributes /* IN */,
 	int sizelimit);
+
+LDAPMessage *_nss_ldap_read(
+	const char *dn,
+	const char **attributes);
 
 /* common enumeration routine */
 NSS_STATUS _nss_ldap_getent(

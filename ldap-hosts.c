@@ -147,7 +147,7 @@ static NSS_STATUS _nss_ldap_parse_host(
 		return NSS_TRYAGAIN;
 #endif
 
-	align(buffer);
+	align(buffer, buflen);
 	host_addresses = (char **)buffer;
 	host->h_addr_list = host_addresses;
 	host_addresses[addresscount] = NULL;

@@ -74,7 +74,7 @@ static NSS_STATUS _nss_ldap_parse_alias(
 	struct aliasent *alias = (struct aliasent *)result;
 	NSS_STATUS stat;
 
-	stat = _nss_ldap_getrdnvalue(ld, e, &alias->alias_name, &buffer, &buflen);
+	stat = _nss_ldap_getrdnvalue(ld, e, LDAP_ATTR_ALIASNAME, &alias->alias_name, &buffer, &buflen);
 	if (stat != NSS_SUCCESS) return stat;
 
 	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_MEMBERS, NULL, &alias->alias_members,

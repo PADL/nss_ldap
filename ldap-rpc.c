@@ -86,7 +86,7 @@ static NSS_STATUS _nss_ldap_parse_rpc(
 	char *number;
 	NSS_STATUS stat;
 
-	stat = _nss_ldap_getrdnvalue(ld, e, &rpc->r_name, &buffer, &buflen);
+	stat = _nss_ldap_getrdnvalue(ld, e, LDAP_ATTR_RPCNAME, &rpc->r_name, &buffer, &buflen);
 	if (stat != NSS_SUCCESS) return stat;
 
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_RPCNUMBER, &number, &buffer, &buflen);

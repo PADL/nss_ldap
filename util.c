@@ -50,31 +50,207 @@
 
 static char rcsId[] = "$Id$";
 
+static NSS_STATUS _nss_ldap_getrdnvalue_impl(const char *dn, const char *rdntype, char **rval, char **buffer, size_t *buflen);
+
+#ifdef RFC2307BIS
+#ifdef GNU_NSS
+#define DN2UID_CACHE
+#endif /* GNU_NSS */
+
+#ifdef DN2UID_CACHE
+#include <db.h>
+#include <fcntl.h>
+static DB *__cache = NULL;
+#ifdef SUN_NSS
+static mutex_t __cache_mutex = DEFAULTMUTEX;
+#define cache_lock()	mutex_lock(&__cache_mutex)
+#define cache_unlock()	mutex_unlock(&__cache_mutex)
+#else 
+static pthread_mutex_t __cache_mutex = PTHREAD_MUTEX_INITIALIZER;
+#define cache_lock()	__libc_lock_lock(__cache_mutex)
+#define cache_unlock()	__libc_lock_unlock(__cache_mutex)
+#endif /* SUN_NSS */
+
+static NSS_STATUS dn2uid_cache_put(const char *dn, const char *uid)
+{
+	DBT key, val;
+	int rc;
+
+	cache_lock();
+
+	if (__cache == NULL)
+		{
+		__cache = dbopen(NULL, O_RDWR, 0600, DB_HASH, NULL);
+		if (__cache == NULL)
+			{
+			cache_unlock();
+			return NSS_TRYAGAIN;
+			}
+		}
+	key.data = (void *)dn;
+	key.size = strlen(dn);
+	val.data = (void *)uid;
+	val.size = strlen(uid);
+	rc = (__cache->put)(__cache, &key, &val, 0);
+
+	cache_unlock();
+	return rc ? NSS_TRYAGAIN : NSS_SUCCESS;
+}
+
+static NSS_STATUS dn2uid_cache_get(const char *dn, char **uid, char **buffer, size_t *buflen)
+{
+	DBT key, val;
+	
+	cache_lock();
+
+	if (__cache == NULL)
+		{
+		cache_unlock();
+		return NSS_NOTFOUND;
+		}
+
+	key.data = (void *)dn;
+	key.size = strlen(dn);
+
+	if ((__cache->get)(__cache, &key, &val, 0) != 0)
+		{
+		cache_unlock();
+		return NSS_NOTFOUND;
+		}
+	if ((val.size + 1) > *buflen)
+		{
+		cache_unlock();
+		return NSS_NOTFOUND;
+		}
+
+	*uid = *buffer;
+	strncpy(*uid, (char *)val.data, val.size);
+	(*uid)[val.size] = '\0';
+	*buffer += val.size + 1;
+	*buflen -= val.size + 1;
+
+	cache_unlock();
+	return NSS_SUCCESS;
+}
+#endif /* DN2UID_CACHE */
+
+NSS_STATUS _nss_ldap_dn2uid(
+	LDAP *ld,
+	const char *dn,
+	char **uid,
+	char **buffer,
+	size_t *buflen)
+{
+	NSS_STATUS status;
+
+	debug("==> _nss_ldap_dn2uid");
+
+	status = _nss_ldap_getrdnvalue_impl(dn, "uid", uid, buffer, buflen);
+	if (status != NSS_SUCCESS)
+		{
+#ifdef DN2UID_CACHE
+		status = dn2uid_cache_get(dn, uid, buffer, buflen);
+		if (status != NSS_SUCCESS)
+			{
+#endif /* DN2UID_CACHE */
+			const char *attrs[] = { "uid", NULL };
+			LDAPMessage *res = _nss_ldap_read(dn, attrs);
+			status = NSS_NOTFOUND;
+			if (res != NULL)
+				{
+				LDAPMessage *e = ldap_first_entry(ld, res);
+				if (e != NULL)
+					{
+					status = _nss_ldap_assign_attrval(ld, e, "uid", uid, buffer, buflen);
+#ifdef DN2UID_CACHE
+					if (status == NSS_SUCCESS)
+						dn2uid_cache_put(dn, *uid);
+					}
+#endif /* DN2UID_CACHE */
+				}
+				ldap_msgfree(res);
+			}
+		}
+
+	debug("<== _nss_ldap_dn2uid");
+
+	return status;
+}
+#endif /* RFC2307BIS */
+
 NSS_STATUS _nss_ldap_getrdnvalue(
 	LDAP *ld,
 	LDAPMessage *entry,
+	const char *rdntype,
 	char **rval,
 	char **buffer,
 	size_t *buflen)
 {
-
-	/*
-	 * should getrdnvalue() take a parameterized RDN attribute type?
-	 * or is it safe to assume the cn is the only multivalued attribute
-	 * we'll need to canonicalize on??
-	 */
-
-	char **exploded_dn;
 	char *dn;
-	char *rdnvalue = NULL;
-
-	int rdnlen = 0;
+	NSS_STATUS status;
 
 	dn = ldap_get_dn(ld, entry);
 	if (dn == NULL)
 		{
 		return NSS_NOTFOUND;
 		}
+
+	status = _nss_ldap_getrdnvalue_impl(dn, rdntype, rval, buffer, buflen);
+#ifdef LDAP_VERSION3_API
+	ldap_memfree(dn);
+#else
+	free(dn);
+#endif /* LDAP_VERSION3_API */
+
+	/*
+	 * If examining the DN failed, then pick the nominal first
+	 * value of cn as the canonical name (recall that attributes
+	 * are sets, not sequences)
+	 */
+	if (status == NSS_NOTFOUND)
+		{
+		char **vals;
+
+		vals = ldap_get_values(ld, entry, rdntype);
+
+		if (vals != NULL)
+			{
+			int rdnlen = strlen(*vals);
+			if (*buflen >= rdnlen)
+				{
+				char *rdnvalue = *buffer;
+				strncpy(rdnvalue, *vals, rdnlen);
+				rdnvalue[rdnlen] = '\0';
+				*buffer += rdnlen + 1;
+				*buflen -= rdnlen + 1;
+				*rval = rdnvalue;
+				status = NSS_SUCCESS;
+				}
+			else
+				{
+				status = NSS_TRYAGAIN;
+				}
+			ldap_value_free(vals);
+			}
+		}
+
+	return status;
+}
+
+NSS_STATUS _nss_ldap_getrdnvalue_impl(
+	const char *dn,
+	const char *rdntype,
+	char **rval,
+	char **buffer,
+	size_t *buflen)
+{
+	char **exploded_dn;
+	char *rdnvalue = NULL;
+	char rdnava[64];
+	int rdnlen = 0, rdnavalen;
+
+	snprintf(rdnava, sizeof rdnava, "%s=", rdntype);
+	rdnavalen = strlen(rdnava);
 
 	exploded_dn = ldap_explode_dn(dn, 0);
 
@@ -98,14 +274,13 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 			{
 			for (p = exploded_rdn; *p != NULL; p++)
 				{
-				if (strncasecmp(*p, CN_ATTR_AVA, CN_ATTR_AVA_LEN) == 0)
+				if (strncasecmp(*p, rdnava, rdnavalen) == 0)
 					{
-					char *r = *p + CN_ATTR_AVA_LEN;
+					char *r = *p + rdnavalen;
 
 					rdnlen = strlen(r);
 					if (*buflen < rdnlen)
 						{
-						ldap_memfree(dn);
 						ldap_value_free(exploded_rdn);
 						ldap_value_free(exploded_dn);
 						return NSS_TRYAGAIN;
@@ -140,13 +315,12 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 			p = strtok_r(NULL, "+", &st))
 #endif
 			{
-			if (strncasecmp(p, CN_ATTR_AVA, CN_ATTR_AVA_LEN) == 0)
+			if (strncasecmp(p, rdnava, rdnavalen) == 0)
 				{
-				p += CN_ATTR_AVA_LEN;
+				p += rdnavalen;
 				rdnlen = strlen(p);
 				if (*buflen < rdnlen)
 					{
-					free(dn);
 					ldap_value_free(exploded_dn);
 					return NSS_TRYAGAIN;
 					}
@@ -159,35 +333,6 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 			}
 #endif /* LDAP_VERSION3_API */
 		}
-
-	/*
-	 * If examining the DN failed, then pick the nominal first
-	 * value of cn as the canonical name (recall that attributes
-	 * are sets, not sequences)
-	 */
-	if (rdnvalue == NULL)
-		{
-		char **vals;
-
-		vals = ldap_get_values(ld, entry, CN_ATTR);
-
-		if (vals != NULL)
-			{
-			rdnlen = strlen(*vals);
-			if (*buflen >= rdnlen)
-				{
-				rdnvalue = *buffer;
-				strncpy(rdnvalue, *vals, rdnlen);
-				}
-			ldap_value_free(vals);
-			}
-		}
-
-#ifdef LDAP_VERSION3_API
-	ldap_memfree(dn);
-#else
-	free(dn);
-#endif
 
 	if (exploded_dn != NULL)
 		{

@@ -47,6 +47,7 @@ static char rcsId[] = "$Id$";
 #include "ldap-nss.h"
 #include "ldap-grp.h"
 #include "globals.h"
+#include "util.h"
 
 #ifdef IRS_NSS
 #include <port_after.h>
@@ -67,6 +68,10 @@ static NSS_STATUS _nss_ldap_parse_gr(
 	struct group *gr = (struct group *)result;
 	char *gid;
 	NSS_STATUS stat;
+#ifdef RFC2307BIS
+	char **uid_mems, **dn_mems, **vals;
+	int uid_mems_c = 0, dn_mems_c = 0;
+#endif /* RFC2307BIS */
 
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_GROUP_GID, &gid, &buffer, &buflen);
 	if (stat != NSS_SUCCESS)
@@ -82,9 +87,72 @@ static NSS_STATUS _nss_ldap_parse_gr(
 	if (stat != NSS_SUCCESS)
 		return stat;
 
-	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_USERS, NULL, &gr->gr_mem, &buffer, &buflen, NULL);
+#ifndef RFC2307BIS
+	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_UIDMEMBERS, NULL, &gr->gr_mem, &buffer, &buflen, NULL);
 	if (stat != NSS_SUCCESS)
 		return stat;
+#else
+	dn_mems = NULL;
+	vals = ldap_get_values(ld, e, LDAP_ATTR_DNMEMBERS);
+	if (vals != NULL)
+		{
+		char **mem_p, **valiter;
+
+		dn_mems_c = ldap_count_values(vals);
+
+		if (bytesleft(buffer, buflen) < (dn_mems_c + 1) * sizeof(char *))
+			{
+			ldap_value_free(vals);
+			return NSS_TRYAGAIN;
+			}
+		align(buffer, buflen);
+		mem_p = dn_mems = (char **)buffer;
+		buffer += (dn_mems_c + 1) * sizeof(char *);
+		buflen -= (dn_mems_c + 1) * sizeof(char *);
+		for (valiter = vals; *valiter != NULL; valiter++)
+			{
+			char *uid;
+			stat = _nss_ldap_dn2uid(ld, *valiter, &uid, &buffer, &buflen);
+			if (stat == NSS_SUCCESS) 
+				{
+				*mem_p = uid;
+				mem_p++;
+				}
+			else
+				dn_mems_c--;
+			}
+		ldap_value_free(vals);
+		}
+
+	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_UIDMEMBERS, NULL, &uid_mems, &buffer, &buflen, &uid_mems_c);
+	if (stat != NSS_SUCCESS)
+		uid_mems = NULL;
+
+	if (dn_mems == NULL)
+		{
+		if (uid_mems == NULL)
+			gr->gr_mem = NULL;
+		else
+			gr->gr_mem = uid_mems;
+		}
+	else
+		{
+		if (uid_mems == NULL)
+			gr->gr_mem = dn_mems;
+		else
+			{
+			if (bytesleft(buffer, buflen) < (dn_mems_c + uid_mems_c + 1) * sizeof(char *))
+				return NSS_TRYAGAIN;
+			align(buffer, buflen);
+			gr->gr_mem = (char **)buffer;
+			buffer += (dn_mems_c + uid_mems_c + 1) * sizeof(char *);
+			buflen -= (dn_mems_c + uid_mems_c + 1) * sizeof(char *);
+			memcpy(gr->gr_mem, dn_mems, (dn_mems_c * sizeof(char *)));
+			memcpy(&gr->gr_mem[dn_mems_c], uid_mems, (uid_mems_c * sizeof(char *)));
+			gr->gr_mem[dn_mems_c + uid_mems_c] = NULL;
+			}
+		}
+#endif /* RFC2307BIS */
 
 	return NSS_SUCCESS;
 }

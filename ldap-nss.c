@@ -369,6 +369,55 @@ void _nss_ldap_ent_context_free(context_handle_t *key)
 	return;
 }
 
+LDAPMessage *_nss_ldap_read(
+	const char *dn,
+	const char **attributes)
+{
+	LDAPMessage *res = NULL;
+	int lstatus;
+	int retry = 0;
+	int sizelimit = 1;
+
+	debug("==> _nss_ldap_read");
+
+	if (do_open() != NSS_SUCCESS)
+		{
+		__session.ls_conn = NULL;
+		debug("<== _nss_ldap_read");
+		return NULL;
+		}
+
+#ifdef LDAP_VERSION3_API
+	ldap_set_option(__session.ls_conn, LDAP_OPT_SIZELIMIT, (void *)&sizelimit);
+#else
+	__session.ls_conn->ld_sizelimit = sizelimit;
+#endif /* LDAP_VERSION3_API */
+
+do_retry:
+	lstatus = ldap_search_s(__session.ls_conn, dn, LDAP_SCOPE_BASE,
+		"(objectclass=*)", (char **)attributes, 0, &res);
+
+	switch (lstatus)
+		{
+		case LDAP_SUCCESS:
+		case LDAP_SIZELIMIT_EXCEEDED:
+		case LDAP_TIMELIMIT_EXCEEDED:
+			break;
+		case LDAP_SERVER_DOWN:
+			do_close();
+			if (retry || do_open() != NSS_SUCCESS)
+				{
+				res = NULL;
+				break;
+				}
+			retry = 1;
+			goto do_retry;
+		default:
+			break;
+		}
+
+	return res;
+}
 
 /*
  * The generic lookup cover function.
@@ -658,7 +707,7 @@ NSS_STATUS _nss_ldap_assign_attrvals(
 		return NSS_TRYAGAIN;
 		}
 
-	align(buffer);
+	align(buffer, buflen);
 	p = *valptr = (char **)buffer;
 
 	buffer += (valcount + 1) * sizeof(char *);

@@ -155,7 +155,7 @@ static NSS_STATUS _nss_ldap_parse_serv(
 		return stat;
 		}
 
-	stat = _nss_ldap_getrdnvalue(ld, e, &service->s_name, &buffer, &buflen);
+	stat = _nss_ldap_getrdnvalue(ld, e, LDAP_ATTR_SERVICENAME, &service->s_name, &buffer, &buflen);
 	if (stat != NSS_SUCCESS)
 		{
 		return stat;

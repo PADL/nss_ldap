@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+2.62 	Luke Howard <lukeh@padl.com>
+
+	* added experimental support for DN-membered groups;
+	  to enable, define RFC2307BIS
+
 2.61	Luke Howard <lukeh@padl.com>
 
 	* added warning about compiling with DS 4.1 LDAP SDK

@@ -78,7 +78,7 @@ static NSS_STATUS _nss_ldap_parse_proto(
 	char *number;
 	NSS_STATUS stat;
 
-	stat = _nss_ldap_getrdnvalue(ld, e, &proto->p_name, &buffer, &buflen);
+	stat = _nss_ldap_getrdnvalue(ld, e, LDAP_ATTR_PROTOCOLNAME, &proto->p_name, &buffer, &buflen);
 	if (stat != NSS_SUCCESS) return stat;
 
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_PROTOCOLNUMBER, &number, &buffer, &buflen);

@@ -26,8 +26,6 @@
 /* utility routines.  */
 
 #define CN_ATTR			"CN"
-#define CN_ATTR_AVA		CN_ATTR"="
-#define CN_ATTR_AVA_LEN		(sizeof(CN_ATTR_AVA) - 1)
 
 #define DC_ATTR			"DC"
 #define DC_ATTR_AVA		DC_ATTR"="
@@ -40,27 +38,22 @@
 NSS_STATUS _nss_ldap_getrdnvalue(
 	LDAP *ld,
 	LDAPMessage *entry,
+	const char *rdntype,
 	char **rval,
 	char **buf,
 	size_t *len);
 
-#ifdef notdef
+#ifdef RFC2307BIS
 /*
- * transform dc=foo,dc=bar,dc=edu into foo.bar.edu
+ * map a distinguished name to a login naem.
  */
-NSS_STATUS _nss_ldap_getdomainname(
+NSS_STATUS _nss_ldap_dn2uid(
 	LDAP *ld,
-	LDAPMessage *entry,
-	char **rval,
-	char **buffer,
-	size_t *buflen);
-#endif
-
-/*
- * # @(#)/etc/ldap.conf
- * host monk
- * base DC=toorak,DC=xedoc,DC=com,DC=au,O=Internet
- */
+	const char *dn,
+	char **uid,
+	char **buf,
+	size_t *len);
+#endif /* RFC2307BIS */
 
 #define NSS_LDAP_CONFIG_BUFSIZ	1024
 #define NSS_LDAP_KEY_HOST	"host"

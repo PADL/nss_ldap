@@ -26,13 +26,19 @@
 #define LDAP_CLASS_GROUP		"posixGroup"
 #define LDAP_ATTR_GROUPNAME		"cn"
 #define LDAP_ATTR_GPASSWD		"userpassword"
-#define LDAP_ATTR_USERS			"memberuid"
+#define LDAP_ATTR_UIDMEMBERS		"memberuid"
 #define LDAP_ATTR_GROUP_GID		"gidnumber"
+#ifdef RFC2307BIS
+#define LDAP_ATTR_DNMEMBERS		"member"
+#endif /* RFC2307BIS */
 
 static const char *gr_attributes[] =
 	{ LDAP_ATTR_GROUPNAME, LDAP_ATTR_GPASSWD,
-	  LDAP_ATTR_USERS, LDAP_ATTR_GROUP_GID, 
-	  NULL };
+	  LDAP_ATTR_UIDMEMBERS,
+#ifdef RFC2307BIS
+	  LDAP_ATTR_DNMEMBERS,
+#endif /* RFC2307BIS */
+	  LDAP_ATTR_GROUP_GID, NULL };
 
 static const char filt_getgrnam[] =
 	"(&(objectclass="LDAP_CLASS_GROUP")("LDAP_ATTR_GROUPNAME"=%s))";
@@ -40,9 +46,10 @@ static const char filt_getgrgid[] =
 	"(&(objectclass="LDAP_CLASS_GROUP")("LDAP_ATTR_GROUP_GID"=%d))";
 static const char filt_getgrent[] =
 	"(objectclass="LDAP_CLASS_GROUP")";
+/*
 static const char filt_getgroupsbymember[] =
-	"(&(objectclass="LDAP_CLASS_GROUP")("LDAP_ATTR_USERS"=%s))";
-
+	"(&(objectclass="LDAP_CLASS_GROUP")("LDAP_ATTR_UIDMEMBERS"=%s))";
+ */
 static NSS_STATUS _nss_ldap_parse_gr(
 	LDAP *ld,
 	LDAPMessage *e,
