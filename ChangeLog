@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.73	Luke Howard <lukeh@padl.com>
+
+	* incorporated RPM patches from stein@terminator.net
+
 2.72	Luke Howard <lukeh@padl.com>
 
 	* implemented getgroupsbymember() for Solaris.
