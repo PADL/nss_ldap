@@ -1,7 +1,7 @@
 $Header$
 ===============================================================
 
-111	Luke Howard <lukeh@padl.com>
+113	Luke Howard <lukeh@padl.com>
 
 	* patch from Ben Collins to escape '*' in filters
 

@@ -144,7 +144,7 @@ static NSS_STATUS do_result (ent_context_t * ctx, int all);
 /*
  * Format a filter given a prototype.
  */
-static int do_filter (const ldap_args_t * args, const char *filterprot,
+static NSS_STATUS do_filter (const ldap_args_t * args, const char *filterprot,
 		       const char **attrs, char *filter, size_t filterlen);
 
 /*
@@ -792,11 +792,12 @@ _nss_ldap_ent_context_free (ent_context_t ** ctx)
 /*
  * Do the necessary formatting to create a string filter.
  */
-static int
+static NSS_STATUS
 do_filter (const ldap_args_t * args, const char *filterprot,
 	   const char **attrs, char *filter, size_t filterlen)
 {
-  char buf1[LDAP_FILT_MAXSIZ + 1], buf2[LADP_FILT_MAXSIZ + 1];
+  char buf1[LDAP_FILT_MAXSIZ], buf2[LDAP_FILT_MAXSIZ];
+  NSS_STATUS stat;
 
   debug ("==> do_filter");
 
@@ -805,8 +806,8 @@ do_filter (const ldap_args_t * args, const char *filterprot,
       switch (args->la_type)
 	{
 	case LA_TYPE_STRING:
-	  if (_nss_ldap_escape_string(args->la_arg1.la_string, buf1, sizeof(buf1)))
-	    return 1;
+	  if ((stat = _nss_ldap_escape_string(args->la_arg1.la_string, buf1, sizeof(buf1))) != NSS_SUCCESS)
+	    return stat;
 #ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot, buf1);
 #else
@@ -821,9 +822,9 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 #endif
 	  break;
 	case LA_TYPE_STRING_AND_STRING:
-	  if (_nss_ldap_escape_string(args->la_arg1.la_string, buf1, sizeof(buf1)) ||
-	      _nss_ldap_escape_string(args->la_arg2.la_string, buf2, sizeof(buf2)))
-	    return 1;
+	  if ((stat = _nss_ldap_escape_string(args->la_arg1.la_string, buf1, sizeof(buf1))) != NSS_SUCCESS ||
+	      (stat = _nss_ldap_escape_string(args->la_arg2.la_string, buf2, sizeof(buf2)) != NSS_SUCCESS))
+	    return stat;
 #ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot, buf1, buf2);
 #else
@@ -831,8 +832,8 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 #endif
 	  break;
 	case LA_TYPE_NUMBER_AND_STRING:
-	  if (_nss_ldap_escape_string(args->la_arg2.la_string, buf1, sizeof(buf1)))
-	    return 1;
+	  if ((stat = _nss_ldap_escape_string(args->la_arg2.la_string, buf1, sizeof(buf1))) != NSS_SUCCESS)
+	    return stat;
 #ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot,
 		    args->la_arg1.la_number, buf1);
@@ -848,7 +849,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 
   debug ("<== do_filter");
 
-  return 0;
+  return NSS_SUCCESS;
 }
 
 /*
@@ -1257,7 +1258,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
 		    const char *filterprot, const char **attrs,
 		    int sizelimit, LDAPMessage ** res)
 {
-  char filter[LDAP_FILT_MAXSIZ + 1];
+  char filter[LDAP_FILT_MAXSIZ];
   NSS_STATUS stat;
 
   debug ("==> _nss_ldap_search_s");
@@ -1270,8 +1271,9 @@ _nss_ldap_search_s (const ldap_args_t * args,
       return stat;
     }
 
-  if (do_filter (args, filterprot, attrs, filter, sizeof (filter)))
-    return NSS_TRYAGAIN;
+  stat = do_filter (args, filterprot, attrs, filter, sizeof (filter));
+  if (stat != NSS_SUCCESS)
+    return stat;
 
   stat = do_with_reconnect (__session.ls_config->ldc_base,
 			    __session.ls_config->ldc_scope,
@@ -1292,7 +1294,7 @@ NSS_STATUS
 _nss_ldap_search (const ldap_args_t * args, const char *filterprot,
 		  const char **attrs, int sizelimit, int *msgid)
 {
-  char filter[LDAP_FILT_MAXSIZ + 1];
+  char filter[LDAP_FILT_MAXSIZ];
   NSS_STATUS stat;
 
   debug ("==> _nss_ldap_search");
@@ -1305,8 +1307,9 @@ _nss_ldap_search (const ldap_args_t * args, const char *filterprot,
       return stat;
     }
 
-  if (do_filter (args, filterprot, attrs, filter, sizeof (filter)))
-    return NSS_TRYAGAIN;
+  stat = do_filter (args, filterprot, attrs, filter, sizeof (filter));
+  if (stat != NSS_SUCCESS)
+    return stat;
 
   stat = do_with_reconnect (__session.ls_config->ldc_base,
 			    __session.ls_config->ldc_scope,

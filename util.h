@@ -94,7 +94,7 @@ NSS_STATUS _nss_ldap_readconfig (
  * Escape '*' in a string for use as a filter
  */
 
-int _nss_ldap_escape_string (
+NSS_STATUS _nss_ldap_escape_string (
 			      const char *str,
 			      char *buf,
 			      size_t buflen

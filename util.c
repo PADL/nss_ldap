@@ -552,25 +552,28 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   return stat;
 }
 
-#define _CHK_FAIL if ((p - buf) > buflen) goto fail
-int _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+/*
+ * Patch from Ben Collins <bcollins@debian.org>
+ */
+NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
-  int ret = 1, c;
+  int ret = NSS_TRYAGAIN, c;
   char *p = buf;
 
   memset(p, '\0', buflen);
   for (c = 0 ; str[c] ; c++) {
-    _CHK_FAIL;
+    if ((p - buf) > buflen)
+	goto fail;
     if (str[c] == '*') {
       *p++ = '\\';
-      _CHK_FAIL;
+      if ((p - buf) > buflen)
+	goto fail;
     }
     *p++ = str[c];
   }
 
-  ret = 0;
+  ret = NSS_SUCCESS; 
 
 fail:
   return ret;
 }
-#undef _CHK_FAIL
