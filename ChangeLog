@@ -1,10 +1,15 @@
 $Id$
 ===============================================================
 
+101	Luke Howard <lukeh@padl.com>
+
+	* fixed spec file
+
 100	Luke Howard <lukeh@padl.com>
 
 	* added some contributors
 	* notes about ldap_ld_free()
+	* merged in ChangeLog
 
 99	Luke Howard <lukeh@padl.com>
 
