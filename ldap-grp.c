@@ -236,7 +236,9 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   size_t listlen;
 #endif /* _AIX */
 
+#ifdef HAVE_NSS_H
   gid_t *groups = *groupsp;
+#endif /* HAVE_NSS_H */
 
   LA_INIT (a);
 #if defined(HAVE_NSS_H) || defined(_AIX)

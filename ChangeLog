@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+149	Luke Howard <lukeh@padl.com>
+
+	* fixed compile on Solaris, broken in 145 by
+	  malformed Linux patch
+	 
 148	Luke Howard <lukeh@padl.com>
 
 	* check for HAVE_LDAP_SET_OPTION always
