@@ -50,14 +50,15 @@
 
 static char rcsId[] = "$Id$";
 
-static NSS_STATUS _nss_ldap_getrdnvalue_impl (const char *dn,
+static NSS_STATUS do_getrdnvalue (const char *dn,
 					      const char *rdntype,
 					      char **rval, char **buffer,
 					      size_t * buflen);
 
 static NSS_STATUS do_searchdescriptorconfig (const char *key,
+					     const char *value,
 					     ldap_service_search_descriptor_t
-					     ** result, const char *);
+					     ** result, char **buffer, size_t *buflen);
 
 #ifdef RFC2307BIS
 #ifdef GNU_NSS
@@ -159,7 +160,7 @@ _nss_ldap_dn2uid (LDAP * ld,
 
   debug ("==> _nss_ldap_dn2uid");
 
-  status = _nss_ldap_getrdnvalue_impl (dn, "uid", uid, buffer, buflen);
+  status = do_getrdnvalue (dn, "uid", uid, buffer, buflen);
   if (status != NSS_SUCCESS)
     {
 #ifdef DN2UID_CACHE
@@ -211,7 +212,7 @@ _nss_ldap_getrdnvalue (LDAP * ld,
       return NSS_NOTFOUND;
     }
 
-  status = _nss_ldap_getrdnvalue_impl (dn, rdntype, rval, buffer, buflen);
+  status = do_getrdnvalue (dn, rdntype, rval, buffer, buflen);
 #ifdef LDAP_VERSION3_API
   ldap_memfree (dn);
 #else
@@ -254,7 +255,7 @@ _nss_ldap_getrdnvalue (LDAP * ld,
 }
 
 NSS_STATUS
-_nss_ldap_getrdnvalue_impl (const char *dn,
+do_getrdnvalue (const char *dn,
 			    const char *rdntype,
 			    char **rval, char **buffer, size_t * buflen)
 {
@@ -366,9 +367,9 @@ _nss_ldap_getrdnvalue_impl (const char *dn,
 }
 
 static NSS_STATUS
-do_searchdescriptorconfig (const char *key,
+do_searchdescriptorconfig (const char *key, const char *value,
 			   ldap_service_search_descriptor_t ** result,
-			   const char *value, char **buffer, size_t * buflen)
+			   char **buffer, size_t * buflen)
 {
   ldap_service_search_descriptor_t **t = NULL, *p;
   char *base;
@@ -404,23 +405,23 @@ do_searchdescriptorconfig (const char *key,
     return NSS_NOTFOUND;
 
   /* we have already checked for room for the value */
-  base = buffer;
-  strcpy (base, v);
+  base = *buffer;
+  strcpy (base, value);
   *buflen -= strlen (base);
 
   /* now we need MORE space for a descriptor, do we have it? */
-  if (*len - alignof (ldap_service_search_descriptor_t) + 1 <
+  if (*buflen - alignof (ldap_service_search_descriptor_t) + 1 <
       sizeof (ldap_service_search_descriptor_t))
     return NSS_UNAVAIL;
 
   /* align so we can put a descriptor in here */
   p = *t;
   *t += alignof (ldap_service_search_descriptor_t) - 1;
-  *t -= ((*t - NULL) % alignof (ldap_service_search_descriptor_t));
-  *len -= (*t - p);
+  *t -= ((*t - (ldap_service_search_descriptor_t *)NULL) % alignof (ldap_service_search_descriptor_t));
+  *buflen -= (*t - p);
 
   *t = (ldap_service_search_descriptor_t *) buffer;
-  *len -= sizeof (ldap_service_search_descriptor_t);
+  *buflen -= sizeof (ldap_service_search_descriptor_t);
 
   (*t)->lsd_base = base;
   (*t)->lsd_scope = -1;		/* reserved? */
@@ -612,7 +613,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
       else
 	{
 	  /* check whether the key is a naming context key */
-	  if (do_searchdescriptorconfig (k, result->ldc_sds, v, &buf, &buflen)
+	  if (do_searchdescriptorconfig (k, v, result->ldc_sds, &buf, &buflen)
 	      == NSS_UNAVAIL)
 	    {
 	      free (result->ldc_sds);
