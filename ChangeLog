@@ -3,7 +3,10 @@ $Id$
 
 2.72	Luke Howard <lukeh@padl.com>
 
-	* GNU-indentified
+	* implemented getgroupsbymember() for Solaris.
+	  Supplementary groups should be initialized now.
+	  (NB: doesn't appear to be quite working for
+	  RFC2307bis yet.)
 
 2.71	Luke Howard <lukeh@padl.com>
 

@@ -1,4 +1,5 @@
 
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.

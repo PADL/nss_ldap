@@ -47,10 +47,15 @@ static const char filt_getgrgid[] =
 "(&(objectclass=" LDAP_CLASS_GROUP ")(" LDAP_ATTR_GROUP_GID "=%d))";
 static const char filt_getgrent[] =
 "(objectclass=" LDAP_CLASS_GROUP ")";
-/*
-   static const char filt_getgroupsbymember[] =
-   "(&(objectclass="LDAP_CLASS_GROUP")("LDAP_ATTR_UIDMEMBERS"=%s))";
- */
+
+#ifdef RFC2307BIS
+static const char filt_getgroupsbymemberanddn[] =
+"(&(objectclass=" LDAP_CLASS_GROUP ")(|(" LDAP_ATTR_UIDMEMBERS "=%s)(" LDAP_ATTR_DNMEMBERS "=%s)))";
+#endif
+
+static const char filt_getgroupsbymember[] =
+"(&(objectclass=" LDAP_CLASS_GROUP ")(" LDAP_ATTR_UIDMEMBERS "=%s))";
+
 static NSS_STATUS _nss_ldap_parse_gr (
 				       LDAP * ld,
 				       LDAPMessage * e,

@@ -374,6 +374,14 @@ NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be);
 ent_context_t *_nss_ldap_ent_context_init (context_handle_t *);
 void _nss_ldap_ent_context_free (context_handle_t *);
 
+/*
+ * these are helper functions for ldap-grp.c only on Solaris
+ */
+char **_nss_ldap_get_values (LDAPMessage * e, char *attr);
+char *_nss_ldap_get_dn (LDAPMessage * e);
+LDAPMessage *_nss_ldap_first_entry (LDAPMessage * res);
+LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
+
 LDAPMessage *_nss_ldap_lookup (
 				const ldap_args_t * args,	/* IN */
 				const char *filterprot,		/* IN */

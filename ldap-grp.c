@@ -163,8 +163,107 @@ _nss_ldap_parse_gr (
 static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 {
-  /* filt_getgroupsbymember */
+  ldap_args_t a;
+  struct nss_groupsbymem *gbm = (struct nss_groupsbymem *) args;
+#ifdef RFC2307BIS
+  char *userdn = NULL;
+  const char **attrs =
+  {NULL};
+  const char *filter;
+#endif /* RFC2307BIS */
+  LDAPMessage *res, *e;
 
+  LA_INIT (a);
+  LA_STRING (a) = gbm->username;
+  LA_TYPE (a) = LA_TYPE_STRING;
+
+#ifdef RFC2307BIS
+  /* lookup the user's DN. XXX: import this filter from somewhere else */
+  res = _nss_ldap_lookup (&a, "(uid=%s)", attrs, 1);
+  if (res != NULL)
+    {
+      e = _nss_ldap_first_entry (res);
+      if (e != NULL)
+	{
+	  userdn = _nss_ldap_get_dn (e);
+	}
+      ldap_msgfree (res);
+    }
+  if (userdn != NULL)
+    {
+      LA_STRING2 (a) = userdn;
+      LA_TYPE (a) = LA_TYPE_STRING_AND_STRING;
+      filter = filt_getgroupsbymemberanddn;
+    }
+  else
+    {
+      filter = filt_getgroupsbymember;
+    }
+  res = _nss_ldap_lookup (&a, filter, gr_attributes, LDAP_NO_LIMIT);
+#ifdef LDAP_VERSION3_API
+  ldap_memfree (userdn);
+#else
+  free (userdn);
+#endif /* LDAP_VERSION3_API */
+#else
+  res = _nss_ldap_lookup (&a, filt_getgroupsbymember, gr_attributes, LDAP_NO_LIMIT);
+#endif /* RFC2307BIS */
+
+  if (res == NULL)
+    {
+      return NSS_NOTFOUND;
+    }
+  for (e = _nss_ldap_first_entry (res);
+       e != NULL;
+       e = _nss_ldap_next_entry (e))
+    {
+      char **values = _nss_ldap_get_values (e, LDAP_ATTR_GROUP_GID);
+      if (values != NULL)
+	{
+	  int i, gid;
+
+	  gid = strtol (values[0], (char **) NULL, 10);
+	  ldap_value_free (values);
+
+	  if ((gid == LONG_MIN || gid == LONG_MAX) && errno == ERANGE)
+	    {
+	      continue;
+	    }
+
+	  /* weed out duplicates */
+	  for (i = 0; i < gbm->numgids; i++)
+	    {
+	      if (gbm->gid_array[i] == (gid_t) gid)
+		{
+		  continue;
+		}
+	    }
+
+	  ldap_value_free (values);
+	  gbm->gid_array[gbm->numgids++] = (gid_t) gid;
+
+	  if (gbm->numgids == gbm->maxgids)
+	    {
+	      ldap_msgfree (res);
+	      return NSS_SUCCESS;
+	    }
+	}
+
+    }
+  ldap_msgfree (res);
+
+#if 0
+  {
+    int i;
+    for (i = 0; i < gbm->numgids; i++)
+      {
+	printf ("%d ", gbm->gid_array[i]);
+      }
+    printf (".\n");
+  }
+#endif
+
+  /* yes, NSS_NOTFOUND is the successful errno code. see nss_dbdefs.h */
   return NSS_NOTFOUND;
 }
 #endif /* SUN_NSS */
@@ -268,8 +367,8 @@ static nss_backend_op_t group_ops[] =
   _nss_ldap_setgrent_r,
   _nss_ldap_getgrent_r,
   _nss_ldap_getgrnam_r,
-  _nss_ldap_getgrgid_r
-/*      _nss_ldap_getgroupsbymember_r   */
+  _nss_ldap_getgrgid_r,
+  _nss_ldap_getgroupsbymember_r
 };
 
 nss_backend_t *

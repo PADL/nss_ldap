@@ -433,6 +433,46 @@ do_retry:
   return res;
 }
 
+char **
+_nss_ldap_get_values (LDAPMessage * e, char *attr)
+{
+  if (__session.ls_conn == NULL)
+    {
+      return NULL;
+    }
+  return ldap_get_values (__session.ls_conn, e, attr);
+}
+
+char *
+_nss_ldap_get_dn (LDAPMessage * e)
+{
+  if (__session.ls_conn == NULL)
+    {
+      return NULL;
+    }
+  return ldap_get_dn (__session.ls_conn, e);
+}
+
+LDAPMessage *
+_nss_ldap_first_entry (LDAPMessage * res)
+{
+  if (__session.ls_conn == NULL)
+    {
+      return NULL;
+    }
+  return ldap_first_entry (__session.ls_conn, res);
+}
+
+LDAPMessage *
+_nss_ldap_next_entry (LDAPMessage * res)
+{
+  if (__session.ls_conn == NULL)
+    {
+      return NULL;
+    }
+  return ldap_next_entry (__session.ls_conn, res);
+}
+
 /*
  * The generic lookup cover function.
  * Assumes caller holds lock.
