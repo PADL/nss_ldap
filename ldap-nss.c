@@ -220,22 +220,29 @@ do_open (void)
      "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif /* DEBUG */
+
+  if (__euid != euid && (__euid == 0 || euid == 0))
+    {
+      /*
+       * If we've changed user ids, close the session so we can
+       * rebind as the correct user.
+       */
+      do_close ();
+    }
+
   if (__pid != pid)
     {
       /*
        * If we've forked, then we need to open a new session.
-       * Don't actually close the connection as this buggers up our parent process and 
-       * seems to crash when we call ldap_unbind on the same connection repeatedly :-)
+       * Don't actually close the connection as this buggers up
+       * our parent process and seems to crash when we call
+       * ldap_unbind on the same connection repeatedly :-)
+       * XXX not calling do_close() could be a leak. Perhaps
+       * we should dup the underlying descriptor and then
+       * call do_close()?
        */
 /*      do_close (); */
       __session.ls_conn = NULL;
-    }
-  else if (__euid != euid)
-    {
-      /*
-       * If we've changed user ids, close the session so we can rebind as the correct user.
-       */
-      do_close ();
     }
   else if (__session.ls_conn != NULL && __session.ls_config != NULL)
     {
@@ -253,7 +260,7 @@ do_open (void)
 #ifdef LDAP_VERSION3_API
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 #else
-      if ((sd = __session.ls_conn->ld->sb) > 0)
+      if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_VERSION3_API */
 	{
 	  old_handler = signal (SIGPIPE, SIG_IGN);
@@ -644,11 +651,12 @@ _nss_ldap_lookup (const ldap_args_t * args,
 
   debug ("==> _nss_ldap_lookup");
 
-  if (do_open () != NSS_SUCCESS)
+  stat = do_open ();
+  if (stat != NSS_SUCCESS)
     {
       __session.ls_conn = NULL;
       debug ("<== _nss_ldap_lookup");
-      return NSS_UNAVAIL;
+      return stat;
     }
 
   if (args != NULL)
