@@ -593,7 +593,7 @@ do_open (void)
        * close the session after an idle timeout.
        */
       time_t current_time;
-      void (*old_handler) (int sig);
+      void (*old_handler) (int sig) = SIG_DFL;
 #ifndef HAVE_LDAPSSL_CLIENT_INIT
       /*
        * Otherwise we can hand back this process' global
