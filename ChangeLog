@@ -1,7 +1,11 @@
 $Id$
 ===============================================================
 
-2.55	Luke Howard <lukeh@padl.com> [planned]
+2.56	Luke Howard <lukeh@padl.com>
+
+	* fixed Makefile.linux.mozilla NSSLIBVER
+
+2.55	Luke Howard <lukeh@padl.com>
 
 	* merged in glibc-2.1 branch
 
