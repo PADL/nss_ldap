@@ -23,10 +23,6 @@
 #ifndef _LDAP_NSS_LDAP_UTIL_H
 #define _LDAP_NSS_LDAP_UTIL_H
 
-/*
-   Please note: parse.[ch] are not distributed under the GLPL.
- */
-
 /* utility routines.  */
 
 #define CN_ATTR			"CN"
@@ -37,7 +33,8 @@
 #define DC_ATTR_AVA		DC_ATTR"="
 #define DC_ATTR_AVA_LEN		(sizeof(DC_ATTR_AVA) - 1)
 
-/* get the RDN's value: eg. if the RDN was cn=lukeh, getrdnvalue(entry)
+/*
+ * get the RDN's value: eg. if the RDN was cn=lukeh, getrdnvalue(entry)
  * would return lukeh.
  */
 NSS_STATUS _nss_ldap_getrdnvalue(
@@ -48,8 +45,8 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 	size_t *len);
 
 #ifdef notdef
-/* transform dc=foo,dc=bar,dc=edu into foo.bar.edu
- *
+/*
+ * transform dc=foo,dc=bar,dc=edu into foo.bar.edu
  */
 NSS_STATUS _nss_ldap_getdomainname(
 	LDAP *ld,
@@ -60,9 +57,9 @@ NSS_STATUS _nss_ldap_getdomainname(
 #endif
 
 /*
-	# @(#)/etc/ldap.conf
-	host monk
-	base DC=toorak,DC=xedoc,DC=com,DC=au,O=Internet
+ * # @(#)/etc/ldap.conf
+ * host monk
+ * base DC=toorak,DC=xedoc,DC=com,DC=au,O=Internet
  */
 
 #define NSS_LDAP_CONFIG_BUFSIZ	1024
@@ -75,17 +72,17 @@ NSS_STATUS _nss_ldap_getdomainname(
 #define NSS_LDAP_KEY_BINDPW	"bindpw"
 #define NSS_LDAP_PATH_CONF	"/etc/ldap.conf"
 
-/* There are a number of means of obtaining configuration information.
-
-	(a) DHCP (Cf draft-hedstrom-dhc-ldap-00.txt)
-	(b) a configuration file (/etc/ldap.conf) **
-	(c) a coldstart file & subsequent referrals from the LDAP server
-	(d) a custom LDAP bind protocol
-	(e) DNS **
-
-   This should be opaque to the rest of the library.
-   ** implemented
-
+/*
+ * There are a number of means of obtaining configuration information.
+ *
+ * (a) DHCP (Cf draft-hedstrom-dhc-ldap-00.txt)
+ * (b) a configuration file (/etc/ldap.conf) **
+ * (c) a coldstart file & subsequent referrals from the LDAP server
+ * (d) a custom LDAP bind protocol
+ * (e) DNS **
+ *
+ * This should be opaque to the rest of the library.
+ * ** implemented
  */
 
 NSS_STATUS _nss_ldap_readconfig(

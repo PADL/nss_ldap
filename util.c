@@ -44,13 +44,6 @@
 #include <nsswitch.h>
 #endif
 
-/*
-	Utility functions. Some of this code was originally developed in ypldapd
-	and LDAPAgent. Those portions are now "derived works" from this code,
-	and those portions are subject to the licence above. This code has been
-	heavily modified (and improved!) for nss_ldap.
- */
-
 #include "ldap-nss.h"
 #include "globals.h"
 #include "util.h"

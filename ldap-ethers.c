@@ -48,7 +48,6 @@ static char rcsId[] = "$Id$";
 #include <nsswitch.h>
 #endif
 
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <net/if.h>
@@ -88,12 +87,15 @@ static NSS_STATUS _nss_ldap_parse_ether(
 	NSS_STATUS stat;
 	struct ether_addr *addr;
 
-	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_HOSTNAME, &ether->e_name, &buffer, &buflen);
+	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_HOSTNAME,
+		&ether->e_name, &buffer, &buflen);
 	if (stat != NSS_SUCCESS) return stat;
 
-	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_ETHERADDR, &saddr, &buffer, &buflen);
+	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_ETHERADDR, &saddr,
+		&buffer, &buflen);
 
-	if (stat != NSS_SUCCESS || ((addr = ether_aton(saddr)) == NULL)) return NSS_NOTFOUND;
+	if (stat != NSS_SUCCESS || ((addr = ether_aton(saddr)) == NULL))
+		return NSS_NOTFOUND;
 
 	memcpy(&ether->e_addr, addr, sizeof(*addr));
 

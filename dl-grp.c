@@ -18,7 +18,8 @@
    Boston, MA 02111-1307, USA.
  */
 
-/* an experimental module for IRIX and other ELF operating systems
+/*
+ * an experimental module for IRIX and other ELF operating systems
  * which don't support the NSS to integrate LDAP for resolver calls.
  */
 
@@ -188,9 +189,10 @@ struct group *getgrent(void)
 }
 
 #ifdef OSF1
-/* XXX we should implement the non-Posix one as well, but I can't be bothered.
- * That doesn't take the last argument, and has a symbol name of getgrgid_r instead
- * of Pgetgrgid_r. Ditto for getgrnam.
+/*
+ * XXX we should implement the non-Posix one as well, but I can't be bothered.
+ * That doesn't take the last argument, and has a symbol name of getgrgid_r
+ * instead of Pgetgrgid_r. Ditto for getgrnam.
  */
 int getgrgid_r(gid_t gid, struct group *grp, char *buffer, size_t len, struct group **result)
 {

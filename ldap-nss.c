@@ -250,7 +250,7 @@ NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be)
 
 	return NSS_SUCCESS;
 }
-#endif /*SUN_NSS*/
+#endif /* SUN_NSS */
 
 /*
  * Frees a given context; this is called from endXXent() and so we

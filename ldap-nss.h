@@ -101,9 +101,10 @@
 # endif
 #endif
 
-/* linked list of configurations pointing to LDAP servers. The first
-   which has a successful ldap_open() is used. Conceivably the rest
-   could be used after a failed or exhausted search.
+/*
+ * linked list of configurations pointing to LDAP servers. The first
+ * which has a successful ldap_open() is used. Conceivably the rest
+ * could be used after a failed or exhausted search.
  */
 struct ldap_config
 {
@@ -188,12 +189,12 @@ struct ldap_args
 typedef struct ldap_args ldap_args_t;
 
 #define LA_INIT(q)				do { \
-							q.la_type = LA_TYPE_STRING; \
-							q.la_arg1.la_string = NULL; \
-							q.la_arg2.la_string = NULL; \
-							q.la_session.ls_conn = NULL; \
-							q.la_session.ls_config = NULL; \
-							q.la_stayopen = 0;		 \
+						q.la_type = LA_TYPE_STRING; \
+						q.la_arg1.la_string = NULL; \
+						q.la_arg2.la_string = NULL; \
+						q.la_session.ls_conn = NULL; \
+						q.la_session.ls_config = NULL; \
+						q.la_stayopen = 0;		 \
 						} while (0)
 #define LA_TYPE(q)				(q.la_type)
 #define LA_STRING(q)				(q.la_arg1.la_string)
@@ -208,15 +209,16 @@ typedef struct ldap_args ldap_args_t;
 
 #include "ldap-parse.h"
 
-/* the state consists of the desired attribute value or an offset into a list of
-   values for the desired attribute. This is necessary to support services.
-
-   Be aware of the arbitary distinction between state and context. Context is
-   the enumeration state of a lookup subsystem (which may be per-subsystem,
-   or per-subsystem/per-thread, depending on the OS). State is the state
-   of a particular lookup, and is only concerned with resolving and enumerating
-   services. State is represented as instances of ldap_state_t; context as
-   instances of ent_context_t. The latter contains the former.
+/*
+ * the state consists of the desired attribute value or an offset into a list of
+ * values for the desired attribute. This is necessary to support services.
+ *
+ * Be aware of the arbitary distinction between state and context. Context is
+ * the enumeration state of a lookup subsystem (which may be per-subsystem,
+ * or per-subsystem/per-thread, depending on the OS). State is the state
+ * of a particular lookup, and is only concerned with resolving and enumerating
+ * services. State is represented as instances of ldap_state_t; context as
+ * instances of ent_context_t. The latter contains the former.
  */
 struct ldap_state
 {
@@ -236,7 +238,8 @@ typedef struct ldap_state ldap_state_t;
 /* LS_INIT only used for enumeration contexts */
 #define LS_INIT(state)	do { state.ls_type = LS_TYPE_INDEX; state.ls_info.ls_index = -1; } while (0)
 
-/* thread specific context: session, result chain, and state data
+/*
+ * thread specific context: session, result chain, and state data
  */
 struct ent_context
 {
@@ -248,7 +251,8 @@ struct ent_context
 
 typedef struct ent_context ent_context_t;
 
-/* this is just a pointer to a context, used by the allocation and 
+/*
+ * this is just a pointer to a context, used by the allocation and 
  * destruction functions, so we can allocate it properly and maybe
  * destroy it & reset the pointer to NULL. (We don't free the memory
  * at the moment, we reuse it next time.)
@@ -322,7 +326,9 @@ typedef nss_status_t NSS_STATUS;
 typedef NSS_STATUS (*parser_t)(LDAP *, LDAPMessage *, ldap_state_t *, void *, char *, size_t);
 
 #ifdef NETSCAPE_SDK
-/* Netscape's libldap is threadsafe, but we use a lock before it is initialized */
+/*
+ * Netscape's libldap is threadsafe, but we use a lock before it is initialized 
+ */
 
 struct ldap_error
 {
@@ -365,10 +371,11 @@ NSS_STATUS _nss_ldap_default_destr(nss_backend_t *, void *);
 #endif
 
 
-/* context management routines.
-   _nss_ldap_default_constr() is called once in the constructor
-   ent_context_init() is called for each getXXent() call
-   ent_context_free() is used to manually free a context
+/*
+ * context management routines.
+ * _nss_ldap_default_constr() is called once in the constructor
+ * ent_context_init() is called for each getXXent() call
+ * ent_context_free() is used to manually free a context
  */
 #ifdef SUN_NSS
 NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be);

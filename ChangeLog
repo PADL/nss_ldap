@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+2.39	Luke Howard <lukeh@xedoc.com>
+
+	* fixed warning in ldap-ethers.c (removed const from 
+	  struct ether)
+
 2.38	Luke Howard <lukeh@xedoc.com>
 
 	* debugged ldap_explode_rdn() code

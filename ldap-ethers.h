@@ -50,7 +50,7 @@ struct ether_addr {
 
 struct ether
 {
-	const char *e_name;
+	char *e_name;
 	struct ether_addr e_addr;
 };
 
