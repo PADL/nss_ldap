@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+90	Luke Howard <lukeh@padl.com>
+
+	* only reconnect if we've changed to/from root
+
 89	Luke Howard <lukeh@padl.com>
 
 	* cleaned up a few things
