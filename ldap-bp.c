@@ -92,7 +92,7 @@ static NSS_STATUS
 _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, _nss_ldap_filt_getbootparamsbyname, LM_BOOTPARAMS,
-	       _nss_ldap_parse_bp);
+	       _nss_ldap_parse_bp, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #endif
 

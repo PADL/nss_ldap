@@ -46,14 +46,14 @@ IRS_EXPORT struct group *
 gr_byname (struct irs_gr *this, const char *name)
 {
   LOOKUP_NAME (name, this, _nss_ldap_filt_getgrnam, LM_GROUP,
-	       _nss_ldap_parse_gr);
+	       _nss_ldap_parse_gr, NSS_BUFLEN_GROUP);
 }
 
 IRS_EXPORT struct group *
 gr_bygid (struct irs_gr *this, gid_t gid)
 {
   LOOKUP_NUMBER (gid, this, _nss_ldap_filt_getgrgid, LM_GROUP,
-		 _nss_ldap_parse_gr);
+		 _nss_ldap_parse_gr, NSS_BUFLEN_GROUP);
 }
 
 IRS_EXPORT void
@@ -69,7 +69,8 @@ gr_close (struct irs_gr *this)
 IRS_EXPORT struct group *
 gr_next (struct irs_gr *this)
 {
-  LOOKUP_GETENT (this, _nss_ldap_filt_getgrent, LM_GROUP, _nss_ldap_parse_gr);
+  LOOKUP_GETENT (this, _nss_ldap_filt_getgrent, LM_GROUP, _nss_ldap_parse_gr,
+		 NSS_BUFLEN_GROUP);
 }
 
 IRS_EXPORT void

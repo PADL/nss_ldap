@@ -111,7 +111,7 @@ IRS_EXPORT struct servent *
 sv_next (struct irs_sv *this)
 {
   LOOKUP_GETENT (this, _nss_ldap_filt_getservent, LM_SERVICES,
-		 _nss_ldap_parse_serv);
+		 _nss_ldap_parse_serv, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 IRS_EXPORT void

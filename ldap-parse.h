@@ -27,9 +27,13 @@
 #if defined(HAVE_NSSWITCH_H)
 #define NSS_ARGS(args)	((nss_XbyY_args_t *)args)
 
-#define LOOKUP_NAME(args, filter, selector, parser) \
+#define LOOKUP_NAME(args, filter, selector, parser, req_buflen) \
 	ldap_args_t a; \
 	NSS_STATUS s; \
+	if (NSS_ARGS(args)->buf.buflen < req_buflen) { \
+		NSS_ARGS(args)->erange = 1; \
+		return NSS_TRYAGAIN; \
+	} \
 	LA_INIT(a); \
 	LA_STRING(a) = NSS_ARGS(args)->key.name; \
 	LA_TYPE(a) = LA_TYPE_STRING; \
@@ -45,9 +49,13 @@
 		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result; \
 	} \
 	return s
-#define LOOKUP_NUMBER(args, field, filter, selector, parser) \
+#define LOOKUP_NUMBER(args, field, filter, selector, parser, req_buflen) \
 	ldap_args_t a; \
 	NSS_STATUS s; \
+	if (NSS_ARGS(args)->buf.buflen < req_buflen) { \
+		NSS_ARGS(args)->erange = 1; \
+		return NSS_TRYAGAIN; \
+	} \
 	LA_INIT(a); \
 	LA_NUMBER(a) = NSS_ARGS(args)->field; \
 	LA_TYPE(a) = LA_TYPE_NUMBER; \
@@ -63,8 +71,12 @@
 		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result; \
 	} \
 	return s
-#define LOOKUP_GETENT(args, be, filter, selector, parser) \
+#define LOOKUP_GETENT(args, be, filter, selector, parser, req_buflen) \
 	NSS_STATUS s; \
+	if (NSS_ARGS(args)->buf.buflen < req_buflen) { \
+		NSS_ARGS(args)->erange = 1; \
+		return NSS_TRYAGAIN; \
+	} \
 	s = _nss_ldap_getent(&((nss_ldap_backend_t *)be)->state, \
 		NSS_ARGS(args)->buf.result, \
 		NSS_ARGS(args)->buf.buffer, \
@@ -80,24 +92,36 @@
 
 #elif defined(HAVE_NSS_H)
 
-#define LOOKUP_NAME(name, result, buffer, buflen, errnop, filter, selector, parser) \
+#define LOOKUP_NAME(name, result, buffer, buflen, errnop, filter, selector, parser, req_buflen) \
 	ldap_args_t a; \
+	if (buflen < req_buflen) { \
+		*errnop = ERANGE; \
+		return NSS_TRYAGAIN; \
+	} \
 	LA_INIT(a); \
 	LA_STRING(a) = name; \
 	LA_TYPE(a) = LA_TYPE_STRING; \
 	return _nss_ldap_getbyname(&a, result, buffer, buflen, errnop, filter, selector, parser);
-#define LOOKUP_NUMBER(number, result, buffer, buflen, errnop, filter, selector, parser) \
+#define LOOKUP_NUMBER(number, result, buffer, buflen, errnop, filter, selector, parser, req_buflen) \
 	ldap_args_t a; \
+	if (buflen < req_buflen) { \
+		*errnop = ERANGE; \
+		return NSS_TRYAGAIN; \
+	} \
 	LA_INIT(a); \
 	LA_NUMBER(a) = number; \
 	LA_TYPE(a) = LA_TYPE_NUMBER; \
 	return _nss_ldap_getbyname(&a, result, buffer, buflen, errnop, filter, selector, parser)
-#define LOOKUP_GETENT(key, result, buffer, buflen, errnop, filter, selector, parser) \
+#define LOOKUP_GETENT(key, result, buffer, buflen, errnop, filter, selector, parser, req_buflen) \
+	if (buflen < req_buflen) { \
+		*errnop = ERANGE; \
+		return NSS_TRYAGAIN; \
+	} \
 	return _nss_ldap_getent(&key, result, buffer, buflen, errnop, filter, selector, parser)
 
 #elif defined(HAVE_IRS_H)
 
-#define LOOKUP_NAME(name, this, filter, selector, parser) \
+#define LOOKUP_NAME(name, this, filter, selector, parser, req_buflen) \
 	ldap_args_t a; \
 	struct pvt *pvt = (struct pvt *)this->private; \
 	NSS_STATUS s; \
@@ -111,7 +135,7 @@
 		return NULL; \
 	} \
 	return &pvt->result;
-#define LOOKUP_NUMBER(number, this, filter, selector, parser) \
+#define LOOKUP_NUMBER(number, this, filter, selector, parser, req_buflen) \
 	ldap_args_t a; \
 	struct pvt *pvt = (struct pvt *)this->private; \
 	NSS_STATUS s; \
@@ -125,7 +149,7 @@
 		return NULL; \
 	} \
 	return &pvt->result;
-#define LOOKUP_GETENT(this, filter, selector, parser) \
+#define LOOKUP_GETENT(this, filter, selector, parser, req_buflen) \
 	struct pvt *pvt = (struct pvt *)this->private; \
 	NSS_STATUS s; \
 	s = _nss_ldap_getent(&pvt->state, &pvt->result, pvt->buffer, \

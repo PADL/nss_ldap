@@ -366,10 +366,10 @@ do_parse_group_members (LDAPMessage * e,
 	  *pGroupMembersBufferSize =
 	    (i + groupMembersCount + 1) * sizeof (char *);
 	  *pGroupMembersBufferSize +=
-	    (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)) - 1;
+	    (LDAP_NSS_NGROUPS * sizeof (char *)) - 1;
 	  *pGroupMembersBufferSize -=
 	    (*pGroupMembersBufferSize %
-	     (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)));
+	     (LDAP_NSS_NGROUPS * sizeof (char *)));
 
 	  if (*pGroupMembersBufferIsMalloced == 0)
 	    {
@@ -576,7 +576,7 @@ _nss_ldap_parse_gr (LDAPMessage * e,
   char **groupMembers;
   size_t groupMembersCount;
   size_t groupMembersBufferSize;
-  char *groupMembersBuffer[LDAP_NSS_MAXGR_BUFSIZ];
+  char *groupMembersBuffer[LDAP_NSS_NGROUPS];
   int groupMembersBufferIsMalloced;
   int depth;
   struct name_list *knownGroups = NULL;
@@ -1017,13 +1017,14 @@ _nss_ldap_getgrnam_r (const char *name,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NAME (name, result, buffer, buflen, errnop, _nss_ldap_filt_getgrnam,
-	       LM_GROUP, _nss_ldap_parse_gr);
+	       LM_GROUP, _nss_ldap_parse_gr, LDAP_NSS_BUFLEN_GROUP);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrnam_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, _nss_ldap_filt_getgrnam, LM_GROUP, _nss_ldap_parse_gr);
+  LOOKUP_NAME (args, _nss_ldap_filt_getgrnam, LM_GROUP, _nss_ldap_parse_gr,
+	       LDAP_NSS_BUFLEN_GROUP);
 }
 #endif
 
@@ -1034,14 +1035,14 @@ _nss_ldap_getgrgid_r (gid_t gid,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NUMBER (gid, result, buffer, buflen, errnop, _nss_ldap_filt_getgrgid,
-		 LM_GROUP, _nss_ldap_parse_gr);
+		 LM_GROUP, _nss_ldap_parse_gr, LDAP_NSS_BUFLEN_GROUP);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NUMBER (args, key.gid, _nss_ldap_filt_getgrgid, LM_GROUP,
-		 _nss_ldap_parse_gr);
+		 _nss_ldap_parse_gr, LDAP_NSS_BUFLEN_GROUP);
 }
 #endif
 
@@ -1077,14 +1078,15 @@ _nss_ldap_getgrent_r (struct group *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop,
-		 _nss_ldap_filt_getgrent, LM_GROUP, _nss_ldap_parse_gr);
+		 _nss_ldap_filt_getgrent, LM_GROUP, _nss_ldap_parse_gr,
+		 LDAP_NSS_BUFLEN_GROUP);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrent_r (nss_backend_t * gr_context, void *args)
 {
   LOOKUP_GETENT (args, gr_context, _nss_ldap_filt_getgrent, LM_GROUP,
-		 _nss_ldap_parse_gr);
+		 _nss_ldap_parse_gr, LDAP_NSS_BUFLEN_GROUP);
 }
 #endif
 

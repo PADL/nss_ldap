@@ -87,7 +87,7 @@ _nss_ldap_getaliasbyname_r (const char *name, struct aliasent * result,
 {
   LOOKUP_NAME (name, result, buffer, buflen, errnop,
 	       _nss_ldap_filt_getaliasbyname, LM_ALIASES,
-	       _nss_ldap_parse_alias);
+	       _nss_ldap_parse_alias, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 NSS_STATUS _nss_ldap_setaliasent (void)
@@ -106,7 +106,7 @@ _nss_ldap_getaliasent_r (struct aliasent *result, char *buffer, size_t buflen,
 {
   LOOKUP_GETENT (alias_context, result, buffer, buflen, errnop,
 		 _nss_ldap_filt_getaliasent, LM_ALIASES,
-		 _nss_ldap_parse_alias);
+		 _nss_ldap_parse_alias, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 #endif /* HAVE_NSS_H */

@@ -104,7 +104,7 @@ static NSS_STATUS
 _nss_ldap_getprotobyname_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, _nss_ldap_filt_getprotobyname, LM_PROTOCOLS,
-	       _nss_ldap_parse_proto);
+	       _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #elif defined(HAVE_NSS_H)
 NSS_STATUS
@@ -113,7 +113,7 @@ _nss_ldap_getprotobyname_r (const char *name, struct protoent *result,
 {
   LOOKUP_NAME (name, result, buffer, buflen, errnop,
 	       _nss_ldap_filt_getprotobyname, LM_PROTOCOLS,
-	       _nss_ldap_parse_proto);
+	       _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #endif
 
@@ -122,7 +122,7 @@ static NSS_STATUS
 _nss_ldap_getprotobynumber_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NUMBER (args, key.number, _nss_ldap_filt_getprotobynumber,
-		 LM_PROTOCOLS, _nss_ldap_parse_proto);
+		 LM_PROTOCOLS, _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #elif defined(HAVE_NSS_H)
 NSS_STATUS
@@ -131,7 +131,7 @@ _nss_ldap_getprotobynumber_r (int number, struct protoent *result,
 {
   LOOKUP_NUMBER (number, result, buffer, buflen, errnop,
 		 _nss_ldap_filt_getprotobynumber, LM_PROTOCOLS,
-		 _nss_ldap_parse_proto);
+		 _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #endif
 
@@ -164,7 +164,7 @@ static NSS_STATUS
 _nss_ldap_getprotoent_r (nss_backend_t * proto_context, void *args)
 {
   LOOKUP_GETENT (args, proto_context, _nss_ldap_filt_getprotoent,
-		 LM_PROTOCOLS, _nss_ldap_parse_proto);
+		 LM_PROTOCOLS, _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #elif defined(HAVE_NSS_H)
 NSS_STATUS
@@ -173,7 +173,7 @@ _nss_ldap_getprotoent_r (struct protoent *result, char *buffer, size_t buflen,
 {
   LOOKUP_GETENT (proto_context, result, buffer, buflen, errnop,
 		 _nss_ldap_filt_getprotoent, LM_PROTOCOLS,
-		 _nss_ldap_parse_proto);
+		 _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #endif
 

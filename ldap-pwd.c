@@ -182,13 +182,14 @@ _nss_ldap_getpwnam_r (const char *name,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NAME (name, result, buffer, buflen, errnop, _nss_ldap_filt_getpwnam,
-	       LM_PASSWD, _nss_ldap_parse_pw);
+	       LM_PASSWD, _nss_ldap_parse_pw, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getpwnam_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, _nss_ldap_filt_getpwnam, LM_PASSWD, _nss_ldap_parse_pw);
+  LOOKUP_NAME (args, _nss_ldap_filt_getpwnam, LM_PASSWD, _nss_ldap_parse_pw,
+	       LDAP_NSS_BUFLEN_DEFAULT);
 }
 #endif /* HAVE_NSS_H */
 
@@ -199,14 +200,14 @@ _nss_ldap_getpwuid_r (uid_t uid,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NUMBER (uid, result, buffer, buflen, errnop, _nss_ldap_filt_getpwuid,
-		 LM_PASSWD, _nss_ldap_parse_pw);
+		 LM_PASSWD, _nss_ldap_parse_pw, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getpwuid_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NUMBER (args, key.uid, _nss_ldap_filt_getpwuid, LM_PASSWD,
-		 _nss_ldap_parse_pw);
+		 _nss_ldap_parse_pw, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #endif
 
@@ -244,14 +245,15 @@ _nss_ldap_getpwent_r (struct passwd *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (pw_context, result, buffer, buflen, errnop,
-		 _nss_ldap_filt_getpwent, LM_PASSWD, _nss_ldap_parse_pw);
+		 _nss_ldap_filt_getpwent, LM_PASSWD, _nss_ldap_parse_pw,
+		 LDAP_NSS_BUFLEN_DEFAULT);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getpwent_r (nss_backend_t * be, void *args)
 {
   LOOKUP_GETENT (args, be, _nss_ldap_filt_getpwent, LM_PASSWD,
-		 _nss_ldap_parse_pw);
+		 _nss_ldap_parse_pw, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #endif
 

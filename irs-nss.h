@@ -57,40 +57,4 @@ extern int make_group_list (struct irs_gr *, const char *,
 #define IRS_EXPORT static
 #endif
 
-/*
- * These lengths were derived from the Solaris headers.
- * Copyright (c) 1992, by Sun Microsystems, Inc.
- */
-
-#define NSS_BUFSIZ              1024
-
-#define NSS_LINELEN_ETHERS      NSS_BUFSIZ
-#define NSS_LINELEN_GROUP       NSS_BUFSIZ
-#define NSS_LINELEN_HOSTS       NSS_BUFSIZ
-#define NSS_LINELEN_NETMASKS    NSS_BUFSIZ
-#define NSS_LINELEN_NETWORKS    NSS_BUFSIZ
-#define NSS_LINELEN_PASSWD      NSS_BUFSIZ
-#define NSS_LINELEN_PROTOCOLS   NSS_BUFSIZ
-#define NSS_LINELEN_RPC         NSS_BUFSIZ
-#define NSS_LINELEN_SERVICES    NSS_BUFSIZ
-#define NSS_LINELEN_SHADOW      NSS_BUFSIZ
-#define NSS_LINELEN_BOOTPARAMS  NSS_BUFSIZ
-
-#ifndef NSS_BUFLEN_GROUP	/* defined on Linux */
-#define NSS_BUFLEN_GROUP        (NSS_LINELEN_GROUP + 200 * sizeof (char *))
-#endif /* NSS_BUFLEN_GROUP */
-#define NSS_BUFLEN_HOSTS        \
-        (NSS_LINELEN_HOSTS + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
-#define NSS_BUFLEN_NETGROUP     (MAXHOSTNAMELEN * 2 + LOGNAME_MAX + 3)
-#define NSS_BUFLEN_NETWORKS     NSS_LINELEN_NETWORKS
-#ifndef NSS_BUFLEN_PASSWD	/* defined on Linux */
-#define NSS_BUFLEN_PASSWD       NSS_LINELEN_PASSWD
-#endif /* NSS_BUFLEN_PASSWD */
-#define NSS_BUFLEN_PROTOCOLS    NSS_LINELEN_PROTOCOLS
-#define NSS_BUFLEN_RPC          NSS_LINELEN_RPC
-#define NSS_BUFLEN_SERVICES     NSS_LINELEN_SERVICES
-#define NSS_BUFLEN_SHADOW       NSS_LINELEN_SHADOW
-#define NSS_BUFLEN_ETHERS       NSS_LINELEN_ETHERS
-#define NSS_BUFLEN_BOOTPARAMS   NSS_LINELEN_BOOTPARAMS
-
 #endif /* _LDAP_NSS_LDAP_IRS_H */

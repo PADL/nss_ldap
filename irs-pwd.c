@@ -38,7 +38,7 @@ IRS_EXPORT void pw_minimize (struct irs_pw *);
 struct pvt
 {
   struct passwd result;
-  char buffer[NSS_BUFLEN_PASSWD];
+  char buffer[LDAP_NSS_BUFLEN_DEFAULT];
   ent_context_t *state;
 };
 
@@ -46,14 +46,14 @@ IRS_EXPORT struct passwd *
 pw_byname (struct irs_pw *this, const char *name)
 {
   LOOKUP_NAME (name, this, _nss_ldap_filt_getpwnam, LM_PASSWD,
-	       _nss_ldap_parse_pw);
+	       _nss_ldap_parse_pw, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 IRS_EXPORT struct passwd *
 pw_byuid (struct irs_pw *this, uid_t uid)
 {
   LOOKUP_NUMBER (uid, this, _nss_ldap_filt_getpwuid, LM_PASSWD,
-		 _nss_ldap_parse_pw);
+		 _nss_ldap_parse_pw, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 IRS_EXPORT void
@@ -70,7 +70,7 @@ IRS_EXPORT struct passwd *
 pw_next (struct irs_pw *this)
 {
   LOOKUP_GETENT (this, _nss_ldap_filt_getpwent, LM_PASSWD,
-		 _nss_ldap_parse_pw);
+		 _nss_ldap_parse_pw, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 IRS_EXPORT void

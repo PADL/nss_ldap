@@ -314,7 +314,7 @@ static NSS_STATUS
 _nss_ldap_getservent_r (nss_backend_t * serv_context, void *args)
 {
   LOOKUP_GETENT (args, serv_context, _nss_ldap_filt_getservent, LM_SERVICES,
-		 _nss_ldap_parse_serv);
+		 _nss_ldap_parse_serv, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #elif defined(HAVE_NSS_H)
 NSS_STATUS
@@ -323,7 +323,7 @@ _nss_ldap_getservent_r (struct servent *result, char *buffer, size_t buflen,
 {
   LOOKUP_GETENT (serv_context, result, buffer, buflen, errnop,
 		 _nss_ldap_filt_getservent, LM_SERVICES,
-		 _nss_ldap_parse_serv);
+		 _nss_ldap_parse_serv, LDAP_NSS_BUFLEN_DEFAULT);
 }
 #endif
 

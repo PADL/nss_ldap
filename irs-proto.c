@@ -46,14 +46,14 @@ IRS_EXPORT struct protoent *
 pr_byname (struct irs_pr *this, const char *name)
 {
   LOOKUP_NAME (name, this, _nss_ldap_filt_getprotobyname, LM_PROTOCOLS,
-	       _nss_ldap_parse_proto);
+	       _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 IRS_EXPORT struct protoent *
 pr_bynumber (struct irs_pr *this, int num)
 {
   LOOKUP_NUMBER (num, this, _nss_ldap_filt_getprotobynumber, LM_PROTOCOLS,
-		 _nss_ldap_parse_proto);
+		 _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 IRS_EXPORT void
@@ -70,7 +70,7 @@ IRS_EXPORT struct protoent *
 pr_next (struct irs_pr *this)
 {
   LOOKUP_GETENT (this, _nss_ldap_filt_getprotoent, LM_PROTOCOLS,
-		 _nss_ldap_parse_proto);
+		 _nss_ldap_parse_proto, LDAP_NSS_BUFLEN_DEFAULT);
 }
 
 IRS_EXPORT void
