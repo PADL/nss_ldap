@@ -1,10 +1,14 @@
 $Header$
 ===============================================================
 
+204	Luke Howard <lukeh@padl.com>
+
+	* Linux netgroup implementation from Larry Lile
+
 203	Luke Howard <lukeh@padl.com>
 
-	* fix for bug #115
-	* fix for bug #121
+	* fix for BUG#115
+	* fix for BUG#121
 
 202	Luke Howard <lukeh@padl.com>
 
@@ -115,7 +119,7 @@ $Header$
 185	Luke Howard <lukeh@padl.com>
 
 	* updated copyrights
-	* fix for bug #82: set close on exec (Debian bug 136953)
+	* fix for BUG#82: set close on exec (Debian bug 136953)
 
 184	Luke Howard <lukeh@padl.com>
 
