@@ -585,7 +585,7 @@ extern int __thread_mutex_unlock(pthread_mutex_t *);
 /*
  * Portable locking macro.
  */
-#ifdef HAVE_THREAD_H
+#if defined(HAVE_THREAD_H) && !defined(_AIX)
 #define NSS_LDAP_LOCK(m)		mutex_lock(&m)
 #define NSS_LDAP_UNLOCK(m)		mutex_unlock(&m)
 #define NSS_LDAP_DEFINE_LOCK(m)		static mutex_t m = DEFAULTMUTEX

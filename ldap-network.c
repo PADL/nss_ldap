@@ -31,7 +31,7 @@ static char rcsId[] =
 #include <port_before.h>
 #endif
 
-#ifdef HAVE_THREAD_H
+#if defined(HAVE_THREAD_H) && !defined(_AIX)
 #include <thread.h>
 #elif defined(HAVE_PTHREAD_H)
 #include <pthread.h>

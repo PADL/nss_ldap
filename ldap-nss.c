@@ -27,7 +27,7 @@ static char rcsId[] =
 #include <port_before.h>
 #endif
 
-#ifdef HAVE_THREAD_H
+#if defined(HAVE_THREAD_H) && !defined(_AIX)
 #include <thread.h>
 #elif defined(HAVE_PTHREAD_H)
 #include <pthread.h>
@@ -44,7 +44,6 @@ static char rcsId[] =
 #include <syslog.h>
 #include <signal.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
 #ifdef HAVE_SYS_UN_H
@@ -89,7 +88,7 @@ static char rcsId[] =
 #include "pagectrl.h"
 #endif
 
-#ifdef HAVE_THREAD_H
+#if defined(HAVE_THREAD_H) && !defined(_AIX)
 #ifdef HAVE_PTHREAD_ATFORK
 #undef HAVE_PTHREAD_ATFORK
 #endif
