@@ -32,9 +32,6 @@ static char rcsId[] = "$Id$";
 #include <stdio.h>
 #include <malloc.h>
 #include <errno.h>
-#define _LIBC
-#include <errnos.h>
-#undef _LIBC
 #include <pthread.h>
 #else
 #include <nss_common.h>
@@ -178,7 +175,7 @@ ltf_get_ld_error( char **matched, char **errmsg, void *dummy )
 static void
 ltf_set_errno( int err )
 {
-	__set_errno(err);
+	errno = err;
 }
 
 static int

@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.68	Luke Howard <lukeh@padl.com>
+
+	* mods for glibc 2.1 (__set_errno is obselete it seems)
+
 2.65	Luke Howard <lukeh@padl.com>
 
 	* mods to compile with OpenLDAP 2
