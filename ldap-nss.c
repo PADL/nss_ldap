@@ -1443,13 +1443,16 @@ do_ssl_options (ldap_config_t * cfg)
     }
 
   /* require cert? */
-  rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_REQUIRE_CERT,
-			&cfg->ldc_tls_checkpeer);
-  if (rc != LDAP_SUCCESS)
+  if (cfg->ldc_tls_checkpeer > -1)
     {
-      debug
-	("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_REQUIRE_CERT failed");
-      return LDAP_OPERATIONS_ERROR;
+      rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_REQUIRE_CERT,
+			    &cfg->ldc_tls_checkpeer);
+      if (rc != LDAP_SUCCESS)
+	{
+	  debug
+	    ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_REQUIRE_CERT failed");
+	  return LDAP_OPERATIONS_ERROR;
+	}
     }
 
   if (cfg->ldc_tls_ciphers != NULL)

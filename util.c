@@ -545,7 +545,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_referrals = 1;
   result->ldc_restart = 1;
   result->ldc_uri = NULL;
-  result->ldc_tls_checkpeer = 0;
+  result->ldc_tls_checkpeer = -1;
   result->ldc_tls_cacertfile = NULL;
   result->ldc_tls_cacertdir = NULL;
   result->ldc_tls_ciphers = NULL;

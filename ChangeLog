@@ -1,6 +1,13 @@
 $Id$
 ===============================================================
 
+228	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#188: better documentation for OpenLDAP
+	  SSL options
+	* fix for BUG#189: do not configure tls_checkpeer
+	  unless it is explicitly specifier in ldap.conf
+
 227	Luke Howard <lukeh@padl.com>
 
 	* separate initializing LDAP session with actually
