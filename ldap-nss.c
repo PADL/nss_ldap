@@ -38,8 +38,8 @@ static char rcsId[] =
 #include <lber.h>
 #include <ldap.h>
 #ifdef SSL
-#include <ldap_ssl.h> 
-#endif /* SSL */ 
+#include <ldap_ssl.h>
+#endif /* SSL */
 
 #ifdef GNU_NSS
 #include <nss.h>
@@ -129,7 +129,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   ent_context_t *ctx = ((nss_ldap_backend_t *) be)->state;
@@ -164,7 +164,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
