@@ -295,6 +295,7 @@ do_open (void)
 
   if (__pid != pid)
     {
+      do_close_no_unbind ();
     }
   else if (__euid != euid && (__euid == 0 || euid == 0))
     {
