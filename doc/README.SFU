@@ -26,6 +26,33 @@ nss_ldap-AD-pwdgrp
    in order to properly build this module.  The proper headers and 
    libraries can be found in the openldap-devel package.
 
+From: "Rechenberg, Andrew" <arechenberg@shermfin.com>
+Subject: RE: [nssldap] Can not get nss_ldap to work, can anyone please hel p me?
+To: "'Allister Maguire'" <amaguire@actonz.com>, nssldap@padl.com
+Date: Thu, 24 Jan 2002 09:28:36 -0500
+
+
+The README.SFU is slightly little out of date and off topic now.  I
+originally wrote README.SFU when I modified nss_ldap and Luke Howard
+integrated the patch into nss_ldap-150 I believe as a configure option.
+
+There is now the ability to do schema mapping in nss_ldap and change which
+attributes are used for LDAP lookups.  You have to use the following
+configure option:
+
+./configure --enable-schema-mapping [REST_OF_YOUR_OPTIONS_HERE]
+
+Once nss_ldap is compiled then you edit your ldap.conf file and uncomment
+the attribute mapping under the MSSFU section (use your favorite text editor
+and search for MSSFU and you should find it).  Once you do that, and you
+modify your nsswitch.conf, you should be off and running.
+
+Let me know if you need anymore help.
+
+Regards,
+Andy.
+
+
 
 *
 *** Test systems specifications ***
