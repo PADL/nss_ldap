@@ -85,3 +85,116 @@ Cisco Certified Network Associate, Sun Solaris Certified Systems Administrator
 Senior Technical Consultant - UNIX and Networking
 Taos - The SysAdmin Company 
 
+[http://www.css-solutions.ca/ad4unix/solaris8.html]
+
+To enable support of nss_ldap and pam_ldap modules from PADL for 64bit application on SUN SPARC platform using Sun C/C++ compiler version 5.0+ is required!!! (Note: with latest gcc 3.0.2 there is some support for 64bit platforms, but we didn't find what options are required for that kind of compilation... GNU as produced some errors, but GNU ld explicitly supported 64bit linking.) Our succesfull implementation was based on "Sun WorkShop 6 update 1 C 5.2 Patch 109513-07 2001/08/27" compiler and nss_ldap v.173 and pam_ldap v.133 modules from PADL Software. There was some issues with compailing and compatibility:
+
+1.	For nss_ldap with --enable-schema-mapping configure option Berkeley db library is required. There is no precompiled 64bit Berkeley db library available. You can download db library sources from www.sleepycat.com and compile it with the follow batch file:
+
+             #!/bin/sh             
+             
+             CC64=" -xtarget=native64 -KPIC " 
+             #CC64="" 
+             export CC64 
+             
+             
+             CC=cc 
+             export CC 
+             CFLAGS=" $CC64 " 
+             export CFLAGS 
+             LDFLAGS=" $CC64 -R/usr/local/lib/sparcv9" 
+             export LDFLAGS 
+             
+             cd db-3.3.11/dist 
+             ./configure \ 
+             --prefix=/usr/local \ 
+             --bindir=/usr/local/bin/sparcv9 \ 
+             --libdir=/usr/local/lib/sparcv9 \ 
+             --enable-compat185 
+             make
+             make install
+I guess if you compile it for 64bit you also would like to compile for 32bit, for that just comment CC64 option and uncomment follow CC64 empty option, remove /sparcv9 suffix from LDFLAGS and remove --bindir and --libdir prefixes from configure command line.
+
+
+2.	The nss_ldap v.173 requires some patching for compatibility with Sun C (not only with Sun, but AIX C has same symptoms): 
+*	Sun C compiler (latest from Sun and same issues as AIX C compiler) does not support construction like:
+in ldap-nss.h near line 600:
+#define debug(fmt, args...) fprintf(stderr, fmt, ## args)
+workaround was - coping AIX workaround for SUN C:-)
+
+*	Also Sun C compiler does not support initialization of arrays by not constant values (by functions for example - macro AT with class mapping will replaced by function call)...
+in util.c (line 204) from:
+const char *attrs[] = { AT (uid), attrs[1] = NULL };
+LDAPMessage *res;
+to:
+LDAPMessage *res;
+const char *attrs[2];
+attrs[0] = AT (uid) ;
+attrs[1] = NULL ;
+
+
+
+
+Luke Howard from PADL Software said that in the next releases these problems will be patched.
+
+3.	There is our batch file for compiling nss_ldap.so 64 bit with Sun C/C++ compiler (for compiling 32bit module comment CC64 statment and uncomment follow CC64 empty statment also remove /sparcv9 suffix from LDFLAGS):
+
+
+             #!/bin/sh 
+
+
+             CC64=" -xtarget=native64 -KPIC " 
+             #CC64="" 
+             export CC64 
+             
+             CC=cc 
+             export CC 
+             CFLAGS=" $CC64 " 
+             export CFLAGS 
+             CPPFLAGS=" -I/usr/local/include " 
+             export CPPFLAGS 
+             LDFLAGS=" $CC64 -L/usr/local/lib/sparcv9 -R/usr/local/lib/sparcv9 " 
+             export LDFLAGS 
+             
+             cd nss_ldap-173 
+             ./configure --enable-schema-mapping \ 
+             --enable-rfc2307bis
+             # --enable-debugging 
+
+4.	Batch file for compiling pam_ldap module is same, just change directory to pam_ldap-xxx and run ./configure without any parametrs.
+
+
+32bit version
+We found some incompatibility BUG in the gcc produced code (3.0.1 and 3.0.2) and dynamic linking with dlopen function calls. That BUG we found in 32bit compiled libraries with Sun C/C++ and applications that was compiled by GNU gcc 3.0.1 and 3.0.2 (we could not test it with GNU gcc 64 bit and we did not test it with other versions of GNU gcc). If Application was compiled with Sun C/C++ there is no problem. Workaround for that was erasing linked modules and relinking modules by explicitly call ld: 
+
+1.	Erase modules:
+for PAM
+rm pam_ldap.so 
+or for NSS
+rm nss_ldap.so 
+2.	run ld linker explicitly:
+for PAM: 
+*	for native Sun linker
+/usr/ccs/bin/ld -M mapfile -R/usr/local/lib -o pam_ldap.so -G pam_ldap.o md5.o -lldap -lnsl -lcrypt -lresolv -lpam -ldl
+*	for GNU lg
+/usr/local/bin/ld -R/usr/local/lib -o pam_ldap.so -G pam_ldap.o md5.o -lldap -lnsl -lcrypt -lresolv -lpam -ldl 
+
+or for for NSS:
+*	for native Sun linker
+/usr/ccs/bin/ld -R/usr/local/lib -o nss_ldap.so -M ./mapfile -G \ 
+ldap-nss.o ldap-pwd.o ldap-grp.o ldap-rpc.o ldap-hosts.o ldap-network.o \ 
+ldap-proto.o ldap-spwd.o ldap-alias.o ldap-service.o ldap-schema.o ldap-ethers.o \ 
+ldap-bp.o util.o globals.o ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o \ 
+-lldap -Bdynamic -ldb -ldl -lnsl -lresolv
+*	for GNU lg
+/usr/local/bin/ld -R/usr/local/lib -o nss_ldap.so -G \ 
+ldap-nss.o ldap-pwd.o ldap-grp.o ldap-rpc.o ldap-hosts.o ldap-network.o \ 
+ldap-proto.o ldap-spwd.o ldap-alias.o ldap-service.o ldap-schema.o ldap-ethers.o \ 
+ldap-bp.o util.o globals.o ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o \ 
+-lldap -Bdynamic -ldb -ldl -lnsl -lresolv 
+
+
+3.	make install :-)
+
+
+
