@@ -17,6 +17,8 @@ $Header$
 	* hopefully fixed Berkeley DB include 
 	  mess in util.c
 	* fixed leaks in util.c, dnsconfig.c
+	* accept on/yes/true for boolean configuration
+	  values
  
 126	Luke Howard <lukeh@padl.com>
 
