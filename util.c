@@ -107,10 +107,9 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 				{
 				if (strncasecmp(*p, CN_ATTR_AVA, CN_ATTR_AVA_LEN) == 0)
 					{
-					char *r = *p;
+					char *r = *p + CN_ATTR_AVA_LEN;
 
-					r += CN_ATTR_AVA_LEN;
-					rdnlen = strlen(p);
+					rdnlen = strlen(r);
 					if (*buflen < rdnlen)
 						{
 						ldap_memfree(dn);
@@ -119,7 +118,7 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 						return NSS_TRYAGAIN;
 						}
 					rdnvalue = *buffer;
-					strncpy(rdnvalue, p, rdnlen);
+					strncpy(rdnvalue, r, rdnlen);
 					break;
 					}
 				}

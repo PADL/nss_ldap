@@ -60,7 +60,8 @@ static ldap_config_t *_nss_ldap_config = NULL;
 static void do_close(ldap_session_t *);
 static NSS_STATUS do_open(ldap_session_t *);
 
-/* Closes connection to the LDAP server.
+/*
+ * Closes connection to the LDAP server.
  * This assumes that we have exclusive access to sess->ls_conn,
  * either by some other function having acquired a lock, or by
  * using a thread safe libldap.
@@ -77,7 +78,8 @@ static void do_close(ldap_session_t *sess)
 }
 
 #ifdef SUN_NSS
-/* Default destructor.
+/*
+ * Default destructor.
  * The entry point for this function is the destructor in the dispatch
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
@@ -112,7 +114,8 @@ NSS_STATUS _nss_ldap_default_destr(nss_backend_t *be, void *args)
 }
 #endif
 
-/* Opens connection to an LDAP server.
+/*
+ * Opens connection to an LDAP server.
  * As with do_close(), this assumes ownership of sess.
  * It also wants to own __config: is there a potential deadlock here? XXX
  */ 
@@ -153,7 +156,11 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 
 	while (1)
 		{
+#ifdef NETSCAPE_SDK
+		sess->ls_conn = ldap_init(cfg->ldc_host, cfg->ldc_port);
+#else
 		sess->ls_conn = ldap_open(cfg->ldc_host, cfg->ldc_port);
+#endif
 		if (sess->ls_conn != NULL || cfg->ldc_next == cfg)
 			{
 			break;
@@ -167,13 +174,11 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 		}
 
 #ifdef NETSCAPE_SDK
-#ifndef DL_NSS /* XXX */
 	if (_nss_ldap_ltf_thread_init(sess->ls_conn) != NSS_SUCCESS)
 		{
 		do_close(sess);
 		return NSS_UNAVAIL;
 		}
-#endif
 #endif
 
 	if (ldap_simple_bind_s(sess->ls_conn, cfg->ldc_binddn, cfg->ldc_bindpw) != LDAP_SUCCESS)
@@ -187,7 +192,8 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 	return NSS_SUCCESS;
 }
 
-/* This function initializes an enumeration context.
+/*
+ * This function initializes an enumeration context.
  * It is called from setXXent() directly, and so can safely lock the
  * mutex. 
  *
@@ -232,7 +238,8 @@ ent_context_t *_nss_ldap_ent_context_init(context_handle_t *key)
 }
 
 #ifdef SUN_NSS
-/* This is the default "constructor" which gets called from each 
+/*
+ * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
 NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be)
@@ -245,7 +252,8 @@ NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be)
 }
 #endif /*SUN_NSS*/
 
-/* Frees a given context; this is called from endXXent() and so we
+/*
+ * Frees a given context; this is called from endXXent() and so we
  * can grab the lock.
  */
 void _nss_ldap_ent_context_free(context_handle_t *key)
@@ -279,7 +287,8 @@ void _nss_ldap_ent_context_free(context_handle_t *key)
 }
 
 
-/* The generic lookup cover function.
+/*
+ * The generic lookup cover function.
  * Assumes ownership of the session.
  */
 LDAPMessage *_nss_ldap_lookup(
@@ -365,7 +374,8 @@ do_retry:
 	return res;
 }
 
-/* General entry point for enumeration routines.
+/*
+ * General entry point for enumeration routines.
  * Locks mutex.
  */
 NSS_STATUS _nss_ldap_getent(
@@ -443,7 +453,8 @@ NSS_STATUS _nss_ldap_getent(
 	return stat;
 }
 
-/* General match function.
+/*
+ * General match function.
  * Locks mutex.
  */
 NSS_STATUS _nss_ldap_getbyname(
@@ -471,7 +482,8 @@ NSS_STATUS _nss_ldap_getbyname(
 		return stat;
 		}
 
-	/* we pass this along for the benefit of the services parser,
+	/*
+	 * we pass this along for the benefit of the services parser,
 	 * which uses it to figure out which protocol we really wanted.
 	 * we only pass the second argument along, as that's what we need
 	 * in services.
@@ -498,11 +510,13 @@ NSS_STATUS _nss_ldap_getbyname(
 	return stat;
 }
 
-/* These functions are called from within the parser, where it is assumed
+/*
+ * These functions are called from within the parser, where it is assumed
  * to be safe to use the connection and the respective message.
  */
 
-/* Assign all values, bar omitvalue (if not NULL), to *valptr.
+/*
+ * Assign all values, bar omitvalue (if not NULL), to *valptr.
  */
 NSS_STATUS _nss_ldap_assign_attrvals(
 	LDAP *ld,				 /* IN */
@@ -635,7 +649,8 @@ NSS_STATUS _nss_ldap_assign_attrval(
 }
 
 
-/* Assign a single value to *valptr, after examining userPassword for
+/*
+ * Assign a single value to *valptr, after examining userPassword for
  * a syntactically suitable value. The behaviour here is determinable at
  * runtime from ldap.conf.
  */

@@ -1,6 +1,14 @@
 $Id$
 ===============================================================
 
+2.38	Luke Howard <lukeh@xedoc.com>
+
+	* debugged ldap_explode_rdn() code
+	* added support for Mozilla LDAP client library; see
+	  Makefile.linux.mozilla and ltf.c for more information.
+	  Thanks to Netscape for making their library 
+	  available.
+
 2.37	Luke Howard <lukeh@xedoc.com>
 
 	* moved to CVS repository and Linux as development
