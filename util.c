@@ -90,7 +90,7 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
  * Last resort, use db.h, which we hope has the
  * right API!
  */
-#ifdef RFC2307BIS
+#if defined(RFC2307BIS) || defined(AT_OC_MAP)
 #ifdef HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
 #define DN2UID_CACHE
@@ -106,6 +106,30 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 #endif /* HAVE_DB3_DB_H */
 
 #ifdef DN2UID_CACHE
+
+/* Used for both DN2UID and AT_OC mapping */
+void *
+_nss_hash_open()
+{
+  int rc;
+  DB *db = NULL;
+
+  rc = db_create( &db, NULL, 0 );
+  if ( rc == 0 )
+    {
+      rc = db->open( db, NULL, NULL, NULL, DB_HASH, DB_CREATE | DB_THREAD, 0600 );
+      if ( rc )
+	{
+	  db->close( db, 0 );
+	  db = NULL;
+	}
+    }
+  return db;
+}
+#endif
+
+#if defined(DN2UID_CACHE) && defined(RFC2307BIS)
+
 #include <fcntl.h>
 static DB *__cache = NULL;
 
@@ -113,7 +137,6 @@ NSS_LDAP_DEFINE_LOCK (__cache_lock);
 
 #define cache_lock()     NSS_LDAP_LOCK(__cache_lock)
 #define cache_unlock()   NSS_LDAP_UNLOCK(__cache_lock)
-
 static NSS_STATUS
 dn2uid_cache_put (const char *dn, const char *uid)
 {
@@ -124,21 +147,7 @@ dn2uid_cache_put (const char *dn, const char *uid)
 
   if (__cache == NULL)
     {
-#if DB_VERSION_MAJOR >= 2
-      rc = db_create( &__cache, NULL, 0 );
-      if (rc == 0)
-	{
-	  rc = __cache->open(__cache, NULL, NULL, DB_HASH,
-		DB_CREATE | DB_THREAD, 0600);
-	  if (rc != 0)
-	    {
-		__cache->close(__cache, 0);
-		__cache = NULL;
-	    }
-	}
-#else
-      __cache = dbopen (NULL, O_RDWR, 0600, DB_HASH, NULL);
-#endif
+      __cache = _nss_hash_open();
       if (__cache == NULL)
 	{
 	  cache_unlock ();
@@ -201,6 +210,9 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
   return NSS_SUCCESS;
 }
 #endif /* DN2UID_CACHE */
+#endif
+
+#ifdef RFC2307BIS
 
 NSS_STATUS
 _nss_ldap_dn2uid (LDAP * ld,
@@ -452,7 +464,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 			   ldap_service_search_descriptor_t ** result,
 			   char **buffer, size_t * buflen)
 {
-  ldap_service_search_descriptor_t **t;
+  ldap_service_search_descriptor_t **t, *cur;
   char *base;
   char *filter, *s;
   int scope;
@@ -526,11 +538,22 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 
   align (*buffer, *buflen, ldap_service_search_descriptor_t);
 
-  *t = (ldap_service_search_descriptor_t *) * buffer;
+  for (cur = *t; cur && cur->lsd_next; cur=cur->lsd_next);
+  if (!cur)
+    {
+      *t = (ldap_service_search_descriptor_t *) * buffer;
+      cur = *t;
+    }
+  else
+    {
+      cur->lsd_next = (ldap_service_search_descriptor_t *) * buffer;
+      cur = cur->lsd_next;
+    }
 
-  (*t)->lsd_base = base;
-  (*t)->lsd_scope = scope;
-  (*t)->lsd_filter = filter;
+  cur->lsd_base = base;
+  cur->lsd_scope = scope;
+  cur->lsd_filter = filter;
+  cur->lsd_next = NULL;
 
   *buffer += sizeof (ldap_service_search_descriptor_t);
   *buflen -= sizeof (ldap_service_search_descriptor_t);
@@ -541,8 +564,6 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 void
 _nss_ldap_init_config (ldap_config_t * result)
 {
-  int i;
-
   memset (result, 0, sizeof(*result));
 
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
@@ -576,6 +597,7 @@ _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_tls_ciphers = NULL;
   result->ldc_tls_cert = NULL;
   result->ldc_tls_key = NULL;
+  result->ldc_tls_randfile = NULL;
   result->ldc_idle_timelimit = 0;
   result->ldc_reconnect_pol = LP_RECONNECT_HARD;
 #ifdef AT_OC_MAP
@@ -583,11 +605,6 @@ _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_oc_map = NULL;
   result->ldc_password_type = LU_RFC2307_USERPASSWORD;
 #endif /* AT_OC_MAP */
-
-  for (i = 0; i < LM_NONE; i++)
-    {
-      result->ldc_sds[i] = NULL;
-    }
 
   result->ldc_next = result;
 }
@@ -826,6 +843,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       else if (!strcasecmp (k, "tls_key"))
 	{
 	  t = &result->ldc_tls_key;
+	}
+      else if (!strcasecmp (k, "tls_randfile"))
+	{
+	  t = &result->ldc_tls_randfile;
 	}
 #ifdef AT_OC_MAP
       else if (!strncasecmp (k, NSS_LDAP_KEY_MAP_ATTRIBUTE,

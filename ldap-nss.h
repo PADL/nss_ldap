@@ -202,7 +202,7 @@ struct ldap_service_search_descriptor
   /* filter */
   char *lsd_filter;
   /* next */
-  /* struct ldap_service_search_descriptor *lsd_next; */
+  struct ldap_service_search_descriptor *lsd_next;
 };
 
 typedef struct ldap_service_search_descriptor
@@ -270,6 +270,8 @@ struct ldap_config
   char *ldc_tls_cert;
   /* tls key */
   char *ldc_tls_key;
+  /* tls randfile */
+  char *ldc_tls_randfile;
   /* idle timeout */
   time_t ldc_idle_timelimit;
   /* reconnect policy */
@@ -411,6 +413,7 @@ struct ent_context
   ldap_state_t ec_state;	/* eg. for services */
   int ec_msgid;			/* message ID */
   LDAPMessage *ec_res;		/* result chain */
+  ldap_service_search_descriptor_t *ec_sd;	/* current sd */
 #ifdef PAGE_RESULTS
   struct berval *ec_cookie;     /* cookie for paged searches */
 #endif /* PAGE_RESULTS */
@@ -573,7 +576,8 @@ NSS_STATUS _nss_ldap_search (const ldap_args_t * args,	/* IN */
 			     const char *filterprot,	/* IN */
 			     ldap_map_selector_t sel,	/* IN */
 			     int sizelimit,	/* IN */
-			     int *pMsgid /* OUT */ );
+			     int *pMsgid, /* OUT */
+  			     ldap_service_search_descriptor_t **s /*IN/OUT*/ );
 
 /*
  * Retrieve next result.
@@ -678,5 +682,7 @@ typedef struct ldap_proxy_bind_args ldap_proxy_bind_args_t;
 NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password);
 
 NSS_STATUS _nss_ldap_init (void);
+
+void * _nss_hash_open(void);
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

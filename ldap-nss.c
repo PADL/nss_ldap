@@ -1303,6 +1303,19 @@ do_ssl_options (ldap_config_t * cfg)
 
   debug ("==> do_ssl_options");
 
+  if (cfg->ldc_tls_randfile != NULL)
+    {
+      /* rand file */
+      rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_RANDOM_FILE,
+			    cfg->ldc_tls_randfile);
+      if (rc != LDAP_SUCCESS)
+	{
+	  debug
+	    ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_RANDOM_FILE failed");
+	  return LDAP_OPERATIONS_ERROR;
+	}
+    }
+
   if (cfg->ldc_tls_cacertfile != NULL)
     {
       /* ca cert file */
@@ -1514,6 +1527,7 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 #endif /* PAGE_RESULTS */
   ctx->ec_res = NULL;
   ctx->ec_msgid = -1;
+  ctx->ec_sd = NULL;
 
   LS_INIT (ctx->ec_state);
 
@@ -1559,6 +1573,8 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
       ldap_abandon (__session.ls_conn, ctx->ec_msgid);
       ctx->ec_msgid = -1;
     }
+
+  ctx->ec_sd = NULL;
 
   LS_INIT (ctx->ec_state);
 
@@ -2280,7 +2296,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
   if (sel < LM_NONE)
     {
       sd = __session.ls_config->ldc_sds[sel];
-      if (sd != NULL)
+next: if (sd != NULL)
 	{
 	  size_t len = strlen (sd->lsd_base);
 	  if (sd->lsd_base[len - 1] == ',')
@@ -2312,6 +2328,15 @@ _nss_ldap_search_s (const ldap_args_t * args,
 			    attrs, sizelimit, res,
 			    (search_func_t) do_search_s);
 
+  /* if we got no entry, try the next base */
+  if (stat == NSS_SUCCESS && sd && sd->lsd_next &&
+      (ldap_first_entry(__session.ls_conn, *res) == NULL))
+    {
+      sd = sd->lsd_next;
+      if (sd)
+        goto next;
+    }
+
   debug ("<== _nss_ldap_search_s");
 
   return stat;
@@ -2324,7 +2349,8 @@ _nss_ldap_search_s (const ldap_args_t * args,
 NSS_STATUS
 _nss_ldap_search (const ldap_args_t * args,
 		  const char *filterprot,
-		  ldap_map_selector_t sel, int sizelimit, int *msgid)
+		  ldap_map_selector_t sel, int sizelimit, int *msgid,
+		  ldap_service_search_descriptor_t **csd)
 {
   char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
   char filterBuf[LDAP_FILT_MAXSIZ];
@@ -2348,9 +2374,23 @@ _nss_ldap_search (const ldap_args_t * args,
   scope = __session.ls_config->ldc_scope;
   attrs = NULL;
 
-  if (sel < LM_NONE)
+  if (sel < LM_NONE || *csd)
     {
-      sd = __session.ls_config->ldc_sds[sel];
+      /* If we were chasing multiple descriptors and there are none left,
+       * just quit with NSS_NOTFOUND.
+       */
+      if (*csd)
+	{
+	  sd = (*csd)->lsd_next;
+	  if (!sd)
+	    return NSS_NOTFOUND;
+	}
+      else
+	{
+          sd = __session.ls_config->ldc_sds[sel];
+	}
+
+      *csd = sd;
 
       if (sd != NULL)
 	{
@@ -2505,6 +2545,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
    * of the context.
    */
 
+next:
   _nss_ldap_enter ();
 
   /*
@@ -2514,7 +2555,8 @@ _nss_ldap_getent (ent_context_t ** ctx,
     {
       int msgid;
 
-      stat = _nss_ldap_search (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid);
+      stat = _nss_ldap_search (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid,
+	                       &(*ctx)->ec_sd);
       if (stat != NSS_SUCCESS)
 	{
 	  _nss_ldap_leave ();
@@ -2551,6 +2593,12 @@ _nss_ldap_getent (ent_context_t ** ctx,
 	}
     }
 #endif /* PAGE_RESULTS */
+
+  if (stat == NSS_NOTFOUND && (*ctx)->ec_sd)
+    {
+      (*ctx)->ec_msgid = -1;
+      goto next;
+    }
 
   debug ("<== _nss_ldap_getent");
 
@@ -2909,7 +2957,7 @@ _nss_ldap_atmap_put (ldap_config_t * config,
 
   if (config->ldc_at_map == NULL)
     {
-      config->ldc_at_map = dbopen (NULL, O_RDWR, 0600, DB_HASH, NULL);
+      config->ldc_at_map = _nss_hash_open();
       if (config->ldc_at_map == NULL)
 	{
 	  return NSS_TRYAGAIN;
@@ -2937,7 +2985,7 @@ _nss_ldap_atmap_put (ldap_config_t * config,
   val.size = sizeof (attrdup);
 
   rc =
-    (((DB *) (config->ldc_at_map))->put) ((DB *) config->ldc_at_map, &key,
+    (((DB *) (config->ldc_at_map))->put) ((DB *) config->ldc_at_map, NULL, &key,
 					  &val, 0);
 
   return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
@@ -2953,7 +3001,7 @@ _nss_ldap_ocmap_put (ldap_config_t * config,
 
   if (config->ldc_oc_map == NULL)
     {
-      config->ldc_oc_map = dbopen (NULL, O_RDWR, 0600, DB_HASH, NULL);
+      config->ldc_oc_map = _nss_hash_open();
       if (config->ldc_oc_map == NULL)
 	{
 	  return NSS_TRYAGAIN;
@@ -2969,7 +3017,7 @@ _nss_ldap_ocmap_put (ldap_config_t * config,
   val.data = (void *) &ocdup;
   val.size = sizeof (ocdup);
   rc =
-    (((DB *) (config->ldc_oc_map))->put) ((DB *) config->ldc_oc_map, &key,
+    (((DB *) (config->ldc_oc_map))->put) ((DB *) config->ldc_oc_map, NULL, &key,
 					  &val, 0);
 
   return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
@@ -2991,7 +3039,7 @@ _nss_ldap_atmap_get (ldap_config_t * config,
   key.size = strlen (rfc2307attribute);
 
   if ((((DB *) config->ldc_at_map)->get)
-      ((DB *) config->ldc_at_map, &key, &val, 0) != 0)
+      ((DB *) config->ldc_at_map, NULL, &key, &val, 0) != 0)
     {
       *attribute = rfc2307attribute;
       return NSS_NOTFOUND;
@@ -3017,7 +3065,7 @@ _nss_ldap_ocmap_get (ldap_config_t * config,
   key.size = strlen (rfc2307objectclass);
 
   if ((((DB *) config->ldc_oc_map)->get)
-      ((DB *) config->ldc_oc_map, &key, &val, 0) != 0)
+      ((DB *) config->ldc_oc_map, NULL, &key, &val, 0) != 0)
     {
       *objectclass = rfc2307objectclass;
       return NSS_NOTFOUND;
