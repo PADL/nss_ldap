@@ -1202,6 +1202,10 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_UNAVAIL;
 	}
+/* not in Solaris 9? */
+#ifndef LDAP_OPT_SSL
+#define LDAP_OPT_SSL 0x0A
+#endif 
       if (ldap_set_option (__session.ls_conn, LDAP_OPT_SSL, LDAP_OPT_ON) !=
 	  LDAP_SUCCESS)
 	{
