@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+155	Luke Howard <lukeh@padl.com>
+
+	* do not use private API when setting OpenLDAP TLS
+	  options (do_ssl_options())
+	
 154	Luke Howard <lukeh@padl.com>
 
 	* notes from Scott M. Stone <sstone@foo3.com>
