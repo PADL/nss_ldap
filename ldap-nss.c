@@ -102,7 +102,7 @@ static char rcsId[] =
 #define LDAP_MSG_RECEIVED       0x02
 #endif
 
-NSS_LDAP_DEFINE_LOCK(__lock);
+NSS_LDAP_DEFINE_LOCK (__lock);
 
 /*
  * the configuration is read by the first call to do_open().
@@ -367,8 +367,7 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -393,8 +392,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -450,7 +448,8 @@ do_atfork_setup (void)
 /*
  * Acquires global lock, blocks SIGPIPE.
  */
-void _nss_ldap_enter (void)
+void
+_nss_ldap_enter (void)
 {
   debug ("==> _nss_ldap_enter");
 
@@ -472,7 +471,8 @@ void _nss_ldap_enter (void)
 /*
  * Releases global mutex, releases SIGPIPE.
  */
-void _nss_ldap_leave (void)
+void
+_nss_ldap_leave (void)
 {
   debug ("==> _nss_ldap_leave");
 
@@ -1933,8 +1933,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2439,8 +2438,7 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -2686,8 +2684,7 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-NSS_STATUS
-_nss_ldap_proxy_bind (const char *user, const char *password)
+NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password)
 {
   ldap_args_t args;
   LDAPMessage *res, *e;
