@@ -293,8 +293,8 @@ typedef nss_status_t NSS_STATUS;
 #endif /* TESTING */
 #elif defined(IRS_NSS)
 /* XXX no mutex support */
-#define __nss_lock()
-#define __nss_unlock()
+#define __nss_lock()		pthread_lock(&_nss_ldap_lock)
+#define __nss_unlock()		pthread_unlock(&_nss_ldap_lock)
 #define __nss_cleanup()
 #else
 #define __nss_lock()		mutex_lock(&_nss_ldap_lock)

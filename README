@@ -33,8 +33,8 @@ Platforms this has been built under:
 Platforms this ought to be tested under:
 
 	o Solaris 2.5.x
-	o BSD/OS
-	o FreeBSD
+	o BSD/OS (requires BIND IRS source)
+	o FreeBSD (requires BIND IRS source)
 
 To install, pick a makefile and type make. You'll need to fiddle around
 a bit...

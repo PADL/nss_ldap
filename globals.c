@@ -44,7 +44,7 @@ static char rcsId[] = "$Id$";
 
 #ifdef SUN_NSS
 mutex_t _nss_ldap_lock = DEFAULTMUTEX; 
-#elif defined(GNU_NSS)
+#else
 pthread_mutex_t _nss_ldap_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 

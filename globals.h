@@ -23,7 +23,7 @@
 
 #ifdef SUN_NSS
 extern mutex_t _nss_ldap_lock;
-#elif defined(GNU_NSS)
+#else
 #include <pthread.h>
 extern pthread_mutex_t _nss_ldap_lock;
 #endif

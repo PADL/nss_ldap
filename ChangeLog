@@ -5,6 +5,7 @@ $Id$
 
 	* added patch from gero@faveve.uni-stuttgart.de for
 	  parsing of ldap.conf with tabs
+	* some fixes for BSDI BSD/OS IRS
 
 2.62 	Luke Howard <lukeh@padl.com>
 
