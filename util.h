@@ -83,6 +83,8 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 #ifdef CONFIGURE_KRB5_CCNAME
 #define NSS_LDAP_KEY_KRB5_CCNAME        "krb5_ccname"
 #endif /* CONFIGURE_KRB5_CCNAME */
+#define NSS_LDAP_KEY_LOGDIR		"logdir"
+#define NSS_LDAP_KEY_DEBUG		"debug"
 
 /*
  * support separate naming contexts for each map 

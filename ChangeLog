@@ -8,6 +8,7 @@ SHX-7	Luke Howard <lukeh@padl.com>
 	* fix crasher in do_sasl_interact()
 	* do_sasl_interact() needs to strdup() result for
 	  Cyrus SASL 1.x but not 2.x
+	* merge in LDAP debug patch from Howard Chu
 
 211	Luke Howard <lukeh@padl.com>
 

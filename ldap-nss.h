@@ -299,6 +299,10 @@ struct ldap_config
   ldap_reconnect_policy_t ldc_reconnect_pol;
   /* sasl security */
   char *ldc_sasl_secprops;
+  /* directory for debug files */
+  char *ldc_logdir;
+  /* LDAP debug level */
+  int ldc_debug;
 #ifdef CONFIGURE_KRB5_CCNAME
   /* krb5 ccache name */
   char *ldc_krb5_ccname;

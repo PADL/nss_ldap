@@ -150,6 +150,8 @@ static ldap_session_t __session = { NULL, NULL, 0 };
 static pthread_once_t __once = PTHREAD_ONCE_INIT;
 #endif
 
+static FILE *debugfile;
+
 #ifndef HAVE_PTHREAD_ATFORK
 /* 
  * Process ID that opened the session.
@@ -429,6 +431,9 @@ NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
   debug ("==> _nss_ldap_default_constr");
 
   be->state = NULL;
+#ifdef HPUX
+  __thread_mutex_init(&__lock, NULL);
+#endif
 
   debug ("<== _nss_ldap_default_constr");
 
@@ -1050,6 +1055,32 @@ do_open (void)
 
   while (1)
     {
+#ifdef HAVE_LDAP_SET_OPTION
+  if (cfg->ldc_debug)
+    {
+#ifdef LBER_OPT_LOG_PRINT_FILE
+      if (cfg->ldc_logdir && !debugfile)
+        {
+          char *name = malloc(strlen(cfg->ldc_logdir)+18);
+          if (name)
+            {
+              sprintf(name, "%s/ldap.%d", cfg->ldc_logdir, (int)getpid());
+              debugfile = fopen(name, "a");
+              free(name);
+            }
+          if (debugfile)
+            {
+              ber_set_option( NULL, LBER_OPT_LOG_PRINT_FILE, debugfile );
+            }
+        }
+#endif
+      if (cfg->ldc_debug)
+        {
+          ber_set_option( NULL, LBER_OPT_DEBUG_LEVEL, &cfg->ldc_debug );
+          ldap_set_option( NULL, LDAP_OPT_DEBUG_LEVEL, &cfg->ldc_debug );
+        }
+    }
+#endif
 #ifdef HAVE_LDAPSSL_CLIENT_INIT
       /*
        * Initialize the SSL library. 

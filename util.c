@@ -225,6 +225,10 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
 
 #ifdef RFC2307BIS
 
+#ifdef HPUX
+static int lock_inited;
+#endif
+
 NSS_STATUS
 _nss_ldap_dn2uid (LDAP * ld,
 		  const char *dn, char **uid, char **buffer, size_t * buflen)
@@ -232,6 +236,14 @@ _nss_ldap_dn2uid (LDAP * ld,
   NSS_STATUS status;
 
   debug ("==> _nss_ldap_dn2uid");
+
+#ifdef HPUX
+  if (!lock_inited)
+    {
+      __thread_mutex_init(&__cache_lock, NULL);
+      lock_inited = 1;
+    }
+#endif
 
   status = do_getrdnvalue (dn, AT (uid), uid, buffer, buflen);
   if (status == NSS_NOTFOUND)
@@ -608,6 +620,8 @@ _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_idle_timelimit = 0;
   result->ldc_reconnect_pol = LP_RECONNECT_HARD;
   result->ldc_sasl_secprops = NULL;
+  result->ldc_logdir = NULL;
+  result->ldc_debug = 0;
 #ifdef CONFIGURE_KRB5_CCNAME
   result->ldc_krb5_ccname = NULL;
 #endif /* CONFIGURE_KRB5_CCNAME */
@@ -837,6 +851,14 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       else if (!strcasecmp (k, NSS_LDAP_KEY_SASL_SECPROPS))
 	{
 	  t = &result->ldc_sasl_secprops;
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_LOGDIR))
+	{
+	  t = &result->ldc_logdir;
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_DEBUG))
+	{
+	  result->ldc_debug = atoi (v);
 	}
 #ifdef CONFIGURE_KRB5_CCNAME
       else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_CCNAME))
