@@ -154,6 +154,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 
   result = *presult;
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
+  result->ldc_uri = NULL;
   result->ldc_host = NULL;
   result->ldc_base = NULL;
   result->ldc_port = LDAP_PORT;

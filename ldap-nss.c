@@ -698,12 +698,28 @@ do_open (void)
 	  if (__ssl_initialized == 0
 	    && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
 	    {
-	      continue;
+	      break;
 	    }
 	  __ssl_initialized = 1;
 	}
 #endif /* SSL */
+#ifdef HAVE_LDAP_INITIALIZE
+      __session.ls_conn = NULL;
+      if ( cfg->ldc_hosturi != NULL )
+        {
+          int rc;
+          debug ("==> ldap_initialize");
+          rc = ldap_initialize (&__session.ls_conn, cfg->ldc_hosturi);
+          debug ("<== ldap_initialize");
 
+          if ( rc != LDAP_SUCCESS )
+            {
+              break;
+            }
+        }
+      else
+        {
+#endif /* HAVE_LDAP_INITIALIZE */
 #ifdef HAVE_LDAP_INIT
       debug ("==> ldap_init");
       __session.ls_conn = ldap_init (cfg->ldc_host, cfg->ldc_port);
@@ -713,6 +729,9 @@ do_open (void)
       __session.ls_conn = ldap_open (cfg->ldc_host, cfg->ldc_port);
       debug ("<== ldap_open");
 #endif /* HAVE_LDAP_INIT */
+#ifdef HAVE_LDAP_INITIALIZE
+        }
+#endif
       if (__session.ls_conn != NULL || cfg->ldc_next == cfg)
 	{
 	  break;

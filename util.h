@@ -65,6 +65,7 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 #define NSS_LDAP_KEY_SSLPATH		"sslpath"
 #define NSS_LDAP_KEY_REFERRALS		"referrals"
 #define NSS_LDAP_KEY_RESTART		"restart"
+#define NSS_LDAP_KEY_URI		"uri"
 
 /*
  * support separate naming contexts for each map 

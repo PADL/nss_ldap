@@ -511,6 +511,9 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   result->ldc_referrals = 1;
   result->ldc_restart = 1;
   result->ldc_next = result;
+#ifdef HAVE_LDAP_INITIALIZE
+  result->ldc_hosturi = NULL;
+#endif
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
   if (fp == NULL)
@@ -566,6 +569,12 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	{
 	  t = &result->ldc_host;
 	}
+#ifdef HAVE_LDAP_INITIALIZE
+      else if (!strcasecmp (k, NSS_LDAP_KEY_URI))
+	{
+	  t = &result->ldc_hosturi;
+	}
+#endif
       else if (!strcasecmp (k, NSS_LDAP_KEY_BASE))
 	{
 	  t = &result->ldc_base;
@@ -733,7 +742,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	}
     }
 
-  if (result->ldc_host == NULL)
+  if (result->ldc_host == NULL 
+#ifdef HAVE_LDAP_INITIALIZE
+      && result->ldc_hosturi == NULL
+#endif
+      )
     {
       free (result);
       return NSS_NOTFOUND;

@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+150	Luke Howard <lukeh@padl.com>
+
+	* patch from Anselm Kruis for URI support
+
 149	Luke Howard <lukeh@padl.com>
 
 	* fixed compile on Solaris, broken in 145 by
