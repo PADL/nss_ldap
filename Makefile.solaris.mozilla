@@ -64,23 +64,18 @@ SRCS=	ldap-nss.c \
 	resolve.c \
 	dnsconfig.c
 
-OBJS=${SRCS:.c=.o}
-LIB=${MODULE}.so.1
+OBJS=$(SRCS:.c=.o)
+LIB=$(MODULE).so.1
 
-# uncomment NSFLAGS if you are using the Netscape SDK
 NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
 
-# uncomment this SUNFLAGS if you're building under Solaris 2.5 
-#SUNFLAGS=-DSUN_NSS -D_REENTRANT
-
-# uncomment this SUNFLAGS if you're building under Solaris 2.6
 SUNFLAGS=-DSUN_NSS -D_REENTRANT -DHAVE_SNPRINTF -D__EXTENSIONS__
 INCDIRS=
 LIBDIRS=-L/usr/ucblib -L/usr/local/ldapsdk/lib
 LIBS=-lldapssl30
 
 # uncomment this if you're using gcc
-GCCFLAGS=-O -g -Wall -fPIC ${PDOFLAGS}
+GCCFLAGS=-O -g -Wall -fPIC $(PDOFLAGS)
 # don't know about these CFLAGS?
 #SUNCFLAGS=-g -pic
 # these are the flags wcs@sun used
@@ -91,37 +86,37 @@ DEBUGFLAGS=-DDEBUG
 # choose your C compiler
 #CC=/usr/local/opt/SUNWspro/bin/cc
 #CC=cc
-#COMPILERFLAGS=${SUNCFLAGS}
-#LD=${CC}
-#LDFLAGS=${SUNLDFLAGS}
+#COMPILERFLAGS=$(SUNCFLAGS)
+#LD=$(CC)
+#LDFLAGS=$(SUNLDFLAGS)
 
 CC=gcc
-COMPILERFLAGS=${GCCFLAGS}
+COMPILERFLAGS=$(GCCFLAGS)
 
 # These "GNU" flags seem to work OK, with Sun CC too ???
 LD=ld
 GNULDFLAGS=-M mapfile -G -dy -z text -R/usr/local/ldapsdk/lib -R/usr/ucblib
-LDFLAGS=${GNULDFLAGS}
+LDFLAGS=$(GNULDFLAGS)
 
-CFLAGS=${DEBUGFLAGS} ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
+CFLAGS=$(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFLAGS) $(INCDIRS)
 
-all: ${MODULE}
+all: $(MODULE)
 
-${MODULE}: ${OBJS}
-	${LD} ${LIBDIRS} ${LDFLAGS} -o ${LIB} ${OBJS} ${LIBS}
+$(MODULE): $(OBJS)
+	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(LIB) $(OBJS) $(LIBS)
 
 install:
-	cp ${LIB} /usr/lib/
+	cp $(LIB) /usr/lib/
 
 clean:
-	rm -f ${OBJS} ${LIB}
+	rm -f $(OBJS) $(LIB)
 
-TESTCC=gcc ${PDOFLAGS} -g -D_REENTRANT #/usr/lib/nss_ldap.so.1
+TESTCC=gcc $(PDOFLAGS) -g -D_REENTRANT #/usr/lib/nss_ldap.so.1
 
 test:
-	-${TESTCC} -o testpw testpw.c
-	-${TESTCC} -o testpw5 testpw5.c -lthread
-	-${TESTCC} -o testpw2 testpw.c -lthread
-	-${TESTCC} -o testgr testgr.c
-	-${TESTCC} -o testpw3 testpw3.c
+	-$(TESTCC) -o testpw testpw.c
+	-$(TESTCC) -o testpw5 testpw5.c -lthread
+	-$(TESTCC) -o testpw2 testpw.c -lthread
+	-$(TESTCC) -o testgr testgr.c
+	-$(TESTCC) -o testpw3 testpw3.c
 

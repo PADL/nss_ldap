@@ -103,8 +103,8 @@ ${MODULE}: ${OBJS}
 
 install:
 	install -m 644 -o root -g root ${NSSLIB} /lib/$(NSSLIB)
-	ln -s $(NSSLIB) /lib/$(SOLIB)
-	ln -s /lib/$(NSSLIB) /usr/lib/$(MODULE).so
+	ln -sf $(NSSLIB) /lib/$(SOLIB)
+	ln -sf /lib/$(NSSLIB) /usr/lib/$(MODULE).so
 	cp nsswitch.ldap /etc/nsswitch.ldap
 	cp ldap.conf	/etc/ldap.conf
 

@@ -67,72 +67,51 @@ SRCS=	ldap-nss.c \
 	resolve.c \
 	dnsconfig.c
 
-OBJS=${SRCS:.c=.o}
+OBJS=$(SRCS:.c=.o)
 
-# uncomment NSFLAGS if you are using the Netscape SDK (or Mozilla)
 NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API 
 
-# uncomment GNUFLAGS if you are building a GNU glibc-2.x module
 GNUFLAGS=-DGNU_NSS -DWEIRD_GETPWENT -DHAVE_SNPRINTF -D_REENTRANT
 LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 
-SOLIB=lib${MODULE}.so.${NSSLIBVER}
-NSSLIB=lib${MODULE}-${LIBCVERS}.so
-NSSLIBVER=${shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/'}
+SOLIB=lib$(MODULE).so.$(NSSLIBVER)
+NSSLIB=lib$(MODULE)-$(LIBCVERS).so
+NSSLIBVER=$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 
 LIBDIRS=-L.
 
-# uncomment this if you're linking against Sun or Netscape's libldap.so
-# or using UMich libldap/liblber compiled into one library
 LIBS=-L/usr/local/ldapsdk/lib -Wl,-rpath /usr/local/ldapsdk/lib -lldapssl30 -lnsl -lpthread -lresolv
 
-# uncomment this if you're using gcc
 GCCFLAGS=-O -g -Wall -fPIC
 DEBUGFLAGS=-DDEBUG
 
 CC=gcc
-COMPILERFLAGS=${GCCFLAGS}
+COMPILERFLAGS=$(GCCFLAGS)
 
 LD=gcc
-GNULDFLAGS=-shared -Wl,-soname,${SOLIB}
-LDFLAGS=${GNULDFLAGS}
+GNULDFLAGS=-shared -Wl,-soname,$(SOLIB)
+LDFLAGS=$(GNULDFLAGS)
 
-CFLAGS=-DLDAP_REFERRALS ${DEBUGFLAGS} ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
+CFLAGS=-DLDAP_REFERRALS $(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFLAGS) $(INCDIRS)
 
-all: ${MODULE}
+all: $(MODULE)
 
 # This symlink is purely to keep RC happy.
-${MODULE}: ${OBJS}
-	${LD} ${LIBDIRS} ${LDFLAGS} -o ${NSSLIB} ${OBJS} ${LIBS}
-	-ln -sf ${NSSLIB} ${MODULE}.so.1
+$(MODULE): $(OBJS)
+	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(NSSLIB) $(OBJS) $(LIBS)
+	-ln -sf $(NSSLIB) $(MODULE).so.1
 
 install: install_lib install_conf
 
 install_lib:
-	install -m 644 -o root -g root ${NSSLIB} /lib/$(NSSLIB)
+	install -m 644 -o root -g root $(NSSLIB) /lib/$(NSSLIB)
 	ln -sf $(NSSLIB) /lib/$(SOLIB)
 	ln -sf /lib/$(NSSLIB) /usr/lib/$(MODULE).so
 
 install_conf:
-	cp nsswitch.ldap /etc/nsswitch.ldap
-	cp ldap.conf	/etc/ldap.conf
+	install -m 644 -o root -g root nsswitch.ldap /etc/nsswitch.ldap
+	install -m 644 -o root -g root ldap.conf /etc/ldap.conf
 
 clean:
-	rm -f ${OBJS} ${LIB} core
+	rm -f $(OBJS) $(LIB) core
 
-TESTCC=gcc -g -D_REENTRANT -DNSS_GNU -DWEIRD_GETPWENT
-
-test:
-	-${TESTCC} ${CFLAGS} -o  testpw testpw.c
-	-${TESTCC} ${CFLAGS} -o testpw5 testpw5.c -lthread
-	-${TESTCC} -o testpw2 testpw.c -lthread
-	-${TESTCC} -o testgr testgr.c
-#	-${TESTCC} -o testpw3 testpw3.c
-
-# this is bad...
-#test.pl:
-#	cp /etc/nsswitch.conf /etc/nsswitch.conf.ldaptest
-#	cp nsswitch.test /etc/nsswitch.conf
-#	perl ldaptest.pl
-#	mv /etc/nsswitch.conf.ldaptest /etc/nsswitch.conf
-#
