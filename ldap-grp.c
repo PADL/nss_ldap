@@ -264,8 +264,8 @@ do_parse_group_members (LDAP * ld,
 			char **buffer, size_t * buflen, int *depth)
 {
   NSS_STATUS stat = NSS_SUCCESS;
-  char **dnValues;
-  char **uidValues;
+  char **dnValues = NULL;
+  char **uidValues = NULL;
   char **groupMembers;
   size_t groupMembersCount, i;
   char **valiter;
