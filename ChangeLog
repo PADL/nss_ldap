@@ -5,6 +5,8 @@ $Id$
 
 	* added experimental support for DN-membered groups;
 	  to enable, define RFC2307BIS
+	* fixed align bug (where buflen wasn't being
+	  decremented after pointer alignment)
 
 2.61	Luke Howard <lukeh@padl.com>
 
