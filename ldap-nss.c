@@ -2550,11 +2550,10 @@ next:
 	   ldap_first_entry (__session.ls_conn, *res) == NULL))
 	{
 	  sd = sd->lsd_next;
-	  if (sd != NULL)
-	    goto next;
+	  goto next;
 	}
     }
-      
+
   debug ("<== _nss_ldap_search_s");
 
   return stat;
