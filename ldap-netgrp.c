@@ -72,7 +72,7 @@ static char rcsId[] =
 #endif
 
 #ifdef HAVE_NSS_H
-static ent_context_t *netgroup_context = NULL;
+static ent_context_t *_ngbe = NULL;
 #endif
 
 /*
@@ -322,7 +322,7 @@ _nss_ldap_endnetgrent (struct __netgrent * result)
       result->cursor = NULL;
     }
 
-  LOOKUP_ENDENT (netgroup_context);
+  LOOKUP_ENDENT (_ngbe);
 }
 
 NSS_STATUS
@@ -350,7 +350,7 @@ _nss_ldap_setnetgrent (char *group, struct __netgrent *result)
 			 _nss_ldap_filt_getnetgrent, LM_NETGROUP,
 			 _nss_ldap_load_netgr);
 
-  LOOKUP_SETENT (netgroup_context);
+  LOOKUP_SETENT (_ngbe);
 }
 
 NSS_STATUS
@@ -448,42 +448,42 @@ nn_destroy (struct name_list **head)
  * user data.
  */
 static NSS_STATUS
-nn_chase (nss_ldap_netgr_backend_t * psbe, LDAPMessage ** pEntry)
+nn_chase (nss_ldap_netgr_backend_t * ngbe, LDAPMessage ** pEntry)
 {
   ldap_args_t a;
   NSS_STATUS stat = NSS_NOTFOUND;
 
   debug ("==> nn_chase");
 
-  if (psbe->state->ec_res != NULL)
+  if (ngbe->state->ec_res != NULL)
     {
-      ldap_msgfree (psbe->state->ec_res);
-      psbe->state->ec_res = NULL;
+      ldap_msgfree (ngbe->state->ec_res);
+      ngbe->state->ec_res = NULL;
     }
 
-  while (psbe->namelist != NULL)
+  while (ngbe->namelist != NULL)
     {
       LA_INIT (a);
       LA_TYPE (a) = LA_TYPE_STRING;
-      LA_STRING (a) = psbe->namelist->name;
+      LA_STRING (a) = ngbe->namelist->name;
 
       debug (":== nn_chase: nested netgroup=%s", LA_STRING (a));
 
       _nss_ldap_enter ();
       stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getnetgrent,
-				 LM_NETGROUP, 1, &psbe->state->ec_res);
+				 LM_NETGROUP, 1, &ngbe->state->ec_res);
       _nss_ldap_leave ();
 
-      nn_pop (&psbe->namelist);
+      nn_pop (&ngbe->namelist);
 
       if (stat == NSS_SUCCESS)
 	{
 	  /* Check we got an entry, not just a result. */
-	  *pEntry = _nss_ldap_first_entry (psbe->state->ec_res);
+	  *pEntry = _nss_ldap_first_entry (ngbe->state->ec_res);
 	  if (*pEntry == NULL)
 	    {
-	      ldap_msgfree (psbe->state->ec_res);
-	      psbe->state->ec_res = NULL;
+	      ldap_msgfree (ngbe->state->ec_res);
+	      ngbe->state->ec_res = NULL;
 	      stat = NSS_NOTFOUND;
 	    }
 	}
@@ -510,9 +510,6 @@ static NSS_STATUS
 _nss_ldap_getnetgroup_setent (nss_backend_t * be, void *_args)
 {
   debug ("==> _nss_ldap_getnetgroup_setent");
-
-  /* This is a NOOP but I guess we could use it to resolve nested groups */
-
   debug ("<== _nss_ldap_getnetgroup_setent");
 
   return NSS_SUCCESS;
@@ -679,15 +676,15 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 }
 
 static NSS_STATUS
-_nss_ldap_getnetgroup_destr (nss_backend_t * netgroup_context, void *args)
+_nss_ldap_getnetgroup_destr (nss_backend_t * _ngbe, void *args)
 {
-  nss_ldap_netgr_backend_t *psbe =
-    (nss_ldap_netgr_backend_t *) netgroup_context;
+  nss_ldap_netgr_backend_t *ngbe =
+    (nss_ldap_netgr_backend_t *) _ngbe;
 
   /* free list of nested netgroups */
-  nn_destroy (&psbe->namelist);
+  nn_destroy (&ngbe->namelist);
 
-  return _nss_ldap_default_destr (netgroup_context, args);
+  return _nss_ldap_default_destr (_ngbe, args);
 }
 
 static nss_backend_op_t getnetgroup_ops[] = {
@@ -702,7 +699,7 @@ static nss_backend_op_t getnetgroup_ops[] = {
  */
 
 static NSS_STATUS
-do_innetgr2 (const char *netgroup,
+do_innetgr_nested (const char *netgroup,
 	     const char *nested, enum nss_netgr_status *status)
 {
   NSS_STATUS stat;
@@ -710,7 +707,7 @@ do_innetgr2 (const char *netgroup,
   LDAPMessage *e, *res;
   char **values;
 
-  debug ("==> do_innetgr2 %s %s", netgroup, nested);
+  debug ("==> do_innetgr_nested netgroup=%s assertion=%s", netgroup, nested);
 
   *status = NSS_NETGR_NO;
 
@@ -718,11 +715,11 @@ do_innetgr2 (const char *netgroup,
   LA_TYPE (a) = LA_TYPE_STRING;
   LA_STRING (a) = nested;	/* memberNisNetgroup */
 
-  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr2,
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr_nested,
 			     LM_NETGROUP, 1, &res);
   if (stat != NSS_SUCCESS)
     {
-      debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
+      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
       return stat;
     }
 
@@ -730,7 +727,7 @@ do_innetgr2 (const char *netgroup,
   if (e == NULL)
     {
       stat = NSS_NOTFOUND;
-      debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
+      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
       ldap_msgfree (res);
       return stat;
     }
@@ -739,7 +736,7 @@ do_innetgr2 (const char *netgroup,
   if (values == NULL)
     {
       stat = NSS_NOTFOUND;
-      debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
+      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
       ldap_msgfree (res);
       return stat;
     }
@@ -755,12 +752,12 @@ do_innetgr2 (const char *netgroup,
     }
   else
     {
-      stat = do_innetgr2 (netgroup, nested, status);
+      stat = do_innetgr_nested (netgroup, nested, status);
     }
 
   ldap_value_free (values);
 
-  debug ("<== do_innetgr2 status=%d netgr_status=%d", stat, *status);
+  debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
 
   return stat;
 }
@@ -776,9 +773,9 @@ do_innetgr (const char *netgroup,
   char triple[LDAP_FILT_MAXSIZ];
   LDAPMessage *e, *res;
   char **values;
-  char escaped_machine[3 * MAXHOSTNAMELEN];
-  char escaped_user[3 * LOGNAME_MAX];
-  char escaped_domain[3 * MAXHOSTNAMELEN];
+  char escaped_machine[3 * (MAXHOSTNAMELEN + 1)];
+  char escaped_user[3 * (LOGNAME_MAX + 1)];
+  char escaped_domain[3 * (MAXHOSTNAMELEN + 1)];
 
   *status = NSS_NETGR_NO;
 
@@ -880,7 +877,7 @@ do_innetgr (const char *netgroup,
     }
   else
     {
-      stat = do_innetgr2 (netgroup, values[0], status);
+      stat = do_innetgr_nested (netgroup, values[0], status);
     }
 
   ldap_value_free (values);
@@ -965,7 +962,7 @@ _nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
 {
   NSS_STATUS stat;
   struct nss_setnetgrent_args *args;
-  nss_ldap_netgr_backend_t *psbe;
+  nss_ldap_netgr_backend_t *ngbe;
   ldap_args_t a;
 
   debug ("==> _nss_ldap_setnetgrent");
@@ -982,48 +979,48 @@ _nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
   LA_TYPE (a) = LA_TYPE_STRING;
   LA_STRING (a) = args->netgroup;	/* cn */
 
-  psbe = (nss_ldap_netgr_backend_t *) malloc (sizeof (*psbe));
-  if (psbe == NULL)
+  ngbe = (nss_ldap_netgr_backend_t *) malloc (sizeof (*ngbe));
+  if (ngbe == NULL)
     {
       debug ("<== _nss_ldap_setnetgrent");
       return NSS_UNAVAIL;
     }
 
-  psbe->ops = getnetgroup_ops;
-  psbe->n_ops = sizeof (getnetgroup_ops) / sizeof (nss_backend_op_t);
-  psbe->state = NULL;
-  psbe->namelist = NULL;
+  ngbe->ops = getnetgroup_ops;
+  ngbe->n_ops = sizeof (getnetgroup_ops) / sizeof (nss_backend_op_t);
+  ngbe->state = NULL;
+  ngbe->namelist = NULL;
 
-  stat = _nss_ldap_default_constr ((nss_ldap_backend_t *) psbe);
+  stat = _nss_ldap_default_constr ((nss_ldap_backend_t *) ngbe);
   if (stat != NSS_SUCCESS)
     {
-      free (psbe);
+      free (ngbe);
       debug ("<== _nss_ldap_setnetgrent");
       return stat;
     }
 
-  if (_nss_ldap_ent_context_init (&psbe->state) == NULL)
+  if (_nss_ldap_ent_context_init (&ngbe->state) == NULL)
     {
-      _nss_ldap_default_destr ((nss_backend_t *) psbe, NULL);
+      _nss_ldap_default_destr ((nss_backend_t *) ngbe, NULL);
       debug ("<== _nss_ldap_setnetgrent");
       return NSS_UNAVAIL;
     }
 
-  assert (psbe->state != NULL);
-  assert (psbe->state->ec_res == NULL);
+  assert (ngbe->state != NULL);
+  assert (ngbe->state->ec_res == NULL);
 
   _nss_ldap_enter ();
   stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getnetgrent,
-			     LM_NETGROUP, 1, &psbe->state->ec_res);
+			     LM_NETGROUP, 1, &ngbe->state->ec_res);
   _nss_ldap_leave ();
 
   if (stat == NSS_SUCCESS)
     {
-      args->iterator = (nss_backend_t *) psbe;
+      args->iterator = (nss_backend_t *) ngbe;
     }
   else
     {
-      _nss_ldap_default_destr ((nss_backend_t *) psbe, NULL);
+      _nss_ldap_default_destr ((nss_backend_t *) ngbe, NULL);
     }
 
   debug ("<== _nss_ldap_setnetgrent");
@@ -1032,13 +1029,13 @@ _nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
 }
 
 static NSS_STATUS
-_nss_ldap_netgroup_destr (nss_backend_t * netgroup_context, void *args)
+_nss_ldap_netgroup_destr (nss_backend_t * _ngbe, void *args)
 {
-  return _nss_ldap_default_destr (netgroup_context, args);
+  return _nss_ldap_default_destr (_ngbe, args);
 }
 
 static NSS_STATUS
-_nss_ldap_netgroup_noop (nss_backend_t * netgroup_context, void *args)
+_nss_ldap_netgroup_noop (nss_backend_t * _ngbe, void *args)
 {
   assert ("_nss_ldap_netgroup_noop" == NULL);
 

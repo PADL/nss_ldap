@@ -98,7 +98,7 @@ extern char _nss_ldap_filt_getspent[];
 /* netgroups */
 extern char _nss_ldap_filt_getnetgrent[];
 extern char _nss_ldap_filt_innetgr[];
-extern char _nss_ldap_filt_innetgr2[];
+extern char _nss_ldap_filt_innetgr_nested[];
 
 #ifdef AT_OC_MAP
 /**
