@@ -3451,15 +3451,28 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
 static int
 do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 {
-  char *authzid = (char *) defaults;
+  char *authzid = (char *)defaults;
   sasl_interact_t *interact = (sasl_interact_t *) _interact;
 
   while (interact->id != SASL_CB_LIST_END)
     {
       if (interact->id == SASL_CB_USER)
 	{
-	  interact->result = authzid ? authzid : interact->defresult;
-	  interact->len = interact->result ? strlen (interact->result) : 0;
+	  if (authzid != NULL)
+	    {
+		interact->result = authzid;
+		interact->length = strlen(authzid);
+	    }
+	  else if (interact->defresult != NULL)
+	    {
+		interact->result = interact->defresult;
+		interact->length = strlen(interact->defresult)
+	    }
+	  else
+	   {
+		interact->result = "";
+		interact->length = 0;
+	   }
 	}
       else
 	{

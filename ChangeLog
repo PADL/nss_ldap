@@ -1,10 +1,11 @@
-$Header$
+$Id$
 ===============================================================
 
-SHX-2	Luke Howard <lukeh@padl.com>
+SHX-3	Luke Howard <lukeh@padl.com>
 	*** Restricted Release - Use Subject to License ***
 
 	* Solaris netgroup support test release
+	* fix do_sasl_interact() crasher
 
 211	Luke Howard <lukeh@padl.com>
 
