@@ -1,7 +1,7 @@
 $Id$
 ===============================================================
 
-228	Luke Howard <lukeh@padl.com>
+227	Luke Howard <lukeh@padl.com>
 
 	* separate initializing LDAP session with actually
 	  connecting to the DSA, so that we don't try to
@@ -10,9 +10,6 @@ $Id$
 	  to binding). NB: this will only provide improved
 	  behaviour for LDAP client libraries that support
 	  ldap_init() or ldap_initialize() rather than ldap_open
-	 
-227	Luke Howard <lukeh@padl.com>
-
 	* fix for BUG#183: support pw_change and pw_expire
 	  on BSD
 	* fix for glibc 2.1 from Alexander Spannagel
