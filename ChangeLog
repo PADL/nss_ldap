@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.76	Luke Howard <lukeh@padl.com>
+
+	* added -lresolv to Solaris makefiles
+
 2.75	Luke Howard <lukeh@padl.com>
 
 	* incorporated RPM patches from stein@terminator.net
