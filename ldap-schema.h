@@ -95,6 +95,9 @@ extern char _nss_ldap_filt_getservent[];
 extern char _nss_ldap_filt_getspnam[];
 extern char _nss_ldap_filt_getspent[];
 
+/* netgroups */
+extern char _nss_ldap_filt_getnetgrent[];
+
 #ifdef AT_OC_MAP
 /**
  * Initialize attribute vector table indexed by map

@@ -24,10 +24,7 @@
 #define _LDAP_NSS_LDAP_LDAP_NETGRP_H
 
 
-static NSS_STATUS _nss_ldap_parse_netgr (LDAP * ld,
-					 LDAPMessage * e,
-					 ldap_state_t * pvt,
-					 void *result,
+static NSS_STATUS _nss_ldap_parse_netgr (void *result,
 					 char *buffer, size_t buflen);
 
 #ifdef HAVE_NSSWITCH_H

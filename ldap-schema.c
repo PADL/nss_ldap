@@ -121,6 +121,9 @@ char _nss_ldap_filt_getservent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getspnam[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getspent[LDAP_FILT_MAXSIZ];
 
+/* netgroups */
+char _nss_ldap_filt_getnetgrent[LDAP_FILT_MAXSIZ];
+
 /**
  * lookup filter initialization
  */
@@ -228,6 +231,10 @@ _nss_ldap_init_filters ()
 	    "(&(objectclass=%s)(%s=%s))", OC (shadowAccount), AT (uid), "%s");
   snprintf (_nss_ldap_filt_getspent, LDAP_FILT_MAXSIZ,
 	    "(objectclass=%s)", OC (shadowAccount));
+
+  /* netgroups */
+  snprintf (_nss_ldap_filt_getnetgrent, LDAP_FILT_MAXSIZ,
+	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (cn), "%s");
 }
 
 #ifdef AT_OC_MAP
