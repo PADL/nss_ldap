@@ -319,8 +319,9 @@ static int
 do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 	   int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-static int
-do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
+     static int
+       do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+		  int freeit)
 #endif
 {
   if (freeit)
@@ -375,8 +376,7 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -401,8 +401,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -562,7 +561,7 @@ do_close (void)
     {
 #ifdef DEBUG
       syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
-		 __session.ls_conn);
+	      __session.ls_conn);
 #endif /* DEBUG */
       ldap_unbind (__session.ls_conn);
       __session.ls_conn = NULL;
@@ -598,7 +597,7 @@ do_close_no_unbind (void)
 
 #ifdef DEBUG
   syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
-	     __session.ls_conn);
+	  __session.ls_conn);
 #endif /* DEBUG */
 
   /*
@@ -624,7 +623,7 @@ do_close_no_unbind (void)
 	  || (getpeername (sd, &peername, &peernamelen) != 0)
 	  || (memcmp (&peername, &__session.ls_peername, peernamelen) != 0))
 	{
-	  __session.ls_conn = NULL; /* leaky */
+	  __session.ls_conn = NULL;	/* leaky */
 	  debug ("<== do_close_no_unbind (invalid socket descriptor)");
 	  return;
 	}
@@ -662,8 +661,7 @@ do_close_no_unbind (void)
 /*
  * A simple alias around do_open().
  */
-NSS_STATUS
-_nss_ldap_init (void)
+NSS_STATUS _nss_ldap_init (void)
 {
   return do_open ();
 }
@@ -728,19 +726,19 @@ do_open (void)
 #ifdef DEBUG
 #ifdef HAVE_PTHREAD_ATFORK
   syslog (LOG_DEBUG,
-	     "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
-	     __session.ls_conn, __euid, euid);
+	  "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
+	  __session.ls_conn, __euid, euid);
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   syslog (LOG_DEBUG,
-	     "nss_ldap: libpthreads=%s, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
-	     (__pthread_atfork == NULL ? "FALSE" : "TRUE"),
-	     __session.ls_conn,
-	     (__pthread_atfork == NULL ? __pid : -1),
-	     (__pthread_atfork == NULL ? pid : -1), __euid, euid);
+	  "nss_ldap: libpthreads=%s, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  (__pthread_atfork == NULL ? "FALSE" : "TRUE"),
+	  __session.ls_conn,
+	  (__pthread_atfork == NULL ? __pid : -1),
+	  (__pthread_atfork == NULL ? pid : -1), __euid, euid);
 #else
   syslog (LOG_DEBUG,
-	     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
-	     __session.ls_conn, __pid, pid, __euid, euid);
+	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif
 #endif /* DEBUG */
 
@@ -1499,7 +1497,7 @@ do_result (ent_context_t * ctx, int all)
 	  rc = __session.ls_conn->ld_errno;
 #endif /* LDAP_OPT_ERROR_NUMBER */
 	  syslog (LOG_ERR, "nss_ldap: could not get LDAP result - %s",
-		     ldap_err2string (rc));
+		  ldap_err2string (rc));
 	  stat = NSS_UNAVAIL;
 	  break;
 	case LDAP_RES_SEARCH_ENTRY:
@@ -1525,8 +1523,8 @@ do_result (ent_context_t * ctx, int all)
 		  stat = NSS_UNAVAIL;
 		  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
 		  syslog (LOG_ERR,
-			     "nss_ldap: could not get LDAP result - %s",
-			     ldap_err2string (rc));
+			  "nss_ldap: could not get LDAP result - %s",
+			  ldap_err2string (rc));
 		}
 	      else
 		{
@@ -1583,8 +1581,8 @@ do_with_reconnect (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-		     "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
-		     backoff);
+		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+		  backoff);
 	  (void) sleep (backoff);
 	}
       else if (tries > 0)
@@ -1645,20 +1643,20 @@ do_with_reconnect (const char *base, int scope,
     {
     case NSS_UNAVAIL:
       syslog (LOG_ERR, "nss_ldap: could not search LDAP server - %s",
-		 ldap_err2string (rc));
+	      ldap_err2string (rc));
       break;
     case NSS_TRYAGAIN:
       syslog (LOG_ERR,
-		 "nss_ldap: could not reconnect to LDAP server - %s",
-		 ldap_err2string (rc));
+	      "nss_ldap: could not reconnect to LDAP server - %s",
+	      ldap_err2string (rc));
       stat = NSS_UNAVAIL;
       break;
     case NSS_SUCCESS:
       if (tries)
 	{
 	  syslog (LOG_INFO,
-		     "nss_ldap: reconnected to LDAP server after %d attempt(s)",
-		     tries);
+		  "nss_ldap: reconnected to LDAP server after %d attempt(s)",
+		  tries);
 	}
       time (&__session.ls_timestamp);
       break;
@@ -1917,7 +1915,8 @@ do_parse_s (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
 NSS_STATUS
 _nss_ldap_read (const char *dn, const char **attributes, LDAPMessage ** res)
 {
-  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes, 1,	/* sizelimit */
+  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)",
+			    attributes, 1,	/* sizelimit */
 			    res, (search_func_t) do_search_s);
 }
 
@@ -1980,8 +1979,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2486,8 +2484,7 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -2706,9 +2703,9 @@ static int
 do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		 int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-static int
-do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-		 int freeit)
+     static int
+       do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+			int freeit)
 #endif
 {
 #if LDAP_SET_REBIND_PROC_ARGS == 3
@@ -2733,8 +2730,7 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-NSS_STATUS
-_nss_ldap_proxy_bind (const char *user, const char *password)
+NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password)
 {
   ldap_args_t args;
   LDAPMessage *res, *e;
