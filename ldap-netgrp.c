@@ -76,8 +76,20 @@ static ent_context_t *_ngbe = NULL;
 #endif
 
 #ifdef HAVE_NSSWITCH_H
+struct ldap_innetgr_args {
+  const char *lia_netgroup;
+  enum nss_netgr_status lia_netgr_status;
+  int lia_depth;
+  int lia_erange;
+};
+
+typedef struct ldap_innetgr_args ldap_innetgr_args_t;
+
 static nss_backend_op_t netgroup_ops[];
-#endif
+
+static NSS_STATUS do_innetgr_nested (ldap_innetgr_args_t *li_args,
+				     const char *nested);
+#endif /* HAVE_NSSWITCH_H */
 
 /*
  * I pulled the following macro (EXPAND), functions (strip_whitespace and
@@ -721,22 +733,50 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 /*
  * Test a 4-tuple
  */
+static NSS_STATUS
+do_parse_innetgr (LDAP *ld, LDAPMessage *e, ldap_state_t *pvt,
+		  void *result, char *buffer, size_t buflen)
+{
+  ldap_innetgr_args_t *li_args = (ldap_innetgr_args_t *)result;
+  char **values = NULL;
+  NSS_STATUS stat = NSS_NOTFOUND;
+
+  debug ("==> do_parse_innetgr");
+
+  values = _nss_ldap_get_values (e, AT(cn));
+  if (values != NULL)
+    {
+      assert (values[0] != NULL);
+
+      if (strcasecmp (li_args->lia_netgroup, values[0]) == 0)
+	{
+	  li_args->lia_netgr_status = NSS_NETGR_FOUND;
+	  stat = NSS_SUCCESS;
+	}
+      else 
+	{
+	  stat = do_innetgr_nested (li_args, values[0]);
+	}
+
+      ldap_value_free (values);
+    }
+
+  debug ("<== do_parse_innetgr");
+
+  return stat;
+}
 
 static NSS_STATUS
-do_innetgr_nested (const char *netgroup,
-		   const char *nested, enum nss_netgr_status *status,
-		   int *depth)
+do_innetgr_nested (ldap_innetgr_args_t *li_args, const char *nested)
 {
   NSS_STATUS stat;
   ldap_args_t a;
-  LDAPMessage *e, *res;
-  char **values;
+  ent_context_t *ctx = NULL;
 
-  debug ("==> do_innetgr_nested netgroup=%s assertion=%s", netgroup, nested);
+  debug ("==> do_innetgr_nested netgroup=%s assertion=%s",
+	 li_args->lia_netgroup, nested);
 
-  *status = NSS_NETGR_NO;
-
-  if (*depth > LDAP_NSS_MAXNETGR_DEPTH)
+  if (li_args->lia_depth > LDAP_NSS_MAXNETGR_DEPTH)
     {
       debug ("<== do_innetgr_nested: maximum depth exceeded");
       return NSS_NOTFOUND;
@@ -744,65 +784,24 @@ do_innetgr_nested (const char *netgroup,
 
   LA_INIT (a);
   LA_TYPE (a) = LA_TYPE_STRING;
-  LA_STRING (a) = nested;	/* memberNisNetgroup */
+  LA_STRING (a) = nested; /* memberNisNetgroup */
 
-  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr,
-			     LM_NETGROUP, LDAP_NO_LIMIT, &res);
-  if (stat != NSS_SUCCESS)
+  if (_nss_ldap_ent_context_init(&ctx) == NULL)
     {
-      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat,
-	     *status);
-      return stat;
+      debug ("<== do_innetgr_nested: failed to initialize context");
+      return NSS_UNAVAIL;
     }
 
-  stat = NSS_NOTFOUND;
+  li_args->lia_depth++;
 
-  for (e = _nss_ldap_first_entry (res);
-       e != NULL;
-       e = _nss_ldap_next_entry (res))
-    {
-      values = _nss_ldap_get_values (e, AT (cn));
-      if (values != NULL)
-	{
-	  assert (values[0] != NULL);
+  stat = _nss_ldap_getent_ex (&a, &ctx, (void *)li_args, NULL, 0,
+			      &li_args->lia_erange, _nss_ldap_filt_innetgr,
+			      LM_NETGROUP, do_parse_innetgr);
 
-	  (*depth)++;
+  _nss_ldap_ent_context_release (ctx);
 
-	  if (strcasecmp (netgroup, values[0]) == 0)
-	    {
-	      stat = NSS_SUCCESS;
-	      *status = NSS_NETGR_FOUND;
-	      ldap_value_free (values);
-	      break;
-	    }
-	  ldap_value_free(values);
-	}
-    }
-
-  if (stat == NSS_NOTFOUND)
-    {
-      for (e = _nss_ldap_first_entry (res);
-	   e != NULL;
-	   e = _nss_ldap_next_entry (res))
-	{
-	  values = _nss_ldap_get_values (e, AT (cn));
-	  if (values != NULL)
-	    {
-	      /*
-	       * Then, recurse up to see whether this netgroup belongs
-	       * to the argument
-	       */
-	      stat = do_innetgr_nested (netgroup, values[0], status, depth);
-	      ldap_value_free (values);
-	      if (stat == NSS_SUCCESS && *status == NSS_NETGR_FOUND)
-		  break;
-	    }
-	}
-    }
-
-  ldap_msgfree (res);
-
-  debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
+  debug ("<== do_innetgr_nested status=%d netgr_status=%d",
+	 stat, li_args->lia_netgr_status);
 
   return stat;
 }
@@ -815,11 +814,8 @@ do_innetgr (const char *netgroup,
 {
   NSS_STATUS stat;
   ldap_args_t a;
-  LDAPMessage *e, *res;
-  char **values;
-  int depth = 0;
-
-  *status = NSS_NETGR_NO;
+  ent_context_t *ctx = NULL;
+  ldap_innetgr_args_t li_args;
 
   debug ("==> do_innetgr netgroup=%s", netgroup);
 
@@ -832,58 +828,27 @@ do_innetgr (const char *netgroup,
   LA_TRIPLE (a).host = machine;
   LA_TRIPLE (a).domain = domain;
 
-  /* There may be multiple matches. */
-  stat = _nss_ldap_search_s (&a, NULL, LM_NETGROUP, LDAP_NO_LIMIT, &res);
-  if (stat != NSS_SUCCESS)
+  if (_nss_ldap_ent_context_init (&ctx) == NULL)
     {
-      debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
-      return stat;
+      debug ("<== do_innetgr: failed to initialize context");
+      return NSS_UNAVAIL;
     }
 
-  stat = NSS_NOTFOUND;
+  li_args.lia_netgroup = netgroup;
+  li_args.lia_netgr_status = NSS_NETGR_NO;
+  li_args.lia_depth = 0;
+  li_args.lia_erange = 0;
 
-  for (e = _nss_ldap_first_entry (res);
-       e != NULL;
-       e = _nss_ldap_next_entry (res))
-    {
-      values = _nss_ldap_get_values (e, AT (cn));
-      if (values != NULL)
-	{
-	  assert (values[0] != NULL);
+  stat = _nss_ldap_getent_ex (&a, &ctx, (void *)&li_args, NULL, 0,
+			      &li_args.lia_erange, NULL, LM_NETGROUP,
+			      do_parse_innetgr);
 
-	  if (strcasecmp (netgroup, values[0]) == 0)
-	    {
-	      ldap_value_free (values);
-	      stat = NSS_SUCCESS;
-	      *status = NSS_NETGR_FOUND;
-	      break;
-	    }
-	  ldap_value_free (values);
-	}
-    }
+  _nss_ldap_ent_context_release (ctx);
 
-  if (stat == NSS_NOTFOUND)
-    {
-      for (e = _nss_ldap_first_entry (res);
-	   e != NULL;
-	   e = _nss_ldap_next_entry (res))
-	{
-	  values = _nss_ldap_get_values (e, AT (cn));
-	  if (values != NULL)
-	    {
-	      /*
-	       * Then, recurse up to see whether this netgroup belongs
-	       * to the argument
-	       */
-	      stat = do_innetgr_nested (netgroup, values[0], status, &depth);
-	      ldap_value_free (values);
-	      if (stat == NSS_SUCCESS && *status == NSS_NETGR_FOUND)
-		  break;
-	    }
-	}
-    }
+  *status = li_args.lia_netgr_status;
 
-  ldap_msgfree (res);
+  if (li_args.lia_erange != 0)
+    errno = ERANGE;
 
   debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
 

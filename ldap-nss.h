@@ -661,6 +661,19 @@ NSS_STATUS _nss_ldap_read (const char *dn,	/* IN */
 			   LDAPMessage ** pRes /* OUT */ );
 
 /*
+ * extended enumeration routine; uses asynchronous API.
+ */
+NSS_STATUS _nss_ldap_getent_ex (ldap_args_t * args, /* IN */
+				ent_context_t ** key,	/* IN/OUT */
+				void *result,	/* IN/OUT */
+				char *buffer,	/* IN */
+				size_t buflen,	/* IN */
+				int *errnop,	/* OUT */
+				const char *filterprot,	/* IN */
+				ldap_map_selector_t sel,	/* IN */
+				parser_t parser /* IN */ );
+
+/*
  * common enumeration routine; uses asynchronous API.
  */
 NSS_STATUS _nss_ldap_getent (ent_context_t ** key,	/* IN/OUT */

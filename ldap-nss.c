@@ -2741,9 +2741,23 @@ _nss_ldap_getent (ent_context_t ** ctx,
 		  const char *filterprot,
 		  ldap_map_selector_t sel, parser_t parser)
 {
+  return _nss_ldap_getent_ex (NULL, ctx, result, buffer, buflen,
+			      errnop, filterprot, sel, parser);
+}
+
+NSS_STATUS
+_nss_ldap_getent_ex (ldap_args_t *args,
+		     ent_context_t ** ctx,
+		     void *result,
+		     char *buffer,
+		     size_t buflen,
+		     int *errnop,
+		     const char *filterprot,
+		     ldap_map_selector_t sel, parser_t parser)
+{
   NSS_STATUS stat = NSS_SUCCESS;
 
-  debug ("==> _nss_ldap_getent");
+  debug ("==> _nss_ldap_getent_ex");
 
   if (*ctx == NULL || (*ctx)->ec_msgid == -1)
     {
@@ -2753,7 +2767,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
        */
       if (_nss_ldap_ent_context_init (ctx) == NULL)
 	{
-	  debug ("<== _nss_ldap_getent");
+	  debug ("<== _nss_ldap_getent_ex");
 	  return NSS_UNAVAIL;
 	}
     }
@@ -2774,12 +2788,12 @@ next:
     {
       int msgid;
 
-      stat = _nss_ldap_search (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid,
+      stat = _nss_ldap_search (args, filterprot, sel, LDAP_NO_LIMIT, &msgid,
 			       &(*ctx)->ec_sd);
       if (stat != NSS_SUCCESS)
 	{
 	  _nss_ldap_leave ();
-	  debug ("<== _nss_ldap_getent");
+	  debug ("<== _nss_ldap_getent_ex");
 	  return stat;
 	}
 
@@ -2804,7 +2818,7 @@ next:
 			  (*ctx)->ec_cookie);
 	  if (stat != NSS_SUCCESS)
 	    {
-	      debug ("<== _nss_ldap_getent");
+	      debug ("<== _nss_ldap_getent_ex");
 	      return stat;
 	    }
 	  (*ctx)->ec_msgid = msgid;
@@ -2819,7 +2833,7 @@ next:
       goto next;
     }
 
-  debug ("<== _nss_ldap_getent");
+  debug ("<== _nss_ldap_getent_ex");
 
   return stat;
 }
