@@ -4,3 +4,4 @@ config.cache
 config.status
 stamp-h
 Makefile
+NSS_LDAP
