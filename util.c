@@ -607,11 +607,12 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       while (*v == ' ' || *v == '\t')
 	v++;
 
-      len = strlen (v);
-
-      v[len - 1] = '\0';
-
-      len--;
+      /* kick off all whitespaces and newline at the end of value */
+      /* Bob Guo <bob@mail.ied.ac.cn>, 08.10.2001 */
+      len = strlen (v)-1;
+      while (v[len] == ' ' || v[len] == '\t' || v[len] =='\n' )
+        --len;
+      v[++len] = '\0';
 
       if (buflen < (size_t) (len + 1))
 	{
