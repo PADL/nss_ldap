@@ -340,7 +340,7 @@ NSS_STATUS _nss_ldap_readconfig(
 
 	fclose(fp);
 
-	if (result->ldc_host == NULL || result->ldc_base == NULL)
+	if (result->ldc_host == NULL)
 		{
 		return NSS_NOTFOUND;
 		}

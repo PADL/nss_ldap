@@ -393,8 +393,10 @@ LDAPMessage *_nss_ldap_lookup(
 #endif
 
 do_retry:
-	lstatus = ldap_search_s(__session.ls_conn, __session.ls_config->ldc_base, __session.ls_config->ldc_scope,
-		(args == NULL ? (char *)filterprot : filter), (char **)attrs, 0, &res);
+	lstatus = ldap_search_s(__session.ls_conn,
+		(__session.ls_config->ldc_base == NULL) ? "" : __session.ls_config->ldc_base,
+		__session.ls_config->ldc_scope,
+		(args == NULL) ? (char *)filterprot : filter, (char **)attrs, 0, &res);
 
 	switch (lstatus)
 		{
