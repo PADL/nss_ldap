@@ -865,7 +865,6 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
   assert (args->arg[NSS_NETGR_DOMAIN].argc == 0 ||
 	  args->arg[NSS_NETGR_DOMAIN].argc == args->groups.argc);
 
-  _nss_ldap_enter ();
   for (i = 0; i < args->groups.argc; i++)
     {
       NSS_STATUS parseStat;
@@ -899,7 +898,6 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 	  stat = NSS_SUCCESS;
 	}
     }
-  _nss_ldap_leave ();
 
   debug ("<== _nss_ldap_innetgr");
 
