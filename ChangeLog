@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+148	Luke Howard <lukeh@padl.com>
+
+	* check for HAVE_LDAP_SET_OPTION always
+
 147	Luke Howard <lukeh@padl.com>
 
 	* check for ldap_set_option(), as LDAP_OPT_REFERRALS

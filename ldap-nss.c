@@ -426,7 +426,7 @@ do_close_no_unbind (void)
        * XXX untested code
        */
       int sd = -1;
-#ifdef LDAP_OPT_DESC
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 #else
       if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
@@ -434,7 +434,7 @@ do_close_no_unbind (void)
 	{
 	  close (sd);
 	  sd = -1;
-#ifdef LDAP_OPT_DESC
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
 	  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
 #else
 	  __session.ls_conn->ld_sb.sb_sd = sd;
@@ -460,7 +460,7 @@ do_disable_keepalive (LDAP * ld)
   int sd = -1;
 
   debug ("==> do_disable_keepalive");
-#ifdef LDAP_OPT_DESC
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
   if (ldap_get_option (ld, LDAP_OPT_DESC, &sd) == 0)
 #else
   if ((sd = ld->ld_sb.sb_sd) > 0)
@@ -588,7 +588,7 @@ do_open (void)
       struct sockaddr_in sin;
       int sd = -1;
 
-#ifdef LDAP_OPT_DESC
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 #else
       if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
@@ -741,27 +741,27 @@ do_open (void)
   ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind);
 #endif
 
-#ifdef LDAP_OPT_PROTOCOL_VERSION
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_PROTOCOL_VERSION)
   ldap_set_option (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
 		   &cfg->ldc_version);
 #else
   __session.ls_conn->ld_version = cfg->ldc_version;
 #endif /* LDAP_OPT_PROTOCOL_VERSION */
 
-#ifdef LDAP_OPT_DEREF
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DEREF)
   ldap_set_option (__session.ls_conn, LDAP_OPT_DEREF, &cfg->ldc_deref);
 #else
   __session.ls_conn->ld_deref = cfg->ldc_deref;
 #endif /* LDAP_OPT_DEREF */
 
-#ifdef LDAP_OPT_TIMELIMIT
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_TIMELIMIT)
   ldap_set_option (__session.ls_conn, LDAP_OPT_TIMELIMIT,
 		   &cfg->ldc_timelimit);
 #else
   __session.ls_conn->ld_timelimit = cfg->ldc_timelimit;
 #endif /* LDAP_OPT_TIMELIMIT */
 
-#ifdef LDAP_X_OPT_CONNECT_TIMEOUT
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_X_OPT_CONNECT_TIMEOUT)
   /*
    * This is a new option in the Netscape SDK which sets
    * the TCP connect timeout. For want of a better value,
@@ -776,7 +776,7 @@ do_open (void)
 		   cfg->ldc_referrals ? LDAP_OPT_ON : LDAP_OPT_OFF);
 #endif
 
-#ifdef LDAP_OPT_RESTART
+#f defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_RESTART)
   ldap_set_option (__session.ls_conn, LDAP_OPT_RESTART,
 		   cfg->ldc_restart ? LDAP_OPT_ON : LDAP_OPT_OFF);
 #endif
@@ -816,7 +816,7 @@ do_open (void)
      */
   if (cfg->ldc_ssl_on == SSL_LDAPS)
     {
-#ifdef    LDAP_OPT_X_TLS
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS)
       int tls = LDAP_OPT_X_TLS_HARD;
       if (ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS, &tls) !=
 	  LDAP_SUCCESS)
@@ -899,7 +899,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw)
 
   if (msgid < 0)
     {
-#ifdef LDAP_OPT_ERROR_NUMBER
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
       if (ldap_get_option (ld, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	{
 	  rc = LDAP_UNAVAILABLE;
@@ -1174,7 +1174,7 @@ do_result (ent_context_t * ctx, int all)
 	{
 	case -1:
 	case 0:
-#ifdef LDAP_OPT_ERROR_NUMBER
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
 	  if (ldap_get_option
 	    (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	    {
@@ -1288,7 +1288,7 @@ do_with_reconnect (const char *base, int scope,
 	}
       else
 	{
-#ifdef LDAP_OPT_ERROR_NUMBER
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
 	  if (ldap_get_option
 	    (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	    {
@@ -1393,7 +1393,7 @@ do_search (const char *base, int scope,
 
   debug ("==> do_search");
 
-#ifdef LDAP_OPT_SIZELIMIT
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_SIZELIMIT)
   ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
 		   (void *) &sizelimit);
 #else
