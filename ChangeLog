@@ -29,8 +29,7 @@ SHX-6	Luke Howard <lukeh@padl.com>
 
 	* use socklen_t not int
 	* remove OpenLDAP SASL code
-	* incorporated patches from (see below)
-	  Geert Jansen <Geert.Jansen@shell.com>
+	* incorporated patches from (see below) Geert Jansen
 	* add the "sasl_secprops" option to configure SASL
 	  security layers (usage as for OpenLDAP ldap.conf)
 	* add the "krb5_ccname" option to specify the 
