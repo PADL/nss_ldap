@@ -595,7 +595,9 @@ do_close (void)
 static void
 do_close_no_unbind (void)
 {
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
   int sd = -1;
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
 #ifndef HAVE_LDAP_LD_FREE
   int bogusSd = -1;
 #endif /* HAVE_LDAP_LD_FREE */
