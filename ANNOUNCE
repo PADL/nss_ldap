@@ -2,15 +2,7 @@
                       ANNOUNCING NSS_LDAP 0.2
                       =======================
 
-       ********************** WARNING ***************************
-       * THIS IS ALPHA SOFTWARE, FOR DEVELOPERS ONLY. IT MAY    *
-       * BLOW UP. PLEASE DO NOT REDISTRIBUTE IT.                *
-       * PLEASE CONTACT THE AUTHOR SO YOU CAN BE ADDED TO A     *
-       * MAILING LIST OF DEVELOPERS.                            *
-       * PLEASE SEND ANY PATCHES TO nss_ldap@roach.xedoc.com.au *
-       **********************************************************
-
-1. What is nss_ldap?
+e. What is nss_ldap?
 --------------------
 
 nss_ldap is a set of C library extensions which allows X.500 and LDAP
@@ -27,8 +19,9 @@ nss_ldap nominally supports the following operating system libraries:
 	o preliminary support for generic SVR4 Unix, eg. IRIX
 
 nss_ldap is an implementation of the schema specified in RFC 2307
-and is compatible with that used in Xedoc Software Development Inc.'s
-LDAP/NIS gateway (ypldapd) and Rhapsody.
+and is compatible with that used in PADL Software Pty Ltd's
+LDAP/NIS gateway (ypldapd), and forthcoming versions of
+Solaris, HP-UX and MacOS X Server.
 
 2. What can it do for me?
 -------------------------
@@ -73,25 +66,20 @@ Licence (GLPL). Please read the file COPYING.LIB For more information.
 nss_ldap is available from the author directly at the moment, but
 eventually:
 
-	<URL:http://www.xedoc.com.au/~lukeh/ldap/nss_ldap.tar.gz>
+	<URL:http://www.padl.com/download/nss_ldap.tgz>
 
 We have also made available some Perl scripts for populating LDAP
 databases from existing flat files, NIS and/or NetInfo data.
 
-	<URL:http://www.xedoc.com.au/~lukeh/ldap/MigrationTools.tar.gz>
+	<URL:http://www.padl.com/download/MigrationTools.tgz>
 
 You'll need to compile a position-independent LDAP client library
 (libldap). You can either get the entire LDAP package from the University
 of Michigan (see below) and add "-fPIC" (if you're using gcc) to the
-C compiler flags, or download binaries for Solaris SPARC 2.6 from:
-
-	<URL:http://www.xedoc.com.au/~lukeh/ldap/libldap.so.gz>
+C compiler flags, or download the Mozilla SDK from www.mozilla.org.
 
 It's easy to build a single, shared, library (libldap.so) from liblber
 and libldap. Contact the author for the makefiles.
-
-These days, you're better off using the Mozilla LDAP SDK (downloadable
-from http://www.mozilla.org) -- it's heaps better than the UMich SDK.
 
 6. Where can I get more information?
 ------------------------------------
@@ -99,19 +87,19 @@ from http://www.mozilla.org) -- it's heaps better than the UMich SDK.
 To discuss nss_ldap, ypldapd, and related technologies, you may subscribe
 to the following mailing list:
 
-	<URL:mailto:ldap-nis-interest-request@ufo.com.au>
+	<URL:mailto:ldap-nis-request@padl.com>
 
 Send an electronic mail message with "subscribe" in the message body to
 join the list.
 
 To contact the developers, email:
 
-	<URL:mailto:nss_ldap@roach.xedoc.com.au>
+	<URL:mailto:support@padl.com>
 
 For more information on using LDAP for name resolution, and related software,
 see:
 
-	<URL:http://www.xedoc.com.au/~lukeh/ldap/>
+	<URL:http://www.padl.com>
 
 And if you need an LDAP server, or some general information on LDAP,
 see:
@@ -121,5 +109,5 @@ see:
 7. Who wrote it?
 ----------------
 
-nss_ldap was written by Luke Howard <lukeh@xedoc.com>.
+nss_ldap was written by Luke Howard <lukeh@padl.com>.
 

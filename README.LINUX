@@ -5,7 +5,7 @@ INSTALLING
 Install a working ldap server.
 Populate your database with the appropriate entries, use the
 MigrationTools, which can be found at:
-http://www.xedoc.com.au/~lukeh/ldap/MigrationTools.tar.gz
+http://www.padl.com/
 
 Build the software. Under Linux this is done with:
 make -f Makefile.linux

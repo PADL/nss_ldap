@@ -77,7 +77,7 @@ NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
 SUNFLAGS=-DSUN_NSS -D_REENTRANT -DHAVE_SNPRINTF -D__EXTENSIONS__
 INCDIRS=
 LIBDIRS=-L/usr/ucblib -L/usr/local/ldapsdk/lib
-LIBS=-lldap -llber -lnsl
+LIBS=-lldapssl30
 
 # uncomment this if you're using gcc
 GCCFLAGS=-O -g -Wall -fPIC ${PDOFLAGS}

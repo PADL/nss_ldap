@@ -1,9 +1,8 @@
 
-Please contact Luke Howard <lukeh@xedoc.com> if you can help. 
+Please contact Luke Howard <lukeh@padl.com> if you can help. 
 
 People with spare time and experience need only apply. :-)
 
-There is a list for developers at <nss_ldap@roach.xedoc.com.au>
 
 TESTING
 =======
@@ -83,8 +82,8 @@ Resource assignments are suggested only.
   objectclass: top
   membernisnetgroup: kamakiriad
   membernisnetgroup: ruby-baby
-  nisnetgrouptriple: (lukeh,penguin,yp.xedoc.com.au)
-  nisnetgrouptriple: (fagen,grep.next.com,yp.xedoc.com.au)
+  nisnetgrouptriple: (lukeh,penguin,yp.padl.com)
+  nisnetgrouptriple: (fagen,grep.next.com,yp.padl.com)
 
   You should be able to (a) rip out the flat file parser under Solaris -- the semantics
   are complicated, which is why I haven't done it (!), but basically you get a function
