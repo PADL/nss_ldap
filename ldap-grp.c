@@ -311,6 +311,7 @@ do_parse_group_members (LDAPMessage * e,
     }
 
   i = *pGroupMembersCount;	/* index of next member */
+  groupMembers = *pGroupMembers;
 
   groupdn = _nss_ldap_get_dn (e);
   if (groupdn == NULL)
@@ -359,11 +360,11 @@ do_parse_group_members (LDAPMessage * e,
        * As an optimization the buffer is preferentially allocated off
        * the stack
        */
-      if ((i + groupMembersCount) * sizeof (char *) >
+      if ((i + groupMembersCount) * sizeof (char *) >=
 	  *pGroupMembersBufferSize)
 	{
 	  *pGroupMembersBufferSize =
-	    (i + groupMembersCount) * sizeof (char *);
+	    (i + groupMembersCount + 1) * sizeof (char *);
 	  *pGroupMembersBufferSize +=
 	    (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)) - 1;
 	  *pGroupMembersBufferSize -=
@@ -519,6 +520,7 @@ out:
     free (groupdn);
 #endif
 
+  *pGroupMembers = groupMembers;
   *pGroupMembersCount = i;
 
   return stat;
