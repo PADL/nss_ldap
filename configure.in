@@ -28,8 +28,7 @@ dnl because that accepts -Wl. Is this a good idea?
 case "$target_os" in
 aix*) nss_ldap_so_LDFLAGS="-bM:SRE -bnoentry -bE:exports.aix" ;;
 solaris*) nss_ldap_so_LDFLAGS="-Wl,-M -Wl,mapfile -Wl,-G" ;;
-*) nss_ldap_so_LDFLAGS="--shared" ;;
-dnl "--shared" is undocumented for gcc, shouldn't this be "-shared"?
+*) nss_ldap_so_LDFLAGS="-shared" ;;
 esac
 AC_SUBST(nss_ldap_so_LDFLAGS)
 
