@@ -27,6 +27,11 @@
 
 /* $Id$ */
 
+/* apparently we need this prototype */
+#define make_group_list __make_group_list
+extern int              make_group_list(struct irs_gr *, const char *,
+					gid_t, gid_t *, int *);
+
 static void gr_close (struct irs_gr *);
 static struct group *gr_next (struct irs_gr *);
 static struct group *gr_byname (struct irs_gr *, const char *);

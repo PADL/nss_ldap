@@ -53,13 +53,14 @@ sv_byname (struct irs_sv *this, const char *name, const char *proto)
   LA_STRING2 (a) = proto;
   s =
     _nss_ldap_getbyname (&a, &pvt->result, pvt->buffer, sizeof (pvt->buffer),
+			 &errno,
 			 (proto ==
 			  NULL) ? filt_getservbyname :
 			 filt_getservbynameproto,
 			 (const char **) serv_attributes,
 			 _nss_ldap_parse_serv);
 
-  if (s != NSS_SUCCESS)
+  if (s == NSS_NOTFOUND || s == NSS_UNAVAIL)
     {
       errno = ENOENT;
       return NULL;
@@ -80,13 +81,14 @@ sv_byport (struct irs_sv *this, int port, const char *proto)
   LA_STRING2 (a) = proto;
   s =
     _nss_ldap_getbyname (&a, &pvt->result, pvt->buffer, sizeof (pvt->buffer),
+			 &errno,
 			 (proto ==
 			  NULL) ? filt_getservbyport :
 			 filt_getservbyportproto,
 			 (const char **) serv_attributes,
 			 _nss_ldap_parse_serv);
 
-  if (s != NSS_SUCCESS)
+  if (s == NSS_NOTFOUND || s == NSS_UNAVAIL)
     {
       errno = ENOENT;
       return NULL;

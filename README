@@ -6,11 +6,6 @@ This is the nss_ldap library, an LDAP module for the Solaris Nameservice
 Switch (NSS). This should be compatible with the GNU glibc if GNU_NSS is
 defined, and the ISC BIND IRS if IRS_NSS is defined.
 
-****************************IMPORTANT NOTE *********************************
-Versions 2.55 and above of the nss_ldap library are designed to work with
-glibc 2.1, not glibc 2.0. They _may_ work with glibc 2.0. YMMV.
-****************************************************************************
-
 The LDAP schema used is described in RFC 2307
 
 Insert this:
@@ -28,7 +23,6 @@ Platforms this has been built under:
 	o Linux 2.0 (tested by Greg and Luke)
 	o Solaris 2.4 and 2.6 (tested by Luke) It should work under
 	  Solaris 7 as the NSS ABI hasn't changed according to Sun.
-	o NEXTSTEP 4.2 (part tested; does it matter?)
 
 Platforms this ought to be tested under:
 
@@ -39,8 +33,17 @@ Platforms this ought to be tested under:
 To install, pick a makefile and type make. You'll need to fiddle around
 a bit...
 
+NOTES
+=====
+
+1. Installation
+---------------
+
 You need to ensure libnss_ldap.so.1 (or nss_ldap.so.1, for Solaris) is in
 /usr/lib.
+
+2. IRIX
+-------
 
 Under IRIX, you'll need to set _RLD_LIST to
 
@@ -48,10 +51,14 @@ Under IRIX, you'll need to set _RLD_LIST to
 
 IRIX 6.5 has native LDAP support in nsd so you don't need this.
 
+3. Building shared LDAP client libraries
+----------------------------------------
+
 You can build a position independent LDAP client library by compiling
 -fPIC and linking with -shared, or downloading the Mozilla or Netscape
 LDAP SDKs. Note that OpenLDAP only appears to build shared libraries
-on some platforms (apparently not Solaris).
+on some platforms (apparently not Solaris?). To build these, configure
+with --enable-shared.
 
 NOTE: There seem to be problems linking against the libraries included
 with Netscape's Directory Server 4.1. You may wish to try Netscape's
@@ -63,6 +70,26 @@ ldap_ld_free: referenced symbol not found", then undefine
 HAVE_LDAP_LD_FREE at the top of ldap-nss.c. This is exported on
 Linux but _NOT_ Solaris with Netscape's C SDK.
 
+4. glibc 2.0 compatibility
+--------------------------
+
+Current versions of the nss_ldap library are designed to work with
+glibc 2.1, not glibc 2.0. They _may_ work with glibc 2.0. YMMV.
+
+5. RFC2307BIS
+-------------
+
+Compiling with -DRFC2307BIS adds rfc2307bis support, which at the
+moment just gets you support for groups with distinguished name
+members (instead of login names). A posixGroup can thus have the
+both memberUid and uniqueMember attributes. This support makes
+uses of the Berkeley DB library to cache DN to login name mappings;
+if you don't want to use this or don't have libdb, then you need
+to undefine DN2UID_CACHE in util.c. 
+
+6. Mailing lists
+----------------
+
 To discuss nss_ldap and related technologies, you may
 subscribe to the following mailing lists:    
 
@@ -72,6 +99,9 @@ and
 
 Send an electronic mail message with "subscribe" in the
 message body to join the list.
+
+7. Commercial support
+---------------------
 
 Note that PADL now offer commercial support on a
 per-incident basis.      

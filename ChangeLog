@@ -7,6 +7,7 @@ $Header$
 	  must check whether unencumbered)
 	* call ldapssl_client_init() once only
 	* include db_185.h not db.h for dn2uid cache
+	* fixes for FreeBSD (IRS) support
 
 113	Luke Howard <lukeh@padl.com>
 

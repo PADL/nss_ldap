@@ -106,4 +106,12 @@ NSS_STATUS _nss_ldap_escape_string (
 	herr = _nss_ldap_herrno2nssstat_tab[nss_status - _NSS_LOOKUP_OFFSET]; \
 	} while (0)
 
+#ifdef IRS_NSS
+#define MAP_ERRNO(nss_status, herr)	do { \
+	if ((unsigned int) nss_status > _nss_ldap_errno2nssstat_tab_count) \
+		errno = EPERM; \
+	errno = _nss_ldap_errno2nssstat_tab[nss_status]; \
+	} while (0)
+#endif /* IRS_NSS */
+
 #endif /* _LDAP_NSS_LDAP_UTIL_H */

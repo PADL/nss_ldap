@@ -21,7 +21,7 @@
 
 #ifdef SUN_NSS
 #include <thread.h>
-#elif defined(GNU_NSS)
+#else
 #include <pthread.h>
 #endif
 
@@ -77,3 +77,16 @@ size_t _nss_ldap_herrno2nssstat_tab_count =
 (sizeof (_nss_ldap_herrno2nssstat_tab) /
  sizeof (_nss_ldap_herrno2nssstat_tab[0]));
 
+#ifdef IRS_NSS
+int _nss_ldap_errno2nssstat_tab[] =
+{
+  [NSS_SUCCESS] = 0,
+  [NSS_TRYAGAIN] = ERANGE,
+  [NSS_NOTFOUND] = ENOENT,
+  [NSS_UNAVAIL] = EPERM
+};
+
+size_t _nss_ldap_errno2nssstat_tab_count =
+(sizeof (_nss_ldap_errno2nssstat_tab) /
+ sizeof (_nss_ldap_errno2nssstat_tab[0]));
+#endif /* IRS_NSS */

@@ -64,10 +64,23 @@ ho_byname (struct irs_ho *this, const char *name)
 			   &pvt->result,
 			   pvt->buffer,
 			   sizeof (pvt->buffer),
+			   &errno,
 			   filt_gethostbyname,
 			   (const char **) host_attributes,
 			   _nss_ldap_parse_host);
 
+  switch (s) {
+	case NSS_NOTFOUND:
+		errno = ENOENT;
+		return NULL;
+	case NSS_UNAVAIL:
+		errno = EAGAIN;
+		return NULL;
+	case NSS_SUCCESS:
+		return &pvt->result;
+	case NSS_TRYAGAIN:
+		return NULL; 
+  }
   if (s != NSS_SUCCESS)
     {
       MAP_H_ERRNO (s, h_errno);
