@@ -16,7 +16,7 @@ EXTRA_DIST = CVSVersionInfo.txt ChangeLog \
 	     AUTHORS ANNOUNCE NEWS INSTALL README LICENSE.OpenLDAP COPYING\
 	     ldap.conf nss_ldap.spec nsswitch.ldap 
 
-nss_ldap_so_MANS = nss_ldap.5
+man_MANS = nss_ldap.5
 
 nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c \
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
