@@ -25,7 +25,7 @@
 # $Id$
 #
 
-MODULE=nss_ldap
+MODULE=libnss_ldap
 HDRS=	\
 	ldap-alias.h \
 	ldap-ethers.h \
@@ -76,19 +76,18 @@ NSFLAGS=-I/usr/local/include -DLDAP_VERSION3_API -DRFC2307BIS
 
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module
 GNUFLAGS=-DGNU_NSS -DHAVE_SNPRINTF -D_REENTRANT #-DLDAP_VERSION3_API
-LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
+LIBCVERS= `ls /lib/libc-*.so | tail -1 | sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 NSSLIBVER=$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 
-SOLIB=lib$(MODULE).so.$(NSSLIBVER)
-NSSLIB=lib$(MODULE)-$(LIBCVERS).so
+SOLIB=$(MODULE).so.$(NSSLIBVER)
+NSSLIB=$(MODULE)-$(LIBCVERS).so
 
 LIBDIRS=-L.
 
 # uncomment this if you're linking against Sun or Netscape's libldap.so
 # or using UMich libldap/liblber compiled into one library
 #
-# This is a hack
-LIBS=-lnsl -lresolv /usr/lib/libldap.a /usr/lib/liblber.a -lsasl -lpthread 
+LIBS=-lldap -llber -lnsl -lresolv -lsasl -lpthread 
 
 # uncomment this if you're using gcc
 GCCFLAGS=-O -g -Wall -fPIC
@@ -111,8 +110,8 @@ $(MODULE): $(OBJS)
 install:
 	@mkdir -p $(RPM_BUILD_ROOT)/lib $(RPM_BUILD_ROOT)/etc $(RPM_BUILD_ROOT)/usr/lib
 	install -m 644 $(NSSLIB) $(RPM_BUILD_ROOT)/lib/$(NSSLIB)
-	ln -sf $(NSSLIB) $(RPM_BUILD_ROOT)/lib/lib$(MODULE).so.1
-	ln -sf $(NSSLIB) $(RPM_BUILD_ROOT)/lib/lib$(MODULE).so.2	
+	ln -sf $(NSSLIB) $(RPM_BUILD_ROOT)/lib/$(MODULE).so.1
+	ln -sf $(NSSLIB) $(RPM_BUILD_ROOT)/lib/$(MODULE).so.2	
 	ln -sf ../../lib/$(NSSLIB) $(RPM_BUILD_ROOT)/usr/lib/$(MODULE).so
 
 clean:

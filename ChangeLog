@@ -1,6 +1,12 @@
 $Header$
 ===============================================================
 
+127	Luke Howard <lukeh@padl.com>
+
+	* fixed up RPM Mkefiles to build libnss_ldap
+
+126	Luke Howard <lukeh@padl.com>
+
 125	Luke Howard <lukeh@padl.com>
 
 	* fixed up Linux Makefiles to build libnss_ldap
