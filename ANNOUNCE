@@ -7,7 +7,7 @@
        * BLOW UP. PLEASE DO NOT REDISTRIBUTE IT.                *
        * PLEASE CONTACT THE AUTHOR SO YOU CAN BE ADDED TO A     *
        * MAILING LIST OF DEVELOPERS.                            *
-       * PLEASE SEND ANY PATCHES TO nss_ldap@gday.net.au	*
+       * PLEASE SEND ANY PATCHES TO nss_ldap@roach.xedoc.com.au *
        **********************************************************
 
 1. What is nss_ldap?
@@ -90,13 +90,16 @@ C compiler flags, or download binaries for Solaris SPARC 2.6 from:
 It's easy to build a single, shared, library (libldap.so) from liblber
 and libldap. Contact the author for the makefiles.
 
+These days, you're better off using the Mozilla LDAP SDK (downloadable
+from http://www.mozilla.org) -- it's heaps better than the UMich SDK.
+
 6. Where can I get more information?
 ------------------------------------
 
 To discuss nss_ldap, ypldapd, and related technologies, you may subscribe
 to the following mailing list:
 
-	<URL:mailto:ldap-nis-interest-request@xedoc.com>
+	<URL:mailto:ldap-nis-interest-request@ufo.com.au>
 
 Send an electronic mail message with "subscribe" in the message body to
 join the list.
