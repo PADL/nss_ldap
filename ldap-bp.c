@@ -120,8 +120,8 @@ _nss_ldap_bootparams_constr (const char *db_name,
    if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
    return NULL;
 
-   be->ops = net_ops;
-   be->n_ops = sizeof(net_ops) / sizeof(nss_backend_op_t);
+   be->ops = bp_ops;
+   be->n_ops = sizeof(bp_ops) / sizeof(nss_backend_op_t);
 
    if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
    return NULL;
