@@ -165,6 +165,17 @@ AC_TRY_COMPILE([#include <sys/types.h>
 	],
 	AC_MSG_RESULT(no))
 
+AC_MSG_CHECKING(for socklen_t)
+AC_TRY_COMPILE([#include <sys/types.h>
+	#include <sys/socket.h>],
+	[socklen_t len;],
+	[
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_SOCKLEN_T, 1)
+	],
+	AC_MSG_RESULT(no))
+
+dnl check which ldap library we have
 dnl check which ldap library we have
 if test -z "$with_ldap_lib"; then
   with_ldap_lib=auto

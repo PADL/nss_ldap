@@ -25,6 +25,9 @@
 /* define to enable struct ether_addr definition */
 #undef HAVE_STRUCT_ETHER_ADDR
 
+/* define to enable socklen_t definition */
+#undef HAVE_SOCKLEN_T
+
 /* path to LDAP configuration file */
 #define NSS_LDAP_PATH_CONF              "/etc/ldap.conf"
 
