@@ -3020,6 +3020,7 @@ _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
   return ret;
 }
 
+#ifdef AT_OC_MAP
 int
 _nss_ldap_shadow_date (const char *val)
 {
@@ -3048,7 +3049,6 @@ _nss_ldap_shadow_handle_flag (struct spwd *sp)
     }
 }
 
-#ifdef AT_OC_MAP
 const char *
 _nss_ldap_map_at (const char *attribute)
 {

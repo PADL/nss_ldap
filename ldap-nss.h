@@ -675,8 +675,13 @@ NSS_STATUS _nss_ldap_assign_userpassword (LDAP * ld,	/* IN */
 
 NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc);
 
+#ifdef AT_OC_MAP
 int _nss_ldap_shadow_date(const char *val);
 void _nss_ldap_shadow_handle_flag(struct spwd *sp);
+#else
+#define _nss_ldap_shadow_date(_v)		atol((_v))
+#define _nss_ldap_shadow_handle_flag(_sp)	do { /* nothing */ } while (0)
+#endif /* AT_OC_MAP */
 
 #ifdef AT_OC_MAP
 NSS_STATUS _nss_ldap_map_put (ldap_config_t * config,
