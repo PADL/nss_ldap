@@ -270,6 +270,12 @@ do_with_reconnect (const char *base, int scope,
 		   void *private, search_func_t func);
 
 /*
+ * Map error from LDAP status code to NSS status code
+ */
+static NSS_STATUS
+do_map_error (int rc);
+
+/*
  * Do a bind with a defined timeout
  */
 static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
@@ -279,6 +285,48 @@ static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 static int do_sasl_interact (LDAP * ld, unsigned flags, void *defaults,
 			     void *p);
 #endif
+
+static NSS_STATUS
+do_map_error (int rc)
+{
+  NSS_STATUS stat;
+
+  switch (rc)
+    {
+    case LDAP_SUCCESS:
+    case LDAP_SIZELIMIT_EXCEEDED:
+    case LDAP_TIMELIMIT_EXCEEDED:
+      stat = NSS_SUCCESS;
+      break;
+    case LDAP_NO_SUCH_ATTRIBUTE:
+    case LDAP_UNDEFINED_TYPE:
+    case LDAP_INAPPROPRIATE_MATCHING:
+    case LDAP_CONSTRAINT_VIOLATION:
+    case LDAP_TYPE_OR_VALUE_EXISTS:
+    case LDAP_INVALID_SYNTAX:
+    case LDAP_NO_SUCH_OBJECT:
+    case LDAP_ALIAS_PROBLEM:
+    case LDAP_INVALID_DN_SYNTAX:
+    case LDAP_IS_LEAF:
+    case LDAP_ALIAS_DEREF_PROBLEM:
+      stat = NSS_NOTFOUND;
+      break;
+    case LDAP_SERVER_DOWN:
+    case LDAP_TIMEOUT:
+    case LDAP_UNAVAILABLE:
+    case LDAP_BUSY:
+#ifdef LDAP_CONNECT_ERROR
+    case LDAP_CONNECT_ERROR:
+#endif /* LDAP_CONNECT_ERROR */
+      stat = NSS_TRYAGAIN;
+      break;
+    case LDAP_LOCAL_ERROR:
+    default:
+      stat = NSS_UNAVAIL;
+      break;
+    }
+  return stat;
+}
 
 /*
  * Rebind functions.
@@ -1295,7 +1343,8 @@ do_open (void)
 	  return NSS_UNAVAIL;
 	}
 
-      if (ldap_start_tls_s (__session.ls_conn, NULL, NULL) == LDAP_SUCCESS)
+      stat = do_map_error(ldap_start_tls_s (__session.ls_conn, NULL, NULL));
+      if (stat == NSS_SUCCESS)
 	{
 	  debug (":== do_open (TLS startup succeeded)");
 	}
@@ -1303,7 +1352,7 @@ do_open (void)
 	{
 	  do_close ();
 	  debug ("<== do_open (TLS startup failed)");
-	  return NSS_UNAVAIL;
+	  return stat;
 	}
     }
   else
@@ -1370,13 +1419,16 @@ do_open (void)
       bindarg = cfg->ldc_rootbindpw;
 #endif
 
-      if (do_bind
-	  (__session.ls_conn, cfg->ldc_bind_timelimit, cfg->ldc_rootbinddn,
-	   bindarg, usesasl) != LDAP_SUCCESS)
+      stat = do_map_error (do_bind (__session.ls_conn,
+				    cfg->ldc_bind_timelimit,
+				    cfg->ldc_rootbinddn,
+				    bindarg,
+				    usesasl));
+      if (stat != NSS_SUCCESS)
 	{
 	  do_close ();
 	  debug ("<== do_open (bind failed)");
-	  return NSS_UNAVAIL;
+	  return stat;
 	}
     }
   else
@@ -1389,13 +1441,16 @@ do_open (void)
       bindarg = cfg->ldc_bindpw;
 #endif
 
-      if (do_bind
-	  (__session.ls_conn, cfg->ldc_bind_timelimit, cfg->ldc_binddn,
-	   cfg->ldc_bindpw, usesasl) != LDAP_SUCCESS)
+      stat = do_map_error (do_bind (__session.ls_conn,
+				    cfg->ldc_bind_timelimit,
+				    cfg->ldc_binddn,
+				    cfg->ldc_bindpw,
+				    usesasl));
+      if (stat != NSS_SUCCESS)
 	{
 	  do_close ();
 	  debug ("<== do_open (bind failed)");
-	  return NSS_UNAVAIL;
+	  return stat;
 	}
     }
 
@@ -2168,59 +2223,33 @@ do_with_reconnect (const char *base, int scope,
 	  syslog (LOG_INFO, "nss_ldap: reconnecting to LDAP server...");
 	}
 
-      if (do_open () != NSS_SUCCESS)
+      stat = do_open ();
+      if (stat != NSS_SUCCESS)
 	{
-	  __session.ls_conn = NULL;
-	  /*
-	   * If a soft reconnect policy is specified, then do not
-	   * try to reconnect to the LDAP server if it is down.
-	   */
-	  if (__session.ls_config != NULL &&
-	      __session.ls_config->ldc_reconnect_pol == LP_RECONNECT_SOFT)
-	    hard = 0;
+	  if (stat == NSS_TRYAGAIN)
+	    {
+	      __session.ls_conn = NULL;
 
-	  ++tries;
+	      /*
+	       * If a soft reconnect policy is specified, then do not
+	       * try to reconnect to the LDAP server if it is down.
+	       */
+	      if (__session.ls_config != NULL &&
+	          __session.ls_config->ldc_reconnect_pol == LP_RECONNECT_SOFT)
+		hard = 0;
+
+	      ++tries;
+	    }
+
 	  continue;
 	}
 
       rc = search_func (base, scope, filter, attrs, sizelimit, private);
-
-      switch (rc)
+      stat = do_map_error (rc);
+      if (stat == NSS_TRYAGAIN)
 	{
-	case LDAP_SUCCESS:
-	case LDAP_SIZELIMIT_EXCEEDED:
-	case LDAP_TIMELIMIT_EXCEEDED:
-	  stat = NSS_SUCCESS;
-	  break;
-	case LDAP_NO_SUCH_ATTRIBUTE:
-	case LDAP_UNDEFINED_TYPE:
-	case LDAP_INAPPROPRIATE_MATCHING:
-	case LDAP_CONSTRAINT_VIOLATION:
-	case LDAP_TYPE_OR_VALUE_EXISTS:
-	case LDAP_INVALID_SYNTAX:
-	case LDAP_NO_SUCH_OBJECT:
-	case LDAP_ALIAS_PROBLEM:
-	case LDAP_INVALID_DN_SYNTAX:
-	case LDAP_IS_LEAF:
-	case LDAP_ALIAS_DEREF_PROBLEM:
-	  stat = NSS_NOTFOUND;
-	  break;
-	case LDAP_SERVER_DOWN:
-	case LDAP_TIMEOUT:
-	case LDAP_UNAVAILABLE:
-	case LDAP_BUSY:
-#ifdef LDAP_CONNECT_ERROR
-	case LDAP_CONNECT_ERROR:
-#endif /* LDAP_CONNECT_ERROR */
-	  do_close ();
-	  stat = NSS_TRYAGAIN;
+	  do_close();
 	  ++tries;
-	  continue;
-	  break;
-	case LDAP_LOCAL_ERROR:
-	default:
-	  stat = NSS_UNAVAIL;
-	  break;
 	}
     }
 
