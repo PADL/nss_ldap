@@ -298,6 +298,7 @@ irs_ldap_ng (struct irs_acc *this)
   ng->private = pvt;
   ng->close = ng_close;
   ng->next = ng_next;
+  ng->test = ng_test;
   ng->rewind = ng_rewind;
   ng->minimize = ng_minimize;
   return ng;
