@@ -908,9 +908,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	      int len;
 
 	      len = strlen (b);
-	      if (len > 0)
-		len--;
-	      if (b[len] == '\n')
+	      /* BUG#138: check for newline before removing */
+	      if (len > 0 && b[len] == '\n')
 		len--;
 
 	      if (buflen < (size_t) (len + 1))
