@@ -906,7 +906,7 @@ fi
 
 PACKAGE=nss_ldap
 
-VERSION=221
+VERSION=222
 
 if test "`cd $srcdir && pwd`" != "`pwd`" && test -f $srcdir/config.status; then
   { echo "configure: error: source directory already configured; run "make distclean" there first" 1>&2; exit 1; }
