@@ -94,7 +94,6 @@ nw_byaddr(struct irs_nw *this, void *net, int length, int af)
 
 	LA_INIT(a);
 	LA_STRING(a) = tmp;
-	LA_STAYOPEN(a) = 1;
 	LA_TYPE(a) = LA_TYPE_STRING;
 
 	s = _nss_ldap_getbyname(&a,
@@ -117,13 +116,11 @@ nw_byaddr(struct irs_nw *this, void *net, int length, int af)
 				_nss_ldap_parse_net);
 			if (s != NSS_SUCCESS) {
 				MAP_H_ERRNO(s, h_errno);
-				LA_CLOSE(a);
 				return (NULL);
 			}
 	        }
 	}
 
-	LA_CLOSE(a);
 	return &pvt->result;
 }
 

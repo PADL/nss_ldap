@@ -15,20 +15,16 @@ struct  group { /* see getgrent(3) */
 	scan_group();
 	exit(0);
 }
-scan_group()
+
+void dump(struct group *g)
 {
-        struct group *g;
-
-        setgrent();
-
-        while ((g = getgrent()) != NULL)
-        {
-		char mem[512];
+		char mem[2048];
 		char **p;
+
 		int doit = (g->gr_mem && *(g->gr_mem));
 		p = g->gr_mem;
 		strcpy(mem,"");
-		while(doit) {
+		while (doit) {
 			if (p != g->gr_mem) strcat(mem, ",");
 			strcat(mem, *p);
 			if (*(++p) == NULL)
@@ -36,7 +32,28 @@ scan_group()
 		}
                 printf("%s:%s:%d:%s\n",
 			g->gr_name, g->gr_passwd, g->gr_gid, mem);
+
+}
+
+scan_group()
+{
+        struct group *g;
+
+
+        setgrent();
+
+        while ((g = getgrent()) != NULL)
+        {
+			dump(g);
         }
+
+		printf("==> getgrnam(qmail)\n");
+		g = getgrnam("qmail");
+		if (g != NULL) dump(g);
+
+		printf("==> getgrnam(testgroup)\n");
+		g = getgrnam("testgroup");
+		if (g != NULL) dump(g);
 
         endgrent();
 }

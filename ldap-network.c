@@ -198,8 +198,6 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 
 	LA_INIT(a);
 	LA_TYPE(a) = LA_TYPE_STRING;
-	/* we can keep the session open for all our queries here */
-	LA_STAYOPEN(a) = 1;
 
 #ifdef SUN_NSS
 	in = inet_makeaddr(NSS_ARGS(args)->key.netaddr.net, 0);
@@ -238,7 +236,6 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 #else
 					MAP_H_ERRNO(retval, *herrnop);
 #endif
-					LA_CLOSE(a);
 					return NSS_NOTFOUND;
 					}
 				}
@@ -257,7 +254,6 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 # endif
 				MAP_H_ERRNO(retval, *herrnop);
 #endif
-				LA_CLOSE(a);
 				return retval;
 				}
 			}
@@ -275,7 +271,6 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 	MAP_H_ERRNO(NSS_SUCCESS, *herrnop);
 #endif
 
-	LA_CLOSE(a);
 	return retval;
 }
 #endif

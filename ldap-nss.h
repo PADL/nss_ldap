@@ -186,8 +186,6 @@ struct ldap_args
 	union {
 		const char *la_string;
 	} la_arg2;
-	ldap_session_t la_session;
-	int la_stayopen;
 };
 
 typedef struct ldap_args ldap_args_t;
@@ -196,20 +194,11 @@ typedef struct ldap_args ldap_args_t;
 						q.la_type = LA_TYPE_STRING; \
 						q.la_arg1.la_string = NULL; \
 						q.la_arg2.la_string = NULL; \
-						q.la_session.ls_conn = NULL; \
-						q.la_session.ls_config = NULL; \
-						q.la_stayopen = 0;		 \
 						} while (0)
 #define LA_TYPE(q)				(q.la_type)
 #define LA_STRING(q)				(q.la_arg1.la_string)
 #define LA_NUMBER(q)				(q.la_arg1.la_number)
 #define LA_STRING2(q)				(q.la_arg2.la_string)
-#define LA_SESSION(q)				(q.la_session)
-#define LA_STAYOPEN(q)				(q.la_stayopen)
-#define LA_CLOSE(q)				do { \
-							if (q.la_stayopen && q.la_session.ls_conn) \
-								ldap_unbind(q.la_session.ls_conn); \
-						} while (0)
 
 #include "ldap-parse.h"
 
@@ -243,11 +232,10 @@ typedef struct ldap_state ldap_state_t;
 #define LS_INIT(state)	do { state.ls_type = LS_TYPE_INDEX; state.ls_info.ls_index = -1; } while (0)
 
 /*
- * thread specific context: session, result chain, and state data
+ * thread specific context: result chain, and state data
  */
 struct ent_context
 {
-	ldap_session_t ec_session;	/* host & config */
 	ldap_state_t ec_state;		/* eg. for services */
 	LDAPMessage *ec_res;		/* result chain */
 	LDAPMessage *ec_last;		/* current result pointer */
@@ -389,7 +377,6 @@ ent_context_t *_nss_ldap_ent_context_init(context_handle_t *);
 void _nss_ldap_ent_context_free(context_handle_t *);
 
 LDAPMessage *_nss_ldap_lookup(
-	ldap_session_t *session, /* IN/OUT */
 	const ldap_args_t *args,  /* IN */
 	const char *filterprot, /* IN */
 	const char **attributes /* IN */,

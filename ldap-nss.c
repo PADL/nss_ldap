@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Library General Public
    License along with the nss_ldap library; see the file COPYING.LIB.  If not,
-   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   write to the Free Software Foundatiosess->ls_connn, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
  */
 
@@ -49,13 +49,15 @@ static char rcsId[] = "$Id$";
 #endif
 #include "dnsconfig.h"
 
-/* the configuration is read by the first call to do_open().
+/*
+ * the configuration is read by the first call to do_open().
  * Pointers to elements of the list are passed around but should not
  * be freed.
  */
 
 static char __configbuf[NSS_LDAP_CONFIG_BUFSIZ];
-static ldap_config_t *_nss_ldap_config = NULL;
+static ldap_config_t *__config = NULL;
+static ldap_session_t __session = { NULL, NULL };
 
 static void do_close(ldap_session_t *);
 static NSS_STATUS do_open(ldap_session_t *);
@@ -68,13 +70,15 @@ static NSS_STATUS do_open(ldap_session_t *);
  */
 static void do_close(ldap_session_t *sess)
 {
-	debug("do_close");
+	debug("==> do_close");
 
 	if (sess->ls_conn != NULL)
 		{
 		ldap_unbind(sess->ls_conn);
 		sess->ls_conn = NULL;
 		}
+
+	debug("<== do_close");
 }
 
 #ifdef SUN_NSS
@@ -88,7 +92,7 @@ NSS_STATUS _nss_ldap_default_destr(nss_backend_t *be, void *args)
 {
 	ent_context_t *ctx = ((nss_ldap_backend_t *)be)->state;
 
-	debug("_nss_ldap_default_destr");
+	debug("==> _nss_ldap_default_destr");
 
 	nss_context_lock();
 
@@ -98,7 +102,6 @@ NSS_STATUS _nss_ldap_default_destr(nss_backend_t *be, void *args)
 			{
 			ldap_msgfree(ctx->ec_res);
 			}
-		do_close(&ctx->ec_session);
 		free(ctx);
 		((nss_ldap_backend_t *)be)->state = NULL;
 		}
@@ -110,9 +113,11 @@ NSS_STATUS _nss_ldap_default_destr(nss_backend_t *be, void *args)
 
 	nss_cleanup();
 
+	debug("<== _nss_ldap_default_destr");
+
 	return NSS_SUCCESS;
 }
-#endif
+#endif /* SUN_NSS */
 
 /*
  * Opens connection to an LDAP server.
@@ -123,10 +128,11 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 {
 	ldap_config_t *cfg = NULL;
 
-	debug("do_open");
+	debug("==> do_open");
 
 	if (sess->ls_config != NULL && sess->ls_conn != NULL)
 		{
+		debug("<== do_open");
 		return NSS_SUCCESS;
 		}
 	else
@@ -134,32 +140,37 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 		sess->ls_config = NULL;
 		}
 
-	if (_nss_ldap_config == NULL)
+	if (__config == NULL)
 		{
 		NSS_STATUS status;
 
-		status = _nss_ldap_readconfig(&_nss_ldap_config, __configbuf, sizeof(__configbuf));
+		status = _nss_ldap_readconfig(&__config, __configbuf, sizeof(__configbuf));
 
 		if (status != NSS_SUCCESS)
 			{
-			status = _nss_ldap_readconfigfromdns(&_nss_ldap_config, __configbuf, sizeof(__configbuf));
+			status = _nss_ldap_readconfigfromdns(&__config, __configbuf, sizeof(__configbuf));
 			}
 
 		if (status != NSS_SUCCESS)
 			{
-			_nss_ldap_config = NULL;
+			__config = NULL;
+			debug("<== do_open");
 			return status;
 			}
 		}
 
-	cfg = _nss_ldap_config;
+	cfg = __config;
 
 	while (1)
 		{
 #ifdef NETSCAPE_SDK
+		debug("==> ldap_init");
 		sess->ls_conn = ldap_init(cfg->ldc_host, cfg->ldc_port);
-#else
+		debug("<== ldap_init");
+#else	
+		debug("==> ldap_open");
 		sess->ls_conn = ldap_open(cfg->ldc_host, cfg->ldc_port);
+		debug("<== ldap_open");
 #endif
 		if (sess->ls_conn != NULL || cfg->ldc_next == cfg)
 			{
@@ -170,6 +181,7 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 
 	if (sess->ls_conn == NULL)
 		{
+		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
 
@@ -177,6 +189,7 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 	if (_nss_ldap_ltf_thread_init(sess->ls_conn) != NSS_SUCCESS)
 		{
 		do_close(sess);
+		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
 #endif
@@ -190,11 +203,13 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 	if (ldap_simple_bind_s(sess->ls_conn, cfg->ldc_binddn, cfg->ldc_bindpw) != LDAP_SUCCESS)
 		{
 		do_close(sess);
+		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
 
 	sess->ls_config = cfg;
 
+	debug("<== do_open");
 	return NSS_SUCCESS;
 }
 
@@ -210,7 +225,7 @@ ent_context_t *_nss_ldap_ent_context_init(context_handle_t *key)
 {
 	ent_context_t *ctx;
 
-	debug("_nss_ldap_ent_context_init");
+	debug("==> _nss_ldap_ent_context_init");
 
 	nss_context_lock();
 
@@ -222,6 +237,7 @@ ent_context_t *_nss_ldap_ent_context_init(context_handle_t *key)
 		if (ctx == NULL)
 			{
 			nss_context_unlock();
+			debug("<== _nss_ldap_ent_context_init");
 			return NULL;
 			}
 		ctx->ec_res = NULL;
@@ -232,14 +248,13 @@ ent_context_t *_nss_ldap_ent_context_init(context_handle_t *key)
 		ldap_msgfree(ctx->ec_res);
 		}
 
-	ctx->ec_session.ls_conn = NULL;
-	ctx->ec_session.ls_config = NULL;
 	ctx->ec_res = NULL;
 	ctx->ec_last = NULL;
 	LS_INIT(ctx->ec_state);
 
 	nss_context_unlock();
-	
+
+	debug("<== _nss_ldap_ent_context_init");	
 	return ctx;
 }
 
@@ -250,9 +265,11 @@ ent_context_t *_nss_ldap_ent_context_init(context_handle_t *key)
  */
 NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be)
 {
-	debug("_nss_ldap_default_constr");
+	debug("==> _nss_ldap_default_constr");
 
 	be->state = NULL;
+
+	debug("<== _nss_ldap_default_constr");
 
 	return NSS_SUCCESS;
 }
@@ -266,13 +283,14 @@ void _nss_ldap_ent_context_free(context_handle_t *key)
 {
 	ent_context_t *ctx = *key;
 
-	debug("_nss_ldap_ent_context_free");
+	debug("==> _nss_ldap_ent_context_free");
 
 	nss_context_lock();
 
 	if (ctx == NULL)
 		{
 		nss_context_unlock();
+		debug("<== _nss_ldap_ent_context_free");
 		return;
 		}
 
@@ -281,24 +299,23 @@ void _nss_ldap_ent_context_free(context_handle_t *key)
 		ldap_msgfree(ctx->ec_res);
 		}
 
-	do_close(&ctx->ec_session);
-
-	ctx->ec_session.ls_conn = NULL;
-	ctx->ec_session.ls_config = NULL;
 	ctx->ec_res = NULL;
 	ctx->ec_last = NULL;
 	LS_INIT(ctx->ec_state);
 
 	nss_context_unlock();
+
+	debug("<== _nss_ldap_ent_context_free");
+
+	return;
 }
 
 
 /*
  * The generic lookup cover function.
- * Assumes ownership of the session.
+ * Assumes caller holds lock.
  */
 LDAPMessage *_nss_ldap_lookup(
-	ldap_session_t *sess,
 	const ldap_args_t *args,
 	const char *filterprot,
 	const char **attrs,
@@ -309,11 +326,12 @@ LDAPMessage *_nss_ldap_lookup(
 	int lstatus;
 	int retry = 0;
 
-	debug("_nss_ldap_lookup");
+	debug("==> _nss_ldap_lookup");
 
-	if (do_open(sess) != NSS_SUCCESS)
+	if (do_open(&__session) != NSS_SUCCESS)
 		{
-		sess->ls_conn = NULL;
+		__session.ls_conn = NULL;
+		debug("<== _nss_ldap_lookup");
 		return NULL;
 		}
 
@@ -349,13 +367,13 @@ LDAPMessage *_nss_ldap_lookup(
 		}
 
 #ifdef NETSCAPE_SDK
-	ldap_set_option(sess->ls_conn, LDAP_OPT_SIZELIMIT, (void *)&sizelimit);
+	ldap_set_option(__session.ls_conn, LDAP_OPT_SIZELIMIT, (void *)&sizelimit);
 #else
-	sess->ls_conn->ld_sizelimit = sizelimit;
+	__session.ls_conn->ld_sizelimit = sizelimit;
 #endif
 
 do_retry:
-	lstatus = ldap_search_s(sess->ls_conn, sess->ls_config->ldc_base, sess->ls_config->ldc_scope,
+	lstatus = ldap_search_s(__session.ls_conn, __session.ls_config->ldc_base, __session.ls_config->ldc_scope,
 		(args == NULL ? (char *)filterprot : filter), (char **)attrs, 0, &res);
 
 	switch (lstatus)
@@ -365,8 +383,8 @@ do_retry:
 		case LDAP_TIMELIMIT_EXCEEDED:
 			break;
 		case LDAP_SERVER_DOWN:
-			do_close(sess);
-			if (retry || do_open(sess) != NSS_SUCCESS)
+			do_close(&__session);
+			if (retry || do_open(&__session) != NSS_SUCCESS)
 				{
 				res = NULL;
 				break;
@@ -377,11 +395,16 @@ do_retry:
 			break;
 		}
 
+	debug("<== _nss_ldap_lookup");
+
 	return res;
 }
 
 /*
  * General entry point for enumeration routines.
+ * This should really use the asynchronous LDAP search API to avoid
+ * pulling down all the entries at once, particularly if the
+ * enumeration is not completed.
  * Locks mutex.
  */
 NSS_STATUS _nss_ldap_getent(
@@ -415,11 +438,11 @@ NSS_STATUS _nss_ldap_getent(
 	 * NSS_NOTFOUND and reset the index to -1, at which point we'll retrieve
 	 * another entry.
 	 */
-	if (ctx->ec_session.ls_conn == NULL && ctx->ec_res == NULL)
+	if (ctx->ec_res == NULL)
 		{
 		LDAPMessage *res;
 
-		res = _nss_ldap_lookup(&ctx->ec_session, NULL, filterprot, attrs, LDAP_NO_LIMIT);
+		res = _nss_ldap_lookup(NULL, filterprot, attrs, LDAP_NO_LIMIT);
 		if (res == NULL)
 			{
 			nss_context_unlock();
@@ -427,26 +450,26 @@ NSS_STATUS _nss_ldap_getent(
 			}
 
 		ctx->ec_res = res;		
-		ctx->ec_last = ldap_first_entry(ctx->ec_session.ls_conn, ctx->ec_res);
+		ctx->ec_last = ldap_first_entry(__session.ls_conn, ctx->ec_res);
 		}
 	else
 		{
 		if (ctx->ec_state.ls_info.ls_index == -1)
 			{
-			ctx->ec_last = ldap_next_entry(ctx->ec_session.ls_conn, ctx->ec_last);
+			ctx->ec_last = ldap_next_entry(__session.ls_conn, ctx->ec_last);
 			}
 		}
 
 	while (ctx->ec_last != NULL)
 		{
-		stat = parser(ctx->ec_session.ls_conn, ctx->ec_last, &ctx->ec_state, result, buffer, buflen);
+		stat = parser(__session.ls_conn, ctx->ec_last, &ctx->ec_state, result, buffer, buflen);
 		if (stat == NSS_SUCCESS)
 			{
 			break;
 			}
 		if (ctx->ec_state.ls_info.ls_index == -1)
 			{
-			ctx->ec_last = ldap_next_entry(ctx->ec_session.ls_conn, ctx->ec_last);
+			ctx->ec_last = ldap_next_entry(__session.ls_conn, ctx->ec_last);
 			}
 		}
 
@@ -479,17 +502,11 @@ NSS_STATUS _nss_ldap_getbyname(
 	NSS_STATUS stat = NSS_NOTFOUND;
 	ldap_state_t state;
 
-	/* XXX paranoia */
 	nss_context_lock();
 
-	/*
-	 * Don't like session being part of the args struct. What if we
-	 * want, say, a per backend session?
-	 */
-	res = _nss_ldap_lookup(&args->la_session, args, filterprot, attrs, 1);
+	res = _nss_ldap_lookup(args, filterprot, attrs, 1);
 	if (res == NULL)
 		{
-		do_close(&args->la_session);
 		nss_context_unlock();
 		return stat;
 		}
@@ -503,19 +520,16 @@ NSS_STATUS _nss_ldap_getbyname(
 	state.ls_type = LS_TYPE_KEY;
 	state.ls_info.ls_key = args->la_arg2.la_string;
 
-	for (e = ldap_first_entry(args->la_session.ls_conn, res);
+	for (e = ldap_first_entry(__session.ls_conn, res);
 		e != NULL;
-		e = ldap_next_entry(args->la_session.ls_conn, e))
+		e = ldap_next_entry(__session.ls_conn, e))
 		{
-		stat = parser(args->la_session.ls_conn, e, &state, result, buffer, buflen);
+		stat = parser(__session.ls_conn, e, &state, result, buffer, buflen);
 		if (stat == NSS_SUCCESS)
 			break;
 		}
 
 	ldap_msgfree(res);
-
-	if (args->la_stayopen == 0)
-		do_close(&args->la_session);
 
 	nss_context_unlock();
 

@@ -3,7 +3,8 @@ $Id$
 
 2.40	Luke Howard <lukeh@xedoc.com>
 
-   * fixed crasher in dnsconfig.c
+	* fixed crasher in dnsconfig.c
+	* LDAP session is now persistent; big performance boost!
 
 2.39	Luke Howard <lukeh@xedoc.com>
 

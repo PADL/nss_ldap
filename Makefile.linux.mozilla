@@ -101,17 +101,21 @@ all: ${MODULE}
 ${MODULE}: ${OBJS}
 	${LD} ${LIBDIRS} ${LDFLAGS} -o ${LIB} ${OBJS} ${LIBS}
 
-install:
+install: install_lib install_conf
+
+install_lib:
 	cp ${LIB} /lib/libnss_ldap-${LIBCVERS}.so
 	ln -sf libnss_ldap-${LIBCVERS}.so /lib/libnss_ldap.so.1
 	ln -sf /lib/libnss_ldap.so.1 /usr/lib/libnss_ldap.so;true
+
+install_conf:
 	cp nsswitch.ldap /etc/nsswitch.ldap
 	cp ldap.conf	/etc/ldap.conf
 
 clean:
 	rm -f ${OBJS} ${LIB} core
 
-TESTCC=gcc ${PDOFLAGS} -g -D_REENTRANT -DNSS_GNU -DWEIRD_GETPWENT /lib/libnss_ldap.so.1
+TESTCC=gcc ${PDOFLAGS} -g -D_REENTRANT -DNSS_GNU -DWEIRD_GETPWENT
 
 test:
 	-${TESTCC} ${CFLAGS} -o  testpw testpw.c
