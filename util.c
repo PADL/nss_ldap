@@ -514,6 +514,9 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   result->ldc_tls_checkpeer = 0;
   result->ldc_tls_cacertfile = NULL;
   result->ldc_tls_cacertdir = NULL;
+  result->ldc_tls_ciphers = NULL;
+  result->ldc_tls_cert = NULL;
+  result->ldc_tls_key = NULL;
   result->ldc_next = result;
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
@@ -688,6 +691,18 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       else if (!strcasecmp (k, "tls_cacertdir"))
         {
 	  t = &result->ldc_tls_cacertdir;
+        }
+      else if (!strcasecmp (k, "tls_ciphers"))
+        {
+	  t = &result->ldc_tls_ciphers;
+        }
+      else if (!strcasecmp (k, "tls_cert"))
+        {
+	  t = &result->ldc_tls_cert;
+        }
+      else if (!strcasecmp (k, "tls_key"))
+        {
+	  t = &result->ldc_tls_key;
         }
       else
 	{

@@ -1,6 +1,12 @@
 $Header$
 ===============================================================
 
+152	Luke Howard <lukeh@padl.com>
+
+	* further patch from Jarkko for TLS/SSL auth:
+	  support for LDAPS/cipher suite selection/
+	  client key/cert authentication
+
 151	Luke Howard <lukeh@padl.com>
 
 	* patch from Andrew Rechenberg for Active

@@ -218,6 +218,12 @@ struct ldap_config
     char *ldc_tls_cacertfile;
     /* tls ca certificate dir */
     char *ldc_tls_cacertdir;
+    /* tls ciphersuite */
+    char *ldc_tls_ciphers;
+    /* tls certificate */
+    char *ldc_tls_cert;
+    /* tls key */
+    char *ldc_tls_key;
     /* next configuration. loops back onto itself for last entry */
     struct ldap_config *ldc_next;
   };

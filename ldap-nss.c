@@ -151,6 +151,11 @@ static void do_disable_keepalive (LDAP * ld);
 #endif
 
 /*
+ * TLS routines
+ */
+static int set_ssl_options(ldap_config_t **);
+
+/*
  * Open the global session
  */
 static NSS_STATUS do_open (void);
@@ -803,7 +808,6 @@ do_open (void)
 #ifdef HAVE_LDAP_START_TLS_S
   if (cfg->ldc_ssl_on == SSL_START_TLS)
     {
-      int ldap_pvt_tls_set_option(void *, int, void *);
       int version, rc;
 
       if (ldap_get_option
@@ -818,30 +822,13 @@ do_open (void)
 	    }
 	}
 
-      debug ("==> ldap_pvt_tls_set_option");
-
-      if (cfg->ldc_tls_checkpeer)
-        {
-          rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_CACERTDIR, 
-		cfg->ldc_tls_cacertdir);
-          if (rc != LDAP_SUCCESS)
-              {
-                debug ("failed to set LDAP_OPT_X_TLS_CACERTDIR");
-              }
-          rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_CACERTFILE, 
-		cfg->ldc_tls_cacertfile);
-          if (rc != LDAP_SUCCESS)
-              {
-                debug ("failed to set LDAP_OPT_X_TLS_CACERTFILE");
-              }
-          rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_REQUIRE_CERT, 
-		&cfg->ldc_tls_checkpeer);
-          if (rc != LDAP_SUCCESS)
-              {
-                debug ("failed to set LDAP_OPT_X_TLS_REQUIRE_CERT");
-              }
+      /* set up SSL context */
+      debug ("==> set_ssl_options");
+      if (set_ssl_options(&cfg) != LDAP_SUCCESS)
+	{
+	  debug ("Setting of SSL options failed");
         }
-      debug ("<== ldap_pvt_tls_set_option");
+      debug ("<== set_ssl_options");
 
       debug ("==> start_tls");
       if (ldap_start_tls_s (__session.ls_conn, NULL, NULL) == LDAP_SUCCESS)
@@ -874,6 +861,15 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_UNAVAIL;
 	}
+
+	/* set up SSL context */
+	debug ("==> set_ssl_options");
+	if (set_ssl_options(&cfg) != LDAP_SUCCESS)
+	  {
+	    debug ("Setting of SSL options failed");
+	  }
+	debug ("<== set_ssl_options");
+
 #elif defined(HAVE_LDAPSSL_CLIENT_INIT)
       if (ldapssl_install_routines (__session.ls_conn) != LDAP_SUCCESS)
 	{
@@ -932,6 +928,67 @@ do_open (void)
   debug ("<== do_open");
 
   return NSS_SUCCESS;
+}
+
+static int
+set_ssl_options(ldap_config_t ** presult)
+{
+  int ldap_pvt_tls_set_option(void *, int, void *);
+  ldap_config_t *config;
+  int rc;
+
+  config = *presult;
+
+  /* ca cert file */
+  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_CACERTFILE,
+		config->ldc_tls_cacertfile);
+  if (rc != LDAP_SUCCESS)
+    {
+      debug ("Setting of LDAP_OPT_X_TLS_CACERTFILE failed");
+      return LDAP_OPERATIONS_ERROR;
+    }
+
+  /* ca cert directory */
+  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_CACERTDIR,
+		config->ldc_tls_cacertdir);
+  if (rc != LDAP_SUCCESS)
+    {
+      debug ("Setting of LDAP_OPT_X_TLS_CACERTDIR failed");
+      return LDAP_OPERATIONS_ERROR;
+    }
+
+  /* require cert? */
+  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_REQUIRE_CERT,
+		&config->ldc_tls_checkpeer);
+  if (rc != LDAP_SUCCESS)
+    {
+      debug ("Setting of LDAP_OPT_X_TLS_REQUIRE_CERT failed");
+      return LDAP_OPERATIONS_ERROR;
+    }
+
+  /* set cipher suite, certificate and private key: */
+  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_CIPHER_SUITE,
+		config->ldc_tls_ciphers);
+  if (rc != LDAP_SUCCESS)
+    {
+      debug ("Setting of LDAP_OPT_X_TLS_CIPHER_SUITE failed");
+      return LDAP_OPERATIONS_ERROR;
+    }
+  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_CERTFILE,
+		config->ldc_tls_cert);
+  if (rc != LDAP_SUCCESS)
+    {
+      debug ("Setting of LDAP_OPT_X_TLS_CERTFILE failed");
+      return LDAP_OPERATIONS_ERROR;
+    }
+  rc = ldap_pvt_tls_set_option(NULL, LDAP_OPT_X_TLS_KEYFILE,
+		config->ldc_tls_key);
+  if (rc != LDAP_SUCCESS)
+    {
+      debug ("Setting of LDAP_OPT_X_TLS_KEYFILE failed");
+      return LDAP_OPERATIONS_ERROR;
+    }
+  return LDAP_SUCCESS;
 }
 
 static int
