@@ -108,9 +108,10 @@ ng_chase (LDAP * ld, const char *dn, ldap_initgroups_args_t * lia);
 
 static NSS_STATUS
 do_parse_range (const char *attributeType,
-		char *attributeDescription, int *start, int *end)
+		const char *attributeDescription, int *start, int *end)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
+  char *attribute;
   size_t attributeTypeLength;
   size_t attributeDescriptionLength;
   char *p;
@@ -122,7 +123,9 @@ do_parse_range (const char *attributeType,
   *end = -1;
 
   if (strcasecmp (attributeType, attributeDescription) == 0)
-    return NSS_SUCCESS;
+    {
+      return NSS_SUCCESS;
+    }
 
   attributeDescriptionLength = strlen (attributeDescription);
   attributeTypeLength = strlen (attributeType);
@@ -133,20 +136,30 @@ do_parse_range (const char *attributeType,
       return NSS_NOTFOUND;
     }
 
+  /* XXX need to copy as strtok() is destructive */
+  attribute = strdup(attributeDescription);
+  if (attribute == NULL)
+    {
+      return NSS_TRYAGAIN;
+    }
+
 #ifndef HAVE_STRTOK_R
-  for (p = strtok (attributeDescription, ";");
+  for (p = strtok (attribute, ";");
        p != NULL; p = strtok (NULL, ";"))
 #else
-  for (p = strtok_r (attributeDescription, ";", &st);
+  for (p = strtok_r (attribute, ";", &st);
        p != NULL; p = strtok_r (NULL, ";", &st))
 #endif /* !HAVE_STRTOK_R */
     {
       char *q;
 
-      if (p == attributeDescription)
+      if (p == attribute)
 	{
 	  if (strcasecmp (p, attributeType) != 0)
-	    return NSS_NOTFOUND;
+	    {
+	      free (attribute);
+	      return NSS_NOTFOUND;
+	    }
 	}
       else if (strncasecmp (p, "range=", sizeof ("range=") - 1) == 0)
 	{
@@ -154,7 +167,10 @@ do_parse_range (const char *attributeType,
 
 	  q = strchr (p, '-');
 	  if (q == NULL)
-	    return NSS_NOTFOUND;
+	    {
+	      free (attribute);
+	      return NSS_NOTFOUND;
+	    }
 
 	  *q++ = '\0';
 
@@ -169,6 +185,7 @@ do_parse_range (const char *attributeType,
 	}
     }
 
+  free (attribute);
   return stat;
 }
 
@@ -286,7 +303,6 @@ do_parse_group_members (LDAP * ld,
       return NSS_NOTFOUND;
     }
 
-  groupMembersCount = 0;	/* number of members in this group */
   i = *pGroupMembersCount;	/* index of next member */
 
   do
@@ -296,6 +312,8 @@ do_parse_group_members (LDAP * ld,
 	  stat = NSS_NOTFOUND;
 	  goto out;
 	}
+
+      groupMembersCount = 0; /* number of members in this group */
 
       (void) do_get_range_values (ld, e, uniquemember_attrs[0], &start, &end, &dnValues);
       if (dnValues != NULL)
@@ -314,16 +332,11 @@ do_parse_group_members (LDAP * ld,
        * As an optimization the buffer is preferentially allocated off
        * the stack
        */
-      if ((*pGroupMembersCount + groupMembersCount) * sizeof (char *) >
-	  *pGroupMembersBufferSize)
+      if ((i + groupMembersCount) * sizeof (char *) > *pGroupMembersBufferSize)
 	{
-	  *pGroupMembersBufferSize =
-	    (*pGroupMembersCount + groupMembersCount) * sizeof (char *);
-	  *pGroupMembersBufferSize +=
-	    (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)) - 1;
-	  *pGroupMembersBufferSize -=
-	    (*pGroupMembersBufferSize %
-	     (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)));
+	  *pGroupMembersBufferSize = (i + groupMembersCount) * sizeof (char *);
+	  *pGroupMembersBufferSize += (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)) - 1;
+	  *pGroupMembersBufferSize -= (*pGroupMembersBufferSize % (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)));
 
 	  if (*pGroupMembersBufferIsMalloced == 0)
 	    {
@@ -331,8 +344,7 @@ do_parse_group_members (LDAP * ld,
 	      *pGroupMembers = NULL;	/* force malloc() */
 	    }
 
-	  *pGroupMembers =
-	    (char **) realloc (*pGroupMembers, *pGroupMembersBufferSize);
+	  *pGroupMembers = (char **) realloc (*pGroupMembers, *pGroupMembersBufferSize);
 	  if (*pGroupMembers == NULL)
 	    {
 	      stat = NSS_TRYAGAIN;
@@ -341,8 +353,7 @@ do_parse_group_members (LDAP * ld,
 
 	  if (*pGroupMembersBufferIsMalloced == 0)
 	    {
-	      memcpy (*pGroupMembers, groupMembers,
-		      *pGroupMembersCount * sizeof (char *));
+	      memcpy (*pGroupMembers, groupMembers, i * sizeof (char *));
 	      groupMembers = NULL;	/* defensive programming */
 	      *pGroupMembersBufferIsMalloced = 1;
 	    }
@@ -423,7 +434,7 @@ do_parse_group_members (LDAP * ld,
 	    }
 	}
 
-      /* Get next range for Active Directory compatability */
+      /* Get next range for Active Directory compat */
       if (end != -1)
 	{
 	  stat = do_construct_range_attribute (uniquemember_attr,
