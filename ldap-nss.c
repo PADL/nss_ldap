@@ -2001,6 +2001,7 @@ do_result (ent_context_t * ctx, int all)
 	      /* NB: this frees ctx->ec_res */
 #ifdef PAGE_RESULTS
 	      LDAPControl **resultControls = NULL;
+	      ctx->ec_cookie = NULL;
 #endif /* PAGE_RESULTS */
 
 #ifdef PAGE_RESULTS
