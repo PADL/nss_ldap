@@ -196,5 +196,40 @@ ldap-bp.o util.o globals.o ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o \
 
 3.	make install :-)
 
+--------------------------------------------------------------------------------------
 
+When using pam_ldap-150 on a Solaris 8 Sparc box, I would receive the following
+error whenever SSL or TLS was enabled in the pam_ldap configuration file.
+
+<error>
+fatal: relocation error: file /opt/lib/libldap.so.2: symbol
+SSL_load_error_strings: referenced symbol not found
+</error>
+
+The system:
+
+# uname -a
+SunOS drinky-drinky 5.8 Generic_108528-14 sun4u sparc SUNW,Ultra-5_10
+
+The 'configure' options for building pam_ldap:
+
+# env CPPFLAGS="-I/opt/include" LDFLAGS="-L/opt/lib" LIBS="-lssl -lcrypto
+-lsocket" ./configure  --prefix=/opt/pkgs/pam_ldap-150 --with-ldap-lib=openldap
+--with-ldap-dir=/opt --with-ldap-conf-file=/etc/pam_ldap.conf
+
+pam_ldap was linked against OpenLDAP (2.0.25) shared libraries, which were
+linked against OpenSSL (0.9.6d) static libraries.  All OpenLDAP and OpenSSL
+libraries reside in /opt/lib on this system.
+
+After removing the 'mapfile' specification from the Solaris linking options,
+pam_ldap is now able to use SSL and TLS without generating the error noted above.
+
+The diff:
+
+# diff configure.in.orig configure.in
+33c33
+< solaris*) pam_ldap_so_LD="/usr/ccs/bin/ld"; pam_ldap_so_LDFLAGS="-B dynamic -M
+mapfile -G" ;;
+---
+> solaris*) pam_ldap_so_LD="/usr/ccs/bin/ld"; pam_ldap_so_LDFLAGS="-B dynamic -G" ;;
 
