@@ -68,15 +68,23 @@ CPP = @CPP@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
+@AIX_TRUE@authmod = NSS_LDAP
+@AIX_FALSE@authmod = 
 
-noinst_PROGRAMS = nss_ldap.so
-EXTRA_DIST = COPYING.LIB CVSVersionInfo.txt ChangeLog README 	     README.IRS ldap.conf nss_ldap.spec nsswitch.ldap
+noinst_PROGRAMS = nss_ldap.so $(authmod)
+
+EXTRA_DIST = COPYING.LIB CVSVersionInfo.txt ChangeLog README 	     README.IRS ldap.conf nss_ldap.spec nsswitch.ldap aix_authmeth.c
 
 
 nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-rpc.c 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c 	ldap-bp.c util.c globals.c ltf.c snprintf.c resolve.c 	dnsconfig.c irs-nss.c
 
 
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
+
+NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c 	util.c globals.c ltf.c snprintf.c resolve.c dnsconfig.c 	irs-nss.c aix_authmeth.c
+
+
+NSS_LDAP_LDFLAGS = -enss_ldap_initialize -lsys -lcsys -lc
 
 @GLIBC_TRUE@LIBC_VERS = `ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 @GLIBC_TRUE@NSS_LDAP_LIBC_VERSIONED = libnss_ldap-$(LIBC_VERS).so
@@ -100,6 +108,11 @@ ldap-service.o ldap-schema.o ldap-ethers.o ldap-bp.o util.o globals.o \
 ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o
 nss_ldap_so_LDADD = $(LDADD)
 nss_ldap_so_DEPENDENCIES = 
+NSS_LDAP_OBJECTS =  ldap-nss.o ldap-grp.o ldap-pwd.o ldap-schema.o \
+util.o globals.o ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o \
+aix_authmeth.o
+NSS_LDAP_LDADD = $(LDADD)
+NSS_LDAP_DEPENDENCIES = 
 CFLAGS = @CFLAGS@
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
@@ -114,16 +127,22 @@ DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
 TAR = gtar
 GZIP_ENV = --best
-SOURCES = $(nss_ldap_so_SOURCES)
-OBJECTS = $(nss_ldap_so_OBJECTS)
+DEP_FILES =  .deps/aix_authmeth.P .deps/dnsconfig.P .deps/globals.P \
+.deps/irs-nss.P .deps/ldap-alias.P .deps/ldap-bp.P .deps/ldap-ethers.P \
+.deps/ldap-grp.P .deps/ldap-hosts.P .deps/ldap-network.P \
+.deps/ldap-nss.P .deps/ldap-proto.P .deps/ldap-pwd.P .deps/ldap-rpc.P \
+.deps/ldap-schema.P .deps/ldap-service.P .deps/ldap-spwd.P .deps/ltf.P \
+.deps/resolve.P .deps/snprintf.P .deps/util.P
+SOURCES = $(nss_ldap_so_SOURCES) $(NSS_LDAP_SOURCES)
+OBJECTS = $(nss_ldap_so_OBJECTS) $(NSS_LDAP_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
 .SUFFIXES: .S .c .o .s
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --gnu Makefile
 
-Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
+Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status $(BUILT_SOURCES)
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
@@ -172,9 +191,6 @@ distclean-noinstPROGRAMS:
 
 maintainer-clean-noinstPROGRAMS:
 
-.c.o:
-	$(COMPILE) -c $<
-
 .s.o:
 	$(COMPILE) -c $<
 
@@ -194,6 +210,10 @@ maintainer-clean-compile:
 nss_ldap.so: $(nss_ldap_so_OBJECTS) $(nss_ldap_so_DEPENDENCIES)
 	@rm -f nss_ldap.so
 	$(LINK) $(nss_ldap_so_LDFLAGS) $(nss_ldap_so_OBJECTS) $(nss_ldap_so_LDADD) $(LIBS)
+
+NSS_LDAP: $(NSS_LDAP_OBJECTS) $(NSS_LDAP_DEPENDENCIES)
+	@rm -f NSS_LDAP
+	$(LINK) $(NSS_LDAP_LDFLAGS) $(NSS_LDAP_OBJECTS) $(NSS_LDAP_LDADD) $(LIBS)
 
 tags: TAGS
 
@@ -262,6 +282,11 @@ distdir: $(DISTFILES)
 	-rm -rf $(distdir)
 	mkdir $(distdir)
 	-chmod 777 $(distdir)
+	here=`cd $(top_builddir) && pwd`; \
+	top_distdir=`cd $(distdir) && pwd`; \
+	distdir=`cd $(distdir) && pwd`; \
+	cd $(top_srcdir) \
+	  && $(AUTOMAKE) --include-deps --build-dir=$$here --srcdir-name=$(top_srcdir) --output-dir=$$top_distdir --gnu Makefile
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -272,6 +297,38 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
+
+DEPS_MAGIC := $(shell mkdir .deps > /dev/null 2>&1 || :)
+
+-include $(DEP_FILES)
+
+mostlyclean-depend:
+
+clean-depend:
+
+distclean-depend:
+	-rm -rf .deps
+
+maintainer-clean-depend:
+
+%.o: %.c
+	@echo '$(COMPILE) -c $<'; \
+	$(COMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-cp .deps/$(*F).pp .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm .deps/$(*F).pp
+
+%.lo: %.c
+	@echo '$(LTCOMPILE) -c $<'; \
+	$(LTCOMPILE) -Wp,-MD,.deps/$(*F).pp -c $<
+	@-sed -e 's/^\([^:]*\)\.o[ 	]*:/\1.lo \1.o :/' \
+	  < .deps/$(*F).pp > .deps/$(*F).P; \
+	tr ' ' '\012' < .deps/$(*F).pp \
+	  | sed -e 's/^\\$$//' -e '/^$$/ d' -e '/:$$/ d' -e 's/$$/ :/' \
+	    >> .deps/$(*F).P; \
+	rm -f .deps/$(*F).pp
 info-am:
 info: info-am
 dvi-am:
@@ -311,18 +368,19 @@ distclean-generic:
 
 maintainer-clean-generic:
 mostlyclean-am:  mostlyclean-hdr mostlyclean-noinstPROGRAMS \
-		mostlyclean-compile mostlyclean-tags \
+		mostlyclean-compile mostlyclean-tags mostlyclean-depend \
 		mostlyclean-generic
 
 mostlyclean: mostlyclean-am
 
 clean-am:  clean-hdr clean-noinstPROGRAMS clean-compile clean-tags \
-		clean-generic mostlyclean-am
+		clean-depend clean-generic mostlyclean-am
 
 clean: clean-am
 
 distclean-am:  distclean-hdr distclean-noinstPROGRAMS distclean-compile \
-		distclean-tags distclean-generic clean-am
+		distclean-tags distclean-depend distclean-generic \
+		clean-am
 
 distclean: distclean-am
 	-rm -f config.status
@@ -330,7 +388,8 @@ distclean: distclean-am
 maintainer-clean-am:  maintainer-clean-hdr \
 		maintainer-clean-noinstPROGRAMS \
 		maintainer-clean-compile maintainer-clean-tags \
-		maintainer-clean-generic distclean-am
+		maintainer-clean-depend maintainer-clean-generic \
+		distclean-am
 	@echo "This command is intended for maintainers to use;"
 	@echo "it deletes files that may require special tools to rebuild."
 
@@ -342,8 +401,9 @@ mostlyclean-noinstPROGRAMS distclean-noinstPROGRAMS \
 clean-noinstPROGRAMS maintainer-clean-noinstPROGRAMS \
 mostlyclean-compile distclean-compile clean-compile \
 maintainer-clean-compile tags mostlyclean-tags distclean-tags \
-clean-tags maintainer-clean-tags distdir info-am info dvi-am dvi check \
-check-am installcheck-am installcheck all-recursive-am \
+clean-tags maintainer-clean-tags distdir mostlyclean-depend \
+distclean-depend clean-depend maintainer-clean-depend info-am info \
+dvi-am dvi check check-am installcheck-am installcheck all-recursive-am \
 install-exec-local install-exec-am install-exec install-data-local \
 install-data-am install-data install-am install uninstall-local \
 uninstall-am uninstall all-redirect all-am all installdirs \
@@ -351,17 +411,25 @@ mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
-install-exec-local: nss_ldap.so
-	@$(NORMAL_INSTALL)
-@GLIBC_TRUE@	-rm -f $(DESTDIR)$(libdir)/$(NSS_LDAP_LIBC_VERSIONED)
-@GLIBC_TRUE@	$(INSTALL_PROGRAM) -o root -g root nss_ldap.so $(DESTDIR)$(libdir)/$(NSS_LDAP_LIBC_VERSIONED)
-@GLIBC_TRUE@	$(mkinstalldirs) $(DESTDIR)$(libdir)
-@GLIBC_TRUE@	(cd $(DESTDIR)$(libdir); ln -sf $(NSS_LDAP_LIBC_VERSIONED) $(NSS_LDAP_NSS_VERSIONED))
-@GLIBC_TRUE@	$(mkinstalldirs) $(DESTDIR)/usr$(libdir)
-@GLIBC_TRUE@	(cd $(DESTDIR)/usr$(libdir); ln -sf ../..$(libdir)/$(NSS_LDAP_NSS_VERSIONED) .)
-@GLIBC_FALSE@	$(INSTALL_PROGRAM) -o root -g root nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.so.1
-@GLIBC_FALSE@	-rm -f $(DESTDIR)$(libdir)/nss_ldap.so
-@GLIBC_FALSE@	-ln -s $(DESTDIR)$(libdir)/nss_ldap.so.1 $(DESTDIR)$(libdir)/nss_ldap.so
+# AIX install instructions per doc/README.AIX
+
+@AIX_TRUE@install-exec-local: nss_ldap.so NSS_LDAP
+@AIX_TRUE@	$(INSTALL_PROGRAM) -o root -g root nss_ldap.so $(DESTDIR)$(libdir)/netsvc/dynload/nss_ldap.so
+@AIX_TRUE@	$(INSTALL_PROGRAM) -o root -g root NSS_LDAP $(DESTDIR)$(libdir)/security/NSS_LDAP
+
+# Linux, Solaris, other platform install instructions
+
+@AIX_FALSE@install-exec-local: nss_ldap.so
+@AIX_FALSE@	@$(NORMAL_INSTALL)
+@AIX_FALSE@@GLIBC_TRUE@	-rm -f $(DESTDIR)$(libdir)/$(NSS_LDAP_LIBC_VERSIONED)
+@AIX_FALSE@@GLIBC_TRUE@	$(INSTALL_PROGRAM) -o root -g root nss_ldap.so $(DESTDIR)$(libdir)/$(NSS_LDAP_LIBC_VERSIONED)
+@AIX_FALSE@@GLIBC_TRUE@	$(mkinstalldirs) $(DESTDIR)$(libdir)
+@AIX_FALSE@@GLIBC_TRUE@	(cd $(DESTDIR)$(libdir); ln -sf $(NSS_LDAP_LIBC_VERSIONED) $(NSS_LDAP_NSS_VERSIONED))
+@AIX_FALSE@@GLIBC_TRUE@	$(mkinstalldirs) $(DESTDIR)/usr$(libdir)
+@AIX_FALSE@@GLIBC_TRUE@	(cd $(DESTDIR)/usr$(libdir); ln -sf ../..$(libdir)/$(NSS_LDAP_NSS_VERSIONED) .)
+@AIX_FALSE@@GLIBC_FALSE@	$(INSTALL_PROGRAM) -o root -g root nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.so.1
+@AIX_FALSE@@GLIBC_FALSE@	-rm -f $(DESTDIR)$(libdir)/nss_ldap.so
+@AIX_FALSE@@GLIBC_FALSE@	-ln -s $(DESTDIR)$(libdir)/nss_ldap.so.1 $(DESTDIR)$(libdir)/nss_ldap.so
 
 install-data-local:
 	@$(NORMAL_INSTALL)

@@ -1,0 +1,78 @@
+Quick notes for using nss_ldap on AIX
+=====================================
+
+1. Introduction
+---------------
+
+The C library on AIX includes the IRS library which can also found in the
+BIND 8.x distribution. Of course, IBM did some things The Other Way(tm)...
+
+2. Compilation
+--------------
+
+I'm assuming you have successfully installed OpenLDAP 2.x. I haven't
+tested it with IBM's LDAP libraries.
+
+I'm using AIX 4.3.3. It may work with 4.[12]. It won't work with 3.x. I
+see no reason why it shouldn't work with 5.x.
+
+You will need irs.h to build nss_ldap on AIX. IBM did not provide it (what a
+surprise). You have two options: cut the pieces from the AIX documentation
+("System Management Guide: Communications and Networks", Chapter 3, "Dynamic
+Load API") and make your own version, or you just copy it from the BIND 8.x
+distribution. Anyway, be sure that it will be found by the configure script.
+
+Run "configure" and "make" as usual. If everything went OK, you will get two
+objects: nss_ldap.so and NSS_LDAP.
+
+3. Installation
+---------------
+
+Copy nss_ldap.so to /usr/lib/netsvc/dynload (create the directory if it does
+not exist), and copy NSS_LDAP to /usr/lib/security. Now that wasn't
+difficult...
+
+4. Configuration
+----------------
+
+Edit /etc/irs.conf as you like (create it if it does not exist). "man
+irs.conf" tells everything you need. As you would guess, you have to use the
+"nss_ldap" mechanism name to use nss_ldap. This lets you access host,
+network, service, and protocol information using LDAP (well, you can also
+configure netgroups here, but when I'm writing this, nss_ldap does not have
+netgroup support).
+
+Due to the missing netgroup support, you will get lots of "dlsym of symbol:
+ng_pvtinit failed: Function not implemented (ng_pvtinit)" in the system
+logs. That's ugly, but harmless.
+
+Now, the interesting part: users and groups. Have I said that IBM did it The
+Other Way(tm)? Ok, add the following to /usr/lib/security/methods.cfg:
+
+NSS_LDAP:
+	program = /usr/lib/security/NSS_LDAP
+	options = dbonly
+
+After that, edit /etc/security/user. Change the "SYSTEM" attribute of the
+"default" entry to "compat OR NSS_LDAP", i.e:
+
+default:
+	[... lots of attributes...]
+	SYSTEM = "compat OR NSS_LDAP"
+
+After that you should be able to use getpwnam() and friends to get the
+information from the LDAP server.
+
+5. What's missing
+-----------------
+
+The provided NSS_LDAP authentication module supports the identification
+interfaces only. There is no support for authentication (ie. you cannot
+authenticate users defined in LDAP using this module). There is no support
+for modifying user/group attributes (which means you won't be able to use
+the "chuser" command etc. to alter user/group attributes; you have to make
+all modifications directly via LDAP).
+
+Enjoy.
+
+Gabor Gombas <gombasg@inf.elte.hu>

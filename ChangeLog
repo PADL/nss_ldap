@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+137	Gabor Gombas <gombasg@inf.elte.hu>
+
+	* build nss_ldap as a loadable module on AIX
+	* doco on AIX
+
 136	Luke Howard <lukeh@padl.com>
 
 	* define -DPIC for FreeBSD

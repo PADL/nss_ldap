@@ -29,6 +29,16 @@
 
 #include <errno.h>
 
+#ifdef __STDC__
+#ifndef __P
+#define __P(x)  x
+#endif
+#else
+#ifndef __P
+#define __P(x)  ()
+#endif
+#endif /* __STDC__ */
+
 #ifdef HAVE_NSSWITCH_H
 #include <nss_common.h>
 #include <nss_dbdefs.h>
@@ -40,16 +50,6 @@
 #endif
 
 #include "ldap-schema.h"
-
-#ifdef __STDC__
-#ifndef __P
-#define __P(x)  x
-#endif
-#else
-#ifndef __P
-#define __P(x)  ()
-#endif
-#endif /* __STDC__ */
 
 /*
  * Timeouts for reconnecting code. Similar to rebind
@@ -70,7 +70,7 @@
 #   define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, pthread_self() , ## args)
 #  endif			/* HAVE_NSSWITCH_H */
 # else
-#  ifdef __AIX__
+#  ifdef _AIX
 #   include <stdarg.h>
 static void
 debug (char *fmt, ...)
@@ -88,7 +88,7 @@ debug (char *fmt, ...)
 #  endif			/* AIX */
 # endif				/* DEBUG_SYSLOG */
 #else
-# ifdef __AIX__
+# ifdef _AIX
 static void
 debug (char *fmt, ...)
 {

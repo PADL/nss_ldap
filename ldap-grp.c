@@ -178,7 +178,7 @@ _nss_ldap_parse_gr (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(_AIX)
 #ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
@@ -187,6 +187,9 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 		      long int *size, gid_t * groups, long int limit,
 		      int *errnop)
+#elif defined(_AIX)
+char *
+_nss_ldap_getgrset (char *user)
 #endif
 {
 #ifdef HAVE_NSSWITCH_H
@@ -199,13 +202,17 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
   ldap_args_t a;
   NSS_STATUS stat;
   LDAPMessage *res, *e;
+#ifdef _AIX
+  char *grplist = NULL;
+  size_t listlen;
+#endif /* _AIX */
 
   LA_INIT (a);
-#ifdef HAVE_NSS_H
+#if defined(HAVE_NSS_H) || defined(_AIX)
   LA_STRING (a) = user;
 #else
   LA_STRING (a) = gbm->username;
-#endif /* HAVE_NSS_H */
+#endif /* HAVE_NSS_H || _AIX */
   LA_TYPE (a) = LA_TYPE_STRING;
 
 #ifdef RFC2307BIS
@@ -247,11 +254,35 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 
   if (stat != NSS_SUCCESS)
     {
+#ifndef _AIX
       return stat;
+#else
+      return NULL;
+#endif
     }
   for (e = _nss_ldap_first_entry (res);
        e != NULL; e = _nss_ldap_next_entry (e))
     {
+#ifdef _AIX
+      char **values = _nss_ldap_get_values (e, AT (cn));
+      if (values != NULL)
+	{
+          size_t l = strlen (values[0]);
+
+          grplist = realloc (grplist, listlen + l + 2);
+          if (grplist == NULL)
+	    {
+	      ldap_value_free (values);
+	      ldap_msgfree (res);
+	      return NULL;
+	    }
+          memcpy (grplist + listlen, values[0], l);
+          grplist[listlen + l] = ',';
+          listlen += l + 1;
+
+          ldap_value_free (values);
+	}
+#else
       char **values = _nss_ldap_get_values (e, AT (gidNumber));
       if (values != NULL)
 	{
@@ -313,18 +344,23 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 	    }
 #endif /* HAVE_NSSWITCH_H */
 	}
-
+#endif /* _AIX */
     }
   ldap_msgfree (res);
 
 #ifdef HAVE_NSS_H
   return NSS_SUCCESS;
+#elif defined(_AIX)
+  /* Strip last comma and terminate the string */
+  if (grplist)
+    grplist[listlen] = '\0';
+  return grplist;
 #else
   /* yes, NSS_NOTFOUND is the successful errno code. see nss_dbdefs.h */
   return NSS_NOTFOUND;
 #endif /* HAVE_NSS_H */
 }
-#endif /* HAVE_NSSWITCH_H || HAVE_NSS_H */
+#endif /* HAVE_NSSWITCH_H || HAVE_NSS_H || _AIX */
 
 #ifdef HAVE_NSS_H
 NSS_STATUS

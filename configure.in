@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 136)
+AM_INIT_AUTOMAKE(nss_ldap, 137)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -16,7 +16,9 @@ AC_ARG_ENABLE(debug, [  --enable-debugging        enable debug code ], [AC_DEFIN
 AC_ARG_WITH(ldap-lib, [  --with-ldap-lib=type      select ldap library [auto|netscape3|netscape4|umich|openldap]])
 AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of ldap SDK])
 
-AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu" )
+AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu")
+AM_CONDITIONAL(AIX, test "$target_os" = aix)
+
 if test "$ac_cv_prog_gcc" = "yes"; then CFLAGS="$CFLAGS -Wall -fPIC"; fi
 
 dnl This is needed for the native Solaris LDAP SDK
@@ -30,7 +32,7 @@ esac
 
 case "$target_os" in
 aix*) nss_ldap_so_LDFLAGS="-bM:SRE -bnoentry -bE:\$(srcdir)/exports.aix" ;;
-solaris*) nss_ldap_so_LDFLAGS="-Wl,-M -Wl,mapfile -Wl,-G" ;;
+solaris*) nss_ldap_so_LDFLAGS="-Wl,-M -Wl,\$(srcdir)/mapfile -Wl,-G" ;;
 *) nss_ldap_so_LDFLAGS="-shared" ;;
 esac
 AC_SUBST(nss_ldap_so_LDFLAGS)
