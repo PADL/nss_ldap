@@ -4,7 +4,7 @@ Makefile	2.1	0
 Makefile.bsd	2.1	0
 Makefile.gnu	2.1	0
 Makefile.linux	2.1	0
-Makefile.next	2.1	0
+Makefile.next	2.2	0
 Makefile.osf	2.1	0
 Makefile.sgi	2.1	0
 README	2.1	0
@@ -15,6 +15,8 @@ dl-grp.h	2.1	0
 dl-nss.h	2.1	0
 dl-pwd.c	2.1	0
 dl-pwd.h	2.1	0
+dnsconfig.c	2.1	0
+dnsconfig.h	2.1	0
 exports.osf	2.1	0
 exports.sgi	2.1	0
 globals.c	2.1	0
@@ -57,6 +59,8 @@ ltf.c	2.1	0
 ltf.h	2.1	0
 nss.h	2.1	0
 nsswitch.ldap	2.1	0
+resolve.c	2.1	0
+resolve.h	2.1	0
 snprintf.c	2.1	0
 snprintf.h	2.1	0
 testgr.c	2.1	0

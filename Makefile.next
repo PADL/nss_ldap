@@ -21,6 +21,7 @@
 #
 
 MODULE=nss_ldap
+PLATFORM=nextstep
 HDRS=	\
 	ldap-alias.h \
 	ldap-ethers.h \
@@ -38,6 +39,8 @@ HDRS=	\
 	globals.h \
 	ltf.h \
 	irs-nss.h \
+	resolve.h \
+	dnsconfig.h \
 	snprintf.h
 
 SRCS=	ldap-nss.c \
@@ -53,9 +56,11 @@ SRCS=	ldap-nss.c \
 	ldap-ethers.c \
 	ldap-bp.c \
 	util.c \
-	globals.c \
 	ltf.c \
-	snprintf.c
+	snprintf.c \
+	resolve.c \
+	dnsconfig.c \
+	globals.c 
 
 OBJS=${SRCS:.c=.o}
 LIB=lib${MODULE}.a
@@ -63,8 +68,8 @@ LIB=lib${MODULE}.a
 #NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
 # uncomment BSDFLAGS if you are building this as part of the BIND IRS
 BSDFLAGS=-DIRS_NSS
-BIND=../BIND/src
-INCDIRS=-I/usr/local/include -I. -I${BIND}/port/next/include -I${BIND}/include -I${BIND}/lib/irs
+BIND=../bind/src
+INCDIRS=-I/usr/local/include -I. -I${BIND}/port/next/include -I${BIND}/include -I${BIND}/lib/irs -I${BIND}/port/${PLATFORM}/include
 LIBDIRS=-L/usr/local/lib
 LIBS=-lldap -llber
 GCCFLAGS=-g -Wall #-fPIC #-O
