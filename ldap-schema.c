@@ -1,5 +1,4 @@
-
-/* Copyright (C) 2000 Luke Howard.
+/* Copyright (C) 2000-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 2000.
 
@@ -21,27 +20,35 @@
    $Id$
  */
 
-#ifdef SUN_NSS
+static char rcsId[] = "$Id$";
+
+#include "config.h"
+
+#ifdef HAVE_PORT_BEFORE_H
+#include <port_before.h>
+#endif
+
+#ifdef HAVE_THREAD_H
 #include <thread.h>
-#else
+#elif defined(HAVE_PTHREAD_H)
 #include <pthread.h>
 #endif
 
 #include <stdlib.h>
-#include <lber.h>
-#include <ldap.h>
-
 #include <netdb.h>
 
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
 #endif
 
 #include "ldap-nss.h"
+
+#ifdef HAVE_PORT_AFTER_H
+#nclude <port_after.h>
+#endif
 
 static const char *pw_attributes[] =
 {AT (uid), AT (userPassword),

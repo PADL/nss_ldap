@@ -1,4 +1,4 @@
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -21,9 +21,12 @@
 #ifndef _LDAP_NSS_LDAP_GLOBAL_H
 #define _LDAP_NSS_LDAP_GLOBAL_H
 
-#ifdef SUN_NSS
+#include "config.h"
+
+#ifdef HAVE_THREAD_H
+#include <thread.h>
 extern mutex_t _nss_ldap_lock;
-#else
+#elif defined(HAVE_PTHREAD_H)
 #include <pthread.h>
 extern pthread_mutex_t _nss_ldap_lock;
 #endif
@@ -31,13 +34,9 @@ extern pthread_mutex_t _nss_ldap_lock;
 extern int _nss_ldap_herrno2nssstat_tab[];
 extern int _nss_ldap_herrno2nssstat_tab_count;
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 extern int _nss_ldap_errno2nssstat_tab[];
 extern int _nss_ldap_errno2nssstat_tab_count;
-#endif /* IRS_NSS */
-
-#ifdef DL_NSS
-extern void *_nss_ldap_libc_handle;
-#endif
+#endif /* HAVE_IRS_H */
 
 #endif /* _LDAP_NSS_LDAP_GLOBAL_H */

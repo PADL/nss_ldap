@@ -5,14 +5,16 @@
  * plugged in, so to speak, to test anything useful.
  */
 
+#include "config.h"
+
 #ifdef _REENTRANT
-#ifdef GNU_NSS
+#ifdef HAVE_PTHREAD_H
 #include <pthread.h>
 #else
 #include <thread.h>
 #endif /* _REENTRANT */
 
-#endif /* GNU_NSS */
+#endif /* HAVE_PTHREAD_H */
 #include <stdio.h>
 #include <pwd.h>
 #include <sys/types.h>
@@ -43,7 +45,7 @@ main (int argc, char **argv)
 #ifdef _REENTRANT
   for (i = 0; i < MAX_THREADS; i++)
     {
-#ifdef GNU_NSS
+#ifdef HAVE_PTHREAD_H
       pthread_t tid;
       pthread_create (NULL, 0, test_passwd, NULL, 0, &tid);
       pthread_continue (tid);
@@ -51,7 +53,7 @@ main (int argc, char **argv)
       thread_t tid;
       thr_create (NULL, 0, test_passwd, NULL, 0, &tid);
       thr_continue (tid);
-#endif /* GNU_NSS */
+#endif /* HAVE_PTHREAD_H */
     }
   while (thr_join (NULL, NULL, NULL) == 0);
 #else

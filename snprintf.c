@@ -1,4 +1,6 @@
+static char rcsId[] = "$Id$";
 
+#include "config.h"
 
 #ifndef HAVE_SNPRINTF
 
@@ -16,14 +18,13 @@
  * causing nast effects.
  **************************************************************/
 
-static char _id[] = "$Id$";
 static void dopr ();
 static char *end;
 
 #include "snprintf.h"
 #include <string.h>
 
-#ifdef GNU_NSS
+#ifdef HAVE_CTYPE_H
 #include <ctype.h>
 #endif
 

@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -25,29 +24,28 @@
 static char rcsId[] =
 "$Id$";
 
-#if !defined(IRS_NSS)
+#include "config.h"
 
-#ifdef IRS_NSS
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
-#include <lber.h>
-#include <ldap.h>
 
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
 #endif
 
 #include <sys/types.h>
@@ -55,8 +53,12 @@ static char rcsId[] =
 #include <net/if.h>
 #include <netinet/in.h>
 
-#ifdef SUN_NSS
+#ifdef HAVE_NETINET_IF_ETHER_H
 #include <netinet/if_ether.h>
+#endif
+
+#ifdef HAVE_NETINET_ETHER_H
+#include <netinet/ether.h>
 #endif
 
 #include "ldap-nss.h"
@@ -64,17 +66,19 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
 
-#ifdef GNU_NSS
-static ent_context_t * ether_context = NULL;
-#endif
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 extern struct ether_addr *ether_aton (char *s);
 extern char *ether_ntoa (struct ether_addr *e);
+#endif
+
+#ifdef HAVE_NSS_H
+static ent_context_t * ether_context = NULL;
 #endif
 
 static NSS_STATUS
@@ -104,7 +108,7 @@ _nss_ldap_parse_ether (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_gethostton_r (nss_backend_t * be, void *args)
 {
@@ -135,7 +139,7 @@ _nss_ldap_gethostton_r (nss_backend_t * be, void *args)
 
   return status;
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_gethostton_r (const char *name, struct ether * result,
 			char *buffer, size_t buflen, int *errnop)
@@ -145,7 +149,7 @@ _nss_ldap_gethostton_r (const char *name, struct ether * result,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getntohost_r (nss_backend_t * be, void *args)
 {
@@ -183,7 +187,7 @@ _nss_ldap_getntohost_r (nss_backend_t * be, void *args)
 
   return status;
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getntohost_r (struct ether_addr * addr, struct ether * result,
 			char *buffer, size_t buflen, int *errnop)
@@ -197,31 +201,31 @@ _nss_ldap_getntohost_r (struct ether_addr * addr, struct ether * result,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_setetherent_r (nss_backend_t * ether_context, void *fakeargs)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_setetherent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 {
   LOOKUP_SETENT (ether_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_endetherent_r (nss_backend_t * ether_context, void *fakeargs)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_endetherent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSS_H) || defined(HAVE_NSSWITCH_H)
 {
   LOOKUP_ENDENT (ether_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getetherent_r (nss_backend_t * ether_context, void *args)
 {
@@ -251,7 +255,7 @@ _nss_ldap_getetherent_r (nss_backend_t * ether_context, void *args)
 
   return status;
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getetherent_r (struct ether * result, char *buffer, size_t buflen,
 			 int *errnop)
@@ -261,7 +265,7 @@ _nss_ldap_getetherent_r (struct ether * result, char *buffer, size_t buflen,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_ethers_destr (nss_backend_t * ether_context, void *args)
 {
@@ -294,6 +298,6 @@ _nss_ldap_ethers_constr (const char *db_name,
 
 }
 
-#endif /* !GNU_NSS */
+#endif /* !HAVE_NSS_H */
 
-#endif /* !IRS_NSS */
+#endif /* !HAVE_IRS_H */

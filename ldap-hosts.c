@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -25,40 +24,38 @@
 static char rcsId[] =
 "$Id$";
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#include "config.h"
+
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
-#endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
+#include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
-#include <lber.h>
-#include <ldap.h>
-
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
 #include <resolv.h>
-#include <sys/socket.h>
 
-#ifdef GNU_NSS
-#include <nss.h>
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
 #ifdef INET6
 #include <resolv/mapv4v6addr.h>
 #include <resolv/mapv4v6hostent.h>
-#endif
-/* XXX bogus ? */
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
 #endif
 
 #ifndef MAXALIASES
@@ -70,13 +67,11 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
-#endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 static ent_context_t * hosts_context = NULL;
 #endif
 
@@ -104,26 +99,10 @@ _nss_ldap_parse_host (LDAP * ld,
 
   *addressbuf = *buffer = '\0';
 
-#ifdef notdef
-  /* we no longer care whether the DN determines the canonical name or not
-   * because depending on its semantics is a bad thing (tm). If it doesn't work
-   * then xxx->x_name will be NULL, and _nss_ldap_assign_attrval() will ignore
-   * it accordingly and assigned the "first" value of associatedDomain to x_name.
-   */
-  if (_nss_ldap_getdomainname (ld, e, &host->h_name, &buffer, &buflen) !=
-      NSS_SUCCESS)
-    {
-      stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &host->h_name,
-				       &buffer, &buflen);
-      if (stat != NSS_SUCCESS)
-	return stat;
-    }
-#else
   stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &host->h_name,
 				   &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
-#endif
 
   stat =
     _nss_ldap_assign_attrvals (ld, e, AT (cn), host->h_name, &host->h_aliases,
@@ -253,7 +232,7 @@ _nss_ldap_parse_host (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_gethostbyname_r (nss_backend_t * be, void *args)
 {
@@ -280,7 +259,7 @@ _nss_ldap_gethostbyname_r (nss_backend_t * be, void *args)
 
   return status;
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_gethostbyname_r (const char *name, struct hostent * result,
 			   char *buffer, size_t buflen, int *errnop,
@@ -308,7 +287,7 @@ _nss_ldap_gethostbyname_r (const char *name, struct hostent * result,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_gethostbyaddr_r (nss_backend_t * be, void *args)
 {
@@ -338,7 +317,7 @@ _nss_ldap_gethostbyaddr_r (nss_backend_t * be, void *args)
 
   return status;
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_gethostbyaddr_r (struct in_addr * addr, int len, int type,
 			   struct hostent * result, char *buffer,
@@ -371,31 +350,31 @@ _nss_ldap_gethostbyaddr_r (struct in_addr * addr, int len, int type,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_sethostent_r (nss_backend_t * hosts_context, void *fakeargs)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_sethostent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSS_H) || defined(HAVE_NSSWITCH_H)
 {
   LOOKUP_SETENT (hosts_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_endhostent_r (nss_backend_t * hosts_context, void *fakeargs)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_endhostent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSS_H) || defined(HAVE_NSSWITCH_H)
 {
   LOOKUP_ENDENT (hosts_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_gethostent_r (nss_backend_t * hosts_context, void *args)
 {
@@ -417,7 +396,7 @@ _nss_ldap_gethostent_r (nss_backend_t * hosts_context, void *args)
 
   return status;
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_gethostent_r (struct hostent * result, char *buffer, size_t buflen,
 			int *errnop, int *h_errnop)
@@ -439,7 +418,7 @@ _nss_ldap_gethostent_r (struct hostent * result, char *buffer, size_t buflen,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_hosts_destr (nss_backend_t * hosts_context, void *args)
 {
@@ -474,8 +453,8 @@ _nss_ldap_hosts_constr (const char *db_name,
   return (nss_backend_t *) be;
 }
 
-#endif /* !GNU_NSS */
+#endif /* !HAVE_NSS_H */
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 #include "irs-hosts.c"
 #endif

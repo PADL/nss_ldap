@@ -1,4 +1,4 @@
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -42,7 +42,7 @@ OC (bootableDevice) ")(" AT (cn) "=%s))";
 					    char *buffer,
 					    size_t buflen);
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 
 /*
    int parse_bootparams_entry(const char *bp_entry,

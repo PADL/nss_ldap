@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -31,29 +30,28 @@
 static char rcsId[] =
 "$Id$";
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#include "config.h"
+
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
-#endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
-#include <lber.h>
-#include <ldap.h>
 
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
 #endif
 
 #include "ldap-nss.h"
@@ -61,13 +59,11 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
-#endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 static ent_context_t * proto_context = NULL;
 #endif
 
@@ -104,14 +100,14 @@ _nss_ldap_parse_proto (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getprotobyname_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, filt_getprotobyname, LM_PROTOCOLS,
 	       _nss_ldap_parse_proto);
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getprotobyname_r (const char *name, struct protoent *result,
 			    char *buffer, size_t buflen, int *errnop)
@@ -121,14 +117,14 @@ _nss_ldap_getprotobyname_r (const char *name, struct protoent *result,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getprotobynumber_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NUMBER (args, key.number, filt_getprotobynumber, LM_PROTOCOLS,
 		 _nss_ldap_parse_proto);
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getprotobynumber_r (int number, struct protoent *result,
 			      char *buffer, size_t buflen, int *errnop)
@@ -139,38 +135,38 @@ _nss_ldap_getprotobynumber_r (int number, struct protoent *result,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_setprotoent_r (nss_backend_t * proto_context, void *fakeargs)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_setprotoent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSS_H) || defined(HAVE_NSSWITCH_H)
 {
   LOOKUP_SETENT (proto_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_endprotoent_r (nss_backend_t * proto_context, void *fakeargs)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_endprotoent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSS_H) || defined(HAVE_NSSWITCH_H)
 {
   LOOKUP_ENDENT (proto_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getprotoent_r (nss_backend_t * proto_context, void *args)
 {
   LOOKUP_GETENT (args, proto_context, filt_getprotoent, LM_PROTOCOLS,
 		 _nss_ldap_parse_proto);
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getprotoent_r (struct protoent *result, char *buffer, size_t buflen,
 			 int *errnop)
@@ -180,7 +176,7 @@ _nss_ldap_getprotoent_r (struct protoent *result, char *buffer, size_t buflen,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_protocols_destr (nss_backend_t * proto_context, void *args)
 {
@@ -215,8 +211,8 @@ _nss_ldap_protocols_constr (const char *db_name,
   return (nss_backend_t *) be;
 }
 
-#endif /* !GNU_NSS */
+#endif /* !HAVE_NSS_H */
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 #include "irs-proto.c"
 #endif

@@ -1,4 +1,4 @@
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
    (The author maintains a non-exclusive licence to distribute this file
@@ -20,6 +20,8 @@
    Boston, MA 02111-1307, USA.
  */
 
+#include "config.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -27,21 +29,17 @@
 #include <sys/param.h>
 #include <netdb.h>
 #include <syslog.h>
-
-#include <lber.h>
-#include <ldap.h>
-
 #include <string.h>
 
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(IRS_NSS)
-#include "irs-nss.h"
-#elif defined(SUN_NSS)
-#include <thread.h>
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
+#ifndef HAVE_SNPRINTF
+#include "snprintf.h"
 #endif
 
 #include "ldap-nss.h"
@@ -63,31 +61,37 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 					     size_t * buflen);
 
 #ifdef RFC2307BIS
-#ifdef GNU_NSS
-#define DN2UID_CACHE
-#endif /* GNU_NSS */
+# ifdef HAVE_DB1_DB_H
+#  include <db1/db.h>
+#  define DN2UID_CACHE
+# elif defined(HAVE_DB_185_H)
+#  include <db_185.h>
+#  define DN2UID_CACHE
+# elif defined(HAVE_DB_H)
+#  include <db.h>
+#  define DN2UID_CACHE
+# endif				/* HAVE_DB1_DB_H */
 
 #ifdef DN2UID_CACHE
-#if defined(__GLIBC__)
-# if __GLIBC_MINOR__ < 2
-#  include <db_185.h>
-# else
-#  include <db1/db.h>
-# endif
-#else
-#include <db.h>
-#endif
 #include <fcntl.h>
 static DB *__cache = NULL;
-#ifdef SUN_NSS
+
+#ifdef HAVE_THREAD_H
 static mutex_t __cache_mutex = DEFAULTMUTEX;
-#define cache_lock()	mutex_lock(&__cache_mutex)
-#define cache_unlock()	mutex_unlock(&__cache_mutex)
-#else
+# define cache_lock()	mutex_lock(&__cache_mutex)
+# define cache_unlock()	mutex_unlock(&__cache_mutex)
+#elif defined(GLIBC)
 static pthread_mutex_t __cache_mutex = PTHREAD_MUTEX_INITIALIZER;
-#define cache_lock()	__libc_lock_lock(__cache_mutex)
-#define cache_unlock()	__libc_lock_unlock(__cache_mutex)
-#endif /* SUN_NSS */
+# define cache_lock()	__libc_lock_lock(__cache_mutex)
+# define cache_unlock()	__libc_lock_unlock(__cache_mutex)
+#elif defined(HAVE_PTHREAD_H)
+static pthread_mutex_t __cache_mutex = PTHREAD_MUTEX_INITIALIZER;
+# define cache_lock()	pthread_mutex_lock(&__cache_mutex)
+# define cache_unlock()	pthread_mutex_unlock(&__cache_mutex)
+#else
+# define cache_lock()
+# define cache_unlock()
+#endif /* HAVE_THREAD_H */
 
 static NSS_STATUS
 dn2uid_cache_put (const char *dn, const char *uid)
@@ -215,11 +219,11 @@ _nss_ldap_getrdnvalue (LDAP * ld,
     }
 
   status = do_getrdnvalue (dn, rdntype, rval, buffer, buflen);
-#ifdef LDAP_VERSION3_API
+#ifdef HAVE_LDAP_MEMFREE
   ldap_memfree (dn);
 #else
   free (dn);
-#endif /* LDAP_VERSION3_API */
+#endif /* HAVE_LDAP_MEMFREE */
 
   /*
    * If examining the DN failed, then pick the nominal first
@@ -279,7 +283,7 @@ do_getrdnvalue (const char *dn,
        * multivalued RDNs (as they're essentially mandated
        * for services)
        */
-#ifdef LDAP_VERSION3_API
+#ifdef HAVE_LDAP_EXPLODE_RDN
       /*
        * use ldap_explode_rdn() API, as it's cleaner than
        * strtok(). This code has not been tested!
@@ -348,7 +352,7 @@ do_getrdnvalue (const char *dn,
 	if (r != NULL)
 	  r = NULL;
       }
-#endif /* LDAP_VERSION3_API */
+#endif /* HAVE_LDAP_EXPLODE_RDN */
     }
 
   if (exploded_dn != NULL)
@@ -444,7 +448,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   /* now we need MORE space for a descriptor, do we have it? */
   if (*buflen - alignof (ldap_service_search_descriptor_t) + 1 <
       sizeof (ldap_service_search_descriptor_t))
-    return NSS_TRYAGAIN;
+    return NSS_UNAVAIL;
 
   /* align so we can put a descriptor in here */
   p = *t = (ldap_service_search_descriptor_t *) * buffer;
@@ -471,26 +475,21 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 }
 
 NSS_STATUS
-_nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
+_nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 {
   FILE *fp;
-  char b[NSS_LDAP_CONFIG_BUFSIZ], *p;
+  char b[NSS_LDAP_CONFIG_BUFSIZ];
   NSS_STATUS stat = NSS_SUCCESS;
   ldap_config_t *result;
 
   if (*presult == NULL)
     {
-      *presult = (ldap_config_t *) malloc (sizeof (*result));
+      *presult = (ldap_config_t *) calloc (1, sizeof (*result));
       if (*presult == NULL)
 	return NSS_UNAVAIL;
     }
 
   result = *presult;
-
-  p = buf;
-
-  memset (result->ldc_sds, '\0',
-	  LM_NONE * sizeof (ldap_service_search_descriptor_t));
 
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
   result->ldc_deref = LDAP_DEREF_NEVER;
@@ -556,7 +555,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 
       if (buflen < (size_t) (len + 1))
 	{
-	  stat = NSS_TRYAGAIN;
+	  /*
+	   * fix in nss_ldap-127: don't return NSS_TRYAGAIN,
+	   * as we have no way to increase the buffer size.
+	   */
+	  stat = NSS_UNAVAIL;
 	  break;
 	}
 
@@ -662,23 +665,32 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	{
 	  /* check whether the key is a naming context key */
 	  if (do_searchdescriptorconfig
-	      (k, v, len, result->ldc_sds, &buf, &buflen) == NSS_TRYAGAIN)
+	      (k, v, len, result->ldc_sds, &buffer, &buflen) != NSS_SUCCESS)
 	    {
 	      free (result);
-	      return NSS_TRYAGAIN;
+	      return NSS_UNAVAIL;
 	    }
 	}
 
       if (t != NULL)
 	{
-	  strncpy (p, v, len);
-	  p[len] = '\0';
-	  *t = p;
-	  p += len + 1;
+	  strncpy (buffer, v, len);
+	  buffer[len] = '\0';
+	  *t = buffer;
+	  buffer += len + 1;
+	  /* fix in nss_ldap-127: decrement buflen */
+	  buflen -= len + 1;
 	}
     }
 
   fclose (fp);
+
+  /* fix in nss_ldap-127: return if out of buffer space */
+  if (stat != NSS_SUCCESS)
+    {
+      free (result);
+      return stat;
+    }
 
   if (result->ldc_rootbinddn != NULL)
     {
@@ -693,10 +705,19 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	      if (len > 0)
 		len--;
 
-	      strncpy (p, b, len);
-	      p[len] = '\0';
-	      result->ldc_rootbindpw = p;
-	      p += len + 1;
+	      /* fix in nss_ldap-127: check for enough buffer space */
+	      if (buflen < (size_t) (len + 1))
+		{
+		  free (result);
+		  return NSS_UNAVAIL;
+		}
+
+	      strncpy (buffer, b, len);
+	      buffer[len] = '\0';
+	      result->ldc_rootbindpw = buffer;
+	      buffer += len + 1;
+	      /* fix in nss_ldap-127: decrement buflen */
+	      buflen -= len + 1;
 	    }
 	  fclose (fp);
 	}
@@ -714,7 +735,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 
   if (result->ldc_port == 0)
     {
-#ifdef SSL
+#ifdef LDAPS_PORT
       if (result->ldc_ssl_on == SSL_LDAPS)
 	{
 	  result->ldc_port = LDAPS_PORT;

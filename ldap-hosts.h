@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -23,15 +22,14 @@
 #define _LDAP_NSS_LDAP_LDAP_HOSTS_H
 
 /*
-
-   It's critical that we support IPv6 both in the IRS and the NSS modules.
-   For code, check out the BIND IRS and the glibc as it stands. Both support
-   NIS lookups for IPv6 addresses.
-
+ * It's critical that we support IPv6 both in the IRS and the NSS modules.
+ * For code, check out the BIND IRS and the glibc as it stands. Both support
+ * NIS lookups for IPv6 addresses.
+ *
  */
 
 
-#if defined(SUN_NSS) || defined(DL_NSS)
+#if defined(HAVE_NSSWITCH_H) || defined(DL_NSS)
 /* XXX Fixme */
 #ifndef INADDRSZ
 #define INADDRSZ (sizeof(u_long))
@@ -55,7 +53,7 @@ OC (ipHost) ")(" AT (cn) "=%s))";
 					      char *buffer,
 					      size_t buflen);
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
      static NSS_STATUS _nss_ldap_gethostbyname_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_gethostbyaddr_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_gethostent_r (nss_backend_t * be, void *fakeargs);

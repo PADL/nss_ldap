@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -22,14 +21,16 @@
 static char rcsId[] =
 "$Id$";
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#include "config.h"
+
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
-#endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <stdlib.h>
@@ -37,15 +38,12 @@ static char rcsId[] =
 #include <sys/types.h>
 #include <sys/param.h>
 #include <grp.h>
-#include <lber.h>
-#include <ldap.h>
 
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
 #endif
 
 #include "ldap-nss.h"
@@ -53,13 +51,11 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
-#endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 static ent_context_t * gr_context = NULL;
 #endif
 
@@ -182,20 +178,20 @@ _nss_ldap_parse_gr (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#if defined(SUN_NSS) || defined(GNU_NSS)
-#ifdef SUN_NSS
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
   NSS_STATUS
 _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 		      long int *size, gid_t * groups, long int limit,
 		      int *errnop)
 #endif
 {
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
   struct nss_groupsbymem *gbm = (struct nss_groupsbymem *) args;
-#endif /* SUN_NSS */
+#endif /* HAVE_NSSWITCH_H */
 #ifdef RFC2307BIS
   char *userdn = NULL;
   const char *filter;
@@ -205,11 +201,11 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
   LDAPMessage *res, *e;
 
   LA_INIT (a);
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
   LA_STRING (a) = user;
 #else
   LA_STRING (a) = gbm->username;
-#endif /* GNU_NSS */
+#endif /* HAVE_NSS_H */
   LA_TYPE (a) = LA_TYPE_STRING;
 
 #ifdef RFC2307BIS
@@ -237,11 +233,11 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
   stat = _nss_ldap_search_s (&a, filter, LM_GROUP, LDAP_NO_LIMIT, &res);
   if (userdn != NULL)
     {
-#ifdef LDAP_VERSION3_API
+#ifdef HAVE_LDAP_MEMFREE
       ldap_memfree (userdn);
 #else
       free (userdn);
-#endif /* LDAP_VERSION3_API */
+#endif /* HAVE_LDAP_MEMFREE */
     }
 #else
   stat =
@@ -270,7 +266,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 	      continue;
 	    }
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 	  /* weed out duplicates: is this really our responsibility? */
 	  for (i = 0; i < gbm->numgids; i++)
 	    {
@@ -315,22 +311,22 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 		  return NSS_SUCCESS;
 		}
 	    }
-#endif /* SUN_NSS */
+#endif /* HAVE_NSSWITCH_H */
 	}
 
     }
   ldap_msgfree (res);
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
   return NSS_SUCCESS;
 #else
   /* yes, NSS_NOTFOUND is the successful errno code. see nss_dbdefs.h */
   return NSS_NOTFOUND;
-#endif /* GNU_NSS */
+#endif /* HAVE_NSS_H */
 }
-#endif /* SUN_NSS || GNU_NSS */
+#endif /* HAVE_NSSWITCH_H || HAVE_NSS_H */
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 NSS_STATUS
 _nss_ldap_getgrnam_r (const char *name,
 		      struct group * result,
@@ -339,7 +335,7 @@ _nss_ldap_getgrnam_r (const char *name,
   LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getgrnam,
 	       LM_GROUP, _nss_ldap_parse_gr);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrnam_r (nss_backend_t * be, void *args)
 {
@@ -347,7 +343,7 @@ _nss_ldap_getgrnam_r (nss_backend_t * be, void *args)
 }
 #endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 NSS_STATUS
 _nss_ldap_getgrgid_r (gid_t gid,
 		      struct group *result,
@@ -356,7 +352,7 @@ _nss_ldap_getgrgid_r (gid_t gid,
   LOOKUP_NUMBER (gid, result, buffer, buflen, errnop, filt_getgrgid,
 		 LM_GROUP, _nss_ldap_parse_gr);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 {
@@ -365,13 +361,13 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 }
 #endif
 
-#if defined(GNU_NSS)
+#if defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 {
@@ -379,13 +375,13 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 }
 #endif
 
-#if defined(GNU_NSS)
+#if defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_endgrent_r (nss_backend_t * gr_context, void *args)
 {
@@ -393,7 +389,7 @@ _nss_ldap_endgrent_r (nss_backend_t * gr_context, void *args)
 }
 #endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 NSS_STATUS
 _nss_ldap_getgrent_r (struct group *result,
 		      char *buffer, size_t buflen, int *errnop)
@@ -401,7 +397,7 @@ _nss_ldap_getgrent_r (struct group *result,
   LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop, filt_getgrent,
 		 LM_GROUP, _nss_ldap_parse_gr);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrent_r (nss_backend_t * gr_context, void *args)
 {
@@ -410,7 +406,7 @@ _nss_ldap_getgrent_r (nss_backend_t * gr_context, void *args)
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_group_destr (nss_backend_t * gr_context, void *args)
 {
@@ -448,8 +444,8 @@ _nss_ldap_group_constr (const char *db_name,
 }
 
 
-#endif /* !GNU_NSS */
+#endif /* !HAVE_NSS_H */
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 #include "irs-grp.c"
 #endif

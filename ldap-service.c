@@ -1,6 +1,4 @@
-
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -32,32 +30,33 @@
 static char rcsId[] =
 "$Id$";
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#include "config.h"
+
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
-#endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
-#include <lber.h>
-#include <ldap.h>
-
 #include <netinet/in.h>
 
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
+#ifdef HAVE_SYS_BYTEORDER_H
 #include <sys/byteorder.h>
+#endif
+
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
 #endif
 
 #include "ldap-nss.h"
@@ -65,13 +64,11 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
-#endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 static ent_context_t * serv_context = NULL;
 #endif
 
@@ -191,7 +188,7 @@ _nss_ldap_parse_serv (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getservbyname_r (nss_backend_t * be, void *args)
 {
@@ -219,7 +216,7 @@ _nss_ldap_getservbyname_r (nss_backend_t * be, void *args)
 
   return status;
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getservbyname_r (const char *name,
 			   const char *proto,
@@ -241,7 +238,7 @@ _nss_ldap_getservbyname_r (const char *name,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getservbyport_r (nss_backend_t * be, void *args)
 {
@@ -269,7 +266,7 @@ _nss_ldap_getservbyport_r (nss_backend_t * be, void *args)
 
   return status;
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getservbyport_r (int port,
 			   const char *proto,
@@ -291,38 +288,38 @@ _nss_ldap_getservbyport_r (int port,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_setservent_r (nss_backend_t * serv_context, void *args)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_setservent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSS_H) || defined(HAVE_NSSWITCH_H)
 {
   LOOKUP_SETENT (serv_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_endservent_r (nss_backend_t * serv_context, void *args)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_endservent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSS_H) || defined(HAVE_NSSWITCH_H)
 {
   LOOKUP_ENDENT (serv_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getservent_r (nss_backend_t * serv_context, void *args)
 {
   LOOKUP_GETENT (args, serv_context, filt_getservent, LM_SERVICES,
 		 _nss_ldap_parse_serv);
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getservent_r (struct servent *result, char *buffer, size_t buflen,
 			int *errnop)
@@ -332,7 +329,7 @@ _nss_ldap_getservent_r (struct servent *result, char *buffer, size_t buflen,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_services_destr (nss_backend_t * serv_context, void *args)
 {
@@ -367,8 +364,8 @@ _nss_ldap_services_constr (const char *db_name,
   return (nss_backend_t *) be;
 }
 
-#endif /* !GNU_NSS */
+#endif /* !HAVE_NSS_H */
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 #include "irs-service.c"
 #endif

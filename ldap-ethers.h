@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -21,7 +20,7 @@
    $Id$
  */
 
-#ifdef SUN_NSS
+#ifdef HAVE_NETINET_IF_ETHER_H
 #include <netinet/if_ether.h>
 #else
 #include <netinet/ether.h>
@@ -60,7 +59,7 @@ OC (ieee802Device) ")(" AT (cn) "=%s))";
 					       char *buffer,
 					       size_t buflen);
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
      static NSS_STATUS _nss_ldap_gethostton_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_getntohost_r (nss_backend_t * be, void *fakeargs);
 
@@ -68,7 +67,7 @@ OC (ieee802Device) ")(" AT (cn) "=%s))";
 					     const char *src_name,
 					     const char *cfg_args);
 
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 /* for the record */
      NSS_STATUS _nss_ldap_gethostton_r (const char *name, struct ether *eth,
 				  char *buffer, size_t buflen, int *errnop);
@@ -81,3 +80,4 @@ OC (ieee802Device) ")(" AT (cn) "=%s))";
 
 
 #endif /* _LDAP_NSS_LDAP_LDAP_ETHERS_H */
+

@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -21,28 +20,33 @@
 
 static char rcsId[] = "$Id$";
 
-#if defined(NETSCAPE_API_EXTENSIONS) && !defined(HAVE_LDAP_THREAD_FNS)
+#include "config.h"
+
+#ifdef HAVE_PORT_BEFORE_H
+#include <port_before.h>
+#endif
+
+#ifdef HAVE_THREAD_H
+#include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
+#endif
 
 #include <stdlib.h>
 #include <string.h>
-#include <lber.h>
-#include <ldap.h>
-
-#if defined(GNU_NSS) || defined(IRS_NSS)
-#include <nss.h>
 #include <stdio.h>
-#include <malloc.h>
-#include <errno.h>
-#include <pthread.h>
-#else
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
-#include <thread.h>
+
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
 #endif
 
 #include "ldap-nss.h"
 #include "globals.h"
+
+#if defined(LDAP_OPT_THREAD_FN_PTRS) && (defined(HAVE_THREAD_H) || defined(HAVE_PTHREAD_H))
 
 static void *ltf_mutex_alloc (void);
 static void ltf_mutex_free (void *m);
@@ -53,7 +57,7 @@ static int ltf_get_ld_error (char **matched, char **errmsg, void *dummy);
 static void ltf_set_errno (int err);
 static int ltf_get_errno (void);
 
-#if defined(GNU_NSS) || defined(IRS_NSS)
+#ifndef HAVE_THREAD_H /* thus, pthreads */
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 
  * The contents of this file are subject to the Netscape Public License
@@ -136,7 +140,6 @@ ltf_tsd_setup (void)
   tsd = pthread_getspecific (key);
   if (tsd != NULL)
     {
-      fprintf (stderr, "tsd non-null!\n");
       pthread_exit (NULL);
     }
   tsd = (void *) calloc (1, sizeof (struct ldap_error));
@@ -193,12 +196,6 @@ ltf_get_errno (void)
   return (errno);
 }
 #else
-/*
- * based on Netscape code. This doesn't work the GNU glibc, yet, as we don't
- * know what threading package to use. (I guess it'll have to use pthreads.
- * The LTF implementation below uses Solaris threads, which are quite similar
- */
-
 static thread_key_t ltf_key = 0;
 
 static void *
@@ -311,5 +308,5 @@ _nss_ldap_ltf_thread_init (LDAP * ld)
 
   return ltf_tsd_setup ();
 }
-#endif /* GNU_NSS */
-#endif /* NETSCAPE_API_EXTENSIONS */
+#endif /* !HAVE_THREAD_H */
+#endif /* LDAP_OPT_THREAD_FN_PTRS */

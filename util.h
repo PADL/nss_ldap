@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
    (The author maintains a non-exclusive licence to distribute this file
@@ -119,12 +118,12 @@ NSS_STATUS _nss_ldap_escape_string (const char *str,
 	herr = _nss_ldap_herrno2nssstat_tab[nss_status - _NSS_LOOKUP_OFFSET]; \
 	} while (0)
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 #define MAP_ERRNO(nss_status, herr)	do { \
 	if ((unsigned int) nss_status > _nss_ldap_errno2nssstat_tab_count) \
 		errno = EPERM; \
 	errno = _nss_ldap_errno2nssstat_tab[nss_status]; \
 	} while (0)
-#endif /* IRS_NSS */
+#endif /* HAVE_IRS_H */
 
 #endif /* _LDAP_NSS_LDAP_UTIL_H */

@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -31,35 +30,33 @@
 static char rcsId[] =
 "$Id$";
 
-#ifndef IRS_NSS			/* not supported at the moment */
+#include "config.h"
 
-#ifdef IRS_NSS
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(IRS_NSS) || defined(GNU_NSS) || defined(DL_NSS)
-#include <netdb.h>
-#elif defined(SUN_NSS)
+#ifdef HAVE_RPC_RPCENT_H
 #include <rpc/rpcent.h>
+#else
+#include <netdb.h>
 #endif
 
+#ifdef HAVE_LBER_H
 #include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
 #include <ldap.h>
-
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
 #endif
 
 #include "ldap-nss.h"
@@ -67,11 +64,13 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
 
-#ifdef GNU_NSS
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
+
+#ifdef HAVE_NSS_H
 static ent_context_t * rpc_context = NULL;
 #endif
 
@@ -108,13 +107,13 @@ _nss_ldap_parse_rpc (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getrpcbyname_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, filt_getrpcbyname, LM_RPC, _nss_ldap_parse_rpc);
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getrpcbyname_r (const char *name, struct rpcent *result,
 			  char *buffer, size_t buflen, int *errnop)
@@ -124,14 +123,14 @@ _nss_ldap_getrpcbyname_r (const char *name, struct rpcent *result,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getrpcbynumber_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NUMBER (args, key.number, filt_getrpcbynumber, LM_RPC,
 		 _nss_ldap_parse_rpc);
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getrpcbynumber_r (int number, struct rpcent *result,
 			    char *buffer, size_t buflen, int *errnop)
@@ -141,38 +140,38 @@ _nss_ldap_getrpcbynumber_r (int number, struct rpcent *result,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_setrpcent_r (nss_backend_t * rpc_context, void *args)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_setrpcent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 {
   LOOKUP_SETENT (rpc_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_endrpcent_r (nss_backend_t * rpc_context, void *args)
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
      NSS_STATUS _nss_ldap_endrpcent (void)
 #endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 {
   LOOKUP_ENDENT (rpc_context);
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getrpcent_r (nss_backend_t * rpc_context, void *args)
 {
   LOOKUP_GETENT (args, rpc_context, filt_getrpcent, LM_RPC,
 		 _nss_ldap_parse_rpc);
 }
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_getrpcent_r (struct rpcent *result, char *buffer, size_t buflen,
 		       int *errnop)
@@ -182,7 +181,7 @@ _nss_ldap_getrpcent_r (struct rpcent *result, char *buffer, size_t buflen,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_rpc_destr (nss_backend_t * rpc_context, void *args)
 {
@@ -216,7 +215,6 @@ _nss_ldap_rpc_constr (const char *db_name,
 
   return (nss_backend_t *) be;
 }
+#endif /* HAVE_NSSWITCH_H */
 
-#endif /* !GNU_NSS */
-
-#endif /* !IRS_NSS */
+#endif /* !HAVE_IRS_H */

@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -44,7 +43,7 @@ OC (posixAccount) ")(|(" AT (uid) "=%s)(" AT (uid) "=%s@*)))";
 					    char *buffer,
 					    size_t buflen);
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
      static NSS_STATUS _nss_ldap_getpwnam_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_getpwuid_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_setpwent_r (nss_backend_t * be, void *fakeargs);

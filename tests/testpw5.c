@@ -5,8 +5,10 @@
  * plugged in, so to speak, to test anything useful.
  */
 
+#include "config.h"
+
 #ifdef _REENTRANT
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
 #else
 #include <pthread.h>

@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -24,46 +23,45 @@
 
 static char rcsId[] = "$Id$";
 
-#if !defined(IRS_NSS)
+#include "config.h"
 
-#ifdef IRS_NSS
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
-#include <lber.h>
-#include <ldap.h>
-
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
-#endif
-
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
 
 #include "ldap-nss.h"
 #include "ldap-bp.h"
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
 
-#ifdef GNU_NSS
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
+
+#ifdef HAVE_NSS_H
 static ent_context_t * bp_context = NULL;
 #endif
 
@@ -76,16 +74,10 @@ _nss_ldap_parse_bp (LDAP * ld,
   struct bootparams *bp = (struct bootparams *) result;
   NSS_STATUS stat;
 
-#ifdef notdef
-  stat = _nss_ldap_getdomainname (ld, e, &bp->bp_name, &buffer, &buflen);
-  if (stat != NSS_SUCCESS)
-    return stat;
-#else
   stat =
     _nss_ldap_assign_attrval (ld, e, AT (cn), &bp->bp_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
-#endif
 
   stat =
     _nss_ldap_assign_attrvals (ld, e, AT (bootParameter), NULL,
@@ -96,7 +88,7 @@ _nss_ldap_parse_bp (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *args)
 {
@@ -105,7 +97,7 @@ _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *args)
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_bootparams_destr (nss_backend_t * bp_context, void *args)
 {
@@ -141,6 +133,6 @@ _nss_ldap_bootparams_constr (const char *db_name,
   return NULL;
 }
 
-#endif /* !GNU_NSS */
+#endif /* HAVE_NSSWITCH_H */
 
-#endif /* !IRS_NSS */
+#endif /* !HAVE_IRS_H */

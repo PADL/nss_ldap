@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -38,6 +37,7 @@ OC (oncRpc) ")(" AT (cn) "=%s))";
      static const char filt_getrpcent[] =
      "(objectclass=" OC (oncRpc) ")";
 
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
      static NSS_STATUS _nss_ldap_parse_rpc (
 					     LDAP * ld,
 					     LDAPMessage * e,
@@ -45,8 +45,9 @@ OC (oncRpc) ")(" AT (cn) "=%s))";
 					     void *result,
 					     char *buffer,
 					     size_t buflen);
+#endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
      static NSS_STATUS _nss_ldap_getrpcbyname_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_getrpcbynumber_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_setrpcent_r (nss_backend_t * be, void *fakeargs);
@@ -56,6 +57,6 @@ OC (oncRpc) ")(" AT (cn) "=%s))";
      nss_backend_t *_nss_ldap_rpc_constr (const char *db_name,
 					  const char *src_name,
 					  const char *cfg_args);
-#endif /* !GNU_NSS */
+#endif /* !HAVE_IRS_H */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_RPC_H */

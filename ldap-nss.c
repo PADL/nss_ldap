@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997, 1998, 1999, 2000 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -21,8 +20,16 @@
 
 static char rcsId[] = "$Id$";
 
-#ifdef SUN_NSS
+#include "config.h"
+
+#ifdef HAVE_PORT_BEFORE_H
+#include <port_before.h>
+#endif
+
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <assert.h>
@@ -36,38 +43,26 @@ static char rcsId[] = "$Id$";
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <lber.h>
-#include <ldap.h>
-#ifdef SSL
-#include <ldap_ssl.h>
-#endif /* SSL */
 
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(IRS_NSS)
-#include "irs-nss.h"
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+#ifdef HAVE_LDAP_SSL_H
+#include <ldap_ssl.h>
+#endif
+
+#ifndef HAVE_SNPRINTF
+#include "snprintf.h"
 #endif
 
 #include "ldap-nss.h"
 #include "ltf.h"
 #include "globals.h"
 #include "util.h"
-#ifndef HAVE_SNPRINTF
-#include "snprintf.h"
-#endif /* HAVE_SNPRINTF */
 #include "dnsconfig.h"
-
-/*
- * If things don't link because ldap_ld_free() isn't defined,
- * then try undefining this. I think it is exported on
- * Linux but not Solaris with Netscape's C SDK.
- *
- */
-#define HAVE_LDAP_LD_FREE
 
 /* how many messages to retrieve results for */
 #ifndef LDAP_MSG_ONE
@@ -99,9 +94,9 @@ static ldap_session_t __session = { NULL, NULL };
 static pid_t __pid = -1;
 static uid_t __euid = -1;
 
-#ifdef SSL
+#ifdef HAVE_LDAPSSL_CLIENT_INIT
 static int __ssl_initialized = 0;
-#endif /* SSL */
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
 /*
  * Close the global session, sending an unbind.
  */
@@ -204,7 +199,7 @@ _nss_ldap_rebind (LDAP * ld, LDAP_CONST char *url, int request,
   return ldap_simple_bind_s (ld, who, cred);
 }
 #else
-# if NETSCAPE_API_EXTENSIONS
+# if LDAP_SET_REBIND_PROC_ARGS < 3
 static int
 _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		  int freeit, void *arg)
@@ -212,7 +207,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
      static int
        _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 			 int freeit)
-# endif				/* NETSCAPE_API_EXTENSIONS */
+# endif				
 {
   if (freeit)
     {
@@ -243,7 +238,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 /*
  * Default destructor.
  * The entry point for this function is the destructor in the dispatch
@@ -284,7 +279,7 @@ _nss_ldap_default_constr (nss_ldap_backend_t * be)
 
   return NSS_SUCCESS;
 }
-#endif /* SUN_NSS */
+#endif /* HAVE_NSSWITCH_H */
 
 /*
  * Closes connection to the LDAP server.
@@ -353,19 +348,19 @@ do_close_no_unbind (void)
        * XXX untested code
        */
       int sd = -1;
-# ifdef LDAP_VERSION3_API
+# ifdef LDAP_OPT_DESC
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 # else
 	if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-# endif				/* LDAP_VERSION3_API */
+# endif				/* LDAP_OPT_DESC */
 	  {
 	    close (sd);
 	    sd = -1;
-# ifdef LDAP_VERSION3_API
+# ifdef LDAP_OPT_DESC
 	    (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
 # else
 	    __session.ls_conn->ld_sb.sb_sd = sd;
-# endif				/*  LDAP_VERSION3_API */
+# endif				/*  LDAP_OPT_DESC */
 	  }
 
       /* hope we closed it OK! */
@@ -387,11 +382,11 @@ do_disable_keepalive (LDAP * ld)
   int sd = -1;
 
   debug ("==> do_disable_keepalive");
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_DESC
   if (ldap_get_option (ld, LDAP_OPT_DESC, &sd) == 0)
 #else
   if ((sd = ld->ld_sb.sb_sd) > 0)
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_DESC */
     {
       int off = 0;
       (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, &off, sizeof off);
@@ -443,7 +438,7 @@ do_open (void)
     }
   else if (__session.ls_conn != NULL && __session.ls_config != NULL)
     {
-#ifndef SSL
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
       /*
        * Otherwise we can hand back this process' global
        * LDAP session.
@@ -464,20 +459,20 @@ do_open (void)
       struct sockaddr_in sin;
       int sd = -1;
 
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_DESC
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 #else
       if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_DESC */
 	{
 	  void (*old_handler) (int sig);
 	  size_t len;
 
-#ifdef SUN_NSS
+#ifdef HAVE_SIGSET
 	  old_handler = sigset (SIGPIPE, SIG_IGN);
 #else
 	  old_handler = signal (SIGPIPE, SIG_IGN);
-#endif /* SUN_NSS */
+#endif /* HAVE_SIGSET */
 	  len = sizeof (sin);
 	  if (getpeername (sd, (struct sockaddr *) &sin, &len) < 0)
 	    {
@@ -489,21 +484,21 @@ do_open (void)
 	    }
 	  if (old_handler != SIG_ERR && old_handler != SIG_IGN)
 	    {
-#ifdef SUN_NSS
+#ifdef HAVE_SIGSET
 	      (void) sigset (SIGPIPE, old_handler);
 #else
 	      (void) signal (SIGPIPE, old_handler);
-#endif /* SUN_NSS */
+#endif /* HAVE_SIGSET */
 	    }
 	}
 #else
       /* XXX Permanently ignore SIGPIPE. */
-#ifdef SUN_NSS
+#ifdef HAVE_SIGSET
       (void) sigset (SIGPIPE, SIG_IGN);
 #else
       (void) signal (SIGPIPE, SIG_IGN);
-#endif /* SUN_NSS */
-#endif /* SSL */
+#endif /* HAVE_SIGSET */
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
       /*
        * If the connection is still there (ie. do_close() wasn't
        * called) then we can return the cached connection.
@@ -545,7 +540,7 @@ do_open (void)
 
   while (1)
     {
-#ifdef SSL
+#ifdef HAVE_LDAPSSL_CLIENT_INIT
       /*
        * Initialize the SSL library. 
        */
@@ -560,7 +555,7 @@ do_open (void)
 	}
 #endif /* SSL */
 
-#ifdef LDAP_VERSION3_API
+#ifdef HAVE_LDAP_INIT
       debug ("==> ldap_init");
       __session.ls_conn = ldap_init (cfg->ldc_host, cfg->ldc_port);
       debug ("<== ldap_init");
@@ -568,7 +563,7 @@ do_open (void)
       debug ("==> ldap_open");
       __session.ls_conn = ldap_open (cfg->ldc_host, cfg->ldc_port);
       debug ("<== ldap_open");
-#endif /* LDAP_VERSION3_API */
+#endif /* HAVE_LDAP_INIT */
       if (__session.ls_conn != NULL || cfg->ldc_next == cfg)
 	{
 	  break;
@@ -582,40 +577,40 @@ do_open (void)
       return NSS_UNAVAIL;
     }
 
-#if defined(NETSCAPE_API_EXTENSIONS) && !defined(HAVE_LDAP_THREAD_FNS)
+#ifdef LDAP_OPT_THREAD_FN_PTRS
   if (_nss_ldap_ltf_thread_init (__session.ls_conn) != NSS_SUCCESS)
     {
       do_close ();
       debug ("<== do_open");
       return NSS_UNAVAIL;
     }
-#endif /* NETSCAPE_API_EXTENSIONS */
+#endif /* LDAP_OPT_THREAD_FN_PTRS */
 
-#ifdef NETSCAPE_API_EXTENSIONS
-  ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind, NULL);
-#else
+#if HAVE_LDAP_SET_REBIND_PROC_ARGS < 3
   ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind);
-#endif /* NETSCAPE_API_EXTENSIONS */
+#else
+  ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind, NULL);
+#endif
 
 #ifdef LDAP_OPT_PROTOCOL_VERSION
   ldap_set_option (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
 		   &cfg->ldc_version);
 #else
   __session.ls_conn->ld_version = cfg->ldc_version;
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_PROTOCOL_VERSION */
 
 #ifdef LDAP_OPT_DEREF
   ldap_set_option (__session.ls_conn, LDAP_OPT_DEREF, &cfg->ldc_deref);
 #else
   __session.ls_conn->ld_deref = cfg->ldc_deref;
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_DEREF */
 
 #ifdef LDAP_OPT_TIMELIMIT
   ldap_set_option (__session.ls_conn, LDAP_OPT_TIMELIMIT,
 		   &cfg->ldc_timelimit);
 #else
   __session.ls_conn->ld_timelimit = cfg->ldc_timelimit;
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_TIMELIMIT */
 
 #ifdef LDAP_X_OPT_CONNECT_TIMEOUT
   /*
@@ -637,7 +632,7 @@ do_open (void)
 		   cfg->ldc_restart ? LDAP_OPT_ON : LDAP_OPT_OFF);
 #endif
 
-#ifdef TLS
+#ifdef HAVE_LDAP_START_TLS_S
   if (cfg->ldc_ssl_on == SSL_START_TLS)
     {
       int version;
@@ -665,7 +660,7 @@ do_open (void)
       debug ("<== start_tls");
     }
   else
-#endif
+#endif /* HAVE_LDAP_START_TLS_S */
 
     /*
      * If SSL is desired, then enable it.
@@ -681,7 +676,7 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_UNAVAIL;
 	}
-#elif defined(SSL)		/* Netscape */
+#elif defined(HAVE_LDAPSSL_CLIENT_INIT)
       if (ldapssl_install_routines (__session.ls_conn) != LDAP_SUCCESS)
 	{
 	  do_close ();
@@ -695,7 +690,7 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_UNAVAIL;
 	}
-#endif /* SSL */
+#endif 
     }
 
   /*
@@ -755,14 +750,14 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw)
 
   if (msgid < 0)
     {
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_ERROR_NUMBER
       if (ldap_get_option (ld, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	{
 	  rc = LDAP_UNAVAILABLE;
 	}
 #else
       rc = ld->ld_errno;
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_ERROR_NUMBER */
       debug ("<== do_bind");
 
       return rc;
@@ -925,18 +920,10 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
 					sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
-#ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot, buf1);
-#else
-	  sprintf (filter, filterprot, buf1);
-#endif
 	  break;
 	case LA_TYPE_NUMBER:
-#ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot, args->la_arg1.la_number);
-#else
-	  sprintf (filter, filterprot, args->la_arg1.la_number);
-#endif
 	  break;
 	case LA_TYPE_STRING_AND_STRING:
 	  if (
@@ -947,11 +934,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 		  _nss_ldap_escape_string (args->la_arg2.la_string, buf2,
 					   sizeof (buf2)) != NSS_SUCCESS))
 	    return stat;
-#ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot, buf1, buf2);
-#else
-	  sprintf (filter, filterprot, buf1, buf2);
-#endif
 	  break;
 	case LA_TYPE_NUMBER_AND_STRING:
 	  if (
@@ -959,12 +942,8 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	       _nss_ldap_escape_string (args->la_arg2.la_string, buf1,
 					sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
-#ifdef HAVE_SNPRINTF
 	  snprintf (filter, filterlen, filterprot,
 		    args->la_arg1.la_number, buf1);
-#else
-	  sprintf (filter, filterprot, args->la_arg1.la_number, buf1);
-#endif
 	  break;
 	}
     }
@@ -996,7 +975,7 @@ do_result (ent_context_t * ctx, int all)
 	{
 	case -1:
 	case 0:
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_ERROR_NUMBER
 	  if (ldap_get_option
 	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	    {
@@ -1004,7 +983,7 @@ do_result (ent_context_t * ctx, int all)
 	    }
 #else
 	  rc = __session.ls_conn->ld_errno;
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_ERROR_NUMBER */
 	  syslog (LOG_ERR, "nss_ldap: could not get LDAP result - %s",
 		  ldap_err2string (rc));
 	  stat = NSS_UNAVAIL;
@@ -1020,7 +999,7 @@ do_result (ent_context_t * ctx, int all)
 	    }
 	  else
 	    {
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_MORE_RESULTS_TO_RETURN
 	      int parserc;
 	      /* NB: this frees ctx->ec_res */
 	      parserc =
@@ -1040,7 +1019,7 @@ do_result (ent_context_t * ctx, int all)
 		}
 #else
 	      stat = NSS_NOTFOUND;
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_MORE_RESULTS_TO_RETURN */
 	      ctx->ec_res = NULL;
 	      ctx->ec_msgid = -1;
 	    }
@@ -1050,11 +1029,11 @@ do_result (ent_context_t * ctx, int all)
 	  break;
 	}
     }
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_RES_SEARCH_REFERENCE
   while (rc == LDAP_RES_SEARCH_REFERENCE);
 #else
   while (0);
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_RES_SEARCH_REFERENCE */
 
   debug ("<== do_result");
 
@@ -1110,7 +1089,7 @@ do_with_reconnect (const char *base, int scope,
 	}
       else
 	{
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_ERROR_NUMBER
 	  if (ldap_get_option
 	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	    {
@@ -1118,7 +1097,7 @@ do_with_reconnect (const char *base, int scope,
 	    }
 #else
 	  rc = __session.ls_conn->ld_errno;
-#endif
+#endif /* LDAP_OPT_ERROR_NUMBER */
 	}
       switch (rc)
 	{
@@ -1215,12 +1194,12 @@ do_search (const char *base, int scope,
 
   debug ("==> do_search");
 
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_SIZELIMIT
   ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
 		   (void *) &sizelimit);
 #else
   __session.ls_conn->ld_sizelimit = sizelimit;
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_SIZELIMIT */
 
   *msgid = ldap_search (__session.ls_conn, base, scope, filter,
 			(char **) attrs, 0);
@@ -1302,12 +1281,12 @@ do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
   *errnop = 0;
   if (parseStat == NSS_TRYAGAIN)
     {
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
       errno = ERANGE;
       *errnop = 1;		/* this is really erange */
 #else
       *errnop = ERANGE;
-#endif /* SUN_NSS */
+#endif /* HAVE_NSSWITCH_H */
     }
 
   debug ("<== do_parse");

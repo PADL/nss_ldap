@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
    (The author maintains a non-exclusive licence to distribute this file
@@ -21,37 +20,6 @@
    Boston, MA 02111-1307, USA.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include <sys/param.h>
-#include <netdb.h>
-#include <syslog.h>
-#include <netinet/in.h>
-#include <arpa/nameser.h>
-#ifdef NeXT
-/* hack */
-#include <bsd/resolv.h>
-#else
-#include <resolv.h>
-#endif
-#include <lber.h>
-#include <ldap.h>
-
-#include <string.h>
-
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(IRS_NSS)
-#include "irs-nss.h"
-#elif defined(SUN_NSS)
-#include <thread.h>
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
-#endif
-
 /*
  * Support DNS SRV records. I look up the SRV record for
  * _ldap._tcp.gnu.org.
@@ -59,12 +27,35 @@
  * Thanks to Assar & co for resolve.[ch].
  */
 
-#include "ldap-nss.h"
-#include "globals.h"
-#include "util.h"
+static char rcsId[] = "$Id$";
+
+#include "config.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/param.h>
+#include <netdb.h>
+#include <syslog.h>
+#include <netinet/in.h>
+#include <arpa/nameser.h>
+#include <resolv.h>
+#include <string.h>
+
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
+
 #ifndef HAVE_SNPRINTF
 #include "snprintf.h"
 #endif
+
+#include "ldap-nss.h"
+#include "globals.h"
+#include "util.h"
 #include "resolve.h"
 #include "dnsconfig.h"
 
@@ -191,11 +182,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
       return NSS_UNAVAIL;
     }
 
-#ifdef RFC2052BIS
   snprintf (domain, sizeof (domain), "_ldap._tcp.%s.", _res.defdname);
-#else
-  snprintf (domain, sizeof (domain), "ldap.tcp.%s.", _res.defdname);
-#endif /* RFC2307BIS */
 
   r = dns_lookup (domain, "srv");
   if (r == NULL)
@@ -242,7 +229,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 
 	  /* Port */
 	  result->ldc_port = rr->u.srv->port;
-#ifdef SSL
+#ifdef LDAPS_PORT
 	  /* Hack: if the port is the registered SSL port, enable SSL. */
 	  if (result->ldc_port == LDAPS_PORT)
 	    {

@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
    (The author maintains a non-exclusive licence to distribute this file
@@ -36,16 +35,6 @@ NSS_STATUS _nss_ldap_readconfigfromdns (
 					 ldap_config_t ** result,
 					 char *buf,
 					 size_t buflen);
-
-/* 
- * The symbolic name of the desired service, as defined in Assigned
- * Numbers or locally.  An underscore (_) is prepended to the
- * service identifier to avoid collisions with DNS labels that
- * occur in nature.
- */
-#ifndef RFC2052BIS
-#define RFC2052BIS	1
-#endif /* RFC2052BIS */
 
 /*
  * These are unnecessary for the moment, as there is a coarser

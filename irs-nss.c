@@ -1,4 +1,4 @@
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -20,16 +20,24 @@
 
 static char rcsId[] = "$Id$";
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#include "config.h"
+
+#ifdef HAVE_IRS_H
+
+#ifndef __AIX__
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-
-#include <lber.h>
-#include <ldap.h>
 #include <errno.h>
+
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
+#endif
 
 #include "irs-nss.h"
 #include "ldap-nss.h"
@@ -85,5 +93,5 @@ ldap_close (struct irs_acc *this)
 {
   free (this);
 }
-#endif /* AIX_IRS */
-#endif /* IRS_NSS */
+#endif /* __AIX__ */
+#endif /* HAVE_IRS_H */

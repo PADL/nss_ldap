@@ -36,6 +36,8 @@
  * SUCH DAMAGE.
  */
 
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -43,20 +45,11 @@
 #include <arpa/nameser.h>
 #include <string.h>
 
-#ifdef NeXT
-#include <bsd/resolv.h>
-extern char *strdup (const char *);
-
-#else
 #include <resolv.h>
-#endif
 
 #include "resolve.h"
 
-#define HAVE_RES_SEARCH
-#define HAVE_DN_EXPAND
-
-static char rcsid[] = "$Id$";
+static char rcsId[] = "$Id$";
 
 #if defined(HAVE_RES_SEARCH) && defined(HAVE_DN_EXPAND)
 

@@ -3,7 +3,12 @@ $Header$
 
 127	Luke Howard <lukeh@padl.com>
 
-	* default to LDAP protocol version 3
+	* updating copyright notices
+	* autoconf support; IRIX and OSF/1 support has
+	  been dropped (dl-*.[ch]) as no one really
+	  used this, the implementation was a hack,
+	  and these operating systems have their
+	  own LDAP implementations now
 	* added support for "referrals" and "restart"
 	  options to ldap.conf
 	* use OpenLDAP 2.x rebind proc with correct
@@ -19,10 +24,14 @@ $Header$
 	  "start_tls" for Start TLS
 	* hopefully fixed Berkeley DB include 
 	  mess in util.c
+	* fixed potential buffer overflow in util.c
+	* default to LDAP protocol version 3
 	* fixed leaks in util.c, dnsconfig.c
 	* accept on/yes/true for boolean configuration
 	  values
- 
+	* tested building on FreeBSD, Solaris 8, Linux
+	* tested functionality on RedHat 6.2
+
 126	Luke Howard <lukeh@padl.com>
 
 125	Luke Howard <lukeh@padl.com>

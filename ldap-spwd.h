@@ -1,4 +1,4 @@
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -38,7 +38,7 @@ OC (shadowAccount) ")(" AT (uid) "=%s))";
 					    char *buffer,
 					    size_t buflen);
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
      static NSS_STATUS _nss_ldap_getspnam_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_setspent_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_endspent_r (nss_backend_t * be, void *fakeargs);
@@ -47,6 +47,6 @@ OC (shadowAccount) ")(" AT (uid) "=%s))";
      nss_backend_t *_nss_ldap_shadow_constr (const char *db_name,
 					     const char *src_name,
 					     const char *cfg_args);
-#endif /* !GNU_NSS */
+#endif /* !HAVE_NSS_H */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_SPWD_H */

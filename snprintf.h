@@ -1,5 +1,3 @@
-#ifndef HAVE_SNPRINTF
-
 /**************************************************************
  * Original:
  * Patrick Powell Tue Apr 11 09:48:21 PDT 1995
@@ -15,19 +13,8 @@
  **************************************************************/
 
 /* keep namespace tidy */
-#if defined(GNU_NSS) || defined(SUN_NSS) || defined(IRS_NSS)
 #define vsnprintf	_nss_ldap_vsnprintf
 #define snprintf	_nss_ldap_snprintf
-#endif /* NSS */
-
-/* if you have configure you can use this */
-#if defined(HAVE_CONFIG_H)
-#include config.h
-#endif
-
-#ifndef HAVE_SNPRINTF
-#define HAVE_SNPRINTF
-#endif
 
 #define HAVE_STDARG_H
 #include <sys/types.h>
@@ -65,5 +52,3 @@ int vsnprintf ();
 void setproctitle ();
 #endif
 
-
-#endif /* HAVE_SNPRINTF */

@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -24,34 +23,39 @@
 #ifndef _LDAP_NSS_LDAP_IRS_H
 #define _LDAP_NSS_LDAP_IRS_H
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 /*
  * This header is only needed when using the BSD Information 
  * Retrieval Service. It is not necessary for the Solaris or
  * GNU nameservice switch modules.
  */
 #include <irs.h>
-#ifndef AIX_IRS
-#include <irs_p.h>
+#endif
 
-extern struct irs_gr *irs_ldap_gr __P ((struct irs_acc *));
-extern struct irs_pw *irs_ldap_pw __P ((struct irs_acc *));
-extern struct irs_sv *irs_ldap_sv __P ((struct irs_acc *));
-extern struct irs_pr *irs_ldap_pr __P ((struct irs_acc *));
-extern struct irs_ho *irs_ldap_ho __P ((struct irs_acc *));
-extern struct irs_nw *irs_ldap_nw __P ((struct irs_acc *));
+struct irs_gr *irs_ldap_gr __P ((struct irs_acc *));
+struct irs_pw *irs_ldap_pw __P ((struct irs_acc *));
+struct irs_sv *irs_ldap_sv __P ((struct irs_acc *));
+struct irs_pr *irs_ldap_pr __P ((struct irs_acc *));
+struct irs_ho *irs_ldap_ho __P ((struct irs_acc *));
+struct irs_nw *irs_ldap_nw __P ((struct irs_acc *));
 /* not done yet */
-extern struct irs_ng *irs_ldap_ng __P ((struct irs_acc *));
+struct irs_ng *irs_ldap_ng __P ((struct irs_acc *));
 
 /* Keep namespace clean. */
 #define irs_ldap_acc	__irs_ldap_acc
 
-extern struct irs_acc *irs_ldap_acc __P ((const char *));
+struct irs_acc *irs_ldap_acc __P ((const char *));
 
-#define IRS_EXPORT static
-#else
+#define make_group_list __make_group_list
+
+extern int              make_group_list(struct irs_gr *, const char *,
+                                        gid_t, gid_t *, int *);
+
+#ifdef __AIX__
 #define IRS_EXPORT
-#endif /* AIX_IRS */
+#else
+#define IRS_EXPORT static
+#endif 
 
 /*
  * These lengths were derived from the Solaris headers.
@@ -88,6 +92,5 @@ extern struct irs_acc *irs_ldap_acc __P ((const char *));
 #define NSS_BUFLEN_SHADOW       NSS_LINELEN_SHADOW
 #define NSS_BUFLEN_ETHERS       NSS_LINELEN_ETHERS
 #define NSS_BUFLEN_BOOTPARAMS   NSS_LINELEN_BOOTPARAMS
-#endif
 
 #endif /* _LDAP_NSS_LDAP_IRS_H */

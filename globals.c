@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -19,52 +18,36 @@
    Boston, MA 02111-1307, USA.
  */
 
-#ifdef SUN_NSS
+#include "config.h"
+
+#ifdef HAVE_THREAD_H
 #include <thread.h>
-#else
+#elif defined(HAVE_PTHREAD_H)
 #include <pthread.h>
 #endif
 
 #include <stdlib.h>
 #include <lber.h>
 #include <ldap.h>
-
 #include <netdb.h>
-
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
-#endif
 
 #include "ldap-nss.h"
 
 static char rcsId[] = "$Id$";
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 mutex_t _nss_ldap_lock = DEFAULTMUTEX;
-#else
+#elif defined(HAVE_PTHREAD_H)
 pthread_mutex_t _nss_ldap_lock = PTHREAD_MUTEX_INITIALIZER;
-#endif
-
-#ifdef DL_NSS
-void *_nss_ldap_libc_handle = NULL;
 #endif
 
 int _nss_ldap_herrno2nssstat_tab[] =
 {
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
   [NSS_SUCCESS - _NSS_LOOKUP_OFFSET] = 0,
   [NSS_TRYAGAIN - _NSS_LOOKUP_OFFSET] = TRY_AGAIN,
   [NSS_NOTFOUND - _NSS_LOOKUP_OFFSET] = HOST_NOT_FOUND,
   [NSS_UNAVAIL - _NSS_LOOKUP_OFFSET] = NO_RECOVERY
-#elif !defined(__GNUC__) || defined(NeXT)
-  0,
-  HOST_NOT_FOUND,
-  NO_RECOVERY,
-  TRY_AGAIN
 #else
   [NSS_SUCCESS] = 0,
   [NSS_TRYAGAIN] = TRY_AGAIN,
@@ -77,7 +60,7 @@ size_t _nss_ldap_herrno2nssstat_tab_count =
 (sizeof (_nss_ldap_herrno2nssstat_tab) /
  sizeof (_nss_ldap_herrno2nssstat_tab[0]));
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 #ifdef __GNUC__
 int _nss_ldap_errno2nssstat_tab[] =
 {
@@ -99,4 +82,4 @@ int _nss_ldap_errno2nssstat_tab[] =
 size_t _nss_ldap_errno2nssstat_tab_count =
 (sizeof (_nss_ldap_errno2nssstat_tab) /
  sizeof (_nss_ldap_errno2nssstat_tab[0]));
-#endif /* IRS_NSS */
+#endif /* HAVE_IRS_H */

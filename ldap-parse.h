@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -25,7 +24,7 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_PARSE_H
 #define _LDAP_NSS_LDAP_LDAP_PARSE_H
 
-#if defined(SUN_NSS)
+#if defined(HAVE_NSSWITCH_H)
 #define NSS_ARGS(args)	((nss_XbyY_args_t *)args)
 
 #define LOOKUP_NAME(args, filter, selector, parser) \
@@ -79,7 +78,7 @@
 	} \
 	return s
 
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 
 #define LOOKUP_NAME(name, result, buffer, buflen, errnop, filter, selector, parser) \
 	ldap_args_t a; \
@@ -96,7 +95,7 @@
 #define LOOKUP_GETENT(key, result, buffer, buflen, errnop, filter, selector, parser) \
 	return _nss_ldap_getent(&key, result, buffer, buflen, errnop, filter, selector, parser)
 
-#elif defined(IRS_NSS)
+#elif defined(HAVE_IRS_H)
 
 #define LOOKUP_NAME(name, this, filter, selector, parser) \
 	ldap_args_t a; \
@@ -137,20 +136,9 @@
 		return NULL; \
 	} \
 	return &pvt->result;
-#endif
+#endif /* HAVE_NSSWITCH_H */
 
-#if defined(IRS_NSS)
-
-#define LOOKUP_SETENT(this) \
-	struct pvt *pvt = (struct pvt *)this->private; \
-	(void) _nss_ldap_ent_context_init(&pvt->state)
-#define LOOKUP_ENDENT(this) \
-	struct pvt *pvt = (struct pvt *)this->private; \
-	nss_lock(); \
-	_nss_ldap_ent_context_zero(pvt->state); \
-	nss_unlock();
-
-#elif defined(SUN_NSS)
+#if defined(HAVE_NSSWITCH_H)
 
 #define LOOKUP_SETENT(key) \
 	if (_nss_ldap_ent_context_init(&((nss_ldap_backend_t *)key)->state) == NULL) \
@@ -162,7 +150,7 @@
 	nss_unlock(); \
 	return NSS_SUCCESS
 
-#else
+#elif defined(HAVE_NSS_H)
 
 #define LOOKUP_SETENT(key) \
 	if (_nss_ldap_ent_context_init(&key) == NULL) \
@@ -173,6 +161,18 @@
 	_nss_ldap_ent_context_zero(key); \
 	nss_unlock(); \
 	return NSS_SUCCESS
-#endif
+
+#elif defined(HAVE_IRS_H)
+
+#define LOOKUP_SETENT(this) \
+	struct pvt *pvt = (struct pvt *)this->private; \
+	(void) _nss_ldap_ent_context_init(&pvt->state)
+#define LOOKUP_ENDENT(this) \
+	struct pvt *pvt = (struct pvt *)this->private; \
+	nss_lock(); \
+	_nss_ldap_ent_context_zero(pvt->state); \
+	nss_unlock();
+
+#endif /* HAVE_NSSWITCH_H */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_PARSE_H */

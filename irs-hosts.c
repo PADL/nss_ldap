@@ -1,4 +1,4 @@
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -18,14 +18,14 @@
    Boston, MA 02111-1307, USA.
  */
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 
 #include <errno.h>
 #include "irs-nss.h"
 
 /* $Id$ */
 
-#ifdef AIX_IRS
+#ifdef __AIX__
 void *ho_pvtinit (void);
 #endif
 IRS_EXPORT void ho_close (struct irs_ho *this);
@@ -129,7 +129,7 @@ IRS_EXPORT void
 ho_close (struct irs_ho *this)
 {
   LOOKUP_ENDENT (this);
-#ifdef AIX_IRS
+#ifdef __AIX__
   free (this->private);
   free (this);
 #endif
@@ -169,7 +169,7 @@ ho_minimize (struct irs_ho *this)
 {
 }
 
-#ifdef AIX_IRS
+#ifdef __AIX__
 void *
 ho_pvtinit (void)
 #else
@@ -200,4 +200,4 @@ irs_ldap_ho (struct irs_acc *this)
   return ho;
 }
 
-#endif /*IRS_NSS */
+#endif /*HAVE_IRS_H */

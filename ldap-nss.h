@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -24,12 +23,23 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_NSS_H
 #define _LDAP_NSS_LDAP_LDAP_NSS_H
 
-#include "ldap-schema.h"
+#ifdef HAVE_MALLOC_H
+#include <malloc.h>
+#endif
 
-#if defined(GNU_NSS) || defined(IRS_NSS)
 #include <errno.h>
-#include <pthread.h>
-#endif /* GNU_NSS */
+
+#ifdef HAVE_NSSWITCH_H
+#include <nss_common.h>
+#include <nss_dbdefs.h>
+#include <nsswitch.h>
+#elif defined(HAVE_NSS_H)
+#include <nss.h>
+#elif defined(HAVE_IRS_H)
+#include "irs-nss.h"
+#endif
+
+#include "ldap-schema.h"
 
 #ifdef __STDC__
 #ifndef __P
@@ -54,13 +64,13 @@
 
 #ifdef DEBUG
 # ifdef DEBUG_SYSLOG
-#  ifdef SUN_NSS
+#  ifdef HAVE_NSSWITCH_H
 #   define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, thr_self() , ## args);
 #  else
 #   define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, pthread_self() , ## args)
-#  endif			/* SUN_NSS */
+#  endif			/* HAVE_NSSWITCH_H */
 # else
-#  ifdef AIX_IRS
+#  ifdef __AIX__
 #   include <stdarg.h>
 static void
 debug (char *fmt, ...)
@@ -75,39 +85,28 @@ debug (char *fmt, ...)
 }
 #  else
 #   define debug(fmt, args...) fprintf(stderr, "nss_ldap: " fmt "\n" , ## args)
-#  endif			/* AIX_IRS */
+#  endif			/* AIX */
 # endif				/* DEBUG_SYSLOG */
 #else
-# ifdef AIX_IRS
+# ifdef __AIX__
 static void
 debug (char *fmt, ...)
 {
 }
 # else
 #  define debug(fmt, args...)
-# endif				/* AIX_IRS */
+# endif				/* AIX */
 #endif /* DEBUG */
 
 #ifdef __GNUC__
-#define alignof(ptr) __alignof__(ptr)
-#define INLINE inline
-#elif defined(OSF1)
-#include <alignof.h>
-#define INLINE
+# define alignof(ptr) __alignof__(ptr)
+# define INLINE inline
+#elif defined(HAVE_ALIGNOF_H)
+# include <alignof.h>
+# define INLINE
 #else
 #define INLINE
 #endif /* __GNUC__ */
-
-#ifdef DL_NSS
-#ifndef GNU_NSS
-#define GNU_NSS
-#endif
-#define __set_errno(e)  do { errno = e; } while (0)
-#endif /* DL_NSS */
-
-#if defined(GNU_NSS) || defined(SUN_NSS)
-#define HAVE_STRTOK_R
-#endif
 
 #ifndef alignof
 
@@ -126,16 +125,14 @@ debug (char *fmt, ...)
 /* worst case */
 #define bytesleft(ptr, blen)    (blen - alignof(char *) + 1)
 
-#endif
+#endif /* alignof */
 
-#ifdef GNU_NSS
-#if !defined(DL_NSS)
-#if (__GLIBC__ == 2) && (__GLIBC_MINOR__ > 0)
-#include <bits/libc-lock.h>
-#else
-#include <libc-lock.h>
-#endif
-#endif
+#ifdef HAVE_NSS_H
+# if (__GLIBC__ == 2) && (__GLIBC_MINOR__ > 0)
+#  include <bits/libc-lock.h>
+# else
+#  include <libc-lock.h>
+# endif
 #endif
 
 /* selectors for different maps */
@@ -242,7 +239,7 @@ struct ldap_session
 
 typedef struct ldap_session ldap_session_t;
 
-#if !defined(SUN_NSS)
+#if !defined(HAVE_NSSWITCH_H)
 #ifndef UID_NOBODY
 #define UID_NOBODY      (-2)
 #endif
@@ -337,7 +334,8 @@ struct ent_context
 
 typedef struct ent_context ent_context_t;
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
+
 struct nss_ldap_backend
 {
   nss_backend_op_t *ops;
@@ -346,9 +344,10 @@ struct nss_ldap_backend
 };
 
 typedef struct nss_ldap_backend nss_ldap_backend_t;
-#endif
 
-#if defined(IRS_NSS) || defined(DL_NSS)
+typedef nss_status_t NSS_STATUS;
+
+#elif defined(HAVE_IRS_H)
 
 typedef enum
 {
@@ -358,8 +357,9 @@ typedef enum
   NSS_TRYAGAIN
 }
 NSS_STATUS;
+/* #define HAVE_NSS_H  */
 
-#elif defined(GNU_NSS)
+#elif defined(HAVE_NSS_H)
 
 typedef enum nss_status NSS_STATUS;
 
@@ -372,34 +372,30 @@ typedef enum nss_status NSS_STATUS;
 
 #define _NSS_LOOKUP_OFFSET      NSS_STATUS_TRYAGAIN
 
-#else
-typedef nss_status_t NSS_STATUS;
-#endif
+#endif /* HAVE_NSSWITCH_H */
 
 #ifndef _NSS_LOOKUP_OFFSET
 #define _NSS_LOOKUP_OFFSET      (0)
 #endif
 
-#ifdef GNU_NSS
-#if defined(DL_NSS)
-#define nss_lock()		/* NOOP */
-#define nss_unlock()		/* NOOP */
+#ifdef HAVE_THREAD_H
+# define nss_lock()		mutex_lock(&_nss_ldap_lock)
+# define nss_unlock()		mutex_unlock(&_nss_ldap_lock)
+#elif defined(__GLIBC__)
+# define nss_lock()		__libc_lock_lock(_nss_ldap_lock)
+# define nss_unlock()		__libc_lock_unlock(_nss_ldap_lock)
+#elif defined(HAVE_PTHREAD_H)
+# define nss_lock()		pthread_mutex_lock(&_nss_ldap_lock)
+# define nss_unlock()		pthread_mutex_unlock(&_nss_ldap_lock)
 #else
-#define nss_lock()		__libc_lock_lock(_nss_ldap_lock)
-#define nss_unlock()		__libc_lock_unlock(_nss_ldap_lock)
-#endif /* DL_NSS */
-#elif defined(IRS_NSS)
-#define nss_lock()		pthread_mutex_lock(&_nss_ldap_lock)
-#define nss_unlock()		pthread_mutex_unlock(&_nss_ldap_lock)
-#else
-#define nss_lock()		mutex_lock(&_nss_ldap_lock)
-#define nss_unlock()		mutex_unlock(&_nss_ldap_lock)
+# define nss_lock()
+# define nss_unlock()
 #endif
 
 typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *,
 				char *, size_t);
 
-#ifdef LDAP_VERSION3_API
+#ifdef LDAP_OPT_THREAD_FN_PTRS
 /*
  * Netscape's libldap is threadsafe, but we use a lock before it is initialized 
  */
@@ -421,9 +417,9 @@ typedef struct ldap_error ldap_error_t;
 #define nss_libldap_lock()		nss_lock()
 #define nss_libldap_unlock()		nss_unlock()
 
-#endif /* LDAP_VERSION3_API */
+#endif /* LDAP_OPT_THREAD_FN_PTRS */
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 NSS_STATUS _nss_ldap_default_destr (nss_backend_t *, void *);
 #endif
 
@@ -433,7 +429,7 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t *, void *);
  * ent_context_init() is called for each getXXent() call
  * ent_context_free() is used to manually free a context
  */
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be);
 #endif
 

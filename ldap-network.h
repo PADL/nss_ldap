@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -41,7 +40,7 @@ OC (ipNetwork) ")(" AT (cn) "=%s))";
      "(objectclass=" OC (ipNetwork) ")";
 
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
      static NSS_STATUS _nss_ldap_getnetbyname_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_getnetbyaddr_r (nss_backend_t * be, void *fakeargs);
      static NSS_STATUS _nss_ldap_setnetent_r (nss_backend_t * be, void *fakeargs);
@@ -52,6 +51,6 @@ OC (ipNetwork) ")(" AT (cn) "=%s))";
 					       const char *src_name,
 					       const char *cfg_args);
 
-#endif /* !GNU_NSS */
+#endif /* !HAVE_NSS_H */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NETWORK_H */

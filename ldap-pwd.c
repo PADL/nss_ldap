@@ -1,5 +1,4 @@
-
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -22,14 +21,16 @@
 static char rcsId[] =
 "$Id$";
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#include "config.h"
+
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
-#endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <stdlib.h>
@@ -37,15 +38,12 @@ static char rcsId[] =
 #include <sys/param.h>
 #include <string.h>
 #include <pwd.h>
-#include <lber.h>
-#include <ldap.h>
 
-#ifdef GNU_NSS
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
+#ifdef HAVE_LBER_H
+#include <lber.h>
+#endif
+#ifdef HAVE_LDAP_H
+#include <ldap.h>
 #endif
 
 #include "ldap-nss.h"
@@ -53,13 +51,11 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
-#ifndef AIX_IRS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
-#endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 static ent_context_t * pw_context = NULL;
 #endif
 
@@ -176,7 +172,7 @@ _nss_ldap_parse_pw (LDAP * ld,
   if (stat != NSS_SUCCESS)
     (void) _nss_ldap_assign_emptystring (&pw->pw_shell, &buffer, &buflen);
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
   stat =
     _nss_ldap_assign_attrval (ld, e, AT (description), &pw->pw_comment,
 			      &buffer, &buflen);
@@ -188,12 +184,12 @@ _nss_ldap_parse_pw (LDAP * ld,
       pw->pw_comment = pw->pw_gecos;
     }
   (void) _nss_ldap_assign_emptystring (&pw->pw_age, &buffer, &buflen);
-#endif /* SUN_NSS */
+#endif /* HAVE_NSSWITCH_H */
 
   return NSS_SUCCESS;
 }
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 NSS_STATUS
 _nss_ldap_getpwnam_r (const char *name,
 		      struct passwd * result,
@@ -202,15 +198,15 @@ _nss_ldap_getpwnam_r (const char *name,
   LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getpwnam,
 	       LM_PASSWD, _nss_ldap_parse_pw);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getpwnam_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, filt_getpwnam, LM_PASSWD, _nss_ldap_parse_pw);
 }
-#endif /* GNU_NSS */
+#endif /* HAVE_NSS_H */
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 NSS_STATUS
 _nss_ldap_getpwuid_r (uid_t uid,
 		      struct passwd *result,
@@ -219,7 +215,7 @@ _nss_ldap_getpwuid_r (uid_t uid,
   LOOKUP_NUMBER (uid, result, buffer, buflen, errnop, filt_getpwuid,
 		 LM_PASSWD, _nss_ldap_parse_pw);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getpwuid_r (nss_backend_t * be, void *args)
 {
@@ -228,13 +224,13 @@ _nss_ldap_getpwuid_r (nss_backend_t * be, void *args)
 }
 #endif
 
-#if defined(GNU_NSS)
+#if defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_setpwent (void)
 {
   LOOKUP_SETENT (pw_context);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_setpwent_r (nss_backend_t * be, void *args)
 {
@@ -242,13 +238,13 @@ _nss_ldap_setpwent_r (nss_backend_t * be, void *args)
 }
 #endif
 
-#if defined(GNU_NSS)
+#if defined(HAVE_NSS_H)
 NSS_STATUS
 _nss_ldap_endpwent (void)
 {
   LOOKUP_ENDENT (pw_context);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_endpwent_r (nss_backend_t * be, void *args)
 {
@@ -256,7 +252,7 @@ _nss_ldap_endpwent_r (nss_backend_t * be, void *args)
 }
 #endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 NSS_STATUS
 _nss_ldap_getpwent_r (struct passwd *result,
 		      char *buffer, size_t buflen, int *errnop)
@@ -264,7 +260,7 @@ _nss_ldap_getpwent_r (struct passwd *result,
   LOOKUP_GETENT (pw_context, result, buffer, buflen, errnop, filt_getpwent,
 		 LM_PASSWD, _nss_ldap_parse_pw);
 }
-#elif defined(SUN_NSS)
+#elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getpwent_r (nss_backend_t * be, void *args)
 {
@@ -272,7 +268,7 @@ _nss_ldap_getpwent_r (nss_backend_t * be, void *args)
 }
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_passwd_destr (nss_backend_t * pw_context, void *args)
 {
@@ -308,8 +304,8 @@ _nss_ldap_passwd_constr (const char *db_name,
 }
 
 
-#endif /* !GNU_NSS */
+#endif /* !HAVE_NSS_H */
 
-#ifdef IRS_NSS
+#ifdef HAVE_IRS_H
 #include "irs-pwd.c"
-#endif /* IRS_NSS */
+#endif /* HAVE_IRS_H */

@@ -1,4 +1,4 @@
-/* Copyright (C) 1997 Luke Howard.
+/* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -24,14 +24,16 @@
 static char rcsId[] =
 "$Id$";
 
-#ifdef GNU_NSS			/* for the moment */
+#include "config.h"
 
-#ifdef IRS_NSS
+#ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif
 
-#ifdef SUN_NSS
+#ifdef HAVE_THREAD_H
 #include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
 #endif
 
 #include <stdio.h>
@@ -40,28 +42,20 @@ static char rcsId[] =
 #include <lber.h>
 #include <ldap.h>
 
-#ifdef GNU_NSS
+#ifdef HAVE_ALIASES_H
 #include <aliases.h>
-#include <nss.h>
-#elif defined(SUN_NSS)
-#include "aliases.h"
-#include <nss_common.h>
-#include <nss_dbdefs.h>
-#include <nsswitch.h>
-#endif
 
 #include "ldap-nss.h"
 #include "ldap-alias.h"
 #include "globals.h"
 #include "util.h"
 
-#ifdef IRS_NSS
+#ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
 #endif
 
-#ifdef GNU_NSS
+#ifdef HAVE_NSS_H
 static ent_context_t * alias_context = NULL;
-#endif
 
 static NSS_STATUS
 _nss_ldap_parse_alias (LDAP * ld,
@@ -117,4 +111,5 @@ _nss_ldap_getaliasent_r (struct aliasent *result, char *buffer, size_t buflen,
 		 filt_getaliasent, LM_ALIASES, _nss_ldap_parse_alias);
 }
 
-#endif /* GNU_NSS */
+#endif  /* HAVE_NSS_H */
+#endif  /* HAVE_ALIASES_H */

@@ -3,8 +3,8 @@ LDAP NAMESERVICE SWITCH LIBRARY
 ===============================
 
 This is the nss_ldap library, an LDAP module for the Solaris Nameservice
-Switch (NSS). This should be compatible with the GNU glibc if GNU_NSS is
-defined, and the ISC BIND IRS if IRS_NSS is defined.
+Switch (NSS), the GNU libc NSS, and the ISC BIND IRS (used on BSDI
+and IRS).
 
 The LDAP schema used is described in RFC 2307
 
@@ -20,21 +20,17 @@ The source code is distributed under the GNU General Library Public Licence
 
 Platforms this has been built under:
 
-	o Linux 2.0 (tested by Greg and Luke)
-	o Solaris 2.4 and 2.6 (tested by Luke) It should work under
-	  Solaris 7 as the NSS ABI hasn't changed according to Sun.
+	o Linux 2.x
+	o Solaris 2.4, 2.6, 7, 8
+	o FreeBSD BIND 8.x
+	o AIX 4.?? with IRS
 
-Platforms this ought to be tested under:
+To install:
 
-	o Solaris 2.5.x
-	o BSD/OS (requires BIND IRS source)
-	o FreeBSD (requires BIND IRS source)
+% ./configure
+% make
+% make install
 
-To install, pick a makefile and type make. You'll need to fiddle around
-a bit...
-
-NOTES
-=====
 
 1. Installation
 ---------------
@@ -42,16 +38,7 @@ NOTES
 You need to ensure libnss_ldap.so.1 (or nss_ldap.so.1, for Solaris) is in
 /usr/lib.
 
-2. IRIX
--------
-
-Under IRIX, you'll need to set _RLD_LIST to
-
-	libnss_ldap.so:libldap.so:DEFAULT
-
-IRIX 6.5 has native LDAP support in nsd so you don't need this.
-
-3. Building shared LDAP client libraries
+2. Building shared LDAP client libraries
 ----------------------------------------
 
 You can build a position independent LDAP client library by compiling
@@ -60,23 +47,13 @@ LDAP SDKs. Note that OpenLDAP only appears to build shared libraries
 on some platforms (apparently not Solaris?). To build these, configure
 with --enable-shared.
 
-NOTE: There seem to be problems linking against the libraries included
-with Netscape's Directory Server 4.1. You may wish to try Netscape's
-LDAP SDK 3.0 instead.
-
-If ldap-nss.c doesn't link because ldap_ld_free() isn't defined (or
-the module fails at runtime with a "relocation error: symbol 
-ldap_ld_free: referenced symbol not found", then undefine 
-HAVE_LDAP_LD_FREE at the top of ldap-nss.c. This is exported on
-Linux but _NOT_ Solaris with Netscape's C SDK.
-
-4. glibc 2.0 compatibility
+3. glibc 2.0 compatibility
 --------------------------
 
 Current versions of the nss_ldap library are designed to work with
 glibc 2.1, not glibc 2.0. They _may_ work with glibc 2.0. YMMV.
 
-5. RFC2307BIS
+4. RFC2307BIS
 -------------
 
 Compiling with -DRFC2307BIS adds rfc2307bis support, which at the
@@ -86,6 +63,22 @@ both memberUid and uniqueMember attributes. This support makes
 uses of the Berkeley DB library to cache DN to login name mappings;
 if you don't want to use this or don't have libdb, then you need
 to undefine DN2UID_CACHE in util.c. 
+
+5. Building under FreeBSD
+-------------------------
+
+Here's what I do to build it under FreeBSD. You will need to
+link it into libbind.a for it actually to be useful.
+
+CPPFLAGS="-I/usr/local/include -I/usr/local/include/bind -DPIC"
+export CPPFLAGS
+CFLAGS=$CPPFLAGS # this is weird
+export CFLAGS
+LDFLAGS="-L/usr/local/lib"
+LIBS="-lbind_r -lgnuregex -lsasl -lkrb"
+export LDFLAGS LIBS
+./configure
+make
 
 6. Mailing lists
 ----------------
