@@ -5,7 +5,12 @@ $Id$
 
 	* don't double-free on realloc() failure in
 	  do_pasre_group_members()
-	* avoid using stale LDAP handles
+	* don't pass LDAP session as an argument, as
+	  it may refer to a stale LDAP handle. If this
+	  does not work we will need to replace LDAPMessage
+	  pointers with pointers to a structure that
+	  contains a reference-counted LDAP handle as well
+	  as the message
 
 223	Luke Howard <lukeh@padl.com>
 
