@@ -285,7 +285,11 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
   if (lia->numgids == lia->maxgids)
     {
       /* can't fit any more */
-      return NSS_TRYAGAIN;
+      /*
+       * should probably return NSS_TRYAGAIN but IIRC
+       * will send Solaris into an infinite loop XXX
+       */
+      return NSS_SUCCESS;
     }
 
   lia->gid_array[lia->numgids++] = (gid_t) gid;
