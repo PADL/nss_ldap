@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+168	Luke Howard <lukeh@padl.com>
+
+	* initialize old_handler to SIG_DFL
+
 167	Luke Howard <lukeh@padl.com>
 
 	* support for new OpenLDAP rebind proc prototype
