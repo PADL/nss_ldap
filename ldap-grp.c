@@ -973,8 +973,11 @@ char *_nss_ldap_getgrset (char *user)
   return NSS_SUCCESS;
 #elif defined(HAVE_USERSEC_H)
   /* Strip last comma and terminate the string */
-  if (lia.grplist != NULL && lia.listlen != 0)
+  if (lia.grplist == NULL)
+    lia.grplist = strdup("");
+  else if (lia.listlen != 0)
     lia.grplist[lia.listlen - 1] = '\0';
+
   return lia.grplist;
 #else
   /* yes, NSS_NOTFOUND is the successful errno code. see nss_dbdefs.h */

@@ -69,7 +69,21 @@ static char rcsId[] =
 static ent_context_t *_ngbe = NULL;
 #endif
 
+#ifdef HAVE_IRS_H
+enum nss_netgr_status {
+	NSS_NETGR_FOUND,
+	NSS_NETGR_NO,
+	NSS_NETGR_NOMEM
+};
+
+struct pvt; /* forward declaration for IRS backend type */
+#endif /* HAVE_IRS_H */
+
 #ifdef HAVE_NSSWITCH_H
+static nss_backend_op_t netgroup_ops[];
+#endif
+
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_IRS_H)
 struct ldap_innetgr_args
 {
   const char *lia_netgroup;
@@ -80,11 +94,9 @@ struct ldap_innetgr_args
 
 typedef struct ldap_innetgr_args ldap_innetgr_args_t;
 
-static nss_backend_op_t netgroup_ops[];
-
 static NSS_STATUS do_innetgr_nested (ldap_innetgr_args_t * li_args,
 				     const char *nested);
-#endif /* HAVE_NSSWITCH_H */
+#endif /* HAVE_NSSWITCH_H || HAVE_IRS_H */
 
 /*
  * I pulled the following macro (EXPAND), functions (strip_whitespace and
@@ -372,7 +384,7 @@ _nss_ldap_getnetgrent_r (struct __netgrent *result,
 }
 #endif /* HAVE_NSS_H */
 
-#ifdef HAVE_NSSWITCH_H
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_IRS_H)
 /*
  * Add a nested netgroup to the namelist
  */
@@ -554,7 +566,9 @@ nn_chase (nss_ldap_netgr_backend_t * ngbe, LDAPMessage ** pEntry)
 
   return stat;
 }
+#endif /* HAVE_NSSWITCH_H || HAVE_IRS_H */
 
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getnetgroup_endent (nss_backend_t * be, void *_args)
 {
@@ -726,7 +740,9 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 
   return parseStat;
 }
+#endif /* HAVE_NSSWITCH_H */
 
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_IRS_H)
 /*
  * Test a 4-tuple
  */
@@ -858,7 +874,9 @@ do_innetgr (ldap_innetgr_args_t * li_args,
 
   return stat;
 }
+#endif /* HAVE_NSSWITCH_H || HAVE_IRS_H */
 
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 {
@@ -1056,3 +1074,7 @@ _nss_ldap_netgroup_constr (const char *db_name,
 }
 
 #endif /* !HAVE_NSS_H */
+
+#ifdef HAVE_IRS_H
+#include "irs-netgrp.c"
+#endif /* HAVE_IRS_H */

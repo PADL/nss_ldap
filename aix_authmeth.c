@@ -19,7 +19,7 @@
  */
 
 /*
- * Glue code to support AIX loadable authentication modules.
+ * Shim to support AIX loadable authentication modules
  */
 
 #include "config.h"
@@ -27,23 +27,11 @@
 static char rcsId[] =
   "$Id$";
 
-#define AIX_TEST_HARNESS 1
-
-#ifdef AIX_TEST_HARNESS
-#define HAVE_USERSEC_H 1
-#include "irs.h"
-#include "irs-nss.h"
-#endif
-
 #ifdef HAVE_USERSEC_H
 
 #include <stdlib.h>
 #include <string.h>
-#ifdef AIX_TEST_HARNESS
-#include "usersec.h"
-#else
 #include <usersec.h>
-#endif
 
 #ifdef HAVE_LBER_H
 #include <lber.h>
@@ -59,11 +47,11 @@ static char rcsId[] =
 #define TABLE_USER	"user"
 #define TABLE_GROUP	"group"
 
-static struct irs_gr *grp_conn = NULL;
-static struct irs_pw *pwd_conn = NULL;
+static struct irs_gr *uess_gr_be = NULL;
+static struct irs_pw *uess_pw_be = NULL;
 
-extern void *gr_pvtinit (void);
-extern void *pw_pvtinit (void);
+extern void *gr_pvtinit (void); /* irs-grp.c */
+extern void *pw_pvtinit (void); /* irs-pwd.c */
 
 /* from ldap-grp.c */
 extern char *_nss_ldap_getgrset (char *user);
@@ -75,7 +63,7 @@ typedef struct ldap_uess_args
   const char *lua_key;
   const char *lua_table;
   char **lua_attributes;
-  attrval_t *lua_results;	/* UESS results */
+  attrval_t *lua_results;
   int lua_size;
 
   /* private */
@@ -86,32 +74,21 @@ typedef struct ldap_uess_args
 }
 ldap_uess_args_t;
 
-static NSS_STATUS uess_get_char (LDAP * ld, LDAPMessage * e,
-				 ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_char_ex (LDAP * ld, LDAPMessage * e,
-				    ldap_uess_args_t * arg, int index,
-				    const char *attribute);
-static NSS_STATUS uess_get_int (LDAP * ld, LDAPMessage * e,
-				ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_pgrp (LDAP * ld, LDAPMessage * e,
-				 ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_groupsids (LDAP * ld, LDAPMessage * e,
-				      ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_registry (LDAP * ld, LDAPMessage * e,
-				     ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_gecos (LDAP * ld, LDAPMessage * e,
-				  ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_pwd (LDAP * ld, LDAPMessage * e,
-				ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_char (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_char_ex (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index, const char *attribute);
+static NSS_STATUS uess_get_int (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_groupsids (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_registry (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_gecos (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_pwd (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 
 /* dispatch table for retrieving UESS attribute from an LDAP entry */
 struct ldap_uess_fn
 {
   const char *luf_attribute;
-  
-    
-    NSS_STATUS (*luf_translator) (LDAP * ld, LDAPMessage * e,
-				  ldap_uess_args_t *, int);
+  NSS_STATUS (*luf_translator) (LDAP * ld, LDAPMessage * e,
+				ldap_uess_args_t *, int);
 }
 ldap_uess_fn_t;
 
@@ -124,16 +101,33 @@ static struct ldap_uess_fn __uess_fns[] = {
   {S_REGISTRY, uess_get_registry},
   {S_SHELL, uess_get_char},
   {S_PGRP, uess_get_pgrp},
+  /* add additional attributes we know about here */
   {NULL, NULL}
 };
 
+#define GR_PVTINIT()	do { \
+		if (uess_gr_be == NULL) { \
+			uess_gr_be = (struct irs_gr *) gr_pvtinit (); \
+			if (uess_gr_be == NULL) \
+				return NULL; \
+		} \
+	} while (0)
+
+#define PW_PVTINIT()	do { \
+		if (uess_pw_be == NULL) { \
+			uess_pw_be = (struct irs_pw *) pw_pvtinit (); \
+			if (uess_pw_be == NULL) \
+				return NULL; \
+		} \
+	} while (0)
+	
 static void *
 _nss_ldap_open (const char *name, const char *domain,
 		const int mode, char *options)
 {
   /* Currently we do not use the above parameters */
-  grp_conn = (struct irs_gr *) gr_pvtinit ();
-  pwd_conn = (struct irs_pw *) pw_pvtinit ();
+  GR_PVTINIT();
+  PW_PVTINIT();
 
   return NULL;
 }
@@ -141,16 +135,16 @@ _nss_ldap_open (const char *name, const char *domain,
 static int
 _nss_ldap_close (void *token)
 {
-  if (grp_conn != NULL)
+  if (uess_gr_be != NULL)
     {
-      (grp_conn->close) (grp_conn);
-      grp_conn = NULL;
+      (uess_gr_be->close) (uess_gr_be);
+      uess_gr_be = NULL;
     }
 
-  if (pwd_conn != NULL)
+  if (uess_pw_be != NULL)
     {
-      (pwd_conn->close) (pwd_conn);
-      pwd_conn = NULL;
+      (uess_pw_be->close) (uess_pw_be);
+      uess_pw_be = NULL;
     }
 
   return AUTH_SUCCESS;
@@ -159,49 +153,44 @@ _nss_ldap_close (void *token)
 static struct group *
 _nss_ldap_getgrgid (gid_t gid)
 {
-  if (grp_conn == NULL)
-    return NULL;
+  GR_PVTINIT ();
 
-  return (grp_conn->bygid) (grp_conn, gid);
+  return (uess_gr_be->bygid) (uess_gr_be, gid);
 }
 
 static struct group *
 _nss_ldap_getgrnam (const char *name)
 {
-  if (grp_conn == NULL)
-    return NULL;
+  GR_PVTINIT ();
 
-  return (grp_conn->byname) (grp_conn, name);
+  return (uess_gr_be->byname) (uess_gr_be, name);
 }
 
 static struct passwd *
 _nss_ldap_getpwuid (uid_t uid)
 {
-  if (pwd_conn == NULL)
-    return NULL;
+  PW_PVTINIT ();
 
-  return (pwd_conn->byuid) (pwd_conn, uid);
+  return (uess_pw_be->byuid) (uess_pw_be, uid);
 }
 
 static struct passwd *
 _nss_ldap_getpwnam (const char *name)
 {
-  if (pwd_conn == NULL)
-    return NULL;
+  PW_PVTINIT ();
 
-  return (pwd_conn->byname) (pwd_conn, name);
+  return (uess_pw_be->byname) (uess_pw_be, name);
 }
 
 static struct group *
 _nss_ldap_getgracct (void *id, int type)
 {
-  if (grp_conn == NULL)
-    return NULL;
+  GR_PVTINIT ();
 
   if (type == SEC_INT)
-    return (grp_conn->bygid) (grp_conn, *(gid_t *) id);
+    return (uess_gr_be->bygid) (uess_gr_be, *(gid_t *) id);
   else
-    return (grp_conn->byname) (grp_conn, (char *) id);
+    return (uess_gr_be->byname) (uess_gr_be, (char *) id);
 }
 
 static int
@@ -574,7 +563,7 @@ do_parse_uess_getentry (LDAP * ld, LDAPMessage * e,
 			ldap_state_t * pvt, void *result,
 			char *buffer, size_t buflen)
 {
-  ldap_uess_args_t *lua = (ldap_uess_args_t *) pvt;
+  ldap_uess_args_t *lua = (ldap_uess_args_t *) result;
   int i;
   char **vals;
   size_t len;
@@ -587,8 +576,7 @@ do_parse_uess_getentry (LDAP * ld, LDAPMessage * e,
       attrval_t *av = lua->lua_results;
 
       attribute = uess2ldapattr (lua->lua_map, lua->lua_attributes[0]);
-
-      if (av->attr_flag != 0 || attribute == NULL)
+      if (attribute == NULL)
 	return NSS_NOTFOUND;
 
       vals = ldap_get_values (ld, e, attribute);
@@ -630,6 +618,11 @@ do_parse_uess_getentry (LDAP * ld, LDAPMessage * e,
       ldap_value_free (vals);
 
       lua->lua__buffer[0] = '\0';	/* ensure _list_ is always terminated */
+
+      if (av->attr_flag != 0)
+	av->attr_flag = 0;
+
+      return NSS_NOTFOUND; /* trick caller into calling us again */
     }
   else
     {
@@ -641,12 +634,12 @@ do_parse_uess_getentry (LDAP * ld, LDAPMessage * e,
 	  av->attr_flag = -1;
 	  av->attr_un.au_char = NULL;
 
-	  for (j = 0; __uess_fns[i].luf_attribute != NULL; j++)
+	  for (j = 0; __uess_fns[j].luf_attribute != NULL; j++)
 	    {
-	      if (strcmp (__uess_fns[i].luf_attribute, lua->lua_attributes[i])
+	      if (strcmp (__uess_fns[j].luf_attribute, lua->lua_attributes[i])
 		  == 0)
 		{
-		  stat = (__uess_fns[i].luf_translator) (ld, e, lua, i);
+		  stat = (__uess_fns[j].luf_translator) (ld, e, lua, i);
 		  switch (stat)
 		    {
 		    case NSS_SUCCESS:
@@ -688,7 +681,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
   lua.lua_map = table2map (table);
   if (lua.lua_map == LM_NONE)
     {
-      errno = EINVAL;
+      errno = ENOSYS;
       debug ("<== _nss_ldap_getentry");
       return -1;
     }
@@ -716,7 +709,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
 	  debug ("<== _nss_ldap_getentry");
 	  return -1;
 	}
-      results[0].attr_flag = 0;
+      results[0].attr_flag = -1;
     }
 
   _nss_ldap_enter ();
@@ -733,13 +726,31 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
   stat = _nss_ldap_getent_ex (ap, &ctx, (void *) &lua, NULL, 0,
 			      &erange, filter, lua.lua_map,
 			      NULL, do_parse_uess_getentry);
+
   _nss_ldap_ent_context_release (ctx);
   free (ctx);
   _nss_ldap_leave ();
 
+  /*
+   * Whilst enumerating, we have the parser always return
+   * NSS_NOTFOUND so that it will be called for each entry.
+   *
+   * Although this is probably bogus overloading of the
+   * _nss_ldap_getent_ex() API, it does allow us to share
+   * the same code for matches and enumerations. However,
+   * for the enumeration case we need to treat NSS_NOTFOUND
+   * as a success code; hence, we use the attr_flag to
+   * indicate failure.
+   */
+  if (ap == NULL)
+    {
+      if (stat == NSS_NOTFOUND && results[0].attr_flag == 0)
+	stat = NSS_SUCCESS;
+    }
+
   if (stat != NSS_SUCCESS)
     {
-      if (erange)
+      if (stat == NSS_TRYAGAIN)
 	errno = ERANGE;
       else
 	errno = ENOENT;

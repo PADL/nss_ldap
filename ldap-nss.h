@@ -77,7 +77,7 @@
 #define LDAP_NSS_MAXSLEEPTIME    64	/* maximum seconds to sleep */
 #define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
 
-#ifdef HAVE_NSSWITCH_H
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_IRS_H)
 #define LDAP_NSS_MAXNETGR_DEPTH  16	/* maximum depth of netgroup nesting for innetgr() */
 #endif /* HAVE_NSSWITCH_H */
 
@@ -544,8 +544,16 @@ typedef enum
   NSS_RETURN
 }
 NSS_STATUS;
-/* #define HAVE_NSS_H  */
 
+struct nss_ldap_netgr_backend
+{
+  char buffer[NSS_BUFLEN_NETGROUP];
+  ent_context_t *state;
+  struct name_list *known_groups; /* netgroups seen, for loop detection */
+  struct name_list *needed_groups; /* nested netgroups to chase */
+};
+
+typedef struct nss_ldap_netgr_backend nss_ldap_netgr_backend_t;
 #elif defined(HAVE_NSS_H)
 
 typedef enum nss_status NSS_STATUS;

@@ -19,13 +19,13 @@ ho_byname
 * No ho_byname2
 ho_byaddr
 
-* Netgroup-related routines (not implemented yet)
-* ng_pvtinit
-* ng_close
-* ng_rewind
-* ng_minimize
-* ng_next
-* ng_test
+* Netgroup-related routines
+ng_pvtinit
+ng_close
+ng_rewind
+ng_minimize
+ng_next
+ng_test
 
 * Networks-related routines
 nw_pvtinit
