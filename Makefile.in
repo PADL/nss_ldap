@@ -398,6 +398,7 @@ install-exec-local: nss_ldap.so
 	@$(NORMAL_INSTALL)
 @GLIBC_TRUE@	-rm -f $(DESTDIR)$(libdir)/$(NSS_LDAP_LIBC_VERSIONED)
 @GLIBC_TRUE@	$(INSTALL_PROGRAM) -o root -g root nss_ldap.so $(DESTDIR)$(libdir)/$(NSS_LDAP_LIBC_VERSIONED)
+@GLIBC_TRUE@	$(mkinstalldirs) $(DESTDIR)$(libdir)
 @GLIBC_TRUE@	(cd $(DESTDIR)$(libdir); ln -sf $(NSS_LDAP_LIBC_VERSIONED) $(NSS_LDAP_NSS_VERSIONED))
 @GLIBC_TRUE@	$(mkinstalldirs) $(DESTDIR)/usr$(libdir)
 @GLIBC_TRUE@	(cd $(DESTDIR)/usr$(libdir); ln -sf ../..$(libdir)/$(NSS_LDAP_NSS_VERSIONED) .)
