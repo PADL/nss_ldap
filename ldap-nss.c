@@ -3461,17 +3461,17 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 	  if (authzid != NULL)
 	    {
 		interact->result = authzid;
-		interact->length = strlen(authzid);
+		interact->len = strlen(authzid);
 	    }
 	  else if (interact->defresult != NULL)
 	    {
 		interact->result = interact->defresult;
-		interact->length = strlen(interact->defresult)
+		interact->len = strlen(interact->defresult);
 	    }
 	  else
 	   {
 		interact->result = "";
-		interact->length = 0;
+		interact->len = 0;
 	   }
 	}
       else
