@@ -97,9 +97,6 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 #define NSS_LDAP_KEY_NSS_BASE_ALIASES		"nss_base_aliases"
 #define NSS_LDAP_KEY_NSS_BASE_NETGROUP		"nss_base_netgroup"
 
-#define NSS_LDAP_KEY_NSS_TEMPLATE_HOMEDIRECTORY	"nss_template_homedirectory"
-#define NSS_LDAP_KEY_NSS_TEMPLATE_LOGINSHELL	"nss_template_loginshell"
-
 /*
  * There are a number of means of obtaining configuration information.
  *
