@@ -47,7 +47,8 @@ BUGS 18, 19, 20, 34 would be good to fix soon.
   debug IPv6 support in ldap-hosts.c (and ldap-network.c?) (Uli?)
 
 [BUG#18]
-- write ldap-netgrp.c and irs-netgrp.c (Uli, +Luke IRS)
+- write ldap-netgrp.c and irs-netgrp.c (Uli, +Luke IRS) -- note that netgroups
+  are now supported on Linux
   This is a lot easier now that the schema supports triples:
 
   squid> ldapsearch -L objectclass=nisnetgroup

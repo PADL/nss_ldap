@@ -34,7 +34,6 @@ automount:  files
 aliases:    files
 sendmailvars:   files
 
-# No one has written the LDAP support for netgroups yet, so we'll
-# have to stick with NIS.
-netgroup:   files nis
+# Note: there is no support for netgroups on Solaris (yet)
+netgroup:   ldap [NOTFOUND=return] files
 
