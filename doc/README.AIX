@@ -130,6 +130,9 @@ modifying user/group attributes (which means you won't be able to use
 the "chuser" command etc. to alter user/group attributes; you have to
 make all modifications directly via LDAP).
 
+Also, lsgroup does not support querying group membership, although
+group membership will be evaluted correctly when a user logs on.
+
 Enjoy.
 
 Gabor Gombas <gombasg@inf.elte.hu>
