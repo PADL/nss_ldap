@@ -25,54 +25,50 @@
 #define _LDAP_NSS_LDAP_LDAP_SERVICE_H
 
 /*
-   Determine the canonical name of the service with _nss_ldap_getrdnvalue(),
-   and assign any values of "cn" which do NOT match this canonical name
-   as aliases.
-
-   You can use the ec_state in the context to derive multiple service
-   entries from one LDAP entry. See the example in draft-...-nis-schema-xx.txt.
-
+ * Determine the canonical name of the service with _nss_ldap_getrdnvalue(),
+ * and assign any values of "cn" which do NOT match this canonical name
+ * as aliases.
+ *
+ * You can use the ec_state in the context to derive multiple service
+ * entries from one LDAP entry. See the example in draft-...-nis-schema-xx.txt.
+ *
  */
 
-#define LDAP_CLASS_SERVICE              "ipService"
-#define LDAP_ATTR_SERVICENAME           "cn"
-#define LDAP_ATTR_SERVICEPORT           "ipServicePort"
-#define LDAP_ATTR_SERVICEPROTOCOL       "ipServiceProtocol"
-
 static const char *serv_attributes[] =
-{LDAP_ATTR_SERVICENAME, LDAP_ATTR_SERVICEPORT,
- LDAP_ATTR_SERVICEPROTOCOL, NULL};
+{AT (cn), AT (ipServicePort),
+ AT (ipServiceProtocol), NULL};
 
 static const char filt_getservbyname[] =
-"(&(objectclass=" LDAP_CLASS_SERVICE ")(" LDAP_ATTR_SERVICENAME "=%s))";
-static const char filt_getservbynameproto[] =
-"(&(objectclass=" LDAP_CLASS_SERVICE ")(" LDAP_ATTR_SERVICENAME "=%s)(" LDAP_ATTR_SERVICEPROTOCOL "=%s))";
-static const char filt_getservbyport[] =
-"(&(objectclass=" LDAP_CLASS_SERVICE ")(" LDAP_ATTR_SERVICEPORT "=%d))";
-static const char filt_getservbyportproto[] =
-"(&(objectclass=" LDAP_CLASS_SERVICE ")(" LDAP_ATTR_SERVICEPORT "=%d)(" LDAP_ATTR_SERVICEPROTOCOL "=%s))";
-static const char filt_getservent[] =
-"(objectclass=" LDAP_CLASS_SERVICE ")";
+"(&(objectclass=" 
+OC (ipService) ")(" AT (cn) "=%s))";
+     static const char filt_getservbynameproto[] =
+     "(&(objectclass=" OC (ipService) ")(" AT (cn) "=%s)(" AT (ipServiceProtocol) "=%s))";
+     static const char filt_getservbyport[] =
+     "(&(objectclass=" OC (ipService) ")(" AT (ipServicePort) "=%d))";
+     static const char filt_getservbyportproto[] =
+     "(&(objectclass=" OC (ipService) ")(" AT (ipServicePort) "=%d)(" AT (ipServiceProtocol) "=%s))";
+     static const char filt_getservent[] =
+     "(objectclass=" OC (ipService) ")";
 
 
-static NSS_STATUS _nss_ldap_parse_serv (
-					 LDAP * ld,
-					 LDAPMessage * e,
-					 ldap_state_t * pvt,
-					 void *result,
-					 char *buffer,
-					 size_t buflen);
+     static NSS_STATUS _nss_ldap_parse_serv (
+					      LDAP * ld,
+					      LDAPMessage * e,
+					      ldap_state_t * pvt,
+					      void *result,
+					      char *buffer,
+					      size_t buflen);
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getservbyname_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getservbyport_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_setservent_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_endservent_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getservent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getservbyname_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getservbyport_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_setservent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_endservent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getservent_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_services_constr (const char *db_name,
-					  const char *src_name,
-					  const char *cfg_args);
+     nss_backend_t *_nss_ldap_services_constr (const char *db_name,
+					       const char *src_name,
+					       const char *cfg_args);
 #endif /* !GNU_NSS */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_SERVICE_H */

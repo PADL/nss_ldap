@@ -109,24 +109,24 @@ _nss_ldap_parse_host (
    */
   if (_nss_ldap_getdomainname (ld, e, &host->h_name, &buffer, &buflen) != NSS_SUCCESS)
     {
-      stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_HOSTNAME, &host->h_name,
+      stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &host->h_name,
 				       &buffer, &buflen);
       if (stat != NSS_SUCCESS)
 	return stat;
     }
 #else
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_HOSTNAME, &host->h_name,
+  stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &host->h_name,
 				   &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 #endif
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_HOSTNAME, host->h_name, &host->h_aliases,
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (cn), host->h_name, &host->h_aliases,
 				    &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_HOSTADDR, NULL, &addresses,
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (ipHostNumber), NULL, &addresses,
 				 &p_addressbuf, &addresslen, &addresscount);
   if (stat != NSS_SUCCESS)
     return stat;

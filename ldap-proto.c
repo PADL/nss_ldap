@@ -80,17 +80,17 @@ _nss_ldap_parse_proto (
   char *number;
   NSS_STATUS stat;
 
-  stat = _nss_ldap_getrdnvalue (ld, e, LDAP_ATTR_PROTOCOLNAME, &proto->p_name, &buffer, &buflen);
+  stat = _nss_ldap_getrdnvalue (ld, e, AT (cn), &proto->p_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_PROTOCOLNUMBER, &number, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (ipProtocolNumber), &number, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   proto->p_proto = atoi (number);
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_PROTOCOLNAME, proto->p_name, &proto->p_aliases,
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (cn), proto->p_name, &proto->p_aliases,
 				    &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

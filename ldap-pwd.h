@@ -24,53 +24,43 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_PWD_H
 #define _LDAP_NSS_LDAP_LDAP_PWD_H
 
-#define LDAP_CLASS_USER                 "posixAccount"
-#define LDAP_ATTR_USERNAME              "uid"
-#define LDAP_ATTR_PASSWD                "userPassword"
-#define LDAP_ATTR_UID                   "uidNumber"
-#define LDAP_ATTR_USER_GID              "gidNumber"
-#define LDAP_ATTR_REALNAME              "cn"
-#define LDAP_ATTR_HOME                  "homeDirectory"
-#define LDAP_ATTR_SHELL                 "loginShell"
-#define LDAP_ATTR_GECOS                 "gecos"
-#define LDAP_ATTR_COMMENT		"description"
-
 static const char *pw_attributes[] =
-{LDAP_ATTR_USERNAME, LDAP_ATTR_PASSWD,
- LDAP_ATTR_UID, LDAP_ATTR_USER_GID,
- LDAP_ATTR_REALNAME, LDAP_ATTR_HOME,
- LDAP_ATTR_SHELL, LDAP_ATTR_GECOS,
- LDAP_ATTR_COMMENT, NULL};
+{AT (uid), AT (userPassword),
+ AT (uidNumber), AT (gidNumber),
+ AT (cn), AT (homeDirectory),
+ AT (loginShell), AT (gecos),
+ AT (description), NULL};
 
 static const char filt_getpwnam[] =
 #ifdef IDS_UID
-"(&(objectclass=" LDAP_CLASS_USER ")(|(" LDAP_ATTR_USERNAME "=%s)(" LDAP_ATTR_USERNAME "=%s@*)))";
+"(&(objectclass=" 
+OC (posixAccount) ")(|(" AT (uid) "=%s)(" AT (uid) "=%s@*)))";
 #else
-"(&(objectclass=" LDAP_CLASS_USER ")(" LDAP_ATTR_USERNAME "=%s))";
+"(&(objectclass=" OC (posixAccount) ")(" AT (uid) "=%s))";
 #endif
-static const char filt_getpwuid[] =
-"(&(objectclass=" LDAP_CLASS_USER ")(" LDAP_ATTR_UID "=%d))";
-static const char filt_getpwent[] =
-"(objectclass=" LDAP_CLASS_USER ")";
+     static const char filt_getpwuid[] =
+     "(&(objectclass=" OC (posixAccount) ")(" AT (uidNumber) "=%d))";
+     static const char filt_getpwent[] =
+     "(objectclass=" OC (posixAccount) ")";
 
-static NSS_STATUS _nss_ldap_parse_pw (
-				       LDAP * ld,
-				       LDAPMessage * e,
-				       ldap_state_t * pvt,
-				       void *result,
-				       char *buffer,
-				       size_t buflen);
+     static NSS_STATUS _nss_ldap_parse_pw (
+					    LDAP * ld,
+					    LDAPMessage * e,
+					    ldap_state_t * pvt,
+					    void *result,
+					    char *buffer,
+					    size_t buflen);
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getpwnam_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getpwuid_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_setpwent_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_endpwent_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getpwent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getpwnam_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getpwuid_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_setpwent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_endpwent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getpwent_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_passwd_constr (const char *db_name,
-					const char *src_name,
-					const char *cfg_args);
+     nss_backend_t *_nss_ldap_passwd_constr (const char *db_name,
+					     const char *src_name,
+					     const char *cfg_args);
 #endif
 
 #endif /* _LDAP_NSS_LDAP_LDAP_PWD_H */

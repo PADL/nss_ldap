@@ -89,12 +89,12 @@ _nss_ldap_parse_ether (
   NSS_STATUS stat;
   struct ether_addr *addr;
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_HOSTNAME,
+  stat = _nss_ldap_assign_attrval (ld, e, AT (cn),
 				   &ether->e_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_ETHERADDR, &saddr,
+  stat = _nss_ldap_assign_attrval (ld, e, AT (macAddress), &saddr,
 				   &buffer, &buflen);
 
   if (stat != NSS_SUCCESS || ((addr = ether_aton (saddr)) == NULL))

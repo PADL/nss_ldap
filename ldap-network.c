@@ -102,18 +102,18 @@ _nss_ldap_parse_net (
    */
   if (_nss_ldap_getdomainname (ld, e, &network->n_name, &buffer, &buflen) != NSS_SUCCESS)
     {
-      stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_NETWORKNAME, &network->n_name,
+      stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &network->n_name,
 				       &buffer, &buflen);
       if (stat != NSS_SUCCESS)
 	return stat;
     }
 #else
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_NETWORKNAME, &network->n_name,
+  stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &network->n_name,
 				   &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 #endif
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_NETWORKADDR, &tmp, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (ipNetworkNumber), &tmp, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -129,7 +129,7 @@ _nss_ldap_parse_net (
   network->n_net = inet_network (tmp);
 #endif
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_NETWORKNAME, network->n_name, &network->n_aliases,
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (cn), network->n_name, &network->n_aliases,
 				    &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

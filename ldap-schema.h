@@ -87,9 +87,11 @@
  * ( nisSchema.2.2 NAME 'posixGroup' SUP top STRUCTURAL            
  *   DESC 'Abstraction of a group of accounts'
  *   MUST ( cn $ gidNumber )
+ *   MAY ( userPassword $ uidMember $ description ) )
  */
 #define OC_posixGroup             "posixGroup"
 #define AT_gidNumber              "gidNumber"
+#define AT_memberUid              "memberUid"
 
 /*
  * ( nisSchema.2.3 NAME 'ipService' SUP top STRUCTURAL
@@ -102,7 +104,8 @@
  *   MAY ( description ) )
  */
 #define OC_ipService              "ipService"
-#define AT_ipServicePort          "ipServiceProtocol"
+#define AT_ipServicePort          "ipServicePort"
+#define AT_ipServiceProtocol      "ipServiceProtocol"
 
 /*
  * ( nisSchema.2.4 NAME 'ipProtocol' SUP top STRUCTURAL
@@ -176,7 +179,6 @@
  */
 #define OC_nisObject              "nisObject"
 #define AT_nisMapEntry            "nisMapEntry"
-#define AT_nisMapName             "nisMapName"
 
 /*
  * ( nisSchema.2.11 NAME 'ieee802Device' SUP top AUXILIARY
@@ -198,4 +200,3 @@
 #define AT_bootParameter          "bootParameter"
 
 #endif /* _LDAP_NSS_LDAP_LDAP_SCHEMA_H */
-

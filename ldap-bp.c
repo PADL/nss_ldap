@@ -84,12 +84,12 @@ _nss_ldap_parse_bp (
   if (stat != NSS_SUCCESS)
     return stat;
 #else
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_HOSTNAME, &bp->bp_name, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &bp->bp_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 #endif
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_BOOTPARAM, NULL, &bp->bp_params, &buffer, &buflen, NULL);
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (bootParameter), NULL, &bp->bp_params, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
 

@@ -75,27 +75,27 @@ _nss_ldap_parse_gr (
   int uid_mems_c = 0, dn_mems_c = 0;
 #endif /* RFC2307BIS */
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_GROUP_GID, &gid, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (gidNumber), &gid, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   gr->gr_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol (gid);
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_GROUPNAME, &gr->gr_name, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &gr->gr_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_passwd (ld, e, LDAP_ATTR_GPASSWD, &gr->gr_passwd, &buffer, &buflen);
+  stat = _nss_ldap_assign_passwd (ld, e, AT (userPassword), &gr->gr_passwd, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
 #ifndef RFC2307BIS
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_UIDMEMBERS, NULL, &gr->gr_mem, &buffer, &buflen, NULL);
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &gr->gr_mem, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
 #else
   dn_mems = NULL;
-  vals = ldap_get_values (ld, e, LDAP_ATTR_DNMEMBERS);
+  vals = ldap_get_values (ld, e, AT (uniqueMember));
   if (vals != NULL)
     {
       char **mem_p, **valiter;
@@ -126,7 +126,7 @@ _nss_ldap_parse_gr (
       ldap_value_free (vals);
     }
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_UIDMEMBERS, NULL, &uid_mems, &buffer, &buflen, &uid_mems_c);
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &uid_mems, &buffer, &buflen, &uid_mems_c);
   if (stat != NSS_SUCCESS)
     uid_mems = NULL;
 
@@ -217,7 +217,7 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
        e != NULL;
        e = _nss_ldap_next_entry (e))
     {
-      char **values = _nss_ldap_get_values (e, LDAP_ATTR_GROUP_GID);
+      char **values = _nss_ldap_get_values (e, AT (gidNumber));
       if (values != NULL)
 	{
 	  int i, gid;

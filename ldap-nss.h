@@ -24,6 +24,8 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_NSS_H
 #define _LDAP_NSS_LDAP_LDAP_NSS_H
 
+#include "ldap-schema.h"
+
 #ifdef GNU_NSS
 #include <errno.h>
 #include <pthread.h>

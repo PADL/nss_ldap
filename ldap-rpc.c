@@ -88,17 +88,17 @@ _nss_ldap_parse_rpc (
   char *number;
   NSS_STATUS stat;
 
-  stat = _nss_ldap_getrdnvalue (ld, e, LDAP_ATTR_RPCNAME, &rpc->r_name, &buffer, &buflen);
+  stat = _nss_ldap_getrdnvalue (ld, e, AT (cn), &rpc->r_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_RPCNUMBER, &number, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (oncRpcNumber), &number, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   rpc->r_number = atol (number);
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_RPCNAME, rpc->r_name, &rpc->r_aliases,
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (cn), rpc->r_name, &rpc->r_aliases,
 				    &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

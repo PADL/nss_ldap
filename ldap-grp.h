@@ -24,56 +24,48 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_GRP_H
 #define _LDAP_NSS_LDAP_LDAP_GRP_H
 
-#define LDAP_CLASS_GROUP		"posixGroup"
-#define LDAP_ATTR_GROUPNAME		"cn"
-#define LDAP_ATTR_GPASSWD		"userPassword"
-#define LDAP_ATTR_UIDMEMBERS		"memberUid"
-#define LDAP_ATTR_GROUP_GID		"gidNumber"
-#ifdef RFC2307BIS
-#define LDAP_ATTR_DNMEMBERS		"uniqueMember"
-#endif /* RFC2307BIS */
-
 static const char *gr_attributes[] =
-{LDAP_ATTR_GROUPNAME, LDAP_ATTR_GPASSWD,
- LDAP_ATTR_UIDMEMBERS,
+{AT (cn), AT (userPassword),
+ AT (memberUid),
 #ifdef RFC2307BIS
- LDAP_ATTR_DNMEMBERS,
+ AT (uniqueMember),
 #endif				/* RFC2307BIS */
- LDAP_ATTR_GROUP_GID, NULL};
+ AT (gidNumber), NULL};
 
 static const char filt_getgrnam[] =
-"(&(objectclass=" LDAP_CLASS_GROUP ")(" LDAP_ATTR_GROUPNAME "=%s))";
-static const char filt_getgrgid[] =
-"(&(objectclass=" LDAP_CLASS_GROUP ")(" LDAP_ATTR_GROUP_GID "=%d))";
-static const char filt_getgrent[] =
-"(objectclass=" LDAP_CLASS_GROUP ")";
+"(&(objectclass=" 
+OC (posixGroup) ")(" AT (cn) "=%s))";
+     static const char filt_getgrgid[] =
+     "(&(objectclass=" OC (posixGroup) ")(" AT (gidNumber) "=%d))";
+     static const char filt_getgrent[] =
+     "(objectclass=" OC (posixGroup) ")";
 
 #ifdef RFC2307BIS
-static const char filt_getgroupsbymemberanddn[] =
-"(&(objectclass=" LDAP_CLASS_GROUP ")(|(" LDAP_ATTR_UIDMEMBERS "=%s)(" LDAP_ATTR_DNMEMBERS "=%s)))";
+     static const char filt_getgroupsbymemberanddn[] =
+     "(&(objectclass=" OC (posixGroup) ")(|(" AT (memberUid) "=%s)(" AT (uniqueMember) "=%s)))";
 #endif
 
-static const char filt_getgroupsbymember[] =
-"(&(objectclass=" LDAP_CLASS_GROUP ")(" LDAP_ATTR_UIDMEMBERS "=%s))";
+     static const char filt_getgroupsbymember[] =
+     "(&(objectclass=" OC (posixGroup) ")(" AT (memberUid) "=%s))";
 
-static NSS_STATUS _nss_ldap_parse_gr (
-				       LDAP * ld,
-				       LDAPMessage * e,
-				       ldap_state_t * pvt,
-				       void *result,
-				       char *buffer,
-				       size_t buflen);
+     static NSS_STATUS _nss_ldap_parse_gr (
+					    LDAP * ld,
+					    LDAPMessage * e,
+					    ldap_state_t * pvt,
+					    void *result,
+					    char *buffer,
+					    size_t buflen);
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_endgrent_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_setgrent_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getgrent_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getgrnam_r (nss_backend_t * be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getgrgid_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_endgrent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_setgrent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getgrent_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getgrnam_r (nss_backend_t * be, void *fakeargs);
+     static NSS_STATUS _nss_ldap_getgrgid_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_group_constr (const char *db_name,
-				       const char *src_name,
-				       const char *cfg_args);
+     nss_backend_t *_nss_ldap_group_constr (const char *db_name,
+					    const char *src_name,
+					    const char *cfg_args);
 #endif
 
 #endif /* _LDAP_NSS_LDAP_LDAP_GRP_H */

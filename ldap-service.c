@@ -1,4 +1,5 @@
 
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -92,7 +93,7 @@ _nss_ldap_parse_serv (
       if (state->ls_info.ls_key == NULL)
 	{
 	  /* non-deterministic behaviour is ok */
-	  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_SERVICEPROTOCOL, &service->s_proto, &buffer, &buflen);
+	  stat = _nss_ldap_assign_attrval (ld, e, AT (ipServiceProtocol), &service->s_proto, &buffer, &buflen);
 	  if (stat != NSS_SUCCESS)
 	    {
 	      return stat;
@@ -115,7 +116,7 @@ _nss_ldap_parse_serv (
     }
   else
     {
-      char **vals = ldap_get_values (ld, e, LDAP_ATTR_SERVICEPROTOCOL);
+      char **vals = ldap_get_values (ld, e, AT (ipServiceProtocol));
       int len;
       if (vals == NULL)
 	{
@@ -157,20 +158,20 @@ _nss_ldap_parse_serv (
       return stat;
     }
 
-  stat = _nss_ldap_getrdnvalue (ld, e, LDAP_ATTR_SERVICENAME, &service->s_name, &buffer, &buflen);
+  stat = _nss_ldap_getrdnvalue (ld, e, AT (cn), &service->s_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     {
       return stat;
     }
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_SERVICENAME, service->s_name, &service->s_aliases,
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (cn), service->s_name, &service->s_aliases,
 				    &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     {
       return stat;
     }
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_SERVICEPORT, &port, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (ipServicePort), &port, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     {
       return stat;

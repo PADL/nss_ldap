@@ -105,7 +105,7 @@ _nss_ldap_parse_pw (
   char *at;
 #endif /* IDS_UID */
 
-  stat = _nss_ldap_assign_passwd (ld, e, LDAP_ATTR_PASSWD, &pw->pw_passwd, &buffer, &buflen);
+  stat = _nss_ldap_assign_passwd (ld, e, AT (userPassword), &pw->pw_passwd, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -114,43 +114,43 @@ _nss_ldap_parse_pw (
     *at = '\0';
 #endif /* IDS_UID */
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_USERNAME, &pw->pw_name, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (uid), &pw->pw_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   tmp = tmpbuf;
   tmplen = sizeof (tmpbuf);
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_UID, &uid, &tmp, &tmplen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (uidNumber), &uid, &tmp, &tmplen);
   if (stat != NSS_SUCCESS)
     return stat;
   pw->pw_uid = (*uid == '\0') ? UID_NOBODY : (uid_t) atol (uid);
 
   tmp = tmpbuf;
   tmplen = sizeof (tmpbuf);
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_USER_GID, &gid, &tmp, &tmplen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (gidNumber), &gid, &tmp, &tmplen);
   if (stat != NSS_SUCCESS)
     return stat;
   pw->pw_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol (gid);
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_GECOS, &pw->pw_gecos, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (gecos), &pw->pw_gecos, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     {
       pw->pw_gecos = NULL;
-      stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_REALNAME, &pw->pw_gecos, &buffer, &buflen);
+      stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &pw->pw_gecos, &buffer, &buflen);
       if (stat != NSS_SUCCESS)
 	return stat;
     }
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_HOME, &pw->pw_dir, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (homeDirectory), &pw->pw_dir, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_SHELL, &pw->pw_shell, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (loginShell), &pw->pw_shell, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     (void) _nss_ldap_assign_emptystring (&pw->pw_shell, &buffer, &buflen);
 
 #ifdef SUN_NSS
-  stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_COMMENT, &pw->pw_comment, &buffer, &buflen);
+  stat = _nss_ldap_assign_attrval (ld, e, AT (description), &pw->pw_comment, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     {
       /* 

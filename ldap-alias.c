@@ -75,11 +75,11 @@ _nss_ldap_parse_alias (
   struct aliasent *alias = (struct aliasent *) result;
   NSS_STATUS stat;
 
-  stat = _nss_ldap_getrdnvalue (ld, e, LDAP_ATTR_ALIASNAME, &alias->alias_name, &buffer, &buflen);
+  stat = _nss_ldap_getrdnvalue (ld, e, AT (cn), &alias->alias_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_MEMBERS, NULL, &alias->alias_members,
+  stat = _nss_ldap_assign_attrvals (ld, e, AT (rfc822MailMember), NULL, &alias->alias_members,
 			       &buffer, &buflen, &alias->alias_members_len);
 
   alias->alias_local = 0;
