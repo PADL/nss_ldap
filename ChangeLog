@@ -5,6 +5,8 @@ $Header$
 
 	* patch from Andrew Rechenberg for Active
 	  Directory schema support
+	* patch from Jarkko Turkulainen <jt@wapit.com> for
+	  peer certificate support with OpenLDAP
 
 150	Luke Howard <lukeh@padl.com>
 

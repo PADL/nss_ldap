@@ -803,7 +803,8 @@ do_open (void)
 #ifdef HAVE_LDAP_START_TLS_S
   if (cfg->ldc_ssl_on == SSL_START_TLS)
     {
-      int version;
+      int ldap_pvt_tls_set_option(void *, int, void *);
+      int version, rc;
 
       if (ldap_get_option
 	  (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
@@ -816,6 +817,32 @@ do_open (void)
 			       &version);
 	    }
 	}
+
+      debug ("==> ldap_pvt_tls_set_option");
+
+      if (cfg->ldc_tls_checkpeer)
+        {
+          rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_CACERTDIR, 
+		cfg->ldc_tls_cacertdir);
+          if (rc != LDAP_SUCCESS)
+              {
+                debug ("failed to set LDAP_OPT_X_TLS_CACERTDIR");
+              }
+          rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_CACERTFILE, 
+		cfg->ldc_tls_cacertfile);
+          if (rc != LDAP_SUCCESS)
+              {
+                debug ("failed to set LDAP_OPT_X_TLS_CACERTFILE");
+              }
+          rc = ldap_pvt_tls_set_option (NULL, LDAP_OPT_X_TLS_REQUIRE_CERT, 
+		&cfg->ldc_tls_checkpeer);
+          if (rc != LDAP_SUCCESS)
+              {
+                debug ("failed to set LDAP_OPT_X_TLS_REQUIRE_CERT");
+              }
+        }
+      debug ("<== ldap_pvt_tls_set_option");
+
       debug ("==> start_tls");
       if (ldap_start_tls_s (__session.ls_conn, NULL, NULL) == LDAP_SUCCESS)
 	{

@@ -511,6 +511,9 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   result->ldc_referrals = 1;
   result->ldc_restart = 1;
   result->ldc_uri = NULL;
+  result->ldc_tls_checkpeer = 0;
+  result->ldc_tls_cacertfile = NULL;
+  result->ldc_tls_cacertdir = NULL;
   result->ldc_next = result;
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
@@ -665,6 +668,27 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	{
 	  result->ldc_bind_timelimit = atoi (v);
 	}
+      else if (!strcasecmp (k, "tls_checkpeer"))
+        {
+          if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
+              || !strcasecmp (v, "true"))
+            {
+              result->ldc_tls_checkpeer = 1;
+            }
+          else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
+              || !strcasecmp (v, "false"))
+            {
+              result->ldc_tls_checkpeer = 0;
+            }
+        }
+      else if (!strcasecmp (k, "tls_cacertfile"))
+        {
+	  t = &result->ldc_tls_cacertfile;
+        }
+      else if (!strcasecmp (k, "tls_cacertdir"))
+        {
+	  t = &result->ldc_tls_cacertdir;
+        }
       else
 	{
 	  /*

@@ -212,6 +212,12 @@ struct ldap_config
     int ldc_restart;
     /* naming contexts */
     ldap_service_search_descriptor_t *ldc_sds[LM_NONE];
+    /* tls check peer */
+    int ldc_tls_checkpeer;
+    /* tls ca certificate file */
+    char *ldc_tls_cacertfile;
+    /* tls ca certificate dir */
+    char *ldc_tls_cacertdir;
     /* next configuration. loops back onto itself for last entry */
     struct ldap_config *ldc_next;
   };
