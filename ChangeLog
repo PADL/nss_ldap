@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+167	Luke Howard <lukeh@padl.com>
+
+	* support for new OpenLDAP rebind proc prototype
+
 166	Luke Howard <lukeh@padl.com>
 
 	* corrected small typos 
