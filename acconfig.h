@@ -16,3 +16,6 @@
 /* define to enable proxy authentication for AIX */
 #undef PROXY_AUTH
 
+#define NSS_LDAP_PATH_CONF              "/etc/ldap.conf"
+#define NSS_LDAP_PATH_ROOTPASSWD        "/etc/ldap.secret"
+

@@ -4,6 +4,10 @@ $Header$
 182	Luke Howard <lukeh@padl.com>
 
 	* return error strings in AIX authentication routine
+	* initialise schema in getgroupsbymember()
+	* fix for tls_checkpeer; pass NULL session in to
+	  set global option
+	* BUG#77: configurable config file locations
 
 181	Luke Howard <lukeh@padl.com>
 

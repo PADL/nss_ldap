@@ -245,6 +245,15 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   LA_TYPE (a) = LA_TYPE_STRING;
 
 #ifdef RFC2307BIS
+  /* initialize schema */
+  stat = _nss_ldap_init ();
+  if (stat != NSS_SUCCESS)
+#ifndef _AIX
+    return stat;
+#else
+    return NULL;
+#endif /* !_AIX */
+
   /* lookup the user's DN. XXX: import this filter from somewhere else */
   snprintf (filt, LDAP_FILT_MAXSIZ, "(%s=%s)", AT (uid), "%s");
   stat = _nss_ldap_search_s (&a, filt, LM_NONE, 1, &res);
@@ -429,8 +438,7 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_setgrent (void)
+NSS_STATUS _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -443,8 +451,7 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_endgrent (void)
+NSS_STATUS _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }

@@ -367,7 +367,8 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -392,7 +393,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -611,6 +613,14 @@ do_close_no_unbind (void)
   debug ("<== do_close_no_unbind");
 
   return;
+}
+
+/*
+ * A simple alias around do_open().
+ */
+NSS_STATUS _nss_ldap_init (void)
+{
+  return do_open ();
 }
 
 /*
@@ -1061,7 +1071,7 @@ do_ssl_options (ldap_config_t * cfg)
   if (cfg->ldc_tls_cacertfile != NULL)
     {
       /* ca cert file */
-      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CACERTFILE,
+      rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_CACERTFILE,
 			    cfg->ldc_tls_cacertfile);
       if (rc != LDAP_SUCCESS)
 	{
@@ -1074,7 +1084,7 @@ do_ssl_options (ldap_config_t * cfg)
   if (cfg->ldc_tls_cacertdir != NULL)
     {
       /* ca cert directory */
-      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CACERTDIR,
+      rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_CACERTDIR,
 			    cfg->ldc_tls_cacertdir);
       if (rc != LDAP_SUCCESS)
 	{
@@ -1085,7 +1095,7 @@ do_ssl_options (ldap_config_t * cfg)
     }
 
   /* require cert? */
-  rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_REQUIRE_CERT,
+  rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_REQUIRE_CERT,
 			&cfg->ldc_tls_checkpeer);
   if (rc != LDAP_SUCCESS)
     {
@@ -1097,7 +1107,7 @@ do_ssl_options (ldap_config_t * cfg)
   if (cfg->ldc_tls_ciphers != NULL)
     {
       /* set cipher suite, certificate and private key: */
-      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CIPHER_SUITE,
+      rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_CIPHER_SUITE,
 			    cfg->ldc_tls_ciphers);
       if (rc != LDAP_SUCCESS)
 	{
@@ -1109,8 +1119,7 @@ do_ssl_options (ldap_config_t * cfg)
 
   if (cfg->ldc_tls_cert != NULL)
     {
-      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CERTFILE,
-			    cfg->ldc_tls_cert);
+      rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_CERTFILE, cfg->ldc_tls_cert);
       if (rc != LDAP_SUCCESS)
 	{
 	  debug
@@ -1121,8 +1130,7 @@ do_ssl_options (ldap_config_t * cfg)
 
   if (cfg->ldc_tls_key != NULL)
     {
-      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_KEYFILE,
-			    cfg->ldc_tls_key);
+      rc = ldap_set_option (NULL, LDAP_OPT_X_TLS_KEYFILE, cfg->ldc_tls_key);
       if (rc != LDAP_SUCCESS)
 	{
 	  debug
@@ -1933,7 +1941,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2438,7 +2447,8 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -2684,7 +2694,8 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password)
+NSS_STATUS
+_nss_ldap_proxy_bind (const char *user, const char *password)
 {
   ldap_args_t args;
   LDAPMessage *res, *e;

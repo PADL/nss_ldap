@@ -633,4 +633,6 @@ typedef struct ldap_proxy_bind_args ldap_proxy_bind_args_t;
 NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password);
 #endif /* PROXY_AUTH */
 
+NSS_STATUS _nss_ldap_init(void);
+
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

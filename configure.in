@@ -16,6 +16,8 @@ AC_ARG_ENABLE(debugging, [  --enable-debugging        enable debug code ], [AC_D
 AC_ARG_ENABLE(ssl, [  --disable-ssl             disable SSL/TSL support])
 AC_ARG_WITH(ldap-lib, [  --with-ldap-lib=type      select ldap library [auto|netscape5|netscape4|netscape3|umich|openldap]])
 AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of ldap SDK])
+AC_ARG_WITH(ldap-conf-file, [  --with-ldap-conf-file     path to LDAP configuration file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_CONF, "$with_ldap_conf_file")])
+AC_ARG_WITH(ldap-secret-file, [  --with-ldap-secret-file   path to LDAP root secret file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_ROOTPASSWD, "$with_ldap_secret_file")])
 
 AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu")
 
