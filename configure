@@ -3573,6 +3573,7 @@ fi
 done
 
 
+
 # For HP-UX and AIX we use private API, the headers for which
 # are included locally. We need to do something to stop both
 # API being detected.
@@ -6771,7 +6772,8 @@ fi
 done
 
 
-for ac_header in sasl.h
+
+for ac_header in sasl.h sasl/sasl.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then

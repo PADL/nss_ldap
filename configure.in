@@ -89,6 +89,16 @@ AC_CHECK_HEADERS(lber.h)
 AC_CHECK_HEADERS(ldap.h, , AC_MSG_ERROR(could not locate <ldap.h>))
 AC_CHECK_HEADERS(ldap_ssl.h)
 
+dnl AC_MSG_CHECKING(for ldap_ssl.h)
+dnl AC_TRY_COMPILE([#include <sys/types.h>
+dnl	#include <ldap.h>
+dnl	#include <ldap_ssl.h>], ,
+dnl	[
+dnl		AC_MSG_RESULT(yes),
+dnl		AC_DEFINE(HAVE_LDAP_SSL_H, 1)
+dnl	],
+dnl	AC_MSG_RESULT(no))
+
 # For HP-UX and AIX we use private API, the headers for which
 # are included locally. We need to do something to stop both
 # API being detected.
@@ -122,7 +132,7 @@ AC_CHECK_HEADERS(sys/byteorder.h)
 AC_CHECK_HEADERS(sys/un.h)
 AC_CHECK_HEADERS(libc-lock.h)
 AC_CHECK_HEADERS(bits/libc-lock.h)
-AC_CHECK_HEADERS(sasl.h)
+AC_CHECK_HEADERS(sasl.h sasl/sasl.h)
 AC_CHECK_HEADERS(strings.h)
 AC_CHECK_HEADERS(gssldap.h)
 AC_CHECK_HEADERS(gsssasl.h)

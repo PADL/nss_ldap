@@ -20,7 +20,7 @@
 /* define to enable paged results control */
 #undef PAGE_RESULTS
 
-/* define to enable configuration of Kerberos V credentials cache name */
+/* define to enable configurable Kerberos credentials cache */
 #undef CONFIGURE_KRB5_CCNAME
 
 /* define to enable struct ether_addr definition */
@@ -209,6 +209,9 @@
 
 /* Define to 1 if you have the <sasl.h> header file. */
 #undef HAVE_SASL_H
+
+/* Define to 1 if you have the <sasl/sasl.h> header file. */
+#undef HAVE_SASL_SASL_H
 
 /* Define to 1 if you have the <shadow.h> header file. */
 #undef HAVE_SHADOW_H

@@ -66,7 +66,11 @@ static char rcsId[] =
 #ifdef HAVE_GSSSASL_H
 #include <gsssasl.h>
 #endif
-
+#ifdef HAVE_SASL_SASL_H
+#include <sasl/sasl.h>
+#elif defined(HAVE_SASL_H)
+#include <sasl.h>
+#endif
 #ifdef AT_OC_MAP
 #ifdef HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
@@ -268,7 +272,7 @@ do_with_reconnect (const char *base, int scope,
 static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 		    int with_sasl);
 
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
 static int do_sasl_interact (LDAP * ld, unsigned flags, void *defaults,
 			     void *p);
 #endif
@@ -294,7 +298,7 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
   if (geteuid () == 0 && __session.ls_config->ldc_rootbinddn)
     {
       who = __session.ls_config->ldc_rootbinddn;
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
       with_sasl = __session.ls_config->ldc_rootusesasl;
       if (with_sasl)
 	{
@@ -304,14 +308,14 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 	{
 #endif
 	  cred = __session.ls_config->ldc_rootbindpw;
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
 	}
 #endif
     }
   else
     {
       who = __session.ls_config->ldc_binddn;
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
       with_sasl = __session.ls_config->ldc_usesasl;
       if (with_sasl)
 	{
@@ -321,7 +325,7 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 	{
 #endif
 	  cred = __session.ls_config->ldc_bindpw;
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
 	}
 #endif
     }
@@ -352,7 +356,7 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
   if (geteuid () == 0 && __session.ls_config->ldc_rootbinddn)
     {
       *whop = strdup (__session.ls_config->ldc_rootbinddn);
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
       with_sasl = __session.ls_config->ldc_rootusesasl;
       if (with_sasl && __session.ls_config->ldc_rootsaslid)
 	{
@@ -367,7 +371,7 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
     {
       if (__session.ls_config->ldc_binddn != NULL)
 	*whop = strdup (__session.ls_config->ldc_binddn);
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
       with_sasl = __session.ls_config->ldc_usesasl;
       if (with_sasl && __session.ls_config->ldc_saslid)
 	{
@@ -1249,7 +1253,7 @@ do_open (void)
    */
   if (euid == 0 && cfg->ldc_rootbinddn != NULL)
     {
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
       usesasl = cfg->ldc_rootusesasl;
       bindarg =
 	cfg->ldc_rootusesasl ? cfg->ldc_rootsaslid : cfg->ldc_rootbindpw;
@@ -1269,7 +1273,7 @@ do_open (void)
     }
   else
     {
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
       usesasl = cfg->ldc_usesasl;
       bindarg = cfg->ldc_usesasl ? cfg->ldc_saslid : cfg->ldc_bindpw;
 #else
@@ -1416,7 +1420,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
   tv.tv_sec = timelimit;
   tv.tv_usec = 0;
 
-#if (defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)) || defined(HAVE_LDAP_GSS_BIND)
+#if (defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))) || defined(HAVE_LDAP_GSS_BIND)
   if (!with_sasl)
     {
 #endif
@@ -1450,7 +1454,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 	{
 	  ldap_abandon (ld, msgid);
 	}
-#if (defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)) || defined(HAVE_LDAP_GSS_BIND)
+#if (defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))) || defined(HAVE_LDAP_GSS_BIND)
     }
   else
     {
@@ -1462,7 +1466,6 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       char tmpbuf[256];
       static char envbuf[256];
 # endif	/* CONFIGURE_KRB5_CCNAME */
-      void *defaults;
 
       if (__config->ldc_sasl_secprops != NULL)
 	{
@@ -1501,8 +1504,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
-					 do_sasl_interact, defaults);
-      ber_memfree (defaults);
+					 do_sasl_interact, (void *)pw);
 
 # ifdef CONFIGURE_KRB5_CCNAME
       /* Restore default Kerberos ticket cache. */
@@ -3428,7 +3430,7 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
   return stat;
 }
 
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
 static int
 do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 {
