@@ -2209,7 +2209,6 @@ do_with_reconnect (const char *base, int scope,
 	case LDAP_TIMEOUT:
 	case LDAP_UNAVAILABLE:
 	case LDAP_BUSY:
-	case LDAP_LOCAL_ERROR:
 #ifdef LDAP_CONNECT_ERROR
 	case LDAP_CONNECT_ERROR:
 #endif /* LDAP_CONNECT_ERROR */
@@ -2218,6 +2217,7 @@ do_with_reconnect (const char *base, int scope,
 	  ++tries;
 	  continue;
 	  break;
+	case LDAP_LOCAL_ERROR:
 	default:
 	  stat = NSS_UNAVAIL;
 	  break;
