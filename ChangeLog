@@ -3,6 +3,7 @@ $Header$
 
 146	Luke Howard <lukeh@padl.com>
 
+	* mass reindentation, GNU style
 	* patch from Simon Wilkinson <sxw@sxw.org.uk>
 	  for compatibility with old initgroups entry
 	  point
