@@ -910,6 +910,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	      len = strlen (b);
 	      if (len > 0)
 		len--;
+	      if (b[len] == '\n')
+		len--;
 
 	      if (buflen < (size_t) (len + 1))
 		{
