@@ -299,46 +299,6 @@ do_open (void)
   return NSS_SUCCESS;
 }
 
-#if 0
-static INLINE void
-do_sleep (unsigned int seconds)
-{
-#ifdef SUN_NSS
-  /*
-   * Be careful to check whether we're linked with 
-   * libthread.so or not.
-   */
-  if (thr_main () == -1)
-    {
-      sleep (seconds);
-    }
-  else
-    {
-      timestruc_t sleepfor =
-      {seconds, 0};
-      cond_t cond = DEFAULTCV;
-      mutex_t mutex = DEFAULTMUTEX;
-
-      (void) mutex_lock (&mutex);
-      (void) cond_timedwait (&cond, &mutex, &sleepfor);
-      (void) mutex_unlock (&mutex);
-    }
-
-#elif defined(GNU_NSS)
-  struct timespec sleepfor;
-  pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-  pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
-  (void) pthread_mutex_lock (&mutex);
-  (void) pthread_cond_timedwait (&cond, &mutex, &sleepfor);
-  (void) pthread_mutex_unlock (&mutex);
-#else
-  (void) sleep (seconds);
-#endif /* SUN_NSS */
-  return;
-}
-#endif
-
 /*
  * This function initializes an enumeration context.
  * It is called from setXXent() directly, and so can safely lock the
