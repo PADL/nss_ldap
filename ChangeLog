@@ -1,6 +1,21 @@
 $Header$
 ===============================================================
 
+123	Luke Howard <lukeh@padl.com>
+
+	* rolled in BUG#52 branch with fixes for AIX
+
+122.BZ52.2	Luke Howard <lukeh@padl.com>
+
+	* included ldap-schema.c; omitted from previous
+	  checkpoint
+
+122.BZ52.1	Luke Howard <lukeh@padl.com>
+
+	* preliminary fix for BUG#52 (support for different
+	  naming contexts for each map)
+	* fixed bug in enumerating services map
+
 122	Luke Howard <lukeh@padl.com>
 
 	* fixed BUG#50 (check return value of ldap_simple_bind())

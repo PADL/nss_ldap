@@ -34,10 +34,6 @@
  *
  */
 
-static const char *serv_attributes[] =
-{AT (cn), AT (ipServicePort),
- AT (ipServiceProtocol), NULL};
-
 static const char filt_getservbyname[] =
 "(&(objectclass="
 OC (ipService) ")(" AT (cn) "=%s))";

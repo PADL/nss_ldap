@@ -24,18 +24,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_GRP_H
 #define _LDAP_NSS_LDAP_LDAP_GRP_H
 
-static const char *gr_attributes[] =
-{AT (cn), AT (userPassword),
- AT (memberUid),
-#ifdef RFC2307BIS
-#ifdef NDS
- AT (member),
-#else
- AT (uniqueMember),
-#endif				/* NDS */
-#endif				/* RFC2307BIS */
- AT (gidNumber), NULL};
-
 static const char filt_getgrnam[] =
 "(&(objectclass="
 OC (posixGroup) ")(" AT (cn) "=%s))";

@@ -45,13 +45,13 @@ struct pvt
 IRS_EXPORT struct passwd *
 pw_byname (struct irs_pw *this, const char *name)
 {
-  LOOKUP_NAME (name, this, filt_getpwnam, pw_attributes, _nss_ldap_parse_pw);
+  LOOKUP_NAME (name, this, filt_getpwnam, LM_PASSWD, _nss_ldap_parse_pw);
 }
 
 IRS_EXPORT struct passwd *
 pw_byuid (struct irs_pw *this, uid_t uid)
 {
-  LOOKUP_NUMBER (uid, this, filt_getpwuid, pw_attributes, _nss_ldap_parse_pw);
+  LOOKUP_NUMBER (uid, this, filt_getpwuid, LM_PASSWD, _nss_ldap_parse_pw);
 }
 
 IRS_EXPORT void
@@ -67,7 +67,7 @@ pw_close (struct irs_pw *this)
 IRS_EXPORT struct passwd *
 pw_next (struct irs_pw *this)
 {
-  LOOKUP_GETENT (this, filt_getpwent, pw_attributes, _nss_ldap_parse_pw);
+  LOOKUP_GETENT (this, filt_getpwent, LM_PASSWD, _nss_ldap_parse_pw);
 }
 
 IRS_EXPORT void

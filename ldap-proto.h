@@ -30,10 +30,6 @@
    as aliases.
  */
 
-static const char *proto_attributes[] =
-{AT (cn), AT (ipProtocolNumber),
- NULL};
-
 static const char filt_getprotobyname[] =
 "(&(objectclass="
 OC (ipProtocol) ")(" AT (cn) "=%s))";

@@ -56,20 +56,37 @@ NSS_STATUS _nss_ldap_dn2uid (
 			      size_t * len);
 #endif /* RFC2307BIS */
 
-#define NSS_LDAP_CONFIG_BUFSIZ	1024
-#define NSS_LDAP_KEY_HOST	"host"
-#define NSS_LDAP_KEY_SCOPE	"scope"
-#define NSS_LDAP_KEY_BASE	"base"
-#define NSS_LDAP_KEY_PORT	"port"
-#define NSS_LDAP_KEY_BINDDN	"binddn"
-#define NSS_LDAP_KEY_BINDPW     "bindpw"
-#define NSS_LDAP_KEY_DEREF      "deref"
-#define NSS_LDAP_KEY_ROOTBINDDN	"rootbinddn"
+#define NSS_LDAP_CONFIG_BUFSIZ		1024
+#define NSS_LDAP_KEY_HOST		"host"
+#define NSS_LDAP_KEY_SCOPE		"scope"
+#define NSS_LDAP_KEY_BASE		"base"
+#define NSS_LDAP_KEY_PORT		"port"
+#define NSS_LDAP_KEY_BINDDN		"binddn"
+#define NSS_LDAP_KEY_BINDPW   		"bindpw"
+#define NSS_LDAP_KEY_DEREF    		"deref"
+#define NSS_LDAP_KEY_ROOTBINDDN		"rootbinddn"
 #define NSS_LDAP_KEY_LDAP_VERSION	"ldap_version"
-#define NSS_LDAP_KEY_SSL	"ssl"
-#define NSS_LDAP_KEY_SSLPATH	"sslpath"
-#define NSS_LDAP_PATH_CONF	"/etc/ldap.conf"
+#define NSS_LDAP_KEY_SSL		"ssl"
+#define NSS_LDAP_KEY_SSLPATH		"sslpath"
+
+/* support separate naming contexts for each map */
+#define NSS_LDAP_KEY_NSS_BASE_PASSWD		"nss_base_passwd"
+#define NSS_LDAP_KEY_NSS_BASE_SHADOW		"nss_base_shadow"
+#define NSS_LDAP_KEY_NSS_BASE_GROUP		"nss_base_group"
+#define NSS_LDAP_KEY_NSS_BASE_HOSTS		"nss_base_hosts"
+#define NSS_LDAP_KEY_NSS_BASE_SERVICES		"nss_base_services"
+#define NSS_LDAP_KEY_NSS_BASE_NETWORKS		"nss_base_networks"
+#define NSS_LDAP_KEY_NSS_BASE_PROTOCOLS		"nss_base_protocols"
+#define NSS_LDAP_KEY_NSS_BASE_RPC		"nss_base_rpc"
+#define NSS_LDAP_KEY_NSS_BASE_ETHERS		"nss_base_ethers"
+#define NSS_LDAP_KEY_NSS_BASE_NETMASKS		"nss_base_netmasks"
+#define NSS_LDAP_KEY_NSS_BASE_BOOTPARAMS	"nss_base_bootparams"
+#define NSS_LDAP_KEY_NSS_BASE_ALIASES		"nss_base_aliases"
+#define NSS_LDAP_KEY_NSS_BASE_NETGROUP		"nss_base_netgroup"
+
+#define NSS_LDAP_PATH_CONF		"/etc/ldap.conf"
 #define NSS_LDAP_PATH_ROOTPASSWD	"/etc/ldap.secret"
+
 
 /*
  * There are a number of means of obtaining configuration information.

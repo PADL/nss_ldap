@@ -32,10 +32,6 @@ static NSS_STATUS _nss_ldap_parse_net (
 					char *buffer,
 					size_t buflen);
 
-static const char *net_attributes[] =
-{AT (cn), AT (ipNetworkNumber),
- NULL};
-
 static const char filt_getnetbyname[] =
 "(&(objectclass="
 OC (ipNetwork) ")(" AT (cn) "=%s))";

@@ -198,8 +198,6 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 #endif /* SUN_NSS */
 #ifdef RFC2307BIS
   char *userdn = NULL;
-  const char **attrs =
-  {NULL};
   const char *filter;
 #endif /* RFC2307BIS */
   ldap_args_t a;
@@ -216,7 +214,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 
 #ifdef RFC2307BIS
   /* lookup the user's DN. XXX: import this filter from somewhere else */
-  stat = _nss_ldap_search_s (&a, "(" AT (uid) "=%s)", attrs, 1, &res);
+  stat = _nss_ldap_search_s (&a, "(" AT (uid) "=%s)", LM_NONE, 1, &res);
   if (stat == NSS_SUCCESS)
     {
       e = _nss_ldap_first_entry (res);
@@ -236,7 +234,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
     {
       filter = filt_getgroupsbymember;
     }
-  stat = _nss_ldap_search_s (&a, filter, gr_attributes, LDAP_NO_LIMIT, &res);
+  stat = _nss_ldap_search_s (&a, filter, LM_GROUP, LDAP_NO_LIMIT, &res);
   if (userdn != NULL)
     {
 #ifdef LDAP_VERSION3_API
@@ -247,7 +245,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
     }
 #else
   stat =
-    _nss_ldap_search_s (&a, filt_getgroupsbymember, gr_attributes,
+    _nss_ldap_search_s (&a, filt_getgroupsbymember, LM_GROUP,
 		      LDAP_NO_LIMIT, &res);
 #endif /* RFC2307BIS */
 
@@ -339,13 +337,13 @@ _nss_ldap_getgrnam_r (const char *name,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getgrnam,
-	       gr_attributes, _nss_ldap_parse_gr);
+	       LM_GROUP, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getgrnam_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, filt_getgrnam, gr_attributes, _nss_ldap_parse_gr);
+  LOOKUP_NAME (args, filt_getgrnam, LM_GROUP, _nss_ldap_parse_gr);
 }
 #endif
 
@@ -356,13 +354,13 @@ _nss_ldap_getgrgid_r (gid_t gid,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NUMBER (gid, result, buffer, buflen, errnop, filt_getgrgid,
-		 gr_attributes, _nss_ldap_parse_gr);
+		 LM_GROUP, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NUMBER (args, key.gid, filt_getgrgid, gr_attributes,
+  LOOKUP_NUMBER (args, key.gid, filt_getgrgid, LM_GROUP,
 		 _nss_ldap_parse_gr);
 }
 #endif
@@ -401,13 +399,13 @@ _nss_ldap_getgrent_r (struct group *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop, filt_getgrent,
-		 gr_attributes, _nss_ldap_parse_gr);
+		 LM_GROUP, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getgrent_r (nss_backend_t * gr_context, void *args)
 {
-  LOOKUP_GETENT (args, gr_context, filt_getgrent, gr_attributes,
+  LOOKUP_GETENT (args, gr_context, filt_getgrent, LM_GROUP,
 		 _nss_ldap_parse_gr);
 }
 #endif

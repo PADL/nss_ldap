@@ -30,9 +30,6 @@ struct bootparams
     char **bp_params;
   };
 
-static const char *bp_attributes[] =
-{AT (cn), AT (bootParameter), NULL};
-
 static const char filt_getbootparamsbyname[] =
 "(&(objectclass="
 OC (bootableDevice) ")(" AT (cn) "=%s))";

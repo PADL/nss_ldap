@@ -158,6 +158,14 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
       *presult = (ldap_config_t *) calloc (1, sizeof (*result));
       if (*presult == NULL)
 	return NSS_UNAVAIL;
+
+      /* set all namingcontexts to NULL for now */
+      (*presult)->ldc_namingcontexts = (char **) calloc (LM_NONE, sizeof (char *));
+      if ((*presult)->ldc_namingcontexts == NULL)
+        {
+          free (*presult);
+          return NSS_UNAVAIL;
+        }
     }
 
   result = *presult;

@@ -24,14 +24,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_PWD_H
 #define _LDAP_NSS_LDAP_LDAP_PWD_H
 
-static const char *pw_attributes[] =
-{AT (uid), AT (userPassword),
- AT (uidNumber), AT (gidNumber),
- AT (cn), AT (homeDirectory),
- AT (loginShell), AT (gecos),
- AT (description), AT (objectClass),
- NULL};
-
 static const char filt_getpwnam[] =
 #ifdef IDS_UID
 "(&(objectclass="

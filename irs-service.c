@@ -60,7 +60,7 @@ sv_byname (struct irs_sv *this, const char *name, const char *proto)
 			 (proto ==
 			  NULL) ? filt_getservbyname :
 			 filt_getservbynameproto,
-			 (const char **) serv_attributes,
+			 LM_SERVICES,
 			 _nss_ldap_parse_serv);
 
   if (s != NSS_SUCCESS)
@@ -88,7 +88,7 @@ sv_byport (struct irs_sv *this, int port, const char *proto)
 			 (proto ==
 			  NULL) ? filt_getservbyport :
 			 filt_getservbyportproto,
-			 (const char **) serv_attributes,
+			 LM_SERVICES,
 			 _nss_ldap_parse_serv);
 
   if (s != NSS_SUCCESS)
@@ -112,7 +112,7 @@ sv_close (struct irs_sv *this)
 IRS_EXPORT struct servent *
 sv_next (struct irs_sv *this)
 {
-  LOOKUP_GETENT (this, filt_getservent, serv_attributes,
+  LOOKUP_GETENT (this, filt_getservent, LM_SERVICES,
 		 _nss_ldap_parse_serv);
 }
 

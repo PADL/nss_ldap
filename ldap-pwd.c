@@ -200,13 +200,13 @@ _nss_ldap_getpwnam_r (const char *name,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getpwnam,
-	       pw_attributes, _nss_ldap_parse_pw);
+	       LM_PASSWD, _nss_ldap_parse_pw);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getpwnam_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, filt_getpwnam, pw_attributes, _nss_ldap_parse_pw);
+  LOOKUP_NAME (args, filt_getpwnam, LM_PASSWD, _nss_ldap_parse_pw);
 }
 #endif /* GNU_NSS */
 
@@ -217,13 +217,13 @@ _nss_ldap_getpwuid_r (uid_t uid,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NUMBER (uid, result, buffer, buflen, errnop, filt_getpwuid,
-		 pw_attributes, _nss_ldap_parse_pw);
+		 LM_PASSWD, _nss_ldap_parse_pw);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getpwuid_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NUMBER (args, key.uid, filt_getpwuid, pw_attributes,
+  LOOKUP_NUMBER (args, key.uid, filt_getpwuid, LM_PASSWD,
 		 _nss_ldap_parse_pw);
 }
 #endif
@@ -262,13 +262,13 @@ _nss_ldap_getpwent_r (struct passwd *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (pw_context, result, buffer, buflen, errnop, filt_getpwent,
-		 pw_attributes, _nss_ldap_parse_pw);
+		 LM_PASSWD, _nss_ldap_parse_pw);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getpwent_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_GETENT (args, be, filt_getpwent, pw_attributes, _nss_ldap_parse_pw);
+  LOOKUP_GETENT (args, be, filt_getpwent, LM_PASSWD, _nss_ldap_parse_pw);
 }
 #endif
 

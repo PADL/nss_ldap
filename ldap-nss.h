@@ -134,6 +134,27 @@ static void debug(char *fmt, ...) {}
 #endif
 #endif
 
+/* selectors for different maps */
+enum ldap_map_selector
+  {
+    LM_PASSWD,
+    LM_SHADOW,
+    LM_GROUP,
+    LM_HOSTS,
+    LM_SERVICES,
+    LM_NETWORKS,
+    LM_PROTOCOLS,
+    LM_RPC,
+    LM_ETHERS,
+    LM_NETMASKS,
+    LM_BOOTPARAMS,
+    LM_ALIASES,
+    LM_NETGROUP,
+    LM_NONE
+  };
+
+typedef enum ldap_map_selector ldap_map_selector_t;
+
 /*
  * linked list of configurations pointing to LDAP servers. The first
  * which has a successful ldap_open() is used. Conceivably the rest
@@ -165,6 +186,8 @@ struct ldap_config
     int ldc_ssl_on;
     /* SSL certificate path */
     char *ldc_sslpath;
+    /* naming contexts */
+    char **ldc_namingcontexts;
     /* next configuration. loops back onto itself for last entry */
     struct ldap_config *ldc_next;
   };
@@ -397,7 +420,7 @@ LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
  */
 NSS_STATUS _nss_ldap_search_s (const ldap_args_t * args,	/* IN */
 			     const char *filterprot,	/* IN */
-			     const char **attributes,	/* IN */
+			     ldap_map_selector_t sel,   /* IN */
 			     int sizelimit,	/* IN */
 			     LDAPMessage ** pRes /* OUT */ );
 
@@ -406,7 +429,7 @@ NSS_STATUS _nss_ldap_search_s (const ldap_args_t * args,	/* IN */
  */
 NSS_STATUS _nss_ldap_search (const ldap_args_t * args,	/* IN */
 			     const char *filterprot,	/* IN */
-			     const char **attributes,	/* IN */
+			     ldap_map_selector_t sel,   /* IN */
 			     int sizelimit,	/* IN */
 			     int * pMsgid /* OUT */ );
 
@@ -431,7 +454,7 @@ NSS_STATUS _nss_ldap_getent (ent_context_t ** key,	/* IN/OUT */
 			     size_t buflen,	/* IN */
 			     int *errnop,	/* OUT */
 			     const char *filterprot,	/* IN */
-			     const char **attrs,	/* IN */
+			     ldap_map_selector_t sel, /* IN */
 			     parser_t parser /* IN */ );
 
 /*
@@ -443,7 +466,7 @@ NSS_STATUS _nss_ldap_getbyname (ldap_args_t * args,	/* IN/OUT */
 				size_t buflen,	/* IN */
 				int *errnop,	/* OUT */
 				const char *filterprot,		/* IN */
-				const char **attrs,	/* IN */
+				ldap_map_selector_t sel, /* IN */
 				parser_t parser /* IN */ );
 
 /* parsing utility functions */

@@ -47,6 +47,7 @@ SRCS=	ldap-nss.c \
 	ldap-network.c \
 	ldap-proto.c \
 	ldap-service.c \
+	ldap-schema.c \
 	util.c \
 	globals.c \
 	ltf.c \

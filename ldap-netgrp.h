@@ -24,9 +24,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_NETGRP_H
 #define _LDAP_NSS_LDAP_LDAP_NETGRP_H
 
-static const char *netgr_attributes[] =
-{AT (cn), AT (nisNetgroupTriple), AT (memberNisNetgroup), NULL};
-
 static const char *filt_setnetgrent[] =
 "(&(objectclass="
 OC (nisNetgroup) ")(" AT (cn) "=%s))";

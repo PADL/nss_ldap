@@ -24,9 +24,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_ALIAS_H
 #define _LDAP_NSS_LDAP_LDAP_ALIAS_H
 
-static const char *alias_attributes[] =
-{AT (cn), AT (rfc822MailMember), NULL};
-
 static const char filt_getaliasbyname[] =
 "(&(objectclass="
 OC (nisMailAlias) ")(" AT (cn) "=%s))";

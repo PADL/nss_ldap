@@ -55,6 +55,8 @@ static NSS_STATUS _nss_ldap_getrdnvalue_impl (const char *dn,
 					      char **rval, char **buffer,
 					      size_t * buflen);
 
+static char ** do_namingcontextconfig (const char *key, char **result);
+
 #ifdef RFC2307BIS
 #ifdef GNU_NSS
 #define DN2UID_CACHE
@@ -354,6 +356,41 @@ _nss_ldap_getrdnvalue_impl (const char *dn,
   return NSS_NOTFOUND;
 }
 
+static char **
+do_namingcontextconfig (const char *key, char **result)
+{
+  char **t = NULL;
+  
+  if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
+    t = &result[LM_PASSWD];
+  if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SHADOW))
+    t = &result[LM_SHADOW];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_GROUP))
+    t = &result[LM_GROUP];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_HOSTS))
+    t = &result[LM_HOSTS];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SERVICES))
+    t = &result[LM_SERVICES];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETWORKS))
+    t = &result[LM_NETWORKS];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PROTOCOLS))
+    t = &result[LM_PROTOCOLS];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_RPC))
+    t = &result[LM_RPC];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_ETHERS))
+    t = &result[LM_ETHERS];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETMASKS))
+    t = &result[LM_NETMASKS];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_BOOTPARAMS))
+    t = &result[LM_BOOTPARAMS];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_ALIASES))
+    t = &result[LM_ALIASES];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETGROUP))
+    t = &result[LM_NETGROUP];
+
+  return t;
+}
+
 NSS_STATUS
 _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 {
@@ -367,6 +404,14 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
       *presult = (ldap_config_t *) malloc (sizeof (*result));
       if (*presult == NULL)
 	return NSS_UNAVAIL;
+
+      /* set all namingcontexts to NULL for now */
+      (*presult)->ldc_namingcontexts = (char **) calloc (LM_NONE, sizeof (char *));
+      if ((*presult)->ldc_namingcontexts == NULL)
+        {
+          free (*presult);
+          return NSS_UNAVAIL;
+        }
     }
 
   result = *presult;
@@ -502,6 +547,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	{
 	  result->ldc_version = atoi (v);
 	}
+      else
+        {
+          /* check whether the key is a naming context key */
+          t = do_namingcontextconfig (k, result->ldc_namingcontexts);
+        }
 
       if (t != NULL)
 	{

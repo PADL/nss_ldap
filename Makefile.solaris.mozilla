@@ -35,6 +35,7 @@ HDRS=	\
 	ldap-pwd.h \
 	ldap-rpc.h \
 	ldap-service.h \
+	ldap-schema.h \
 	ldap-spwd.h \
 	util.h \
 	globals.h \
@@ -55,6 +56,7 @@ SRCS=	ldap-nss.c \
 	ldap-spwd.c \
 	ldap-alias.c \
 	ldap-service.c \
+	ldap-schema.c \
 	ldap-ethers.c \
 	ldap-bp.c \
 	util.c \
@@ -103,7 +105,7 @@ CFLAGS=$(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFL
 all: $(MODULE)
 
 $(MODULE): $(OBJS)
-	$(LD) $(LIBDIRS) $(LDFLAGS) -o /tmp/$(LIB) $(OBJS) $(LIBS)
+	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(LIB) $(OBJS) $(LIBS)
 
 install:
 	cp $(LIB) /usr/lib/

@@ -38,6 +38,7 @@ HDRS=	\
 	ldap-pwd.h \
 	ldap-rpc.h \
 	ldap-service.h \
+	ldap-schema.h \
 	ldap-spwd.h \
 	util.h \
 	globals.h \
@@ -58,6 +59,7 @@ SRCS=	ldap-nss.c \
 	ldap-spwd.c \
 	ldap-alias.c \
 	ldap-service.c \
+	ldap-schema.c \
 	ldap-ethers.c \
 	ldap-bp.c \
 	util.c \

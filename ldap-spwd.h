@@ -23,13 +23,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_SPWD_H
 #define _LDAP_NSS_LDAP_LDAP_SPWD_H
 
-static const char *sp_attributes[] =
-{AT (uid), AT (userPassword),
- AT (shadowLastChange), AT (shadowMax),
- AT (shadowMin), AT (shadowWarning),
- AT (shadowInactive), AT (shadowExpire),
- NULL};
-
 static const char filt_getspnam[] =
 "(&(objectclass="
 OC (shadowAccount) ")(" AT (uid) "=%s))";

@@ -122,13 +122,13 @@ _nss_ldap_getspnam_r (const char *name,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getspnam,
-	       sp_attributes, _nss_ldap_parse_sp);
+	       LM_SHADOW, _nss_ldap_parse_sp);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getspnam_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, filt_getspnam, sp_attributes, _nss_ldap_parse_sp);
+  LOOKUP_NAME (args, filt_getspnam, LM_SHADOW, _nss_ldap_parse_sp);
 }
 #endif /* GNU_NSS */
 
@@ -164,13 +164,13 @@ _nss_ldap_getspent_r (struct spwd *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (sp_context, result, buffer, buflen, errnop, filt_getspent,
-		 sp_attributes, _nss_ldap_parse_sp);
+		 LM_SHADOW, _nss_ldap_parse_sp);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getspent_r (nss_backend_t * sp_context, void *args)
 {
-  LOOKUP_GETENT (args, sp_context, filt_getspent, sp_attributes,
+  LOOKUP_GETENT (args, sp_context, filt_getspent, LM_SHADOW,
 		 _nss_ldap_parse_sp);
 }
 #endif

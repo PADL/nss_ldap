@@ -24,6 +24,12 @@
 #define _LDAP_NSS_LDAP_LDAP_SCHEMA_H
 
 /**
+ * Attribute vector table indexed by map
+ * selector (eg. LM_PASSWD).
+ */
+extern const char **_nss_ldap_attrtab[];
+
+/**
  * These could potentially be replaced with
  * lookup macros.
  */
