@@ -73,6 +73,11 @@ static char rcsId[] =
 #include <port_after.h>
 #endif
 
+#ifndef NSS_BUFLEN_ETHERS
+/* for HP-UX */
+#define NSS_BUFLEN_ETHERS 1024
+#endif /* NSS_BUFLEN_ETHERS */
+
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 
 #ifdef HAVE_NSSWITCH_H
