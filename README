@@ -52,6 +52,44 @@ LDAP SDKs. Note that OpenLDAP only appears to build shared libraries
 on some platforms (apparently not Solaris?). To build these, configure
 with --enable-shared.
 
+Q: Using the Netscape LDAP library with pam_ldap on Solaris 8
+- aka Solaris 2.8 - fails to link properly! David Begley writes:
+
+There are two releases of the Netscape LDAP library, one marked
+for Solaris 8 and the other marked for Solaris 2.6 - the additional
+catch is that the Solaris 8 library is a 64-bit library (this is marked
+on Netscape's site) whilst the other is a 32-bit library.
+
+It doesn't matter if you have a 64-bit UltraSPARC processor running
+the 64-bit Solaris kernel, if your compiler only works with 32-bit
+objects then it won't successfully link the 64-bit Solaris 8
+Netscape LDAP library.
+
+GCC (up to version 2.95.2) does not work properly with 64-bit objects
+under Solaris, so just use the Solaris 2.6 (32-bit) Netscape LDAP
+library and everything should be fine.
+
+Q: Can I use a third-party client LDAP library (such as Netscape's)
+on Solaris 7? David Begley writes:
+
+Yes, but if you have the Solaris 7 LDAP library installed (package
+SUNWlldap or SUNWldapx) configure will find it before the third-party
+library - in this case, you can't rely on the auto-lib-type detection of
+configure and must use the "--with-ldap-lib=" parameter.
+
+Q: Why does linking fail on Solaris 2.6 (complaining about
+relocations remaining against libcrypt)? David Begley
+writes:
+
+In short, the problem is that GCC is looking for a shared libcrypt
+(in response to the "--shared" parameter) which doesn't exist on
+Solaris 2.6 (but does on Solaris 7).  The fix is quite simple, use
+"-G" instead of "--shared" (could this be a GCC bug?).  This change
+should already be included in newer versions of pam_ldap.
+
+It doesn't look like libcrypt is even needed if you're using the
+Netscape LDAP client library (maybe it's required for OpenLDAP?).
+
 3. glibc 2.0 compatibility
 --------------------------
 
