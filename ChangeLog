@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+121	Luke Howard <lukeh@padl.com>
+
+	* fixed BUG#49 (acknowledged race condition)
+
 120	Luke Howard <lukeh@padl.com>
 
 	* added Makefile.aix and exports.aix (forgot)

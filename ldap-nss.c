@@ -701,7 +701,7 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 
   debug ("==> _nss_ldap_ent_context_init");
 
-  nss_context_lock ();
+  nss_lock ();
 
   ctx = *pctx;
 
@@ -710,7 +710,7 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
       ctx = (ent_context_t *) malloc (sizeof (*ctx));
       if (ctx == NULL)
 	{
-	  nss_context_unlock ();
+	  nss_unlock ();
 	  debug ("<== _nss_ldap_ent_context_init");
 	  return NULL;
 	}
@@ -733,26 +733,23 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 
   LS_INIT (ctx->ec_state);
 
-  nss_context_unlock ();
+  nss_unlock ();
 
   debug ("<== _nss_ldap_ent_context_init");
   return ctx;
 }
 
 /*
- * Clears a given context; this is called from endXXent() and so we
- * can grab the lock.
+ * Clears a given context; as of nss_ldap-121
+ * we require the caller to acquire the lock.
  */
 void
 _nss_ldap_ent_context_zero (ent_context_t * ctx)
 {
   debug ("==> _nss_ldap_ent_context_zero");
 
-  nss_context_lock ();
-
   if (ctx == NULL)
     {
-      nss_context_unlock ();
       debug ("<== _nss_ldap_ent_context_zero");
       return;
     }
@@ -774,8 +771,6 @@ _nss_ldap_ent_context_zero (ent_context_t * ctx)
 
   LS_INIT (ctx->ec_state);
 
-  nss_context_unlock ();
-
   debug ("<== _nss_ldap_ent_context_zero");
 
   return;
@@ -790,9 +785,15 @@ _nss_ldap_ent_context_free (ent_context_t ** ctx)
 {
   debug ("==> _nss_ldap_ent_context_free");
 
+  /*
+   * acquire the lock as _nss_ldap_ent_context_zero()
+   * no longer does so.
+   */
+  nss_lock ();
   _nss_ldap_ent_context_zero (*ctx);
   free (*ctx);
   *ctx = NULL;
+  nss_unlock ();
 
   debug ("<== _nss_ldap_ent_context_free");
 
@@ -1370,7 +1371,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
    * of the context.
    */
 
-  nss_context_lock ();
+  nss_lock ();
 
   /*
    * If ctx->ec_msgid < 0, then we haven't searched yet. Let's do it!
@@ -1383,7 +1384,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
 	_nss_ldap_search (NULL, filterprot, attrs, LDAP_NO_LIMIT, &msgid);
       if (stat != NSS_SUCCESS)
 	{
-	  nss_context_unlock ();
+	  nss_unlock ();
 	  debug ("<== _nss_ldap_getent");
 	  return stat;
 	}
@@ -1392,7 +1393,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
     }
 
 
-  nss_context_unlock ();
+  nss_unlock ();
 
   stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
 
@@ -1417,14 +1418,14 @@ _nss_ldap_getbyname (ldap_args_t * args,
   NSS_STATUS stat = NSS_NOTFOUND;
   ent_context_t ctx;
 
-  nss_context_lock ();
+  nss_lock ();
 
   debug ("==> _nss_ldap_getbyname");
 
   stat = _nss_ldap_search (args, filterprot, attrs, 1, &ctx.ec_msgid);
   if (stat != NSS_SUCCESS)
     {
-      nss_context_unlock ();
+      nss_unlock ();
       debug ("<== _nss_ldap_getbyname");
       return stat;
     }
@@ -1441,10 +1442,10 @@ _nss_ldap_getbyname (ldap_args_t * args,
 
   stat = do_parse (&ctx, result, buffer, buflen, errnop, parser);
 
-  /* is there a race condition here? */
-  nss_context_unlock ();
-
   _nss_ldap_ent_context_zero (&ctx);
+
+  /* moved unlock here to avoid race condition bug #49 */
+  nss_unlock ();
 
   debug ("<== _nss_ldap_getbyname");
 

@@ -61,6 +61,7 @@ static char rcsId[] =
 
 #include "ldap-nss.h"
 #include "ldap-ethers.h"
+#include "globals.h"
 #include "util.h"
 
 #ifdef IRS_NSS

@@ -325,20 +325,19 @@ typedef nss_status_t NSS_STATUS;
 
 #ifdef GNU_NSS
 #if defined(DL_NSS)
-#define __nss_lock()
-#define __nss_unlock()
+#define nss_lock()		/* NOOP */
+#define nss_unlock()		/* NOOP */
 #else
-#define __nss_lock()		__libc_lock_lock(_nss_ldap_lock)
-#define __nss_unlock()		__libc_lock_unlock(_nss_ldap_lock)
-#endif /* */
+#define nss_lock()		__libc_lock_lock(_nss_ldap_lock)
+#define nss_unlock()		__libc_lock_unlock(_nss_ldap_lock)
+#endif /* DL_NSS */
 #elif defined(IRS_NSS)
-/* XXX no mutex support */
-#define __nss_lock()		pthread_mutex_lock(&_nss_ldap_lock)
-#define __nss_unlock()		pthread_mutex_unlock(&_nss_ldap_lock)
+#define nss_lock()		pthread_mutex_lock(&_nss_ldap_lock)
+#define nss_unlock()		pthread_mutex_unlock(&_nss_ldap_lock)
 #else
-#define __nss_lock()		mutex_lock(&_nss_ldap_lock)
-#define __nss_unlock()		mutex_unlock(&_nss_ldap_lock)
-#endif
+#define nss_lock()		mutex_lock(&_nss_ldap_lock)
+#define nss_unlock()		mutex_unlock(&_nss_ldap_lock)
+#endif 
 
 typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *,
 				char *, size_t);
@@ -362,32 +361,14 @@ typedef struct ldap_error ldap_error_t;
 
 #else
 
-#define nss_libldap_lock()		__nss_lock()
-#define nss_libldap_unlock()		__nss_unlock()
+#define nss_libldap_lock()		nss_lock()
+#define nss_libldap_unlock()		nss_unlock()
 
 #endif /* LDAP_VERSION3_API */
 
 #ifdef SUN_NSS
-/* paranoia - maybe we do need to lock it */
-#define nss_context_lock()	__nss_lock()
-#define nss_context_unlock()	__nss_unlock()
-
-/* (Solaris) we leak a mutex at the expense of avoiding race conditions. */
-#define nss_cleanup()
-
-#else
-
-#define nss_context_lock()	__nss_lock()
-#define nss_context_unlock()	__nss_unlock()
-#define nss_cleanup()
-
-#endif
-
-
-#ifdef SUN_NSS
 NSS_STATUS _nss_ldap_default_destr (nss_backend_t *, void *);
 #endif
-
 
 /*
  * context management routines.
