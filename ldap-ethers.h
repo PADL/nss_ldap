@@ -20,28 +20,27 @@
    $Id$
  */
 
-#ifdef HAVE_NETINET_IF_ETHER_H
-#include <netinet/if_ether.h>
-#else
-#include <netinet/ether.h>
-#endif
-
 #ifndef _LDAP_NSS_LDAP_LDAP_ETHERS_H
 #define _LDAP_NSS_LDAP_LDAP_ETHERS_H
 
+#ifdef HAVE_NETINET_IF_ETHER_H
+#include <netinet/if_ether.h>
+#endif
+#ifdef HAVE_NETINET_ETHER_H
+#include <netinet/ether.h>
+#endif
+
+#ifndef HAVE_STRUCT_ETHER_ADDR
+struct ether_addr {
+  u_char ether_addr_octet[6];
+};
+#endif
 
 struct ether
 {
   char *e_name;
   struct ether_addr e_addr;
 };
-
-/*
-   typedef u_char ether_addr_t[6];
-   struct ether_addr {
-   u_char  ether_addr_octet[6];
-   };
- */
 
 static NSS_STATUS _nss_ldap_parse_ether (LDAP * ld,
 					 LDAPMessage * e,

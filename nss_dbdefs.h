@@ -96,6 +96,7 @@ typedef struct nss_XbyY_args {
  
 	void *returnval;
 	int erange;
+#undef h_errno
 	int h_errno;
 	nss_status_t status;
 } nss_XbyY_args_t;

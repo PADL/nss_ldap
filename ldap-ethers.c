@@ -81,9 +81,17 @@ static char rcsId[] =
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 
 #ifdef HAVE_NSSWITCH_H
+#ifdef HAVE_ETHER_ATON
 extern struct ether_addr *ether_aton (char *s);
+#else
+static struct ether_addr *ether_aton (char *s);
+#endif /* HAVE_ETHER_ATON */
+#ifdef HAVE_ETHER_NTOA
 extern char *ether_ntoa (struct ether_addr *e);
-#endif
+#else
+static char *ether_ntoa (struct ether_addr *e);
+#endif /* HAVE_ETHER_NTOA */
+#endif /* HAVE_NSSWITCH_H */
 
 #ifdef HAVE_NSS_H
 static ent_context_t *ether_context = NULL;
@@ -303,5 +311,41 @@ _nss_ldap_ethers_constr (const char *db_name,
 }
 
 #endif /* !HAVE_NSS_H */
+
+#ifdef HAVE_NSSWITCH_H
+
+#ifndef HAVE_ETHER_ATON
+static struct ether_addr *ether_aton (char *s)
+{
+	static struct ether_addr ep;
+	register int i;
+	unsigned int t[6];
+        
+	i = sscanf(s, " %x:%x:%x:%x:%x:%x",
+		&t[0], &t[1], &t[2], &t[3], &t[4], &t[5]);
+	if (i != 6)
+		return NULL;
+	for (i = 0; i < 6; i++)
+		ep.ether_addr_octet[i] = t[i];
+
+	return &ep;
+}
+#endif /* !HAVE_ETHER_ATON */
+
+#ifndef HAVE_ETHER_NTOA
+#define EI(i)	(unsigned int)(e->ether_addr_octet[(i)])
+static char *ether_ntoa (struct ether_addr *e)
+{
+	static char s[18];
+
+	s[0] = 0;
+	sprintf(s, "%x:%x:%x:%x:%x:%x",
+		EI(0), EI(1), EI(2), EI(3), EI(4), EI(5));
+
+	return s;
+}
+#endif /* !HAVE_ETHER_NTOA */
+
+#endif /* HAVE_NSSWITCH_H */
 
 #endif /* !HAVE_IRS_H */

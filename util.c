@@ -283,7 +283,7 @@ _nss_ldap_getrdnvalue (LDAP * ld,
   return status;
 }
 
-NSS_STATUS
+static NSS_STATUS
 do_getrdnvalue (const char *dn,
 		const char *rdntype,
 		char **rval, char **buffer, size_t * buflen)

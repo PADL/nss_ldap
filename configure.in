@@ -130,6 +130,17 @@ AC_CHECK_FUNCS(snprintf)
 AC_CHECK_FUNCS(gethostbyname)
 AC_CHECK_FUNCS(nsdispatch)
 AC_CHECK_FUNCS(pthread_atfork)
+AC_CHECK_FUNCS(ether_aton)
+AC_CHECK_FUNCS(ether_ntoa)
+
+AC_MSG_CHECKING(for struct ether_addr)
+AC_TRY_COMPILE([#include <netinet/if_ether.h>],
+	[struct ether_addr x;],
+	[
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(HAVE_STRUCT_ETHER_ADDR, 1)
+	],
+	AC_MSG_RESULT(no))
 
 dnl check which ldap library we have
 if test -z "$with_ldap_lib"; then

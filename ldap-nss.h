@@ -315,13 +315,14 @@ struct ldap_session
 
 typedef struct ldap_session ldap_session_t;
 
-#if !defined(HAVE_NSSWITCH_H)
+#ifndef HAVE_NSSWITCH_H
 #ifndef UID_NOBODY
 #define UID_NOBODY      (-2)
 #endif
-#ifndef GID_NOBODY
-#define GID_NOBODY     (-2)
 #endif
+
+#ifndef GID_NOBODY
+#define GID_NOBODY     UID_NOBODY
 #endif
 
 enum ldap_args_types
