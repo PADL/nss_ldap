@@ -3423,7 +3423,7 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
 
 #if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
 static int
-do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *p)
+do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 {
   char *authzid = (char *) defaults;
   sasl_interact_t *interact = (sasl_interact_t *) _interact;

@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+209	Luke Howard <lukeh@padl.com>
+
+	* fix SASL breakage
+
 208	Luke Howard <lukeh@padl.com>
 
 	* use socklen_t not int
