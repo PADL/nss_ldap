@@ -44,7 +44,7 @@ static char rcsId[] = "$Id$";
 #include "ltf.h"
 #include "util.h"
 
-static void ldap_close (struct irs_acc *this);
+static void irs_ldap_close (struct irs_acc *this);
 
 /* Dispatch table for IRS LDAP module */
 
@@ -72,15 +72,9 @@ irs_ldap_acc (const char *options)
   acc->pr_map = irs_ldap_pr;
   acc->ho_map = irs_ldap_ho;
   acc->nw_map = irs_ldap_nw;
-
-  /* haven't done netgroups yet */
-#if 0
   acc->ng_map = irs_ldap_ng;
-#else
-  acc->ng_map = NULL;
-#endif
 
-  acc->close = ldap_close;
+  acc->close = irs_ldap_close;
 
   return (acc);
 }
@@ -88,7 +82,7 @@ irs_ldap_acc (const char *options)
 /* Methods */
 
 static void
-ldap_close (struct irs_acc *this)
+irs_ldap_close (struct irs_acc *this)
 {
   free (this);
 }

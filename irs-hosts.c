@@ -181,7 +181,10 @@ irs_ldap_ho (struct irs_acc *this)
 
   pvt = calloc (1, sizeof (*pvt));
   if (pvt == NULL)
-    return NULL;
+    {
+      free (ho);
+      return NULL;
+    }
 
   pvt->state = NULL;
   ho->private = pvt;

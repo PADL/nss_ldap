@@ -47,6 +47,10 @@ static char rcsId[] =
 #define TABLE_USER	"user"
 #define TABLE_GROUP	"group"
 
+#ifndef S_DN
+#define S_DN		"DN"
+#endif /* S_DN */
+
 static struct irs_gr *uess_gr_be = NULL;
 static struct irs_pw *uess_pw_be = NULL;
 
@@ -82,6 +86,7 @@ static NSS_STATUS uess_get_groupsids (LDAP * ld, LDAPMessage * e, ldap_uess_args
 static NSS_STATUS uess_get_registry (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 static NSS_STATUS uess_get_gecos (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 static NSS_STATUS uess_get_pwd (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_dn (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 
 /* dispatch table for retrieving UESS attribute from an LDAP entry */
 struct ldap_uess_fn
@@ -102,6 +107,7 @@ static struct ldap_uess_fn __uess_fns[] = {
   {S_SHELL, uess_get_char},
   {S_PGRP, uess_get_pgrp},
   /* add additional attributes we know about here */
+  {S_DN, uess_get_dn},
   {NULL, NULL}
 };
 
@@ -382,7 +388,7 @@ uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
       return NSS_NOTFOUND;
     }
 
-  stat = uess_get_char (ld, e, lua, i);
+  stat = uess_get_char_ex (ld, e, lua, i, attrs[0]);
 
   ldap_msgfree (res);
 
@@ -556,6 +562,19 @@ uess_get_gecos (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
     }
 
   return stat;
+}
+
+/*
+ * Get the DN 
+ */
+static NSS_STATUS
+uess_get_dn (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
+{
+  lua->lua_results[i].attr_un.au_char = ldap_get_dn (ld, e);
+  if (lua->lua_results[i].attr_un.au_char == NULL)
+    return NSS_NOTFOUND;
+
+  return NSS_SUCCESS;
 }
 
 static NSS_STATUS
@@ -769,13 +788,69 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
   return AUTH_SUCCESS;
 }
 
-#if 0
-/* not implemented yet */
+/*
+ *
+ */
+static NSS_STATUS
+uess_get_pwuid(const char *user, uid_t *uid)
+{
+  char **vals;
+  LDAPMessage *res, *e;
+  const char *attrs[2];
+  NSS_STATUS stat;
+  ldap_args_t a;
+
+  LA_INIT (a);
+  LA_TYPE (a) = LA_TYPE_STRING;
+  LA_STRING (a) = user;
+
+  attrs[0] = ATM (passwd, uidNumber);
+  attrs[1] = NULL;
+
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwuid, LM_PASSWD,
+			     attrs, 1, &res);
+  if (stat != NSS_SUCCESS)
+      return stat;
+
+  e = _nss_ldap_first_entry (res);
+  if (e == NULL)
+    {
+      ldap_msgfree (res);
+      return NSS_NOTFOUND;
+    }
+
+  vals = _nss_ldap_get_values (e, attrs[0]);
+  if (vals == NULL)
+    {
+      ldap_msgfree (res);
+      return NSS_NOTFOUND;
+    }
+
+  if (vals[0] == NULL || (vals[0])[0] == '\0')
+    {
+      ldap_value_free (vals);
+      ldap_msgfree (res);
+      return NSS_NOTFOUND;
+    }
+
+  *uid = atoi(vals[0]);
+
+  ldap_value_free (vals);
+  ldap_msgfree (res);
+
+  return NSS_SUCCESS;
+}
+
+/*
+ *
+ */
 static int
 _nss_ldap_getgrusers (char *group, void *result, int type, int *size)
 {
   struct group *gr;
   struct irs_gr *be;
+  char **memp;
+  size_t i;
 
   be = (struct irs_gr *) gr_pvtinit ();
   if (be == NULL)
@@ -787,15 +862,89 @@ _nss_ldap_getgrusers (char *group, void *result, int type, int *size)
   gr = (be->byname) (be, group);
   if (gr == NULL)
     {
-      errno = ENOENT;
       (be->close) (be);
+      errno = ENOENT;
       return -1;
     }
 
+  if (gr->gr_mem == NULL)
+    {
+      (be->close) (be);
+      *size = 0;
+      return 0;
+    }
+
+  for (i = 0; gr->gr_mem[i] != NULL; i++)
+    ;
+
+  if (i > *size)
+    {
+      (be->close) (be);
+      *size = i;
+      errno = ERANGE;
+      return -1;
+    }
+
+  _nss_ldap_enter ();
+
+  for (i = 0, memp = gr->gr_mem; *memp != NULL; memp++)
+    {
+      if (type == SEC_INT)
+	{
+	  if (uess_get_pwuid(*memp, &(((uid_t *)result)[i])) != NSS_SUCCESS)
+	    continue;
+	}
+      else
+	{
+	  ((char **)result)[i] = strdup(*memp);
+	  if (((char **)result)[i] == NULL)
+	    {
+	      _nss_ldap_leave ();
+	      (be->close) (be);
+	      errno = ENOMEM;
+	      return -1;
+	    }
+	}
+      i++;
+    }
+
+  _nss_ldap_leave ();
+
+  *size = i;
+
   (be->close) (be);
+
   return AUTH_SUCCESS;
 }
 
+/*
+ * Additional attributes supported
+ */
+static attrlist_t **
+_nss_ldap_attrlist(void)
+{
+  attrlist_t **a;
+
+  a = malloc(2 * sizeof(attrlist_t *) + sizeof(attrlist_t));
+  if (a == NULL)
+    {
+      errno = ENOMEM;
+      return NULL;
+    }
+
+  a[0] = (attrlist_t *)(a + 2);
+
+  a[0]->al_name = strdup(S_DN);
+  a[0]->al_flags = AL_USERATTR;
+  a[0]->al_type = SEC_CHAR;
+
+  a[1] = NULL;
+
+  return a;
+}
+
+#if 0
+/* not implemented yet */
 static int
 _nss_ldap_normalize (char *longname, char *shortname)
 {
@@ -814,10 +963,11 @@ nss_ldap_initialize (struct secmethod_table *meths)
   meths->method_getgrgid = _nss_ldap_getgrgid;
   meths->method_getgrset = _nss_ldap_getgrset;
   meths->method_getentry = _nss_ldap_getentry;
-#if 0
+#if UESS_EXPERIMENTAL
+  meths->method_attrlist = _nss_ldap_attrlist;
   meths->method_getgrusers = _nss_ldap_getgrusers;
-  meths->method_normalize = _nss_ldap_normalize;
-#endif
+#endif /* UESS_EXPERIMENTAL */
+/*  meths->method_normalize = _nss_ldap_normalize; */
 
   /*
    * These casts are necessary because the prototypes 

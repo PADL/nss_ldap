@@ -9,10 +9,11 @@ $Id$
 	* support for searching using range retrieval
 	* fix memory leak with private contexts
 	* fix memory leak in do_result()
-	* implement of _nss_ldap_getentry for AIX enumeration
-	* preliminary implementation of netgroup support for
-	  IRS and AIX
-	* remove dependency on Berkeley DB
+	* implement _nss_ldap_getentry for AIX enumeration
+	* implement netgroups for IRS/AIX
+	* remove dependency on Berkeley DB - schema mapping
+	  and RFC2307bis no longer requires DB
+	* remove old NeXT cruft in resolve.c
 
 220	Luke Howard <lukeh@padl.com>
 

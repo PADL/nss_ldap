@@ -101,7 +101,10 @@ irs_ldap_pr (struct irs_acc *this)
 
   pvt = calloc (1, sizeof (*pvt));
   if (pvt == NULL)
-    return NULL;
+    {
+      free (pr);
+      return NULL;
+    }
 
   pvt->state = NULL;
   pr->private = pvt;

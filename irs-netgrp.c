@@ -48,14 +48,20 @@ ng_test (struct irs_ng *this,
   li_args.lia_depth = 0;
   li_args.lia_erange = 0;
 
+  _nss_ldap_enter ();
+
   /* fall through to NSS implementation */
   parseStat = do_innetgr (&li_args, host, user, domain);
   if (parseStat != NSS_SUCCESS && parseStat != NSS_NOTFOUND)
     {
       if (li_args.lia_erange)
 	errno = ERANGE;
+      _nss_ldap_leave ();
+
       return 0;
     }
+
+  _nss_ldap_leave ();
 
   return (li_args.lia_netgr_status == NSS_NETGR_FOUND);
 }
@@ -93,154 +99,29 @@ ng_rewind (struct irs_ng *this, const char *group)
   _nss_ldap_leave ();
 }
 
-/*
- * This code is essentially the same as that for the
- * nsswitch implementation in ldap-netgrp.c
- */
 IRS_EXPORT int
-ng_next (struct irs_ng *this, char **host, char **user, char **domain)
+ng_next (struct irs_ng *this, char **machine, char **user, char **domain)
 {
-  nss_ldap_netgr_backend_t *ngbe;
-  NSS_STATUS parseStat = NSS_NOTFOUND;
-  ent_context_t *ctx;
-  char *buffer;
-  size_t buflen;
+  nss_ldap_netgr_backend_t *ngbe = (nss_ldap_netgr_backend_t *) this->private;
+  enum nss_netgr_status netgr_stat;
+  NSS_STATUS stat;
 
-  ngbe = (nss_ldap_netgr_backend_t *) this->private;
-
-  ctx = ngbe->state;
-  if (ctx == NULL)
+  if (ngbe->state == NULL)
     return 0;
 
-  buffer = ngbe->buffer;
-  buflen = NSS_BUFLEN_NETGROUP;
+  _nss_ldap_enter ();
 
-  do
-    {
-      NSS_STATUS resultStat = NSS_SUCCESS;
-      char **vals, **p;
-      ldap_state_t *state = &ctx->ec_state;
-      struct __netgrent __netgrent;
-      LDAPMessage *e;
+  stat = do_getnetgrent (ngbe,
+			 ngbe->buffer,
+			 NSS_BUFLEN_NETGROUP,
+			 &netgr_stat,
+			 machine,
+			 user,
+			 domain);
 
-      if (state->ls_retry == 0 && state->ls_info.ls_index == -1)
-	{
-	  resultStat = NSS_NOTFOUND;
+  _nss_ldap_leave ();
 
-	  if (ctx->ec_res != NULL)
-	    {
-	      e = _nss_ldap_first_entry (ctx->ec_res);
-	      if (e != NULL)
-		resultStat = NSS_SUCCESS;
-	    }
-
-	  if (resultStat != NSS_SUCCESS)
-	    {
-	      /* chase nested netgroups */
-	      resultStat = nn_chase (ngbe, &e);
-	    }
-
-	  if (resultStat != NSS_SUCCESS)
-	    {
-	      parseStat = resultStat;
-	      break;
-	    }
-
-	  assert (e != NULL);
-
-	  /* Push nested netgroups onto stack for deferred chasing */
-	  vals = _nss_ldap_get_values (e, AT (memberNisNetgroup));
-	  if (vals != NULL)
-	    {
-	      for (p = vals; *p != NULL; p++)
-		{
-		  parseStat = nn_push (&ngbe->needed_groups, *p);
-		  if (parseStat != NSS_SUCCESS)
-		    break;
-		}
-	      ldap_value_free (vals);
-
-	      if (parseStat != NSS_SUCCESS)
-		break;		/* out of memory */
-	    }
-	}
-      else
-	{
-	  assert (ctx->ec_res != NULL);
-	  e = _nss_ldap_first_entry (ctx->ec_res);
-	  if (e == NULL)
-	    {
-	      /* This should never happen, but we fail gracefully. */
-	      parseStat = NSS_UNAVAIL;
-	      break;
-	    }
-	}
-
-      /* We have an entry; now, try to parse it. */
-      vals = _nss_ldap_get_values (e, AT (nisNetgroupTriple));
-      if (vals == NULL)
-	{
-	  state->ls_info.ls_index = -1;
-	  parseStat = NSS_NOTFOUND;
-	  ldap_msgfree (ctx->ec_res);
-	  ctx->ec_res = NULL;
-	  continue;
-	}
-
-      switch (state->ls_info.ls_index)
-	{
-	case 0:
-	  /* last time. decrementing ls_index to -1 AND returning
-	   * an error code will force this entry to be discared.
-	   */
-	  parseStat = NSS_NOTFOUND;
-	  break;
-	case -1:
-	  /* first time */
-	  state->ls_info.ls_index = ldap_count_values (vals);
-	  /* fall off to default... */
-	default:
-	  __netgrent.data = vals[state->ls_info.ls_index - 1];
-	  __netgrent.data_size = strlen (vals[state->ls_info.ls_index - 1]);
-	  __netgrent.cursor = __netgrent.data;
-	  __netgrent.first = 1;
-
-	  parseStat = _nss_ldap_parse_netgr (&__netgrent, buffer, buflen);
-	  if (parseStat != NSS_SUCCESS)
-	    {
-	      break;
-	    }
-	  if (__netgrent.type != triple_val)
-	    {
-	      parseStat = NSS_NOTFOUND;
-	      break;
-	    }
-	  *host = (char *) __netgrent.val.triple.host;
-	  *user = (char *) __netgrent.val.triple.user;
-	  *domain = (char *) __netgrent.val.triple.domain;
-	  break;
-	}
-
-      ldap_value_free (vals);
-      state->ls_info.ls_index--;
-
-      /* hold onto the state if we're out of memory XXX */
-      state->ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
-
-      if (state->ls_retry == 0 && state->ls_info.ls_index == -1)
-	{
-	  ldap_msgfree (ctx->ec_res);
-	  ctx->ec_res = NULL;
-	}
-    }
-  while (parseStat == NSS_NOTFOUND);
-
-  if (parseStat == NSS_TRYAGAIN)
-    {
-      errno = ERANGE;
-    }
-
-  return (parseStat == NSS_SUCCESS) ? 1 : 0;
+  return (stat == NSS_SUCCESS);
 }
 
 IRS_EXPORT void
@@ -272,7 +153,7 @@ ng_close (struct irs_ng *this)
     }
 
   free (this);
-#endif
+#endif /* HAVE_USERSEC_H */
 }
 
 #ifdef HAVE_USERSEC_H
@@ -292,7 +173,10 @@ irs_ldap_ng (struct irs_acc *this)
 
   pvt = calloc (1, sizeof (*pvt));
   if (pvt == NULL)
-    return NULL;
+    {
+      free (ng);
+      return NULL;
+    }
 
   pvt->state = NULL;
   ng->private = pvt;

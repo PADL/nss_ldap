@@ -568,45 +568,33 @@ nn_chase (nss_ldap_netgr_backend_t * ngbe, LDAPMessage ** pEntry)
 }
 #endif /* HAVE_NSSWITCH_H || HAVE_IRS_H */
 
-#ifdef HAVE_NSSWITCH_H
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_IRS_H)
+/*
+ * getnetgrent() inner implementation, used by both Solaris NSS
+ * and IRS/AIX
+ */
 static NSS_STATUS
-_nss_ldap_getnetgroup_endent (nss_backend_t * be, void *_args)
+do_getnetgrent (nss_ldap_netgr_backend_t *be,
+		char *buffer, size_t buflen,
+		enum nss_netgr_status *status,
+		char **machine, char **user, char **domain)
 {
-  LOOKUP_ENDENT (be);
-}
-
-static NSS_STATUS
-_nss_ldap_getnetgroup_setent (nss_backend_t * be, void *_args)
-{
-  return NSS_SUCCESS;
-}
-
-static NSS_STATUS
-_nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
-{
-  struct nss_getnetgrent_args *args = (struct nss_getnetgrent_args *) _args;
-  nss_ldap_netgr_backend_t *be = (nss_ldap_netgr_backend_t *) _be;
   ent_context_t *ctx;
   NSS_STATUS parseStat = NSS_NOTFOUND;
-  char *buffer;
-  size_t buflen;
 
   /*
    * This function is called with the pseudo-backend that
    * we created in _nss_ldap_setnetgrent() (see below)
    */
-  debug ("==> _nss_ldap_getnetgroup_getent");
+  debug ("==> do_getnetgrent");
 
   ctx = be->state;
   assert (ctx != NULL);
 
-  buffer = args->buffer;
-  buflen = args->buflen;
-
-  args->status = NSS_NETGR_NO;
-  args->retp[NSS_NETGR_MACHINE] = NULL;
-  args->retp[NSS_NETGR_USER] = NULL;
-  args->retp[NSS_NETGR_DOMAIN] = NULL;
+  *status = NSS_NETGR_NO;
+  *machine = NULL;
+  *user = NULL;
+  *domain = NULL;
 
   do
     {
@@ -708,10 +696,9 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 	      parseStat = NSS_NOTFOUND;
 	      break;
 	    }
-	  args->retp[NSS_NETGR_MACHINE] = (char *) __netgrent.val.triple.host;
-	  args->retp[NSS_NETGR_USER] = (char *) __netgrent.val.triple.user;
-	  args->retp[NSS_NETGR_DOMAIN] =
-	    (char *) __netgrent.val.triple.domain;
+	  *machine = (char *) __netgrent.val.triple.host;
+	  *user = (char *) __netgrent.val.triple.user;
+	  *domain = (char *) __netgrent.val.triple.domain;
 	  break;
 	}
 
@@ -720,8 +707,7 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 
       /* hold onto the state if we're out of memory XXX */
       state->ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
-      args->status =
-	(parseStat == NSS_SUCCESS) ? NSS_NETGR_FOUND : NSS_NETGR_NOMEM;
+      *status = (parseStat == NSS_SUCCESS) ? NSS_NETGR_FOUND : NSS_NETGR_NOMEM;
 
       if (state->ls_retry == 0 && state->ls_info.ls_index == -1)
 	{
@@ -736,13 +722,11 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
       errno = ERANGE;
     }
 
-  debug ("<== _nss_ldap_getnetgroup_getent");
+  debug ("<== do_getnetgrent");
 
   return parseStat;
 }
-#endif /* HAVE_NSSWITCH_H */
 
-#if defined(HAVE_NSSWITCH_H) || defined(HAVE_IRS_H)
 /*
  * Test a 4-tuple
  */
@@ -878,6 +862,40 @@ do_innetgr (ldap_innetgr_args_t * li_args,
 
 #ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
+_nss_ldap_getnetgroup_endent (nss_backend_t * be, void *_args)
+{
+  LOOKUP_ENDENT (be);
+}
+
+static NSS_STATUS
+_nss_ldap_getnetgroup_setent (nss_backend_t * be, void *_args)
+{
+  return NSS_SUCCESS;
+}
+
+static NSS_STATUS
+_nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
+{
+  nss_ldap_netgr_backend_t *be = (nss_ldap_netgr_backend_t *) _be;
+  struct nss_getnetgrent_args *args = (struct nss_getnetgrent_args *) _args;
+  NSS_STATUS stat;
+
+  _nss_ldap_enter ();
+
+  stat = do_getnetgrent (be,
+			 args->buffer,
+			 args->buflen,
+			 &args->status,
+			 &args->retp[NSS_NETGR_MACHINE],
+			 &args->retp[NSS_NETGR_USER],
+			 &args->retp[NSS_NETGR_DOMAIN]);
+
+  _nss_ldap_leave ();
+
+  return stat;
+}
+
+static NSS_STATUS
 _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
@@ -904,6 +922,7 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 	  args->arg[NSS_NETGR_DOMAIN].argc == args->groups.argc);
 
   _nss_ldap_enter ();
+
   for (i = 0; i < args->groups.argc; i++)
     {
       NSS_STATUS parseStat;
@@ -937,6 +956,7 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 	  stat = NSS_SUCCESS;
 	}
     }
+
   _nss_ldap_leave ();
 
   debug ("<== _nss_ldap_innetgr");

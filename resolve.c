@@ -125,19 +125,11 @@ parse_reply (unsigned char *data, int len)
   struct resource_record **rr;
 
   r = (struct dns_reply *) malloc (sizeof (struct dns_reply));
-#ifdef NeXT
-  bzero (r, sizeof (struct dns_reply));
-#else
   memset (r, 0, sizeof (struct dns_reply));
-#endif
   r->q.domain = NULL;
 
   p = data;
-#ifdef NeXT
-  bcopy (p, &r->h, sizeof (HEADER));
-#else
   memcpy (&r->h, p, sizeof (HEADER));
-#endif
   p += sizeof (HEADER);
   for (query = 0; query < ntohs(r->h.qdcount); query++)
     {
@@ -270,11 +262,7 @@ parse_reply (unsigned char *data, int len)
 
 	default:
 	  (*rr)->u.data = (unsigned char *) malloc (size);
-#ifdef NeXT
-	  bcopy (p, (*rr)->u.data, size);
-#else
 	  memcpy ((*rr)->u.data, p, size);
-#endif
 	}
       p += size;
       rr = &(*rr)->next;

@@ -193,7 +193,10 @@ irs_ldap_nw (struct irs_acc *this)
 
   pvt = calloc (1, sizeof (*pvt));
   if (pvt == NULL)
-    return NULL;
+    {
+      free (nw);
+      return NULL;
+    }
 
   pvt->state = NULL;
   nw->private = pvt;
