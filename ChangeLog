@@ -1,6 +1,13 @@
 $Id$
 ===============================================================
 
+233	Luke Howard <lukeh@padl.com>
+
+	* if do_open() returns NSS_UNAVAIL, don't try to do
+	  server reconnect; only do it if NSS_TRYAGAIN is returned
+	  This should fix the problems introduced by the fixes in
+	  nss_ldap-227 (delayed binding)
+
 232	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#138 (blind last char remove in ldap.secret)
