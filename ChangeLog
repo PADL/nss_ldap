@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+99	Luke Howard <lukeh@padl.com>
+
+	* added some netgroup implementation tips
+	* do_close_no_unbind() cleanup
+
 98	Luke Howard <lukeh@padl.com>
 
 	* /etc/nss_ldap.secret -> /etc/ldap.secret (sorry,
