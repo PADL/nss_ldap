@@ -747,7 +747,7 @@ do_innetgr_nested (const char *netgroup,
   LA_STRING (a) = nested;	/* memberNisNetgroup */
 
   stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr,
-			     LM_NETGROUP, 1, &res);
+			     LM_NETGROUP, LDAP_NO_LIMIT, &res);
   if (stat != NSS_SUCCESS)
     {
       debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat,
@@ -755,43 +755,52 @@ do_innetgr_nested (const char *netgroup,
       return stat;
     }
 
-  e = _nss_ldap_first_entry (res);
-  if (e == NULL)
+  stat = NSS_NOTFOUND;
+
+  for (e = _nss_ldap_first_entry (res);
+       e != NULL;
+       e = _nss_ldap_next_entry (res))
     {
-      stat = NSS_NOTFOUND;
-      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat,
-	     *status);
-      ldap_msgfree (res);
-      return stat;
+      values = _nss_ldap_get_values (e, AT (cn));
+      if (values != NULL)
+	{
+	  assert (values[0] != NULL);
+
+	  (*depth)++;
+
+	  if (strcasecmp (netgroup, values[0]) == 0)
+	    {
+	      stat = NSS_SUCCESS;
+	      *status = NSS_NETGR_FOUND;
+	      ldap_value_free (values);
+	      break;
+	    }
+	  ldap_value_free(values);
+	}
     }
 
-  values = _nss_ldap_get_values (e, AT (cn));
-  if (values == NULL)
+  if (stat == NSS_NOTFOUND)
     {
-      stat = NSS_NOTFOUND;
-      debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat,
-	     *status);
-      ldap_msgfree (res);
-      return stat;
+      for (e = _nss_ldap_first_entry (res);
+	   e != NULL;
+	   e = _nss_ldap_next_entry (res))
+	{
+	  values = _nss_ldap_get_values (e, AT (cn));
+	  if (values != NULL)
+	    {
+	      /*
+	       * Then, recurse up to see whether this netgroup belongs
+	       * to the argument
+	       */
+	      stat = do_innetgr_nested (netgroup, values[0], status, depth);
+	      ldap_value_free (values);
+	      if (stat == NSS_SUCCESS && *status == NSS_NETGR_FOUND)
+		  break;
+	    }
+	}
     }
 
   ldap_msgfree (res);
-
-  assert (values[0] != NULL);
-
-  (*depth)++;
-
-  if (strcasecmp (netgroup, values[0]) == 0)
-    {
-      stat = NSS_SUCCESS;
-      *status = NSS_NETGR_FOUND;
-    }
-  else
-    {
-      stat = do_innetgr_nested (netgroup, values[0], status, depth);
-    }
-
-  ldap_value_free (values);
 
   debug ("<== do_innetgr_nested status=%d netgr_status=%d", stat, *status);
 
@@ -823,51 +832,59 @@ do_innetgr (const char *netgroup,
   LA_TRIPLE (a).host = machine;
   LA_TRIPLE (a).domain = domain;
 
-  stat = _nss_ldap_search_s (&a, NULL, LM_NETGROUP, 1, &res);
+  /* There may be multiple matches. */
+  stat = _nss_ldap_search_s (&a, NULL, LM_NETGROUP, LDAP_NO_LIMIT, &res);
   if (stat != NSS_SUCCESS)
     {
       debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
       return stat;
     }
 
-  e = _nss_ldap_first_entry (res);
-  if (e == NULL)
+  stat = NSS_NOTFOUND;
+
+  for (e = _nss_ldap_first_entry (res);
+       e != NULL;
+       e = _nss_ldap_next_entry (res))
     {
-      stat = NSS_NOTFOUND;
-      debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
-      ldap_msgfree (res);
-      return stat;
+      values = _nss_ldap_get_values (e, AT (cn));
+      if (values != NULL)
+	{
+	  assert (values[0] != NULL);
+
+	  if (strcasecmp (netgroup, values[0]) == 0)
+	    {
+	      ldap_value_free (values);
+	      stat = NSS_SUCCESS;
+	      *status = NSS_NETGR_FOUND;
+	      break;
+	    }
+	  ldap_value_free (values);
+	}
     }
 
-  values = _nss_ldap_get_values (e, AT (cn));
-  if (values == NULL)
+  if (stat == NSS_NOTFOUND)
     {
-      stat = NSS_NOTFOUND;
-      debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
-      ldap_msgfree (res);
-      return stat;
+      for (e = _nss_ldap_first_entry (res);
+	   e != NULL;
+	   e = _nss_ldap_next_entry (res))
+	{
+	  values = _nss_ldap_get_values (e, AT (cn));
+	  if (values != NULL)
+	    {
+	      /*
+	       * Then, recurse up to see whether this netgroup belongs
+	       * to the argument
+	       */
+	      stat = do_innetgr_nested (netgroup, values[0], status, &depth);
+	      ldap_value_free (values);
+	      if (stat == NSS_SUCCESS && *status == NSS_NETGR_FOUND)
+		  break;
+	    }
+	}
     }
 
   ldap_msgfree (res);
 
-  assert (values[0] != NULL);
-
-  if (strcasecmp (netgroup, values[0]) == 0)
-    {
-      stat = NSS_SUCCESS;
-      *status = NSS_NETGR_FOUND;
-    }
-  else
-    {
-      stat = do_innetgr_nested (netgroup, values[0], status, &depth);
-    }
-
-  ldap_value_free (values);
-
-  /*
-   * Then, recurse up to see whether this netgroup belongs
-   * to the argument
-   */
   debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
 
   return stat;
