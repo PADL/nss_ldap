@@ -38,6 +38,7 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <shadow.h>
 
 #ifndef __P
 # if defined(__STDC__) || defined(__GNUC__)
@@ -170,6 +171,19 @@ enum ldap_userpassword_selector
 };
 
 typedef enum ldap_userpassword_selector ldap_userpassword_selector_t;
+
+enum ldap_shadow_selector
+{
+  LS_RFC2307_SHADOW,
+  LS_AD_SHADOW,
+  LS_OTHER_SHADOW
+};
+
+typedef enum ldap_shadow_selector ldap_shadow_selector_t;
+
+#ifndef UF_DONT_EXPIRE_PASSWD
+#define UF_DONT_EXPIRE_PASSWD 0x10000
+#endif
 #endif /* AT_OC_MAP */
 
 enum ldap_ssl_options
@@ -276,28 +290,33 @@ struct ldap_config
   time_t ldc_idle_timelimit;
   /* reconnect policy */
   ldap_reconnect_policy_t ldc_reconnect_pol;
-
+  /* sasl security */
+  char *ldc_sasl_secprops;
+#ifdef CONFIGURE_KRB5_CCNAME
+  /* krb5 ccache name */
+  char *ldc_krb5_ccname;
+#endif /* CONFIGURE_KRB5_CCNAME */
 #ifdef AT_OC_MAP
   /*
    * attribute/objectclass maps relative to this config
    */
-  void *ldc_at_map;
-  void *ldc_oc_map;
+  void *ldc_maps[4]; /* must match MAP_MAX */
 
   /*
    * is userPassword "userPassword" or not? 
    * ie. do we need {crypt} to be stripped
    */
   ldap_userpassword_selector_t ldc_password_type;
+  /*
+   * Use active directory time offsets?
+   */
+  ldap_shadow_selector_t ldc_shadow_type;
 #endif				/* AT_OC_MAP */
 
   /* 
    * attribute table for ldap search requensts
    */
   const char **ldc_attrtab[LM_NONE];
-
-  char *ldc_template_homedir;
-  char *ldc_template_loginshell;
 
   /* next configuration. loops back onto itself for last entry */
   struct ldap_config *ldc_next;
@@ -343,6 +362,17 @@ enum ldap_args_types
 };
 
 typedef enum ldap_args_types ldap_args_types_t;
+
+enum ldap_map_type
+{
+  MAP_ATTRIBUTE = 0,
+  MAP_OBJECTCLASS,
+  MAP_OVERRIDE,
+  MAP_DEFAULT,
+  MAP_MAX = MAP_DEFAULT
+};
+
+typedef enum ldap_map_type ldap_map_type_t;
 
 struct ldap_args
 {
@@ -645,19 +675,13 @@ NSS_STATUS _nss_ldap_assign_userpassword (LDAP * ld,	/* IN */
 
 NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc);
 
-#ifdef AT_OC_MAP
-/**
- * Functions for mapping attributes and objectclasses
- * relative to an ldap_config as proposed by Luke Howard
- * in his eMail from Nov 15 2000
- */
-NSS_STATUS _nss_ldap_atmap_put (ldap_config_t * config,
-				const char *rfc2307attribute,
-				const char *attribute);
+int _nss_ldap_shadow_date(const char *val);
+void _nss_ldap_shadow_handle_flag(struct spwd *sp);
 
-NSS_STATUS _nss_ldap_ocmap_put (ldap_config_t * config,
-				const char *rfc2307objectclass,
-				const char *objectclass);
+#ifdef AT_OC_MAP
+NSS_STATUS _nss_ldap_map_put (ldap_config_t * config,
+                              ldap_map_type_t map,
+			      const char *key, const char *value);
 
 NSS_STATUS _nss_ldap_atmap_get (ldap_config_t * config,
 				const char *rfc2307attribute,
@@ -667,8 +691,22 @@ NSS_STATUS _nss_ldap_ocmap_get (ldap_config_t * config,
 				const char *rfc2307objectclass,
 				const char **objectclass);
 
+NSS_STATUS _nss_ldap_ovmap_get (ldap_config_t * config,
+				const char *rfc2307attribute,
+				const char **value);
+
+NSS_STATUS _nss_ldap_dfmap_get (ldap_config_t * config,
+				const char *rfc2307attribute,
+				const char **value);
+
+NSS_STATUS _nss_ldap_map_get (ldap_config_t * config,
+                              ldap_map_type_t map,
+			      const char *key, const char **value);
+
 const char *_nss_ldap_map_at (const char *pChar);
 const char *_nss_ldap_map_oc (const char *pChar);
+const char *_nss_ldap_map_ov (const char *pChar);
+const char *_nss_ldap_map_df (const char *pChar);
 #endif /* AT_OC_MAP */
 
 /*

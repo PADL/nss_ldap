@@ -110,11 +110,15 @@ extern char _nss_ldap_filt_getnetgrent[];
  */
 #define OC(oc)                   _nss_ldap_map_oc(OC##_##oc)
 #define AT(at)                   _nss_ldap_map_at(AT##_##at)
+#define DF(at)                   _nss_ldap_map_df(at)
+#define OV(at)                   _nss_ldap_map_ov(at)
 
 #else /* AT_OC_MAP */
 
 #define OC(oc)                    OC##_##oc
 #define AT(at)                    AT##_##at
+#define DF(at)                    NULL
+#define OV(at)                    NULL
 
 #endif /* AT_OC_MAP */
 

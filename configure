@@ -838,8 +838,8 @@ Optional Features:
   --enable-rfc2307bis       use RFC2307bis schema
   --enable-schema-mapping   enable attribute/objectclass mapping
   --enable-debugging        enable debug code
-  --enable-xad        enable XAD-specific behaviour
   --enable-paged-results    enable paged results control
+  --enable-configurable-krb5-ccname   enable configurable Kerberos V credentials cache name
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -2879,19 +2879,19 @@ if test "${enable_debugging+set}" = set; then
 _ACEOF
 
 fi;
-# Check whether --enable-xad or --disable-xad was given.
-if test "${enable_xad+set}" = set; then
-  enableval="$enable_xad"
-  cat >>confdefs.h <<\_ACEOF
-#define XAD 1
-_ACEOF
-
-fi;
 # Check whether --enable-paged-results or --disable-paged-results was given.
 if test "${enable_paged_results+set}" = set; then
   enableval="$enable_paged_results"
   cat >>confdefs.h <<\_ACEOF
 #define PAGE_RESULTS 1
+_ACEOF
+
+fi;
+# Check whether --enable-configurable-krb5-ccname or --disable-configurable-krb5-ccname was given.
+if test "${enable_configurable_krb5_ccname+set}" = set; then
+  enableval="$enable_configurable_krb5_ccname"
+  cat >>confdefs.h <<\_ACEOF
+#define CONFIGURE_KRB5_CCNAME 1
 _ACEOF
 
 fi;

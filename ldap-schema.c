@@ -309,7 +309,8 @@ init_sp_attributes (const char ***sp_attrs)
   (*sp_attrs)[5] = (char *) AT (shadowWarning);
   (*sp_attrs)[6] = (char *) AT (shadowInactive);
   (*sp_attrs)[7] = (char *) AT (shadowExpire);
-  (*sp_attrs)[8] = NULL;
+  (*sp_attrs)[8] = (char *) AT (shadowFlag);
+  (*sp_attrs)[9] = NULL;
 }
 
 void

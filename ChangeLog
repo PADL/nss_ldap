@@ -4,6 +4,22 @@ $Header$
 208	Luke Howard <lukeh@padl.com>
 
 	* use socklen_t not int
+	* incorporated patches from (see below)
+	  Geert Jansen <Geert.Jansen@shell.com>
+	* add the "sasl_secprops" option to configure SASL
+	  security layers (usage as for OpenLDAP ldap.conf)
+	* add the "krb5_ccname" option to specify the 
+	  location of the Kerberos ticket cache
+	  (requires --enable-configurable-krb5-ccname for
+	  now as it is a fairly coarse solution to a lack
+	  of appropriate API in the Kerberos libraries)
+	* add support for native Active Directory password
+	  policy attributes (enabled if shadowLastChange is
+	  mapped to pwdLastSet)
+	* add "nss_override_attribute_value" and
+	  "nss_default_attribute_value" keywords for over-
+	  riding and setting default attribute values,
+	  respectively
 
 207	Luke Howard <lukeh@padl.com>
 

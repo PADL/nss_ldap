@@ -64,13 +64,6 @@ static NSS_STATUS do_getrdnvalue (const char *dn,
 				  size_t * buflen);
 
 #ifdef AT_OC_MAP
-enum ldap_map_type
-{
-  MAP_ATTRIBUTE,
-  MAP_OBJECTCLASS
-};
-
-typedef enum ldap_map_type ldap_map_type_t;
 
 static NSS_STATUS do_parse_map_statement (ldap_config_t * cfg,
 					  const char *statement,
@@ -445,11 +438,6 @@ static NSS_STATUS
 do_parse_map_statement (ldap_config_t * cfg,
 			const char *statement, ldap_map_type_t type)
 {
-  /**
-   * statement has already been prepared in _nss_ldap_readconfig
-   * => only a split dumping white space inbetween is necessary!
-   */
-  NSS_STATUS stat;
   char *key, *val;
 
   key = (char *) statement;
@@ -461,12 +449,7 @@ do_parse_map_statement (ldap_config_t * cfg,
   while (*val == ' ' || *val == '\t')
     val++;
 
-  if (type == MAP_ATTRIBUTE)
-    stat = _nss_ldap_atmap_put (cfg, key, val);
-  else				/* type == MAP_OBJECTCLASS */
-    stat = _nss_ldap_ocmap_put (cfg, key, val);
-
-  return stat;
+  return _nss_ldap_map_put (cfg, type, key, val);
 }
 #endif /* AT_OC_MAP */
 
@@ -611,10 +594,17 @@ _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_tls_randfile = NULL;
   result->ldc_idle_timelimit = 0;
   result->ldc_reconnect_pol = LP_RECONNECT_HARD;
+  result->ldc_sasl_secprops = NULL;
+#ifdef CONFIGURE_KRB5_CCNAME
+  result->ldc_krb5_ccname = NULL;
+#endif /* CONFIGURE_KRB5_CCNAME */
 #ifdef AT_OC_MAP
-  result->ldc_at_map = NULL;
-  result->ldc_oc_map = NULL;
+  result->ldc_maps[MAP_ATTRIBUTE] = NULL;
+  result->ldc_maps[MAP_OBJECTCLASS] = NULL;
+  result->ldc_maps[MAP_OVERRIDE] = NULL;
+  result->ldc_maps[MAP_DEFAULT] = NULL;
   result->ldc_password_type = LU_RFC2307_USERPASSWORD;
+  result->ldc_shadow_type = LS_RFC2307_SHADOW;
 #endif /* AT_OC_MAP */
 
   result->ldc_next = result;
@@ -822,6 +812,16 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	      result->ldc_reconnect_pol = LP_RECONNECT_SOFT;
 	    }
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_SASL_SECPROPS))
+	{
+	  t = &result->ldc_sasl_secprops;
+	}
+#ifdef CONFIGURE_KRB5_CCNAME
+      else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_CCNAME))
+	{
+	  t = &result->ldc_krb5_ccname;
+	}
+#endif /* CONFIGURE_KRB5_CCNAME */
       else if (!strcasecmp (k, "tls_checkpeer"))
 	{
 	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
@@ -869,6 +869,16 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 			     strlen (NSS_LDAP_KEY_MAP_OBJECTCLASS)))
 	{
 	  do_parse_map_statement (result, v, MAP_OBJECTCLASS);
+	}
+      else if (!strncasecmp (k, NSS_LDAP_KEY_SET_OVERRIDE,
+			     strlen (NSS_LDAP_KEY_SET_OVERRIDE)))
+	{
+	  do_parse_map_statement (result, v, MAP_OVERRIDE);
+	}
+      else if (!strncasecmp (k, NSS_LDAP_KEY_SET_DEFAULT,
+			     strlen (NSS_LDAP_KEY_SET_DEFAULT)))
+	{
+	  do_parse_map_statement (result, v, MAP_DEFAULT);
 	}
 #endif /* AT_OC_MAP */
       else

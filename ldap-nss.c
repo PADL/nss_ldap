@@ -333,9 +333,8 @@ static int
 do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 	   int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-     static int
-       do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-		  int freeit)
+static int
+do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
 #endif
 {
   if (freeit)
@@ -492,7 +491,7 @@ _nss_ldap_enter (void)
 #ifdef HAVE_SIGPROCMASK
   sigemptyset (&sigset);
   sigaddset (&sigset, SIGPIPE);
-  __sigprocmask_retval = sigprocmask (SIG_BLOCK, &sigset, &__signal_mask); 
+  __sigprocmask_retval = sigprocmask (SIG_BLOCK, &sigset, &__signal_mask);
 #elif defined(HAVE_SIGSET)
   __sigpipe_handler = sigset (SIGPIPE, SIG_IGN);
 #else
@@ -523,7 +522,7 @@ _nss_ldap_leave (void)
       (void) sigset (SIGPIPE, __sigpipe_handler);
 # else
       (void) signal (SIGPIPE, __sigpipe_handler);
-# endif /* HAVE_SIGSET */
+# endif	/* HAVE_SIGSET */
     }
 #endif /* HAVE_SIGPROCMASK */
 
@@ -552,7 +551,8 @@ do_set_sockopts (void)
       int off = 0;
       socklen_t namelen = sizeof (struct sockaddr);
 
-      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *) &off, sizeof (off));
+      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *) &off,
+			 sizeof (off));
       (void) fcntl (sd, F_SETFD, FD_CLOEXEC);
       /*
        * NSS modules shouldn't open file descriptors that the program/utility
@@ -648,8 +648,8 @@ do_close_no_unbind (void)
     {
       struct sockaddr sockname;
       struct sockaddr peername;
-      socklen_t socknamelen = sizeof(sockname);
-      socklen_t peernamelen = sizeof(peername);
+      socklen_t socknamelen = sizeof (sockname);
+      socklen_t peernamelen = sizeof (peername);
 
       /*
        * Important to perform comparison "family-aware" to not count
@@ -1227,7 +1227,7 @@ do_open (void)
 /* not in Solaris 9? */
 #ifndef LDAP_OPT_SSL
 #define LDAP_OPT_SSL 0x0A
-#endif 
+#endif
       if (ldap_set_option (__session.ls_conn, LDAP_OPT_SSL, LDAP_OPT_ON) !=
 	  LDAP_SUCCESS)
 	{
@@ -1455,7 +1455,46 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       return ldap_gss_bind (ld, dn, pw, GSSSASL_NO_SECURITY_LAYER,
 			    LDAP_SASL_GSSAPI);
 #else
+# ifdef CONFIGURE_KRB5_CCNAME
+      char tmpbuf[256];
+      static char envbuf[256];
+# endif	/* CONFIGURE_KRB5_CCNAME */
       void *defaults;
+
+      if (__config->ldc_sasl_secprops != NULL)
+	{
+	  rc =
+	    ldap_set_option (ld, LDAP_OPT_X_SASL_SECPROPS,
+			     (void *) __config->ldc_sasl_secprops);
+	  if (rc != LDAP_SUCCESS)
+	    {
+	      debug ("do_bind: unable to set SASL security properties");
+	      return rc;
+	    }
+	}
+
+# ifdef CONFIGURE_KRB5_CCNAME
+      /* Set default Kerberos ticket cache for SASL-GSSAPI */
+      /* There are probably race conditions here XXX */
+      if (__config->ldc_krb5_ccname != NULL)
+	{
+	  char *oldccname;
+
+	  oldccname = getenv ("KRB5CCNAME");
+	  if (oldccname != NULL)
+	    {
+	      strncpy (tmpbuf, oldccname, sizeof (tmpbuf));
+	      tmpbuf[sizeof (tmpbuf) - 1] = '\0';
+	    }
+	  else
+	    {
+	      tmpbuf[0] = '\0';
+	    }
+	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s",
+		    __config->ldc_krb5_ccname);
+	  putenv (envbuf);
+	}
+# endif	/* CONFIGURE_KRB5_CCNAME */
 
       /* FIXME: a little configurability here, perhaps? */
       defaults =
@@ -1466,8 +1505,17 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 					 _nss_ldap_sasl_interact, defaults);
       ber_memfree (defaults);
 
+# ifdef CONFIGURE_KRB5_CCNAME
+      /* Restore default Kerberos ticket cache. */
+      if (__config->ldc_krb5_ccname != NULL)
+	{
+	  snprintf (envbuf, sizeof (envbuf), "KRB5CCNAME=%s", tmpbuf);
+	  putenv (envbuf);
+	}
+# endif	/* CONFIGURE_KRB5_CCNAME */
+
       return rc;
-#endif
+#endif /* HAVE_LDAP_GSS_BIND */
     }
 #endif
 
@@ -2193,8 +2241,7 @@ do_parse_s (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
 NSS_STATUS
 _nss_ldap_read (const char *dn, const char **attributes, LDAPMessage ** res)
 {
-  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)",
-			    attributes, 1,	/* sizelimit */
+  return do_with_reconnect (dn, LDAP_SCOPE_BASE, "(objectclass=*)", attributes, 1,	/* sizelimit */
 			    res, (search_func_t) do_search_s);
 }
 
@@ -2298,7 +2345,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
   if (sel < LM_NONE)
     {
       sd = __session.ls_config->ldc_sds[sel];
-next: if (sd != NULL)
+    next:if (sd != NULL)
 	{
 	  size_t len = strlen (sd->lsd_base);
 	  if (sd->lsd_base[len - 1] == ',')
@@ -2332,11 +2379,11 @@ next: if (sd != NULL)
 
   /* if we got no entry, try the next base */
   if (stat == NSS_SUCCESS && sd && sd->lsd_next &&
-      (ldap_first_entry(__session.ls_conn, *res) == NULL))
+      (ldap_first_entry (__session.ls_conn, *res) == NULL))
     {
       sd = sd->lsd_next;
       if (sd)
-        goto next;
+	goto next;
     }
 
   debug ("<== _nss_ldap_search_s");
@@ -2352,7 +2399,7 @@ NSS_STATUS
 _nss_ldap_search (const ldap_args_t * args,
 		  const char *filterprot,
 		  ldap_map_selector_t sel, int sizelimit, int *msgid,
-		  ldap_service_search_descriptor_t **csd)
+		  ldap_service_search_descriptor_t ** csd)
 {
   char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
   char filterBuf[LDAP_FILT_MAXSIZ];
@@ -2389,7 +2436,7 @@ _nss_ldap_search (const ldap_args_t * args,
 	}
       else
 	{
-          sd = __session.ls_config->ldc_sds[sel];
+	  sd = __session.ls_config->ldc_sds[sel];
 	}
 
       *csd = sd;
@@ -2558,7 +2605,7 @@ next:
       int msgid;
 
       stat = _nss_ldap_search (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid,
-	                       &(*ctx)->ec_sd);
+			       &(*ctx)->ec_sd);
       if (stat != NSS_SUCCESS)
 	{
 	  _nss_ldap_leave ();
@@ -2770,12 +2817,61 @@ _nss_ldap_assign_attrval (LDAP * ld,
 {
   char **vals;
   int vallen;
+#ifdef AT_OC_MAP
+  const char *ovr, *def;
+
+  ovr = OV (attr);
+  if (ovr != NULL)
+    {
+      vallen = strlen (ovr);
+      if (*buflen < (size_t) (vallen + 1))
+	{
+	  return NSS_TRYAGAIN;
+	}
+
+      *valptr = *buffer;
+
+      strncpy (*valptr, ovr, vallen);
+      (*valptr)[vallen] = '\0';
+
+      *buffer += vallen + 1;
+      *buflen -= vallen + 1;
+
+      return NSS_SUCCESS;
+    }
+#endif /* AT_OC_MAP */
 
   vals = ldap_get_values (ld, e, (char *) attr);
   if (vals == NULL)
+#ifdef AT_OC_MAP
     {
-      return NSS_NOTFOUND;
+      def = DF (attr);
+      if (def != NULL)
+	{
+	  vallen = strlen (def);
+	  if (*buflen < (size_t) (vallen + 1))
+	    {
+	      return NSS_TRYAGAIN;
+	    }
+
+	  *valptr = *buffer;
+
+	  strncpy (*valptr, def, vallen);
+	  (*valptr)[vallen] = '\0';
+
+	  *buffer += vallen + 1;
+	  *buflen -= vallen + 1;
+
+	  return NSS_SUCCESS;
+	}
+      else
+	{
+	  return NSS_NOTFOUND;
+	}
     }
+#else
+    return NSS_NOTFOUND;
+#endif /* AT_OC_MAP */
 
   vallen = strlen (*vals);
   if (*buflen < (size_t) (vallen + 1))
@@ -2924,6 +3020,34 @@ _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
   return ret;
 }
 
+int
+_nss_ldap_shadow_date (const char *val)
+{
+  int date;
+
+  if (__config->ldc_shadow_type == LS_AD_SHADOW)
+    {
+      date = atoll (val) / 864000000000LL - 134774LL;
+      date = (date > 99999) ? 99999 : date;
+    }
+  else
+    {
+      date = atol (val);
+    }
+  return date;
+}
+
+void
+_nss_ldap_shadow_handle_flag (struct spwd *sp)
+{
+  if (__config->ldc_shadow_type == LS_AD_SHADOW)
+    {
+      if (sp->sp_flag & UF_DONT_EXPIRE_PASSWD)
+	sp->sp_max = 99999;
+      sp->sp_flag = 0;
+    }
+}
+
 #ifdef AT_OC_MAP
 const char *
 _nss_ldap_map_at (const char *attribute)
@@ -2949,84 +3073,95 @@ _nss_ldap_map_oc (const char *objectclass)
   return mapped;
 }
 
-NSS_STATUS
-_nss_ldap_atmap_put (ldap_config_t * config,
-		     const char *rfc2307attribute, const char *attribute)
+const char *
+_nss_ldap_map_ov (const char *attribute)
 {
-  DBT key, val;
-  int rc;
-  char *attrdup;
+  char *value;
 
-  if (config->ldc_at_map == NULL)
-    {
-      config->ldc_at_map = _nss_hash_open();
-      if (config->ldc_at_map == NULL)
-	{
-	  return NSS_TRYAGAIN;
-	}
-    }
+  if (_nss_ldap_ovmap_get (__config, attribute, (const char **) &value) ==
+      NSS_NOTFOUND)
+    return NULL;
 
-  attrdup = strdup (attribute);
-  if (attrdup == NULL)
-    return NSS_TRYAGAIN;
+  return value;
+}
 
-  if (strcmp (rfc2307attribute, "userPassword") == 0)
-    {
-      if (strcasecmp (attribute, "userPassword") == 0)
-	config->ldc_password_type = LU_RFC2307_USERPASSWORD;
-      else if (strcasecmp (attribute, "authPassword") == 0)
-	config->ldc_password_type = LU_RFC3112_AUTHPASSWORD;
-      else
-	config->ldc_password_type = LU_OTHER_PASSWORD;
-    }
+const char *
+_nss_ldap_map_df (const char *attribute)
+{
+  char *value;
 
-  key.data = (void *) rfc2307attribute;
-  key.size = strlen (rfc2307attribute);
+  if (_nss_ldap_dfmap_get (__config, attribute, (const char **) &value) ==
+      NSS_NOTFOUND)
+    return NULL;
 
-  val.data = (void *) &attrdup;
-  val.size = sizeof (attrdup);
-
-  rc =
-    (((DB *) (config->ldc_at_map))->put) ((DB *) config->ldc_at_map,
-#if DB_VERSION_MAJOR > 2
-					  NULL, /* DB_TXN */
-#endif /* DB_VERSION_MAJOR */
-					  &key, &val, 0);
-
-  return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
+  return value;
 }
 
 NSS_STATUS
-_nss_ldap_ocmap_put (ldap_config_t * config,
-		     const char *rfc2307objectclass, const char *objectclass)
+_nss_ldap_map_put (ldap_config_t * config, ldap_map_type_t type,
+		   const char *rfc2307attribute, const char *value)
 {
   DBT key, val;
   int rc;
-  char *ocdup;
+  char *vadup;
+  void **map;
 
-  if (config->ldc_oc_map == NULL)
+  switch (type)
     {
-      config->ldc_oc_map = _nss_hash_open();
-      if (config->ldc_oc_map == NULL)
+    case MAP_ATTRIBUTE:
+      /* special handling for attribute mapping */
+      if (strcmp (rfc2307attribute, "userPassword") == 0)
+	{
+	  if (strcasecmp (value, "userPassword") == 0)
+	    config->ldc_password_type = LU_RFC2307_USERPASSWORD;
+	  else if (strcasecmp (value, "authPassword") == 0)
+	    config->ldc_password_type = LU_RFC3112_AUTHPASSWORD;
+	  else
+	    config->ldc_password_type = LU_OTHER_PASSWORD;
+	}
+      else if (strcmp (rfc2307attribute, "shadowLastChange") == 0)
+	{
+	  if (strcasecmp (value, "shadowLastChange") == 0)
+	    config->ldc_shadow_type = LS_RFC2307_SHADOW;
+	  else if (strcasecmp (value, "pwdLastSet") == 0)
+	    config->ldc_shadow_type = LS_AD_SHADOW;
+	  else
+	    config->ldc_shadow_type = LS_OTHER_SHADOW;
+	}
+      break;
+    case MAP_OBJECTCLASS:
+    case MAP_OVERRIDE:
+    case MAP_DEFAULT:
+      break;
+    default:
+      return NSS_NOTFOUND;
+      break;
+    }
+
+  map = &config->ldc_maps[type];
+
+  if (*map == NULL)
+    {
+      *map = (DB *) _nss_hash_open ();
+      if (*map == NULL)
 	{
 	  return NSS_TRYAGAIN;
 	}
     }
 
-  ocdup = strdup (objectclass);
-  if (ocdup == NULL)
+  vadup = strdup (value);
+  if (vadup == NULL)
     return NSS_TRYAGAIN;
 
-  key.data = (void *) rfc2307objectclass;
-  key.size = strlen (rfc2307objectclass);
-  val.data = (void *) &ocdup;
-  val.size = sizeof (ocdup);
-  rc =
-    (((DB *) (config->ldc_oc_map))->put) ((DB *) config->ldc_oc_map,
+  key.data = (void *) rfc2307attribute;
+  key.size = strlen (rfc2307attribute);
+  val.data = (void *) &vadup;
+  val.size = sizeof (vadup);
+  rc = (((DB *) (*map))->put) ((DB *) * map,
 #if DB_VERSION_MAJOR > 2
-					  NULL, /* DB_TXN */
+			       NULL,	/* DB_TXN */
 #endif /* DB_VERSION_MAJOR */
-					  &key, &val, 0);
+			       &key, &val, 0);
 
   return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
 }
@@ -3035,59 +3170,88 @@ NSS_STATUS
 _nss_ldap_atmap_get (ldap_config_t * config,
 		     const char *rfc2307attribute, const char **attribute)
 {
-  DBT key, val;
+  NSS_STATUS stat;
 
-  if (config == NULL || config->ldc_at_map == NULL)
+  stat =
+    _nss_ldap_map_get (config, MAP_ATTRIBUTE, rfc2307attribute, attribute);
+  if (stat == NSS_NOTFOUND)
     {
       *attribute = rfc2307attribute;
-      return NSS_NOTFOUND;
     }
-
-  key.data = (void *) rfc2307attribute;
-  key.size = strlen (rfc2307attribute);
-
-  if ((((DB *) config->ldc_at_map)->get)
-      ((DB *) config->ldc_at_map,
-#if DB_VERSION_MAJOR > 2
-	NULL,
-#endif
-	&key, &val, 0) != 0)
-    {
-      *attribute = rfc2307attribute;
-      return NSS_NOTFOUND;
-    }
-
-  *attribute = *((char **) val.data);
-  return NSS_SUCCESS;
+  return stat;
 }
 
 NSS_STATUS
 _nss_ldap_ocmap_get (ldap_config_t * config,
 		     const char *rfc2307objectclass, const char **objectclass)
 {
+  NSS_STATUS stat;
+
+  stat =
+    _nss_ldap_map_get (config, MAP_OBJECTCLASS, rfc2307objectclass,
+		       objectclass);
+  if (stat == NSS_NOTFOUND)
+    {
+      *objectclass = rfc2307objectclass;
+    }
+  return stat;
+}
+
+NSS_STATUS
+_nss_ldap_ovmap_get (ldap_config_t * config,
+		     const char *rfc2307attribute, const char **value)
+{
+  NSS_STATUS stat;
+
+  stat = _nss_ldap_map_get (config, MAP_OVERRIDE, rfc2307attribute, value);
+  if (stat == NSS_NOTFOUND)
+    {
+      *value = NULL;
+    }
+  return stat;
+}
+
+NSS_STATUS
+_nss_ldap_dfmap_get (ldap_config_t * config,
+		     const char *rfc2307attribute, const char **value)
+{
+  NSS_STATUS stat;
+
+  stat = _nss_ldap_map_get (config, MAP_DEFAULT, rfc2307attribute, value);
+  if (stat == NSS_NOTFOUND)
+    {
+      *value = NULL;
+    }
+  return stat;
+}
+
+NSS_STATUS
+_nss_ldap_map_get (ldap_config_t * config, ldap_map_type_t type,
+		   const char *rfc2307attribute, const char **value)
+{
   DBT key, val;
+  void *map;
 
-  if (config == NULL || config->ldc_oc_map == NULL)
+  if (config == NULL || type > MAP_MAX)
     {
-      *objectclass = rfc2307objectclass;
       return NSS_NOTFOUND;
     }
 
-  key.data = (void *) rfc2307objectclass;
-  key.size = strlen (rfc2307objectclass);
+  map = config->ldc_maps[type];
 
-  if ((((DB *) config->ldc_oc_map)->get)
-      ((DB *) config->ldc_oc_map,
+  key.data = (void *) rfc2307attribute;
+  key.size = strlen (rfc2307attribute);
+
+  if ((((DB *) map)->get) ((DB *) map,
 #if DB_VERSION_MAJOR > 2
-	NULL,
+			   NULL,
 #endif
-	&key, &val, 0) != 0)
+			   &key, &val, 0) != 0)
     {
-      *objectclass = rfc2307objectclass;
       return NSS_NOTFOUND;
     }
 
-  *objectclass = *((char **) val.data);
+  *value = *((char **) val.data);
 
   return NSS_SUCCESS;
 }
@@ -3130,9 +3294,9 @@ static int
 do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		 int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-     static int
-       do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-			int freeit)
+static int
+do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+		 int freeit)
 #endif
 {
 #if LDAP_SET_REBIND_PROC_ARGS == 3
@@ -3257,4 +3421,3 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
 
   return stat;
 }
-

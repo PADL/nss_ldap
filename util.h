@@ -52,6 +52,8 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 #ifdef AT_OC_MAP
 #define NSS_LDAP_KEY_MAP_ATTRIBUTE      "nss_map_attribute"
 #define NSS_LDAP_KEY_MAP_OBJECTCLASS    "nss_map_objectclass"
+#define NSS_LDAP_KEY_SET_OVERRIDE       "nss_override_attribute_value"
+#define NSS_LDAP_KEY_SET_DEFAULT        "nss_default_attribute_value"
 #endif /* AT_OC_MAP */
 
 #define NSS_LDAP_CONFIG_BUFSIZ		4096
@@ -77,6 +79,10 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 #define NSS_LDAP_KEY_URI		"uri"
 #define NSS_LDAP_KEY_IDLE_TIMELIMIT     "idle_timelimit"
 #define NSS_LDAP_KEY_RECONNECT_POLICY	"bind_policy"
+#define NSS_LDAP_KEY_SASL_SECPROPS      "sasl_secprops"
+#ifdef CONFIGURE_KRB5_CCNAME
+#define NSS_LDAP_KEY_KRB5_CCNAME        "krb5_ccname"
+#endif /* CONFIGURE_KRB5_CCNAME */
 
 /*
  * support separate naming contexts for each map 
