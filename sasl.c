@@ -6,14 +6,14 @@
 
 #include "config.h"
 
-#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
-#include <sasl.h>
+#include <sasl.h> 
 
 #include <ldap.h>
 #include "ldap-lutil.h"
@@ -75,7 +75,6 @@ static int
 interaction (sasl_interact_t * interact, lutilSASLdefaults * defaults)
 {
   const char *dflt = interact->defresult;
-  char input[1024];
 
   int noecho = 0;
   int challenge = 0;

@@ -156,6 +156,9 @@
 /* Define if you have the <rpc/rpcent.h> header file.  */
 #undef HAVE_RPC_RPCENT_H
 
+/* Define if you have the <sasl.h> header file.  */
+#undef HAVE_SASL_H
+
 /* Define if you have the <shadow.h> header file.  */
 #undef HAVE_SHADOW_H
 

@@ -1,6 +1,13 @@
 $Header$
 ===============================================================
 
+178	Luke Howard <lukeh@padl.com>
+
+	* cleaned up SASL patch to not break if Cyrus
+	  SASL is not installed
+	* cleaned up IBM patch to not break building
+	  on platforms other than AIX
+
 177	Luke Howard <lukeh@padl.com>
 
 	* patch for building on AIX from IBM
