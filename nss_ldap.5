@@ -160,8 +160,8 @@ directive is not used.
 .B rootbinddn <binddn>
 This directive has the same syntax and effect as the
 .B binddn
-directive above, except it applies when the effective user ID is that
-of the root user. If not specified, then the identity specified in
+directive above, except it applies when the effective user ID is
+zero. If not specified, then the identity specified in
 .B binddn
 is used instead. Because the configuration file may be readable by
 many users, the root bind DN credentials are stored in the
@@ -195,6 +195,34 @@ are otherwise cached.) Only some
 LDAP
 client libraries have the underlying functionality necessary to
 support this directive. The default bind timelimit is 30 seconds.
+.TP
+.B referrals <yes|no>
+Specifies whether automatic referral chasing should be enabled. The
+default behaviour is specifed by the
+.I
+LDAP
+client library.
+.TP
+.B restart <yes|no>
+Specifies whether the
+.I LDAP
+client library should restart the
+.BR
+select(2)
+system call when interrupted. This feature is not supported by all
+client libraries.
+.TP
+.B logdir <directory>
+Specifies the directory used for logging by the
+.I LDAP
+client library. This feature is not supported by all client
+libraries.
+.TP
+.B debug <level>
+Specifies the debug level used for logging by the
+.I LDAP
+client library. This feature is not supported by all client
+libraries.
 .TP
 .B ssl <on|off|start_tls>
 Specifies whether to use SSL/TLS or not (the default is not to). If
@@ -275,12 +303,24 @@ Specifies the time (in seconds) after which
 nss_ldap
 will close connections to the directory server.
 .TP
+.B sasl_authid <authid>
+Specifies the authorization identity to be used when performing SASL
+authentication.
+.TP
+.B rootsasl_auth_id <authid>
+Specifies the authorization identity to be used when performing SASL
+authentication as root (when the effective user ID is zero).
+.TP
 .B sasl_secprops <properties>
 Specifies Cyrus SASL security properties. Allowed values are described
 in the
 .BR
 ldap.conf(5)
 manual page.
+.TP
+.B rootuse_sasl <yes|no>
+Specifies whether SASL authentication should be used when the effective
+user ID is zero.
 .TP
 .B krb5_ccname <PREFIX:args>
 If
@@ -332,18 +372,37 @@ If
 was built without schema mapping support, then this directive
 is ignored.
 .TP
-.B nss_map_obejctclass <from_objectclass> <to_objectclass>
+.B nss_map_objectclass <from_objectclass> <to_objectclass>
 This option may be specified multiple times, and directs
 .B nss_ldap
 to use the object class
 .B to_objectclass
 instead of the RFC 2307 object class
 .B from_objectclass
-in all lookups. If
+in all lookups.
+If
 .B nss_ldap
 was built without schema mapping support, then this option
 is ignored.
-
+.TP
+.B nss_default_attribute_value <attribute> <value>
+Specifies the default value to use for entries that lack the
+specified attribute. This option may be specified multiple times,
+for different attributes.
+If
+.B nss_ldap
+was built without schema mapping support, then this option
+is ignored.
+.TP
+.B nss_override_attribute_value <attribute> <value>
+Specifies a value to use for the specified attribute in preference 
+to that contained in the actual entry. This option may be specified
+multiple times, for different attributes.
+If
+.B nss_ldap
+was built without schema mapping support, then this option
+is ignored.
+.TP
 .SH AUTHOR
 The
 .B nss_ldap
