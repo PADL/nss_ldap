@@ -91,14 +91,8 @@ It doesn't look like libcrypt is even needed if you're using the
 Netscape LDAP client library (maybe it's required for OpenLDAP?).
 
 Scott M. Stone <sstone@foo3.com> writes:
-
-1) your docs should say, "Your openldap libs *and* your SSL/RSAREF libs
-must be DYNAMIC LIBRARIES or neither nss_ldap nor pam_ldap will work".
-You also should say that you need to have all these shared libraries in
-/usr/lib, since LD_LIBRARY_PATH doesn't get sourced when these modules are
-called, and if it's in /usr/local/ssl/lib or /usr/local/lib it's not going
-to find them and the dynamic link calls will fail, and so will your LDAP
-auth.
+Your openldap libs *and* your SSL/RSAREF libs must be DYNAMIC LIBRARIES
+or neither nss_ldap nor pam_ldap will work.  
 
 3. glibc 2.0 compatibility
 --------------------------
