@@ -1,6 +1,16 @@
 $Id$
 ===============================================================
 
+94	Luke Howard <lukeh@padl.com>
+
+	* committed some changes for the parent/child close
+	  problem. It relies on internal libldap APIs so
+	  it may be non-portable but should work with OpenLDAP
+	  and Netscape client libraries, and perhaps most UMich-
+	  derived client libraries. There's a possible workaround
+	  for client libraries without this; undefine
+	  HAVE_LDAP_LD_FREE to test this.
+
 93	Luke Howard <lukeh@padl.com>
 
 	* important fix: make sure return status is reset
