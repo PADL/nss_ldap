@@ -838,6 +838,7 @@ Optional Features:
   --enable-rfc2307bis       use RFC2307bis schema
   --enable-schema-mapping   enable attribute/objectclass mapping
   --enable-debugging        enable debug code
+  --enable-xad        enable XAD-specific behaviour
   --enable-paged-results    enable paged results control
 
 Optional Packages:
@@ -2875,6 +2876,14 @@ if test "${enable_debugging+set}" = set; then
   enableval="$enable_debugging"
   cat >>confdefs.h <<\_ACEOF
 #define DEBUG 1
+_ACEOF
+
+fi;
+# Check whether --enable-xad or --disable-xad was given.
+if test "${enable_xad+set}" = set; then
+  enableval="$enable_xad"
+  cat >>confdefs.h <<\_ACEOF
+#define XAD 1
 _ACEOF
 
 fi;

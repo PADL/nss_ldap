@@ -19,6 +19,9 @@
 /* define to enable paged results control */
 #undef PAGE_RESULTS
 
+/* define to enable XAD-specific behaviour */
+#undef XAD
+
 /* define to enable struct ether_addr definition */
 #undef HAVE_STRUCT_ETHER_ADDR
 
