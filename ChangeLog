@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+218	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#168: set errnop to ENOENT if not found
+
 217	Luke Howard <lukeh@padl.com>
 	
 	* fix for BUG#167: compilation fails on Solaris

@@ -2252,6 +2252,32 @@ do_search (const char *base, int scope,
   return rc;
 }
 
+static void
+do_map_errno (NSS_STATUS status, int *errnop)
+{
+  switch (status)
+    {
+      case NSS_TRYAGAIN:
+#ifdef HAVE_NSSWITCH_H
+	errno = ERANGE;
+	*errnop = 1;		/* this is really erange */
+#else
+	*errnop = ERANGE;
+#endif /* HAVE_NSSWITCH_H */
+	break;
+
+#ifndef HAVE_NSSWITCH_H
+      case NSS_NOTFOUND:
+	*errnop = ENOENT;
+	break;
+#endif /* !HAVE_NSSWITCH_H */
+
+      case NSS_SUCCESS:
+      default:
+	*errnop = 0;
+    }
+}
+
 /*
  * Tries parser function "parser" on entries, calling do_result()
  * to retrieve them from the LDAP server until one parses
@@ -2318,16 +2344,7 @@ do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
     }
   while (parseStat == NSS_NOTFOUND);
 
-  *errnop = 0;
-  if (parseStat == NSS_TRYAGAIN)
-    {
-#ifdef HAVE_NSSWITCH_H
-      errno = ERANGE;
-      *errnop = 1;		/* this is really erange */
-#else
-      *errnop = ERANGE;
-#endif /* HAVE_NSSWITCH_H */
-    }
+  do_map_errno (parseStat, errnop);
 
   debug ("<== do_parse");
 
@@ -2389,16 +2406,7 @@ do_parse_s (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
     }
   while (parseStat == NSS_NOTFOUND);
 
-  *errnop = 0;
-  if (parseStat == NSS_TRYAGAIN)
-    {
-#ifdef HAVE_NSSWITCH_H
-      errno = ERANGE;
-      *errnop = 1;		/* this is really erange */
-#else
-      *errnop = ERANGE;
-#endif /* HAVE_NSSWITCH_H */
-    }
+  do_map_errno (parseStat, errnop);
 
   debug ("<== do_parse_s");
 
