@@ -1,14 +1,11 @@
 $Header$
 ===============================================================
 
-189	Luke Howard <lukeh@padl.com>
+188	Luke Howard <lukeh@padl.com>
 
 	* specify runtime path for LDAP library correctly to
 	  native Solaris linker
-	* check for gcc correctly.
-
-188	Luke Howard <lukeh@padl.com>
-
+	* check for gcc correctly
 	* use native linker on Solaris and AIX
 
 187	Luke Howard <lukeh@padl.com>
