@@ -33,6 +33,7 @@ static char rcsId[] =
 #include <syslog.h>
 #include <lber.h>
 #include <ldap.h>
+#include <sys/socket.h>
 #include <signal.h>
 
 #ifdef GNU_NSS
