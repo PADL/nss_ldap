@@ -3,8 +3,11 @@ $Id$
 
 2.42	Luke Howard <lukeh@xedoc.com>
 
-	* fixed crasher in dnsconfig.c
-	* LDAP session is now persistent
+	* fixed potential crasher in dnsconfig.c
+	* LDAP session is now persistent for performance reasons.
+     Removed references to the session anywhere outside
+     ldap-nss.c. The process ID is cached and the session
+     reopened after a fork().
 
 2.39	Luke Howard <lukeh@xedoc.com>
 

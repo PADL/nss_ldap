@@ -54,32 +54,21 @@ static char rcsId[] = "$Id$";
  * Pointers to elements of the list are passed around but should not
  * be freed.
  */
-
 static char __configbuf[NSS_LDAP_CONFIG_BUFSIZ];
 static ldap_config_t *__config = NULL;
-static ldap_session_t __session = { NULL, NULL };
-static int __pid = -1;
-static void do_close(void);
-static NSS_STATUS do_open(void);
 
 /*
- * Closes connection to the LDAP server.
- * This assumes that we have exclusive access to __session.ls_conn,
- * either by some other function having acquired a lock, or by
- * using a thread safe libldap.
+ * Global LDAP session.
  */
-static void do_close(void)
-{
-	debug("==> do_close");
+static ldap_session_t __session = { NULL, NULL };
 
-	if (__session.ls_conn != NULL)
-		{
-		ldap_unbind(__session.ls_conn);
-		__session.ls_conn = NULL;
-		}
+/* 
+ * Process ID that opened the session.
+ */
+static int __pid = -1;
 
-	debug("<== do_close");
-}
+static void do_close(void);
+static NSS_STATUS do_open(void);
 
 #ifdef SUN_NSS
 /*
@@ -117,7 +106,41 @@ NSS_STATUS _nss_ldap_default_destr(nss_backend_t *be, void *args)
 
 	return NSS_SUCCESS;
 }
+
+/*
+ * This is the default "constructor" which gets called from each 
+ * constructor, in the NSS dispatch table.
+ */
+NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be)
+{
+	debug("==> _nss_ldap_default_constr");
+
+	be->state = NULL;
+
+	debug("<== _nss_ldap_default_constr");
+
+	return NSS_SUCCESS;
+}
 #endif /* SUN_NSS */
+
+/*
+ * Closes connection to the LDAP server.
+ * This assumes that we have exclusive access to __session.ls_conn,
+ * either by some other function having acquired a lock, or by
+ * using a thread safe libldap.
+ */
+static void do_close(void)
+{
+	debug("==> do_close");
+
+	if (__session.ls_conn != NULL)
+		{
+		ldap_unbind(__session.ls_conn);
+		__session.ls_conn = NULL;
+		}
+
+	debug("<== do_close");
+}
 
 /*
  * Opens connection to an LDAP server.
@@ -271,23 +294,6 @@ ent_context_t *_nss_ldap_ent_context_init(context_handle_t *key)
 	debug("<== _nss_ldap_ent_context_init");	
 	return ctx;
 }
-
-#ifdef SUN_NSS
-/*
- * This is the default "constructor" which gets called from each 
- * constructor, in the NSS dispatch table.
- */
-NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be)
-{
-	debug("==> _nss_ldap_default_constr");
-
-	be->state = NULL;
-
-	debug("<== _nss_ldap_default_constr");
-
-	return NSS_SUCCESS;
-}
-#endif /* SUN_NSS */
 
 /*
  * Frees a given context; this is called from endXXent() and so we
@@ -559,14 +565,14 @@ NSS_STATUS _nss_ldap_getbyname(
  * Assign all values, bar omitvalue (if not NULL), to *valptr.
  */
 NSS_STATUS _nss_ldap_assign_attrvals(
-	LDAP *ld,				 /* IN */
-	LDAPMessage *e, 		/* IN */
-	const char *attr, 		/* IN */
-	const char *omitvalue, /* IN */
-	char ***valptr,			 /* OUT */
-	char **pbuffer, /* IN/OUT */
-	size_t *pbuflen, /* IN/OUT */
-	size_t *pvalcount /* OUT */)
+	LDAP *ld,
+	LDAPMessage *e,
+	const char *attr,
+	const char *omitvalue,
+	char ***valptr,
+	char **pbuffer, 
+	size_t *pbuflen,
+	size_t *pvalcount)
 {
 	char **vals;
 	char **valiter;

@@ -20,20 +20,12 @@
    $Id$
  */
 
-#ifndef SSLEAY
-#define SSL_write( ssl, b, l ) \
-    (fprintf(stderr, "calling SSL_write without SSL defined\n"))
-#define SSL_read( ssl, b, l) \
-    (fprintf(stderr, "calling SSL_read without SSL defined\n"))
-#endif /* ssleay not defined */
-
-
 #ifndef _LDAP_NSS_LDAP_LDAP_NSS_H
 #define _LDAP_NSS_LDAP_LDAP_NSS_H
 
 #ifdef GNU_NSS
 #include <pthread.h>
-#endif
+#endif /* GNU_NSS */
 
 #ifdef DEBUG
 #ifdef SUN_NSS
@@ -41,10 +33,10 @@
 #define debug(str) syslog(LOG_DEBUG, "nss_ldap - thread %u  - %s", thr_self(), str)
 #else
 #define debug(str) fprintf(stderr,"%s\n",str)
-#endif
+#endif /* SUN_NSS */
 #else
 #define debug(str)
-#endif
+#endif /* DEBUG */
 
 #ifdef __GNUC__
 #define alignof(ptr) __alignof__(ptr)
@@ -54,15 +46,14 @@
 #define INLINE
 #else
 #define INLINE
-#endif
-
+#endif /* __GNUC__ */
 
 #ifdef DL_NSS
 #ifndef GNU_NSS
 #define GNU_NSS
 #endif
 #define __set_errno(e)  do { errno = e; } while (0)
-#endif
+#endif /* DL_NSS */
 
 #if defined(GNU_NSS) || defined(SUN_NSS)
 #define HAVE_STRTOK_R
@@ -130,7 +121,7 @@ typedef struct ldap_config ldap_config_t;
 
 /*
  * convenient wrapper around pointer into global config list, and a
-   connection to an LDAP server.
+ * connection to an LDAP server.
  */
 struct ldap_session
 {
@@ -147,7 +138,6 @@ typedef struct ldap_session ldap_session_t;
  *  is configurable at runtime by putting crypt [md5|crypt|sha] in
  * /etc/ldap.conf.
  */
-
 enum crypt_prefix
 {
 	UNIX_CRYPT,
@@ -228,7 +218,9 @@ struct ldap_state
 };
 
 typedef struct ldap_state ldap_state_t;
-/* LS_INIT only used for enumeration contexts */
+/*
+ * LS_INIT only used for enumeration contexts
+ */
 #define LS_INIT(state)	do { state.ls_type = LS_TYPE_INDEX; state.ls_info.ls_index = -1; } while (0)
 
 /*
