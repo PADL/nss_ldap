@@ -67,7 +67,7 @@ static ent_context_t *gr_context = NULL;
 static char *_nss_ldap_no_members[] = { NULL };
 #endif
 
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
 typedef struct ldap_initgroups_args
 {
   char *grplist;
@@ -95,7 +95,7 @@ typedef struct ldap_initgroups_args
 }
 ldap_initgroups_args_t;
 # endif
-#endif /* AIX */
+#endif /* HAVE_USERSEC_H */
 
 #ifdef RFC2307BIS
 static NSS_STATUS
@@ -658,7 +658,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       return NSS_NOTFOUND;
     }
 
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
   i = strlen (values[0]);
   lia->grplist = realloc (lia->grplist, lia->listlen + i + 2);
   if (lia->grplist == NULL)
@@ -739,7 +739,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
   (*(lia->groups))[*(lia->start)] = gid;
   (*(lia->start)) += 1;
 # endif				/* HAVE_NSSWITCH_H */
-#endif /* AIX */
+#endif /* HAVE_USERSEC_H */
 
 #ifdef RFC2307BIS
   /*
@@ -804,7 +804,7 @@ ng_chase (LDAP * ld, const char *dn, ldap_initgroups_args_t * lia)
 }
 #endif /* RFC2307BIS */
 
-#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(AIX)
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(HAVE_USERSEC_H)
 #ifdef HAVE_NSS_H
 NSS_STATUS _nss_ldap_initgroups_dyn (const char *user, gid_t group,
 				     long int *start, long int *size,
@@ -828,8 +828,8 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 			  long int *size, gid_t ** groupsp, long int limit,
 			  int *errnop)
-#elif defined(AIX)
-     char *_nss_ldap_getgrset (char *user)
+#elif defined(HAVE_USERSEC_H)
+char *_nss_ldap_getgrset (char *user)
 #endif
 {
   ldap_initgroups_args_t lia;
@@ -848,14 +848,14 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   const char *gidnumber_attrs[2];
 
   LA_INIT (a);
-#if defined(HAVE_NSS_H) || defined(AIX)
+#if defined(HAVE_NSS_H) || defined(HAVE_USERSEC_H)
   LA_STRING (a) = user;
 #else
   LA_STRING (a) = ((struct nss_groupsbymem *) args)->username;
-#endif /* HAVE_NSS_H || AIX */
+#endif /* HAVE_NSS_H || HAVE_USERSEC_H */
   LA_TYPE (a) = LA_TYPE_STRING;
 
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
   lia.grplist = NULL;
   lia.listlen = 0;
 #elif defined(HAVE_NSSWITCH_H)
@@ -866,7 +866,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   lia.size = size;
   lia.groups = groupsp;
   lia.limit = limit;
-#endif /* AIX */
+#endif /* HAVE_USERSEC_H */
   lia.depth = 0;
 
   _nss_ldap_enter ();
@@ -876,11 +876,11 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   if (stat != NSS_SUCCESS)
     {
       _nss_ldap_leave ();
-# ifdef AIX
+# ifdef HAVE_USERSEC_H
       return NULL;
 # else
       return stat;
-# endif				/* !AIX */
+# endif				/* !HAVE_USERSEC_H */
     }
 
 #ifdef RFC2307BIS
@@ -911,11 +911,11 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
     {
       _nss_ldap_leave ();
-# ifdef AIX
+# ifdef HAVE_USERSEC_H
       return NULL;
 # else
       return NSS_UNAVAIL;
-# endif				/* AIX */
+# endif				/* HAVE_USERSEC_H */
     }
 #else
   filter = _nss_ldap_filt_getgroupsbymember;
@@ -958,7 +958,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
       _nss_ldap_ent_context_release (ctx);
       free (ctx);
       _nss_ldap_leave ();
-#ifndef AIX
+#ifndef HAVE_USERSEC_H
       return stat;
 #else
       return NULL;
@@ -971,7 +971,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 
 #ifdef HAVE_NSS_H
   return NSS_SUCCESS;
-#elif defined(AIX)
+#elif defined(HAVE_USERSEC_H)
   /* Strip last comma and terminate the string */
   if (lia.grplist != NULL && lia.listlen != 0)
     lia.grplist[lia.listlen - 1] = '\0';
@@ -981,7 +981,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   return NSS_NOTFOUND;
 #endif /* HAVE_NSS_H */
 }
-#endif /* HAVE_NSSWITCH_H || HAVE_NSS_H || AIX */
+#endif /* HAVE_NSSWITCH_H || HAVE_NSS_H || HAVE_USERSEC_H */
 
 #ifdef HAVE_NSS_H
 NSS_STATUS

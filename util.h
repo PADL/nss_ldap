@@ -170,6 +170,7 @@ NSS_STATUS _nss_ldap_escape_string (const char *str,
 	} while (0)
 #endif /* HAVE_IRS_H */
 
+#if defined(RFC2307BIS) || defined(AT_OC_MAP)
 struct ldap_datum
 {
   void *data;
@@ -189,5 +190,6 @@ NSS_STATUS _nss_ldap_db_put (void *db, const ldap_datum_t * key,
 			     const ldap_datum_t * value);
 NSS_STATUS _nss_ldap_db_get (void *db, const ldap_datum_t * key,
 			     ldap_datum_t * value);
+#endif /* RFC2307BIS || AT_OC_MAP */
 
 #endif /* _LDAP_NSS_LDAP_UTIL_H */

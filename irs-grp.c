@@ -25,7 +25,7 @@
 
 /* $Id$ */
 
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
 void *gr_pvtinit (void);
 #endif
 IRS_EXPORT void gr_close (struct irs_gr *);
@@ -60,7 +60,7 @@ IRS_EXPORT void
 gr_close (struct irs_gr *this)
 {
   LOOKUP_ENDENT (this);
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
   free (this->private);
   free (this);
 #endif
@@ -83,7 +83,7 @@ gr_minimize (struct irs_gr *this)
 {
 }
 
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
 void *
 gr_pvtinit (void)
 #else
@@ -108,7 +108,7 @@ irs_ldap_gr (struct irs_acc *this)
   gr->next = gr_next;
   gr->byname = gr_byname;
   gr->bygid = gr_bygid;
-#ifndef AIX
+#ifndef HAVE_USERSEC_H
   gr->list = make_group_list;
 #else
   gr->list = NULL;

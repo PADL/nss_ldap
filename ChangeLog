@@ -8,6 +8,8 @@ $Id$
 	* support for expansion of nested RFC2307bis groups
 	* support for searching using range retrieval
 	* fix memory leak with private contexts
+	* preliminary implementation of _nss_ldap_getentry
+	  for AIX user/group enumeration support
 	* remove dependency on Berkeley DB
 
 220	Luke Howard <lukeh@padl.com>

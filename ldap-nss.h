@@ -84,6 +84,10 @@
 #define LDAP_NSS_MAXGR_DEPTH     16     /* maximum depth of group nesting for getgrent()/initgroups() */
 #define LDAP_NSS_MAXGR_BUFSIZ	 256	/* maximum number of group members in static buffer */
 
+#ifdef HAVE_USERSEC_H
+#define LDAP_NSS_MAXUESS_ATTRS	8	/* maximum number of attributes in a getentry call */
+#endif /* HAVE_USERSEC_H */
+
 #ifdef PAGE_RESULTS
 #define LDAP_PAGESIZE 1000
 #endif /* PAGE_RESULTS */
@@ -435,15 +439,15 @@ struct ldap_args
 typedef struct ldap_args ldap_args_t;
 
 #define LA_INIT(q)				do { \
-						q.la_type = LA_TYPE_STRING; \
-						q.la_arg1.la_string = NULL; \
-						q.la_arg2.la_string = NULL; \
+						(q).la_type = LA_TYPE_STRING; \
+						(q).la_arg1.la_string = NULL; \
+						(q).la_arg2.la_string = NULL; \
 						} while (0)
-#define LA_TYPE(q)				(q.la_type)
-#define LA_STRING(q)				(q.la_arg1.la_string)
-#define LA_NUMBER(q)				(q.la_arg1.la_number)
-#define LA_TRIPLE(q)				(q.la_arg1.la_triple)
-#define LA_STRING2(q)				(q.la_arg2.la_string)
+#define LA_TYPE(q)				((q).la_type)
+#define LA_STRING(q)				((q).la_arg1.la_string)
+#define LA_NUMBER(q)				((q).la_arg1.la_number)
+#define LA_TRIPLE(q)				((q).la_arg1.la_triple)
+#define LA_STRING2(q)				((q).la_arg2.la_string)
 
 #include "ldap-parse.h"
 

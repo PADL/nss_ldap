@@ -25,7 +25,7 @@
 
 /* $Id$ */
 
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
 void *pr_pvtinit (void);
 #endif
 IRS_EXPORT void pr_close (struct irs_pr *);
@@ -60,7 +60,7 @@ IRS_EXPORT void
 pr_close (struct irs_pr *this)
 {
   LOOKUP_ENDENT (this);
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
   free (this->private);
   free (this);
 #endif
@@ -84,7 +84,7 @@ pr_minimize (struct irs_pr *this)
 {
 }
 
-#ifdef AIX
+#ifdef HAVE_USERSEC_H
 void *
 pr_pvtinit (void)
 #else

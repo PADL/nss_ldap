@@ -58,10 +58,10 @@ static char rcsId[] =
 #include "ldap-network.h"
 #include "util.h"
 
-#if defined(HAVE_IRS_H) || defined(AIX)
+#if defined(HAVE_IRS_H) || defined(HAVE_USERSEC_H)
 #define MAXALIASES 35
 #define MAXADDRSIZE 4
-#endif /* HAVE_IRS_H || AIX */
+#endif /* HAVE_IRS_H || HAVE_USERSEC_H */
 
 #ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>

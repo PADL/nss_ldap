@@ -996,6 +996,8 @@ _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
   return ret;
 }
 
+#if defined(RFC2307BIS) || defined(AT_OC_MAP)
+
 /* XXX just a linked list for now */
 
 struct ldap_dictionary
@@ -1140,3 +1142,5 @@ _nss_ldap_db_put (void *db, const ldap_datum_t * key,
 
   return NSS_SUCCESS;
 }
+
+#endif /* RFC2307BIS || AT_OC_MAP */
