@@ -81,7 +81,7 @@ LIBDIRS=-L.
 
 # uncomment this if you're linking against Sun or Netscape's libldap.so
 # or using UMich libldap/liblber compiled into one library
-LIBS=-L/usr/local/ldapsdk/lib -Wl,-rpath /usr/local/ldapsdk/lib -lldap -lnsl -llber -lpthread
+LIBS=-L/usr/local/ldapsdk/lib -Wl,-rpath /usr/local/ldapsdk/lib -lldapssl30 -lnsl -lpthread
 
 # uncomment this if you're using gcc
 GCCFLAGS=-O -g -Wall -fPIC
