@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 140)
+AM_INIT_AUTOMAKE(nss_ldap, 141)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -17,7 +17,13 @@ AC_ARG_WITH(ldap-lib, [  --with-ldap-lib=type      select ldap library [auto|net
 AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of ldap SDK])
 
 AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu")
-AM_CONDITIONAL(AIX, test "$target_os" = aix)
+
+case "$target_os" in
+aix*) is_aix=yes ;;
+*) is_aix=no ;;
+esac
+
+AM_CONDITIONAL(AIX, test "$is_aix" = yes)
 
 if test "$ac_cv_prog_gcc" = "yes"; then CFLAGS="$CFLAGS -Wall -fPIC"; fi
 
@@ -41,8 +47,8 @@ if test -n "$with_ldap_dir"; then
   CPPFLAGS="$CPPFLAGS -I$with_ldap_dir/include"
   LDFLAGS="$LDFLAGS -L$with_ldap_dir/lib"
   case "$target_os" in  
-  linux*) LDFLAGS="$LDFLAGS -Wl,-rpath,$with_ldap_dir/lib" ;;
   solaris*) LDFLAGS="$LDFLAGS -Wl,-R$with_ldap_dir/lib" ;;  
+  *) LDFLAGS="$LDFLAGS -Wl,-rpath,$with_ldap_dir/lib" ;;
   esac  
 fi
 
