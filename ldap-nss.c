@@ -2738,8 +2738,14 @@ _nss_ldap_getent (ent_context_t ** ctx,
 		  const char *filterprot,
 		  ldap_map_selector_t sel, parser_t parser)
 {
-  return _nss_ldap_getent_ex (NULL, ctx, result, buffer, buflen,
-			      errnop, filterprot, sel, parser);
+  NSS_STATUS status;
+
+  _nss_ldap_enter ();
+  status = _nss_ldap_getent_ex (NULL, ctx, result, buffer, buflen,
+				errnop, filterprot, sel, parser);
+  _nss_ldap_leave ();
+
+  return status;
 }
 
 NSS_STATUS

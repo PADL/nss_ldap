@@ -683,6 +683,7 @@ NSS_STATUS _nss_ldap_read (const char *dn,	/* IN */
 
 /*
  * extended enumeration routine; uses asynchronous API.
+ * Caller holds lock
  */
 NSS_STATUS _nss_ldap_getent_ex (ldap_args_t * args, /* IN */
 				ent_context_t ** key,	/* IN/OUT */
@@ -696,6 +697,7 @@ NSS_STATUS _nss_ldap_getent_ex (ldap_args_t * args, /* IN */
 
 /*
  * common enumeration routine; uses asynchronous API.
+ * Acquires lock
  */
 NSS_STATUS _nss_ldap_getent (ent_context_t ** key,	/* IN/OUT */
 			     void *result,	/* IN/OUT */

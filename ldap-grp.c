@@ -87,7 +87,7 @@ _nss_ldap_parse_gr (LDAP * ld,
   if (stat != NSS_SUCCESS)
     return stat;
 
-  gr->gr_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol (gid);
+  gr->gr_gid = (*gid == '\0') ? (unsigned)GID_NOBODY : (gid_t) strtoul(gid, (char **)NULL, 10);
 
   stat =
     _nss_ldap_getrdnvalue (ld, e, ATM (group, cn), &gr->gr_name, &buffer,
@@ -200,6 +200,110 @@ _nss_ldap_parse_gr (LDAP * ld,
   return NSS_SUCCESS;
 }
 
+#ifdef AIX
+typedef struct ldap_initgroups_args {
+	char **grplist;
+	size_t listlen;
+} ldap_initgroups_args_t;
+#elif defined(HAVE_NSSWITCH_H)
+typedef struct nss_groupsbymem ldap_initgroups_args_t;
+#elif defined(HAVE_NSS_H)
+typedef struct ldap_initgroups_args {
+	gid_t group;
+	long int *start;
+	long int *size;
+	gid_t **groups;
+	long int limit;
+} ldap_initgroups_args_t;
+#endif
+
+/*
+ * Add a group to a group list.
+ */
+static NSS_STATUS
+do_parse_initgroups (LDAP *ld, LDAPMessage *e,
+	ldap_state_t *pvt, void *result,
+	char *buffer, size_t buflen)
+{
+	char **values;
+	ssize_t i;
+	gid_t gid;
+	ldap_initgroups_args_t *lia = (ldap_initgroups_args_t *)result;
+
+	values = _nss_ldap_get_values(e, ATM(group, gidNumber));
+	if (values == NULL) {
+		/* invalid group; skip it */
+		return NSS_SUCCESS;
+	}
+
+	ldap_value_free(values);
+
+#ifdef AIX
+	i = strlen(values[0]);
+	lia->grplist = realloc(lia->grplist, lia->listlen + i + 2);
+	if (lia->grplist == NULL) {
+		ldap_value_free(values);
+		return NSS_TRYAGAIN;
+	}
+	memcpy(lia->grplist + lia->listlen, values[0], i);
+	lia->grplist[lia->listlen + i] = '.';
+	lia->listlen += i + 1;
+	ldap_value_free(values);
+#else
+	gid = strtoul(values[0], (char **)NULL, 10);
+	ldap_value_free(values);
+	if (gid == LONG_MAX && errno == ERANGE) {
+		/* invalid group, skip it */
+		return NSS_SUCCESS;
+	}
+
+# ifdef HAVE_NSSWITCH_H
+	/* weed out duplicates; is this really our resposibility? */
+	for (i = 0; i < lia->numgids; i++) {
+		if (lia->gid_array[i] == (gid_t)gid)
+			return NSS_SUCCESS;
+	}
+
+	if (lia->numgids == lia->maxgids) {
+		/* can't fit any more */
+		return NSS_SUCCESS;
+	}
+
+	lia->gid_array[lia->numgids++] = (gid_t)gid;
+# else
+	if (gid == lia->group) {
+		/* primary group, so skip it */
+		return NSS_SUCCESS;
+	}
+
+	if (*(lia->start) == *(lia->size) && lia->limit <= 0) {
+		/* Need a bigger buffer */
+		*(lia->groups) = (gid_t *)realloc(*(lia->groups),
+			2 * *(lia->size) * sizeof(gid_t *));
+		if (*(lia->groups) == NULL) {
+			return NSS_TRYAGAIN;
+		}
+		*(lia->size) *= 2;
+	}
+	/* weed out duplicates; is this really our responsibility? */
+	for (i = 0; i < *(lia->size); i++) {
+		if ((*(lia->groups)[i]) == gid) {
+			return NSS_SUCCESS;
+		}
+	}
+	if (*(lia->start) == lia->limit) {
+		/* can't fit any more */
+		return NSS_SUCCESS;
+	}
+		
+	*(lia->groups)[*(lia->start)] = gid;
+	*(lia->start)++;
+# endif	 /* HAVE_NSSWITCH_H */
+#endif /* AIX */
+
+	return NSS_SUCCESS;
+}
+
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(AIX)
 #ifdef HAVE_NSS_H
 NSS_STATUS _nss_ldap_initgroups_dyn (const char *user, gid_t group,
@@ -229,8 +333,14 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #endif
 {
 #ifdef HAVE_NSSWITCH_H
-  struct nss_groupsbymem *gbm = (struct nss_groupsbymem *) args;
+  ldap_initgroups_args_t *liap = (struct nss_groupsbymem *) args;
+#else
+  ldap_initgroups_args_t lia;
+  ldap_initgroups_args_t *liap = &lia;
 #endif /* HAVE_NSSWITCH_H */
+#ifndef HAVE_NSS_H
+  int erange = 0;
+#endif /* HAVE_NSS_H */
 #ifdef RFC2307BIS
   char *userdn = NULL;
   const char *filter;
@@ -238,22 +348,26 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   ldap_args_t a;
   NSS_STATUS stat;
   LDAPMessage *res, *e;
-#ifdef AIX
-  char *grplist = NULL;
-  size_t listlen = 0;
-#endif /* AIX */
-
-#ifdef HAVE_NSS_H
-  gid_t *groups = *groupsp;
-#endif /* HAVE_NSS_H */
+  ent_context_t *ctx = NULL;
 
   LA_INIT (a);
 #if defined(HAVE_NSS_H) || defined(AIX)
   LA_STRING (a) = user;
 #else
-  LA_STRING (a) = gbm->username;
+  LA_STRING (a) = lia->username;
 #endif /* HAVE_NSS_H || AIX */
   LA_TYPE (a) = LA_TYPE_STRING;
+
+#ifdef AIX
+  lia.grplist = NULL;
+  lia.listlen = 0;
+#elif !defined(HAVE_NSSWITCH_H)
+  lia.group = group;
+  lia.start = start;
+  lia.size = size;
+  lia.groups = groupsp;
+  lia.limit = limit;
+#endif /* AIX */
 
   _nss_ldap_enter ();
 
@@ -291,7 +405,22 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
     {
       filter = _nss_ldap_filt_getgroupsbymember;
     }
-  stat = _nss_ldap_search_s (&a, filter, LM_GROUP, LDAP_NO_LIMIT, &res);
+
+  if (_nss_ldap_ent_context_init(&ctx) == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
+#endif /* RFC2307BIS */
+
+  stat = _nss_ldap_getent_ex (&a, &ctx, (void *)liap, NULL, 0,
+#ifdef HAVE_NSS_H
+			      errnop,
+#else
+			      erange,
+#endif /* HAVE_NSS_H */
+			      filter, LM_GROUP, do_parse_initgroups);
+
+#ifdef RFC2307BIS
   if (userdn != NULL)
     {
 #ifdef HAVE_LDAP_MEMFREE
@@ -300,14 +429,14 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
       free (userdn);
 #endif /* HAVE_LDAP_MEMFREE */
     }
-#else
-  stat =
-    _nss_ldap_search_s (&a, _nss_ldap_filt_getgroupsbymember, LM_GROUP,
-			LDAP_NO_LIMIT, &res);
 #endif /* RFC2307BIS */
 
   if (stat != NSS_SUCCESS)
     {
+#ifndef HAVE_NSS_H
+      if (erange)
+	errno = ERANGE
+#endif /* HAVE_NSS_H */
       _nss_ldap_leave ();
 #ifndef AIX
       return stat;
@@ -315,107 +444,16 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
       return NULL;
 #endif
     }
-  for (e = _nss_ldap_first_entry (res);
-       e != NULL; e = _nss_ldap_next_entry (e))
-    {
-#ifdef AIX
-      char **values = _nss_ldap_get_values (e, ATM (group, gidNumber));
-      if (values != NULL)
-	{
-	  size_t l = strlen (values[0]);
 
-	  grplist = realloc (grplist, listlen + l + 2);
-	  if (grplist == NULL)
-	    {
-	      ldap_value_free (values);
-	      ldap_msgfree (res);
-	      _nss_ldap_leave ();
-	      return NULL;
-	    }
-	  memcpy (grplist + listlen, values[0], l);
-	  grplist[listlen + l] = ',';
-	  listlen += l + 1;
-
-	  ldap_value_free (values);
-	}
-#else
-      char **values = _nss_ldap_get_values (e, ATM (group, gidNumber));
-      if (values != NULL)
-	{
-	  int i;
-	  long int gid;
-
-	  gid = strtol (values[0], (char **) NULL, 10);
-	  ldap_value_free (values);
-
-	  if ((gid == LONG_MIN || gid == LONG_MAX) && errno == ERANGE)
-	    {
-	      continue;
-	    }
-
-#ifdef HAVE_NSSWITCH_H
-	  /* weed out duplicates: is this really our responsibility? */
-	  for (i = 0; i < gbm->numgids; i++)
-	    {
-	      if (gbm->gid_array[i] == (gid_t) gid)
-		continue;
-	    }
-
-	  gbm->gid_array[gbm->numgids++] = (gid_t) gid;
-
-	  if (gbm->numgids == gbm->maxgids)
-	    {
-	      ldap_msgfree (res);
-	      _nss_ldap_leave ();
-	      return NSS_SUCCESS;
-	    }
-#else
-	  if (gid != group)
-	    {
-	      if (*start == *size && limit <= 0)
-		{
-		  /* Need a bigger buffer */
-		  groups = realloc (groups, 2 * *size * sizeof (*groups));
-		  if (groups == NULL)
-		    {
-		      ldap_msgfree (res);
-		      *errnop = ENOMEM;
-		      _nss_ldap_leave ();
-		      return NSS_TRYAGAIN;
-		    }
-		  *groupsp = groups;
-		  *size *= 2;
-		}
-	      /* weed out duplicates: is this really our responsibility? */
-	      for (i = 0; i < *size; i++)
-		{
-		  if (groups[i] == gid)
-		    continue;
-		}
-	      groups[*start] = gid;
-	      *start += 1;
-
-	      if (*start == limit)
-		{
-		  ldap_msgfree (res);
-		  _nss_ldap_leave ();
-		  return NSS_SUCCESS;
-		}
-	    }
-#endif /* HAVE_NSSWITCH_H */
-	}
-#endif /* AIX */
-    }
-  ldap_msgfree (res);
   _nss_ldap_leave ();
 
 #ifdef HAVE_NSS_H
   return NSS_SUCCESS;
 #elif defined(AIX)
   /* Strip last comma and terminate the string */
-  if (grplist && listlen)
-    grplist[listlen - 1] = '\0';
-  return grplist;
+  if (lia.grplist != NULL && lia.listlen != 0)
+    lia.grplist[lia.listlen - 1] = '\0';
+  return lia.grplist;
 #else
   /* yes, NSS_NOTFOUND is the successful errno code. see nss_dbdefs.h */
   return NSS_NOTFOUND;
