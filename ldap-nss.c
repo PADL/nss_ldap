@@ -819,8 +819,10 @@ do_close_no_unbind (void)
 #endif /* OPENLDAP 2.x */
 
 #else
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
   if (sd > 0)
     close (sd);
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
   (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
 #else

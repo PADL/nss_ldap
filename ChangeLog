@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+201	Luke Howard <lukeh@padl.com>
+
+	* Berkeley DB fixes from Howard Chu
+	* Netscape client library build fix
+
 200	Luke Howard <lukeh@padl.com>
 
 	* use sigprocmask() if available to block SIGPIPE

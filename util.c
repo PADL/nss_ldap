@@ -124,7 +124,21 @@ dn2uid_cache_put (const char *dn, const char *uid)
 
   if (__cache == NULL)
     {
+#if DB_VERSION_MAJOR >= 2
+      rc = db_create( &__cache, NULL, 0 );
+      if (rc == 0)
+	{
+	  rc = __cache->open(__cache, NULL, NULL, DB_HASH,
+		DB_CREATE | DB_THREAD, 0600);
+	  if (rc != 0)
+	    {
+		__cache->close(__cache, 0);
+		__cache = NULL;
+	    }
+	}
+#else
       __cache = dbopen (NULL, O_RDWR, 0600, DB_HASH, NULL);
+#endif
       if (__cache == NULL)
 	{
 	  cache_unlock ();
@@ -135,7 +149,11 @@ dn2uid_cache_put (const char *dn, const char *uid)
   key.size = strlen (dn);
   val.data = (void *) uid;
   val.size = strlen (uid);
-  rc = (__cache->put) (__cache, &key, &val, 0);
+  rc = (__cache->put) (__cache,
+#if DB_VERSION_MAJOR >= 2
+	NULL,
+#endif
+	&key, &val, 0);
 
   cache_unlock ();
   return rc ? NSS_TRYAGAIN : NSS_SUCCESS;
@@ -157,7 +175,11 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
   key.data = (void *) dn;
   key.size = strlen (dn);
 
-  if ((__cache->get) (__cache, &key, &val, 0) != 0)
+  if ((__cache->get) (__cache,
+#if DB_VERSION_MAJOR >= 2
+	NULL,
+#endif
+	&key, &val, 0) != 0)
     {
       cache_unlock ();
       return NSS_NOTFOUND;
