@@ -1001,7 +1001,7 @@ do_open (void)
 	{
 	  __config = NULL;
 	  debug ("<== do_open");
-	  return stat;
+	  return NSS_UNAVAIL;
 	}
     }
 

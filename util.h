@@ -110,6 +110,8 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
  * ** implemented
  */
 
+void _nss_ldap_defaultconfig (ldap_config_t *);
+
 NSS_STATUS _nss_ldap_readconfig (ldap_config_t ** result,
 				 char *buf, size_t buflen);
 

@@ -109,7 +109,7 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 #include <fcntl.h>
 static DB *__cache = NULL;
 
-NSS_LDAP_DEFINE_LOCK(__cache_lock);
+NSS_LDAP_DEFINE_LOCK (__cache_lock);
 
 #define cache_lock()     NSS_LDAP_LOCK(__cache_lock)
 #define cache_unlock()   NSS_LDAP_UNLOCK(__cache_lock)
@@ -516,23 +516,9 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
+void
+_nss_ldap_defaultconfig (ldap_config_t * result)
 {
-  FILE *fp;
-  char b[NSS_LDAP_CONFIG_BUFSIZ];
-  NSS_STATUS stat = NSS_SUCCESS;
-  ldap_config_t *result;
-
-  if (*presult == NULL)
-    {
-      *presult = (ldap_config_t *) calloc (1, sizeof (*result));
-      if (*presult == NULL)
-	return NSS_UNAVAIL;
-    }
-
-  result = *presult;
-
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
   result->ldc_deref = LDAP_DEREF_NEVER;
   result->ldc_host = NULL;
@@ -573,6 +559,27 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 #endif /* AT_OC_MAP */
 
   result->ldc_next = result;
+}
+
+NSS_STATUS
+_nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
+{
+  FILE *fp;
+  char b[NSS_LDAP_CONFIG_BUFSIZ];
+  NSS_STATUS stat = NSS_SUCCESS;
+  ldap_config_t *result;
+
+  if (bytesleft (buffer, buflen, ldap_config_t *) < sizeof (ldap_config_t))
+    {
+      return NSS_TRYAGAIN;
+    }
+  align (buffer, buflen, ldap_config_t *);
+  *presult = (ldap_config_t *) buffer;
+  buffer += sizeof (ldap_config_t);
+  buflen -= sizeof (ldap_config_t);
+
+  result = *presult;
+  _nss_ldap_defaultconfig (result);
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
   if (fp == NULL)
@@ -610,9 +617,9 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 
       /* kick off all whitespaces and newline at the end of value */
       /* Bob Guo <bob@mail.ied.ac.cn>, 08.10.2001 */
-      len = strlen (v)-1;
-      while (v[len] == ' ' || v[len] == '\t' || v[len] =='\n' )
-        --len;
+      len = strlen (v) - 1;
+      while (v[len] == ' ' || v[len] == '\t' || v[len] == '\n')
+	--len;
       v[++len] = '\0';
 
       if (buflen < (size_t) (len + 1))

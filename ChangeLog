@@ -1,15 +1,14 @@
 $Header$
 ===============================================================
 
-198	Luke Howard <lukeh@padl.com>
+198	 Luke Howard <lukeh@padl.com>
 
-	* AIX fixes
+	* fix potential buffer overflow in dnsconfig.c
 
 197	Luke Howard <lukeh@padl.com>
 
 	* improved AIX documentation from Dejan Muhamedagic
-	* define LDAP_OPT_SSL for Solaris 9 (may not work, but should
-	  at least let it compile)
+	* define LDAP_OPT_SSL for Solaris 9
 
 196	Luke Howard <lukeh@padl.com>
 

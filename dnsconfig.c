@@ -130,7 +130,6 @@ _nss_ldap_getdnsdn (char *src_domain,
   return NSS_SUCCESS;
 }
 
-
 NSS_STATUS
 _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 			     char *buf, size_t buflen)
@@ -139,59 +138,10 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   struct dns_reply *r;
   struct resource_record *rr;
   char domain[MAXHOSTNAMELEN + 1];
-  char *bptr;
-  ldap_config_t *result;
-
-  bptr = buf;
-
-  /* Bogus... this never gets freed... */
-  if (*presult == NULL)
-    {
-      *presult = (ldap_config_t *) calloc (1, sizeof (*result));
-      if (*presult == NULL)
-	return NSS_UNAVAIL;
-    }
-
-  result = *presult;
-  result->ldc_scope = LDAP_SCOPE_SUBTREE;
-  result->ldc_uri = NULL;
-  result->ldc_host = NULL;
-  result->ldc_base = NULL;
-  result->ldc_port = LDAP_PORT;
-  result->ldc_binddn = NULL;
-  result->ldc_bindpw = NULL;
-  result->ldc_rootbinddn = NULL;
-  result->ldc_rootbindpw = NULL;
-#ifdef LDAP_VERSION3
-  result->ldc_version = LDAP_VERSION3;
-#else
-  result->ldc_version = LDAP_VERSION2;
-#endif /* LDAP_VERSION3 */
-  result->ldc_timelimit = LDAP_NO_LIMIT;
-  result->ldc_bind_timelimit = 30;
-  result->ldc_ssl_on = SSL_OFF;
-  result->ldc_sslpath = NULL;
-  result->ldc_referrals = 1;
-  result->ldc_restart = 1;
-  result->ldc_uri = NULL;
-  result->ldc_tls_checkpeer = 0;
-  result->ldc_tls_cacertfile = NULL;
-  result->ldc_tls_cacertdir = NULL;
-  result->ldc_tls_ciphers = NULL;
-  result->ldc_tls_cert = NULL;
-  result->ldc_tls_key = NULL;
-  result->ldc_idle_timelimit = 0;
-  result->ldc_reconnect_pol = LP_RECONNECT_HARD;
-#ifdef AT_OC_MAP
-  result->ldc_at_map = NULL;
-  result->ldc_oc_map = NULL;
-  result->ldc_password_type = LU_RFC2307_USERPASSWORD;
-#endif /* AT_OC_MAP */
-  result->ldc_next = result;
+  ldap_config_t *result = NULL;
 
   if ((_res.options & RES_INIT) == 0 && res_init () == -1)
     {
-      free (*presult);
       return NSS_UNAVAIL;
     }
 
@@ -200,7 +150,6 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   r = dns_lookup (domain, "srv");
   if (r == NULL)
     {
-      free (*presult);
       return NSS_NOTFOUND;
     }
 
@@ -210,33 +159,39 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
       if (rr->type == T_SRV)
 	{
 	  int len;
+	  ldap_config_t *last = result;
 
-	  if (result->ldc_host != NULL)
+	  if (bytesleft (buf, buflen, ldap_config_t *) <
+	      sizeof (ldap_config_t))
 	    {
-	      /* need more space. Need to revise memory mgmnt in ldap-nss.c */
-
-	      result->ldc_next = (ldap_config_t *) malloc (sizeof (*result));
-	      if (result->ldc_next == NULL)
-		{
-		  dns_free_data (r);
-		  free (*presult);
-		  return NSS_UNAVAIL;
-		}
-	      result = result->ldc_next;
-
-	      result->ldc_scope = LDAP_SCOPE_SUBTREE;
-	      result->ldc_binddn = NULL;
-	      result->ldc_bindpw = NULL;
-	      result->ldc_next = result;
+	      dns_free_data (r);
+	      return NSS_TRYAGAIN;
+	    }
+	  align (buf, buflen, ldap_config_t *);
+	  result = (ldap_config_t *) buf;
+	  buf += sizeof (ldap_config_t);
+	  buflen -= sizeof (ldap_config_t);
+	  _nss_ldap_defaultconfig (result);
+	  if (last != NULL)
+	    {
+	      last->ldc_next = result;
+	    }
+	  else
+	    {
+	      *presult = result;
 	    }
 
+	  len = strlen (rr->u.srv->target) + 1;
+	  if (len < buflen)
+	    {
+	      dns_free_data (r);
+	      return NSS_TRYAGAIN;
+	    }
 	  /* Server Host */
-	  strcpy (bptr, rr->u.srv->target);
-	  result->ldc_host = bptr;
-
-	  len = strlen (rr->u.srv->target);
-	  bptr += len + 1;
-	  buflen -= len + 1;
+	  memcpy (buf, rr->u.srv->target, len);
+	  result->ldc_host = buf;
+	  buf += len;
+	  buflen -= len;
 
 	  /* Port */
 	  result->ldc_port = rr->u.srv->port;
@@ -250,11 +205,10 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 
 	  /* DN */
 	  stat = _nss_ldap_getdnsdn (_res.defdname,
-				     &result->ldc_base, &bptr, &buflen);
+				     &result->ldc_base, &buf, &buflen);
 	  if (stat != NSS_SUCCESS)
 	    {
 	      dns_free_data (r);
-	      free (*presult);
 	      return stat;
 	    }
 	}
