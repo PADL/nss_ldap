@@ -243,13 +243,13 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
   if (values == NULL)
     {
       /* invalid group; skip it */
-      return NSS_SUCCESS;
+      return NSS_NOTFOUND;
     }
 
   if (values[0] == NULL)
     {
       ldap_value_free (values);
-      return NSS_SUCCESS;
+      return NSS_NOTFOUND;
     }
 
 #ifdef AIX
@@ -271,7 +271,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
   if (gid == LONG_MAX && errno == ERANGE)
     {
       /* invalid group, skip it */
-      return NSS_SUCCESS;
+      return NSS_NOTFOUND;
     }
 
 # ifdef HAVE_NSSWITCH_H
@@ -279,13 +279,13 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
   for (i = 0; i < lia->numgids; i++)
     {
       if (lia->gid_array[i] == (gid_t) gid)
-	return NSS_SUCCESS;
+	return NSS_NOTFOUND;
     }
 
   if (lia->numgids == lia->maxgids)
     {
       /* can't fit any more */
-      return NSS_SUCCESS;
+      return NSS_NOTFOUND;
     }
 
   lia->gid_array[lia->numgids++] = (gid_t) gid;
@@ -293,7 +293,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
   if (gid == lia->group)
     {
       /* primary group, so skip it */
-      return NSS_SUCCESS;
+      return NSS_NOTFOUND;
     }
 
   if (lia->limit > 0)
@@ -301,7 +301,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       if (*(lia->start) >= lia->limit)
 	{
 	  /* can't fit any more */
-	  return NSS_TRYAGAIN;
+	  return NSS_NOTFOUND;
 	}
     }
   else if (*(lia->start) == *(lia->size))
@@ -312,7 +312,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
 					  sizeof (gid_t));
       if (*(lia->groups) == NULL)
 	{
-	  return NSS_TRYAGAIN;
+	  return NSS_NOTFOUND;
 	}
       *(lia->size) *= 2;
     }
@@ -322,7 +322,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
     {
       if ((*(lia->groups))[i] == gid)
 	{
-	  return NSS_SUCCESS;
+	  return NSS_NOTFOUND;
 	}
     }
 
@@ -332,7 +332,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
 # endif				/* HAVE_NSSWITCH_H */
 #endif /* AIX */
 
-  return NSS_SUCCESS;
+  return NSS_NOTFOUND;
 }
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(AIX)
@@ -380,6 +380,8 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   ldap_args_t a;
   NSS_STATUS stat;
   ent_context_t *ctx = NULL;
+  static const char *no_attrs[] = { NULL };
+  const char *gidnumber_attrs[2];
 
   LA_INIT (a);
 #if defined(HAVE_NSS_H) || defined(AIX)
@@ -416,7 +418,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
     }
 
   /* lookup the user's DN. */
-  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwnam, LM_PASSWD, 1, &res);
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwnam, LM_PASSWD, no_attrs, 1, &res);
   if (stat == NSS_SUCCESS)
     {
       e = _nss_ldap_first_entry (res);
@@ -450,13 +452,17 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   filter = _nss_ldap_filt_getgroupsbymember;
 #endif /* RFC2307BIS */
 
+  gidnumber_attrs[0] = ATM (group, gidNumber);
+  gidnumber_attrs[1] = NULL;
+  
   stat = _nss_ldap_getent_ex (&a, &ctx, (void *) liap, NULL, 0,
 #ifdef HAVE_NSS_H
 			      errnop,
 #else
 			      &erange,
 #endif /* HAVE_NSS_H */
-			      filter, LM_GROUP, do_parse_initgroups);
+			      filter, LM_GROUP, gidnumber_attrs,
+			      do_parse_initgroups);
 
 #ifdef RFC2307BIS
   if (userdn != NULL)
@@ -469,7 +475,12 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
     }
 #endif /* RFC2307BIS */
 
-  if (stat != NSS_SUCCESS)
+  /*
+   * We return NSS_NOTFOUND to force the parser to be called
+   * for as many entries (i.e. groups) as exist, for all
+   * search descriptors. So confusingly this means "success".
+   */
+  if (stat != NSS_SUCCESS && stat != NSS_NOTFOUND)
     {
 #ifndef HAVE_NSS_H
       if (erange)

@@ -668,6 +668,7 @@ LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
 NSS_STATUS _nss_ldap_search_s (const ldap_args_t * args,	/* IN */
 			       const char *filterprot,	/* IN */
 			       ldap_map_selector_t sel,	/* IN */
+			       const char **user_attrs, /* IN */
 			       int sizelimit,	/* IN */
 			       LDAPMessage ** pRes /* OUT */ );
 
@@ -677,6 +678,7 @@ NSS_STATUS _nss_ldap_search_s (const ldap_args_t * args,	/* IN */
 NSS_STATUS _nss_ldap_search (const ldap_args_t * args,	/* IN */
 			     const char *filterprot,	/* IN */
 			     ldap_map_selector_t sel,	/* IN */
+			     const char **user_attrs, /* IN */
 			     int sizelimit,	/* IN */
 			     int *pMsgid, /* OUT */
   			     ldap_service_search_descriptor_t **s /*IN/OUT*/ );
@@ -705,6 +707,7 @@ NSS_STATUS _nss_ldap_getent_ex (ldap_args_t * args, /* IN */
 				int *errnop,	/* OUT */
 				const char *filterprot,	/* IN */
 				ldap_map_selector_t sel,	/* IN */
+			        const char **user_attrs, /* IN */
 				parser_t parser /* IN */ );
 
 /*

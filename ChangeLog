@@ -17,6 +17,7 @@ $Id$
 	  _nss_ldap_innetgr()
 	* fix deadlock if getXXXent() called without first
 	  calling setXXXent()
+	* only request gidNumber attribute initgroups()
 
 215	Luke Howard <lukeh@padl.com>
 

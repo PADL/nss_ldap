@@ -2494,6 +2494,7 @@ NSS_STATUS
 _nss_ldap_search_s (const ldap_args_t * args,
 		    const char *filterprot,
 		    ldap_map_selector_t sel,
+		    const char **user_attrs,
 		    int sizelimit, LDAPMessage ** res)
 {
   char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
@@ -2551,7 +2552,8 @@ next:
     return stat;
 
   stat = do_with_reconnect (base, scope, filter,
-			    attrs, sizelimit, res,
+			    (user_attrs != NULL) ? user_attrs : attrs,
+			    sizelimit, res,
 			    (search_func_t) do_search_s);
 
   /* If no entry was returned, try the next search descriptor. */
@@ -2578,7 +2580,9 @@ next:
 NSS_STATUS
 _nss_ldap_search (const ldap_args_t * args,
 		  const char *filterprot,
-		  ldap_map_selector_t sel, int sizelimit, int *msgid,
+		  ldap_map_selector_t sel, 
+	 	  const char **user_attrs, int sizelimit,
+		  int *msgid,
 		  ldap_service_search_descriptor_t ** csd)
 {
   char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
@@ -2652,7 +2656,8 @@ _nss_ldap_search (const ldap_args_t * args,
     return stat;
 
   stat = do_with_reconnect (base, scope, filter,
-			    attrs, sizelimit, msgid,
+			    (user_attrs != NULL) ? user_attrs : attrs,
+			    sizelimit, msgid,
 			    (search_func_t) do_search);
 
   debug ("<== _nss_ldap_search");
@@ -2755,9 +2760,15 @@ _nss_ldap_getent (ent_context_t ** ctx,
 {
   NSS_STATUS status;
 
+  /*
+   * we need to lock here as the context may not be thread-specific
+   * data (under glibc, for example). Maybe we should make the lock part
+   * of the context.
+   */
+
   _nss_ldap_enter ();
   status = _nss_ldap_getent_ex (NULL, ctx, result, buffer, buflen,
-				errnop, filterprot, sel, parser);
+				errnop, filterprot, sel, NULL, parser);
   _nss_ldap_leave ();
 
   return status;
@@ -2775,7 +2786,9 @@ _nss_ldap_getent_ex (ldap_args_t *args,
 		     size_t buflen,
 		     int *errnop,
 		     const char *filterprot,
-		     ldap_map_selector_t sel, parser_t parser)
+		     ldap_map_selector_t sel,
+		     const char **user_attrs,
+		     parser_t parser)
 {
   NSS_STATUS stat = NSS_SUCCESS;
 
@@ -2794,12 +2807,6 @@ _nss_ldap_getent_ex (ldap_args_t *args,
 	}
     }
 
-  /*
-   * we need to lock here as the context may not be thread-specific
-   * data (under glibc, for example). Maybe we should make the lock part
-   * of the context.
-   */
-
 next:
   /*
    * If ctx->ec_msgid < 0, then we haven't searched yet. Let's do it!
@@ -2808,8 +2815,8 @@ next:
     {
       int msgid;
 
-      stat = _nss_ldap_search (args, filterprot, sel, LDAP_NO_LIMIT, &msgid,
-			       &(*ctx)->ec_sd);
+      stat = _nss_ldap_search (args, filterprot, sel, user_attrs,
+			       LDAP_NO_LIMIT, &msgid, &(*ctx)->ec_sd);
       if (stat != NSS_SUCCESS)
 	{
 	  debug ("<== _nss_ldap_getent_ex");
@@ -2843,7 +2850,7 @@ next:
     }
 #endif /* PAGE_RESULTS */
 
-  if (stat == NSS_NOTFOUND && (*ctx)->ec_sd)
+  if (stat == NSS_NOTFOUND && (*ctx)->ec_sd != NULL)
     {
       (*ctx)->ec_msgid = -1;
       goto next;
@@ -2879,7 +2886,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
   ctx.ec_cookie = NULL;
 #endif /* PAGE_RESULTS */
 
-  stat = _nss_ldap_search_s (args, filterprot, sel, 1, &ctx.ec_res);
+  stat = _nss_ldap_search_s (args, filterprot, sel, NULL, 1, &ctx.ec_res);
   if (stat != NSS_SUCCESS)
     {
       _nss_ldap_leave ();
@@ -3567,7 +3574,7 @@ NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password)
   _nss_ldap_enter ();
 
   stat = _nss_ldap_search_s (&args, _nss_ldap_filt_getpwnam,
-			     LM_PASSWD, 1, &res);
+			     LM_PASSWD, NULL, 1, &res);
   if (stat == NSS_SUCCESS)
     {
       e = _nss_ldap_first_entry (res);
