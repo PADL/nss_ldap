@@ -408,7 +408,6 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 
   _nss_ldap_enter ();
 
-#ifdef RFC2307BIS
   /* initialize schema */
   stat = _nss_ldap_init ();
   if (stat != NSS_SUCCESS)
@@ -421,6 +420,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 # endif /* !AIX */
     }
 
+#ifdef RFC2307BIS
   /* lookup the user's DN. */
   stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwnam, LM_PASSWD, no_attrs, 1, &res);
   if (stat == NSS_SUCCESS)
