@@ -63,12 +63,10 @@ static char rcsId[] = "$Id$";
 #endif
 
 #ifdef GNU_NSS
-static context_key_t bp_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t bp_context = { 0 };
+static context_handle_t bp_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_bp(
+static NSS_STATUS _nss_ldap_parse_bp(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,
@@ -79,8 +77,13 @@ PARSER _nss_ldap_parse_bp(
 	struct bootparams *bp = (struct bootparams *)result;
 	NSS_STATUS stat;
 
+#ifdef notdef
 	stat = _nss_ldap_getdomainname(ld, e, &bp->bp_name, &buffer, &buflen);
 	if (stat != NSS_SUCCESS) return stat;
+#else
+	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_HOSTNAME, &bp->bp_name, &buffer, &buflen);
+	if (stat != NSS_SUCCESS) return stat;
+#endif
 
 	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_BOOTPARAM, NULL, &bp->bp_params, &buffer, &buflen, NULL);
 	if (stat != NSS_SUCCESS) return stat;
@@ -96,10 +99,9 @@ static NSS_STATUS _nss_ldap_getbootparamsbyname_r(nss_backend_t *be, void *args)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_bootparams_destr(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_bootparams_destr(nss_backend_t *bp_context, void *args)
 {
-	_nss_ldap_default_destr(&bp_context);
-	return NSS_SUCCESS;
+	return _nss_ldap_default_destr(bp_context, args);
 }
 
 static nss_backend_op_t bp_ops[] =
@@ -112,21 +114,23 @@ nss_backend_t *_nss_ldap_bootparams_constr(const char *db_name,
 	const char *src_name,
 	const char *cfg_args)
 {
-	static nss_backend_t be;
-
-	/* until we figure this out, this is deliberately broken. */
-
-	return NULL;
+	nss_ldap_backend_t *be;
 
 /*
-	be.ops = bp_ops;
-	be.n_ops = sizeof(bp_ops) / sizeof(nss_backend_op_t);
-
-	if (_nss_ldap_default_constr(&bp_context) != NSS_SUCCESS)
+	if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
 		return NULL;
 
-	return &be;
+	be->ops = net_ops;
+	be->n_ops = sizeof(net_ops) / sizeof(nss_backend_op_t);
+
+	if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
+		return NULL;
+
+	return (nss_backend_t *)be;
  */
+
+	/* this is a noop until we figure it out properly */
+	return NULL;
 }
 
 #endif /* !GNU_NSS */

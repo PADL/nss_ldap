@@ -59,12 +59,10 @@ static char rcsId[] = "$Id$";
 #endif
 
 #ifdef GNU_NSS
-static context_key_t alias_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t alias_context = { 0 };
+static context_handle_t alias_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_alias(
+static NSS_STATUS _nss_ldap_parse_alias(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

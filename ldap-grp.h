@@ -29,21 +29,21 @@
 #define LDAP_ATTR_USERS			"memberuid"
 #define LDAP_ATTR_GROUP_GID		"gidnumber"
 
-static char *gr_attributes[] =
+static const char *gr_attributes[] =
 	{ LDAP_ATTR_GROUPNAME, LDAP_ATTR_GPASSWD,
 	  LDAP_ATTR_USERS, LDAP_ATTR_GROUP_GID, 
 	  NULL };
 
-static char filt_getgrnam[] =
+static const char filt_getgrnam[] =
 	"(&(objectclass="LDAP_CLASS_GROUP")("LDAP_ATTR_GROUPNAME"=%s))";
-static char filt_getgrgid[] =
+static const char filt_getgrgid[] =
 	"(&(objectclass="LDAP_CLASS_GROUP")("LDAP_ATTR_GROUP_GID"=%d))";
-static char filt_getgrent[] =
+static const char filt_getgrent[] =
 	"(objectclass="LDAP_CLASS_GROUP")";
-static char filt_getgroupsbymember[] =
+static const char filt_getgroupsbymember[] =
 	"(&(objectclass="LDAP_CLASS_GROUP")("LDAP_ATTR_USERS"=%s))";
 
-PARSER _nss_ldap_parse_gr(
+static NSS_STATUS _nss_ldap_parse_gr(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

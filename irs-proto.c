@@ -37,7 +37,7 @@ struct pvt
 {
 	struct protoent result;
 	char buffer[NSS_BUFLEN_PROTOCOLS];
-	context_key_t state;
+	context_handle_t state;
 };
 
 static struct protoent *

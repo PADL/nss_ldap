@@ -34,20 +34,20 @@
 #define LDAP_ATTR_SHADOW_EXPIRE         "shadowexpire"
 #define LDAP_ATTR_SHADOW_FLAG           "shadowflag"
 
-static char *sp_attributes[] =
+static const char *sp_attributes[] =
         { LDAP_ATTR_SHADOW_NAME, LDAP_ATTR_SHADOW_PASSWD,
           LDAP_ATTR_SHADOW_LASTCHANGE, LDAP_ATTR_SHADOW_MAX,
           LDAP_ATTR_SHADOW_MIN, LDAP_ATTR_SHADOW_WARN,
           LDAP_ATTR_SHADOW_INACTIVE, LDAP_ATTR_SHADOW_EXPIRE,
 	  NULL };
 
-static char filt_getspnam[] =
+static const char filt_getspnam[] =
         "(&(objectclass="LDAP_CLASS_SHADOW")("LDAP_ATTR_SHADOW_NAME"=%s))";
 
-static char filt_getspent[] =
+static const char filt_getspent[] =
         "(objectclass="LDAP_CLASS_SHADOW")";
 
-PARSER _nss_ldap_parse_sp(
+static NSS_STATUS _nss_ldap_parse_sp(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

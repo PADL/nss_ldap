@@ -44,7 +44,7 @@ struct pvt
 {
 	struct hostent result;
 	char buffer[NSS_BUFLEN_HOSTS];
-	context_key_t state;
+	context_handle_t state;
 };
 
 static struct hostent *
@@ -82,8 +82,8 @@ ho_byaddr(struct irs_ho *this, const void *addr, int len, int af)
 	NSS_STATUS s;
 	ldap_args_t a;
 
-	if (af == AF_INET6 && len == IN6ADDRSZ &&
-		(!memcmp(uaddr, mapped, sizeof mapped) ||
+	if (af == AF_INET6 && len == IN6ADDRSZ
+		&& (!memcmp(uaddr, mapped, sizeof mapped) ||
 		 !memcmp(uaddr, tunnelled, sizeof tunnelled))) {
 			/* Unmap. */
 			addr = (u_char *)addr + sizeof mapped;

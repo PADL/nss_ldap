@@ -29,47 +29,54 @@
 
 #define LOOKUP_NAME(args, filter, attributes, parser) \
 	ldap_args_t a; \
+	NSS_STATUS s; \
 	LA_INIT(a); \
-	LA_STRING(a) = ((nss_XbyY_args_t *)args)->key.name; \
+	LA_STRING(a) = NSS_ARGS(args)->key.name; \
 	LA_TYPE(a) = LA_TYPE_STRING; \
-	((nss_XbyY_args_t *)args)->status = _nss_ldap_getbyname(&a, \
-		((nss_XbyY_args_t *)args)->buf.result, \
-		((nss_XbyY_args_t *)args)->buf.buffer, \
-		((nss_XbyY_args_t *)args)->buf.buflen, \
+	s = _nss_ldap_getbyname(&a, \
+		NSS_ARGS(args)->buf.result, \
+		NSS_ARGS(args)->buf.buffer, \
+		NSS_ARGS(args)->buf.buflen, \
 		filter, \
 		(const char **)attributes, \
 		parser); \
-	((nss_XbyY_args_t *)args)->returnval = (((nss_XbyY_args_t *)args)->status == NSS_SUCCESS) ? \
-		((nss_XbyY_args_t *)args)->buf.result : NULL; \
-	return ((nss_XbyY_args_t *)args)->status
+	if (s == NSS_SUCCESS) { \
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result; \
+	} \
+	return s
 #define LOOKUP_NUMBER(args, field, filter, attributes, parser) \
 	ldap_args_t a; \
+	NSS_STATUS s; \
 	LA_INIT(a); \
-	LA_NUMBER(a) = ((nss_XbyY_args_t *)args)->field; \
+	LA_NUMBER(a) = NSS_ARGS(args)->field; \
 	LA_TYPE(a) = LA_TYPE_NUMBER; \
-	((nss_XbyY_args_t *)args)->status = _nss_ldap_getbyname(&a, \
-		((nss_XbyY_args_t *)args)->buf.result, \
-		((nss_XbyY_args_t *)args)->buf.buffer, \
-		((nss_XbyY_args_t *)args)->buf.buflen, \
+	s = _nss_ldap_getbyname(&a, \
+		NSS_ARGS(args)->buf.result, \
+		NSS_ARGS(args)->buf.buffer, \
+		NSS_ARGS(args)->buf.buflen, \
 		filter, \
 		(const char **)attributes, \
 		parser); \
-	((nss_XbyY_args_t *)args)->returnval = (((nss_XbyY_args_t *)args)->status == NSS_SUCCESS) ? \
-		((nss_XbyY_args_t *)args)->buf.result : NULL; \
-	return ((nss_XbyY_args_t *)args)->status
-#define LOOKUP_GETENT(args, key, filter, attributes, parser) \
-	((nss_XbyY_args_t *)args)->status = _nss_ldap_getent(key, \
-		((nss_XbyY_args_t *)args)->buf.result, \
-		((nss_XbyY_args_t *)args)->buf.buffer, \
-		((nss_XbyY_args_t *)args)->buf.buflen, \
+	if (s == NSS_SUCCESS) { \
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result; \
+	} \
+	return s
+#define LOOKUP_GETENT(args, be, filter, attributes, parser) \
+	NSS_STATUS s; \
+	s = _nss_ldap_getent(((nss_ldap_backend_t *)be)->state, \
+		NSS_ARGS(args)->buf.result, \
+		NSS_ARGS(args)->buf.buffer, \
+		NSS_ARGS(args)->buf.buflen, \
 		filter, \
 		(const char **)attributes, \
 		parser); \
-	((nss_XbyY_args_t *)args)->returnval = (((nss_XbyY_args_t *)args)->status == NSS_SUCCESS) ? \
-		((nss_XbyY_args_t *)args)->buf.result : NULL; \
-	return ((nss_XbyY_args_t *)args)->status
+	if (s == NSS_SUCCESS) { \
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result; \
+	} \
+	return s
 
 #elif defined(GNU_NSS)
+
 #define LOOKUP_NAME(name, result, buffer, buflen, filter, attributes, parser) \
 	ldap_args_t a; \
 	LA_INIT(a); \
@@ -84,7 +91,9 @@
 	return _nss_ldap_getbyname(&a, result, buffer, buflen, filter, (const char **)attributes, parser)
 #define LOOKUP_GETENT(key, result, buffer, buflen, filter, attributes, parser) \
 	return _nss_ldap_getent(key, result, buffer, buflen, filter, (const char **)attributes, parser)
+
 #elif defined(IRS_NSS)
+
 #define LOOKUP_NAME(name, this, filter, attributes, parser) \
 	ldap_args_t a; \
 	struct pvt *pvt = (struct pvt *)this->private; \
@@ -127,13 +136,26 @@
 #endif
 
 #if defined(IRS_NSS)
+
 #define LOOKUP_SETENT(this) \
 	struct pvt *pvt = (struct pvt *)this->private; \
 	(void) _nss_ldap_ent_context_init(&pvt->state)
 #define LOOKUP_ENDENT(this) \
 	struct pvt *pvt = (struct pvt *)this->private; \
 	_nss_ldap_ent_context_free(&pvt->state)
+
+#elif defined(SUN_NSS)
+
+#define LOOKUP_SETENT(key) \
+	if (_nss_ldap_ent_context_init(&((nss_ldap_backend_t *)key)->state) == NULL) \
+		return NSS_UNAVAIL; \
+	return NSS_SUCCESS
+#define LOOKUP_ENDENT(key) \
+	_nss_ldap_ent_context_free(&((nss_ldap_backend_t *)key)->state); \
+	return NSS_SUCCESS
+
 #else
+
 #define LOOKUP_SETENT(key) \
 	if (_nss_ldap_ent_context_init(&key) == NULL) \
 		return NSS_UNAVAIL; \

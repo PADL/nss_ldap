@@ -53,12 +53,10 @@ static char rcsId[] = "$Id$";
 #endif
 
 #ifdef GNU_NSS
-static context_key_t gr_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t gr_context = { 0 };
+static context_handle_t gr_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_gr(
+static NSS_STATUS _nss_ldap_parse_gr(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,
@@ -71,18 +69,22 @@ PARSER _nss_ldap_parse_gr(
 	NSS_STATUS stat;
 
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_GROUP_GID, &gid, &buffer, &buflen);
-	if (stat != NSS_SUCCESS) return stat;
+	if (stat != NSS_SUCCESS)
+		return stat;
 
 	gr->gr_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol(gid);
 
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_GROUPNAME, &gr->gr_name, &buffer, &buflen);
-	if (stat != NSS_SUCCESS) return stat;
+	if (stat != NSS_SUCCESS)
+		return stat;
 
 	stat = _nss_ldap_assign_passwd(ld, e, LDAP_ATTR_GPASSWD, &gr->gr_passwd, &buffer, &buflen);
-	if (stat != NSS_SUCCESS) return stat;
+	if (stat != NSS_SUCCESS)
+		return stat;
 
 	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_USERS, NULL, &gr->gr_mem, &buffer, &buflen, NULL);
-	if (stat != NSS_SUCCESS) return stat;
+	if (stat != NSS_SUCCESS)
+		return stat;
 
 	return NSS_SUCCESS;
 }
@@ -129,22 +131,24 @@ static NSS_STATUS _nss_ldap_getgrgid_r(nss_backend_t *be, void *args)
 #endif
 
 #if defined(GNU_NSS) 
-NSS_STATUS _nss_ldap_setgrent_r(void)
+NSS_STATUS _nss_ldap_setgrent(void)
+{
+	LOOKUP_SETENT(gr_context);
+}
 #elif defined(SUN_NSS)
-static NSS_STATUS _nss_ldap_setgrent_r(nss_backend_t *be, void *args)
-#endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+static NSS_STATUS _nss_ldap_setgrent_r(nss_backend_t *gr_context, void *args)
 {
 	LOOKUP_SETENT(gr_context);
 }
 #endif
 
 #if defined(GNU_NSS) 
-NSS_STATUS _nss_ldap_endgrent_r(void)
+NSS_STATUS _nss_ldap_endgrent(void)
+{
+	LOOKUP_ENDENT(gr_context);
+}
 #elif defined(SUN_NSS)
-static NSS_STATUS _nss_ldap_endgrent_r(nss_backend_t *be, void *args)
-#endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+static NSS_STATUS _nss_ldap_endgrent_r(nss_backend_t *gr_context, void *args)
 {
 	LOOKUP_ENDENT(gr_context);
 }
@@ -159,7 +163,7 @@ NSS_STATUS _nss_ldap_getgrent_r(
 	LOOKUP_GETENT(gr_context, result, buffer, buflen, filt_getgrent, gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
-static NSS_STATUS _nss_ldap_getgrent_r(nss_backend_t *be,
+static NSS_STATUS _nss_ldap_getgrent_r(nss_backend_t *gr_context,
 	void *args)
 {
 	LOOKUP_GETENT(args, gr_context, filt_getgrent, gr_attributes, _nss_ldap_parse_gr);
@@ -167,10 +171,9 @@ static NSS_STATUS _nss_ldap_getgrent_r(nss_backend_t *be,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_group_destr(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_group_destr(nss_backend_t *gr_context, void *args)
 {
-	_nss_ldap_default_destr(&gr_context);
-	return NSS_SUCCESS;
+	return _nss_ldap_default_destr(gr_context, args);
 }
 
 static nss_backend_op_t group_ops[] =
@@ -188,18 +191,21 @@ nss_backend_t *_nss_ldap_group_constr(const char *db_name,
 	const char *src_name,
 	const char *cfg_args)
 {
-	static nss_backend_t be;
+	nss_ldap_backend_t *be;
 
-	debug("_nss_ldap_group_constr");
-
-	be.ops = group_ops;
-	be.n_ops = sizeof(group_ops) / sizeof(nss_backend_op_t);
-
-	if (_nss_ldap_default_constr(&gr_context) != NSS_SUCCESS)
+	if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
 		return NULL;
 
-	return &be;
+	be->ops = group_ops;
+	be->n_ops = sizeof(group_ops) / sizeof(nss_backend_op_t);
+
+	/* a NOOP at the moment */
+	if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
+		return NULL;
+
+	return (nss_backend_t *)be;
 }
+
 
 #endif /* !GNU_NSS */
 

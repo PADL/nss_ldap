@@ -32,26 +32,27 @@
 #define LDAP_ATTR_HOME                  "homedirectory"
 #define LDAP_ATTR_SHELL                 "loginshell"
 #define LDAP_ATTR_GECOS                 "gecos"
+#define LDAP_ATTR_COMMENT		"description"
 
-static char *pw_attributes[] =
+static const char *pw_attributes[] =
         { LDAP_ATTR_USERNAME, LDAP_ATTR_PASSWD,
           LDAP_ATTR_UID, LDAP_ATTR_USER_GID,
           LDAP_ATTR_REALNAME, LDAP_ATTR_HOME,
           LDAP_ATTR_SHELL, LDAP_ATTR_GECOS,
-	  NULL };
+	  LDAP_ATTR_COMMENT, NULL };
 
-static char filt_getpwnam[] =
+static const char filt_getpwnam[] =
 #ifdef IDS_UID
         "(&(objectclass="LDAP_CLASS_USER")(|("LDAP_ATTR_USERNAME"=%s)("LDAP_ATTR_USERNAME"=%s@*)))";
 #else
         "(&(objectclass="LDAP_CLASS_USER")("LDAP_ATTR_USERNAME"=%s))";
 #endif
-static char filt_getpwuid[] =
+static const char filt_getpwuid[] =
         "(&(objectclass="LDAP_CLASS_USER")("LDAP_ATTR_UID"=%d))";
-static char filt_getpwent[] =
+static const char filt_getpwent[] =
 	"(objectclass="LDAP_CLASS_USER")";
 
-PARSER _nss_ldap_parse_pw(
+static NSS_STATUS _nss_ldap_parse_pw(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

@@ -33,17 +33,17 @@
 #define LDAP_ATTR_RPCNAME               "cn"
 #define LDAP_ATTR_RPCNUMBER             "oncrpcnumber"
 
-static char *rpc_attributes[] =
+static const char *rpc_attributes[] =
         { LDAP_ATTR_RPCNAME, LDAP_ATTR_RPCNUMBER, NULL };
 
-static char filt_getrpcbyname[] =
+static const char filt_getrpcbyname[] =
         "(&(objectclass="LDAP_CLASS_RPC")("LDAP_ATTR_RPCNAME"=%s))";
-static char filt_getrpcbynumber[] =
+static const char filt_getrpcbynumber[] =
         "(&(objectclass="LDAP_CLASS_RPC")("LDAP_ATTR_RPCNUMBER"=%d))";
-static char filt_getrpcent[] =
+static const char filt_getrpcent[] =
         "(objectclass="LDAP_CLASS_RPC")";
 
-PARSER _nss_ldap_parse_rpc(
+static NSS_STATUS _nss_ldap_parse_rpc(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

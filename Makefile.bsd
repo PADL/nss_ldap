@@ -49,7 +49,9 @@ SRCS=	ldap-nss.c \
 	ldap-service.c \
 	util.c \
 	globals.c \
-	ltf.c
+	ltf.c \
+	resolve.c \
+	dnsconfig.c
 
 OBJS=	${SRCS:.c=.o}
 

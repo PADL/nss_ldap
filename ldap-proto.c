@@ -62,12 +62,10 @@ static char rcsId[] = "$Id$";
 #endif
 
 #ifdef GNU_NSS
-static context_key_t proto_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t proto_context = { 0 };
+static context_handle_t proto_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_proto(
+static NSS_STATUS _nss_ldap_parse_proto(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,
@@ -122,9 +120,9 @@ NSS_STATUS _nss_ldap_getprotobynumber_r(int number, struct protoent *result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_setprotoent_r(nss_backend_t *be, void *fakeargs)
+static NSS_STATUS _nss_ldap_setprotoent_r(nss_backend_t *proto_context, void *fakeargs)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_setprotoent_r(void)
+NSS_STATUS _nss_ldap_setprotoent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -133,9 +131,9 @@ NSS_STATUS _nss_ldap_setprotoent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_endprotoent_r(nss_backend_t *be, void *fakeargs)
+static NSS_STATUS _nss_ldap_endprotoent_r(nss_backend_t *proto_context, void *fakeargs)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_endprotoent_r(void)
+NSS_STATUS _nss_ldap_endprotoent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -144,7 +142,7 @@ NSS_STATUS _nss_ldap_endprotoent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getprotoent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_getprotoent_r(nss_backend_t *proto_context, void *args)
 {
 	LOOKUP_GETENT(args, proto_context, filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
 }
@@ -156,10 +154,9 @@ NSS_STATUS _nss_ldap_getprotoent_r(struct protoent *result, char *buffer, size_t
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_protocols_destr(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_protocols_destr(nss_backend_t *proto_context, void *args)
 {
-	_nss_ldap_default_destr(&proto_context);
-	return NSS_SUCCESS;
+	return _nss_ldap_default_destr(proto_context, args);
 }
 
 static nss_backend_op_t proto_ops[] =
@@ -176,15 +173,18 @@ nss_backend_t *_nss_ldap_protocols_constr(const char *db_name,
 	const char *src_name,
 	const char *cfg_args)
 {
-	static nss_backend_t be;
+	nss_ldap_backend_t *be;
 
-	be.ops = proto_ops;
-	be.n_ops = sizeof(proto_ops) / sizeof(nss_backend_op_t);
-
-	if (_nss_ldap_default_constr(&proto_context) != NSS_SUCCESS)
+	if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
 		return NULL;
 
-	return &be;
+	be->ops = proto_ops;
+	be->n_ops = sizeof(proto_ops) / sizeof(nss_backend_op_t);
+
+	if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
+		return NULL;
+
+	return (nss_backend_t *)be;
 }
 
 #endif /* !GNU_NSS */

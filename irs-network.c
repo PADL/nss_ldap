@@ -37,7 +37,7 @@ struct pvt
 {
 	struct nwent result;
 	char buffer[NSS_BUFLEN_NETWORKS];
-	context_key_t state;
+	context_handle_t state;
 };
 
 static struct nwent *

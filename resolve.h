@@ -43,9 +43,8 @@
 #ifndef __RESOLVE_H__
 #define __RESOLVE_H__
 
-#ifdef NeXT
+/* when would this *not* be defined? */
 #define HAVE_ARPA_NAMESER_H
-#endif
 
 /* We use these, but they are not always present in <arpa/nameser.h> */
 
@@ -105,6 +104,11 @@ struct dns_reply{
     struct resource_record *head;
 };
 
+#if defined(GNU_NSS) || defined(SUN_NSS) || defined(IRS_NSS)
+/* Keep namespace tidy. */
+#define dns_lookup	_nss_ldap_dns_lookup
+#define dns_free_data	_nss_ldap_dns_free_data
+#endif /* NSS */
 
 struct dns_reply* dns_lookup(const char *, const char *);
 

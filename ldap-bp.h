@@ -23,9 +23,8 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_BP_H
 #define _LDAP_NSS_LDAP_LDAP_BP_H
 
-#define LDAP_CLASS_HOST                 "ipHost"
-#define LDAP_ATTR_HOSTNAME              "associateddomain"
-#define LDAP_ATTR_HOSTADDR              "iphostnumber"
+#define LDAP_CLASS_HOST                 "bootableDevice"
+#define LDAP_ATTR_HOSTNAME              "cn"
 #define LDAP_ATTR_BOOTPARAM		"bootparameter"
 
 /* I'm guessing here. This is certainly wrong. */
@@ -35,14 +34,13 @@ struct bootparams
 	char **bp_params;
 };
 
-static char *bp_attributes[] =
-        { LDAP_ATTR_HOSTNAME, LDAP_ATTR_HOSTADDR, 
-	  LDAP_ATTR_BOOTPARAM, NULL };
+static const char *bp_attributes[] =
+        { LDAP_ATTR_HOSTNAME, LDAP_ATTR_BOOTPARAM, NULL };
 
-static char filt_getbootparamsbyname[] = 
+static const char filt_getbootparamsbyname[] = 
         "(&(objectclass="LDAP_CLASS_HOST")("LDAP_ATTR_HOSTNAME"=%s))";
 
-PARSER _nss_ldap_parse_bp(
+static NSS_STATUS _nss_ldap_parse_bp(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

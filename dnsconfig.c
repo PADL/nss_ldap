@@ -29,8 +29,12 @@
 #include <syslog.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
+#ifdef NeXT
+/* hack */
+#include <bsd/resolv.h>
+#else
 #include <resolv.h>
-
+#endif
 #include <lber.h>
 #include <ldap.h>
 
@@ -49,23 +53,23 @@
 
 /*
 	Support DNS SRV records. I look up the SRV record for
-	
 		ldap.tcp.gnu.org.
-
 	and build the DN DC=gnu,DC=org.
-
+	Thanks to Assar & co for resolve.[ch].
  */
 
 #include "ldap-nss.h"
 #include "globals.h"
 #include "util.h"
+#ifndef HAVE_SNPRINTF
 #include "snprintf.h"
+#endif
 #include "resolve.h"
 #include "dnsconfig.h"
 
 /* map gnu.org into DC=gnu,DC=org */
 NSS_STATUS _nss_ldap_getdnsdn(
-        char *domain,
+        char *src_domain,
         char **rval,
         char **buffer,
         size_t *buflen)
@@ -76,6 +80,16 @@ NSS_STATUS _nss_ldap_getdnsdn(
         char *st = NULL;
 #endif
         char *bptr;
+	char *domain;
+
+	/* we need to take a copy of domain, because strtok() modifies
+	 * it in place. Bad.
+	 */
+	domain = strdup(src_domain);
+	if (domain == NULL)
+		{
+		return NSS_TRYAGAIN;
+		}
 
 	bptr = *rval = *buffer;
 	**rval = '\0';
@@ -90,6 +104,7 @@ NSS_STATUS _nss_ldap_getdnsdn(
 
                 if (*buflen < (size_t)(len + DC_ATTR_AVA_LEN + 1 /* D C = [,|\0] */))
                         {
+			free(domain);
                         return NSS_TRYAGAIN;
                         }
 
@@ -105,7 +120,7 @@ NSS_STATUS _nss_ldap_getdnsdn(
 
                 strcpy(bptr, DC_ATTR_AVA);
 		bptr += DC_ATTR_AVA_LEN;
-		
+
                 strcpy(bptr, p);
                 bptr += len; /* don't include comma */
                 *buffer += len + DC_ATTR_AVA_LEN + 1;
@@ -117,12 +132,14 @@ NSS_STATUS _nss_ldap_getdnsdn(
                 (*rval)[bptr - *rval] = '\0';
                 }
 
+	free(domain);
+
         return NSS_SUCCESS;
 }
 
 
 NSS_STATUS _nss_ldap_readconfigfromdns(
-        ldap_config_t *result,
+        ldap_config_t **presult,
         char *buf,
         size_t buflen
 )
@@ -132,8 +149,18 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 	struct resource_record *rr;
 	char domain[MAXHOSTNAMELEN + 1];
 	char *bptr;
+	ldap_config_t *result;
 
 	bptr = buf;
+
+        if (*presult == NULL)
+                {
+                *presult = (ldap_config_t *)malloc(sizeof(*result));
+                if (*presult == NULL)
+                        return NSS_UNAVAIL;
+                }
+
+        result = *presult;
 
 	result->ldc_scope = LDAP_SCOPE_SUBTREE;
 	result->ldc_host = NULL;
@@ -143,24 +170,25 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 	result->ldc_bindpw = NULL;
 	result->ldc_next = result;
 
-	__nss_lock();
+	__nss_dns_lock();
 
 	if ((_res.options & RES_INIT) == 0 && res_init() == -1)
 		{
-		__nss_unlock();
+		__nss_dns_unlock();
 		return NSS_UNAVAIL;
 		}
 
-/*
+#ifdef DEBUG_LUKEH
+	/* Don't try this at home, kiddies. */
 	strcpy(_res.defdname,"toorak.xedoc.com.au");
- */
+#endif
 
 	snprintf(domain, sizeof(domain), "ldap.tcp.%s.", _res.defdname);
 
 	r = dns_lookup(domain, "srv");
 	if (r == NULL)
 		{
-		__nss_unlock();
+		__nss_dns_unlock();
 		return NSS_NOTFOUND;
 		}
 
@@ -176,6 +204,10 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 				/* need more space. Need to revise memory mgmnt in ldap-nss.c */
 
 				result->ldc_next = (ldap_config_t *)malloc(sizeof(*result));
+				if (result->ldc_next == NULL)
+					{
+					return NSS_UNAVAIL;
+					}
 				result = result->ldc_next;
 
 				result->ldc_scope = LDAP_SCOPE_SUBTREE;
@@ -202,13 +234,13 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 				&buflen);
 			if (stat != NSS_SUCCESS)
 				{
-				__nss_unlock();
+				__nss_dns_unlock();
 				return stat;
 				}
 			}
 		}
 
-	__nss_unlock();
+	__nss_dns_unlock();
 	stat = NSS_SUCCESS;
 
 	return stat;

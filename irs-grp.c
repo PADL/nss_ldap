@@ -36,7 +36,7 @@ struct pvt
 {
 	struct group result;
 	char buffer[NSS_BUFLEN_GROUP];
-	context_key_t state;
+	context_handle_t state;
 };
 
 static struct group *

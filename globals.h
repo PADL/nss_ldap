@@ -22,14 +22,16 @@
 #define _LDAP_NSS_LDAP_GLOBAL_H
 
 #ifdef SUN_NSS
-#include <thread.h>
-extern mutex_t *_nss_ldap_lock;
+extern mutex_t _nss_ldap_lock;
+#elif defined(GNU_NSS)
+#include <pthread.h>
+extern pthread_mutex_t _nss_ldap_lock;
 #endif
 
 extern int _nss_ldap_herrno2nssstat_tab[];
 extern int _nss_ldap_herrno2nssstat_tab_count;
 
-extern char *_nss_ldap_crypt_prefixes_tab[];
+extern const char *_nss_ldap_crypt_prefixes_tab[];
 extern size_t _nss_ldap_crypt_prefixes_size_tab[];
 extern size_t _nss_ldap_crypt_prefixes_tab_count;
 extern crypt_prefix_t _nss_ldap_crypt_prefix;

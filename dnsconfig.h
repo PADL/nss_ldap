@@ -23,10 +23,6 @@
 #ifndef _LDAP_NSS_LDAP_DNSCONFIG_H
 #define _LDAP_NSS_LDAP_DNSCONFIG_H
 
-/*
-   Please note: parse.[ch] are not distributed under the GLPL.
- */
-
 /* utility routines.  */
 
 NSS_STATUS _nss_ldap_getdnsdn(
@@ -36,8 +32,13 @@ NSS_STATUS _nss_ldap_getdnsdn(
         size_t *buflen);
 
 NSS_STATUS _nss_ldap_readconfigfromdns(
-        ldap_config_t *result,
+        ldap_config_t **result,
         char *buf,
         size_t buflen);
+
+/* These are unnecessary for the moment, as there is a coarser
+ * lock around readconfig. */
+#define __nss_dns_lock()
+#define __nss_dns_unlock()
 
 #endif /* _LDAP_NSS_LDAP_DNSCONFIG_H */

@@ -25,6 +25,11 @@
 
 #ifdef IRS_NSS
 
+/* This header is only needed when using the BSD Information 
+ * Retrieval Service. It is not necessary for the Solaris or
+ * GNU nameservice switch modules.
+ */
+
 #include <irs_p.h>
 
 extern struct irs_gr *  irs_ldap_gr __P((struct irs_acc *));
@@ -33,11 +38,17 @@ extern struct irs_sv *  irs_ldap_sv __P((struct irs_acc *));
 extern struct irs_pr *  irs_ldap_pr __P((struct irs_acc *));
 extern struct irs_ho *  irs_ldap_ho __P((struct irs_acc *));
 extern struct irs_nw *  irs_ldap_nw __P((struct irs_acc *));
+/* not done yet */
 extern struct irs_ng *  irs_ldap_ng __P((struct irs_acc *));
 
-#endif
+/* Keep namespace clean. */
+#define irs_ldap_acc	__irs_ldap_acc
 
-#ifndef SUN_NSS
+extern struct irs_acc *	irs_ldap_acc __P((const char *));
+
+/* These lengths were derived from the Solaris headers.
+ * Copyright (c) 1992, by Sun Microsystems, Inc.
+ */
 
 #define NSS_BUFSIZ              1024
 
@@ -53,23 +64,15 @@ extern struct irs_ng *  irs_ldap_ng __P((struct irs_acc *));
 #define NSS_LINELEN_SHADOW      NSS_BUFSIZ
 #define NSS_LINELEN_BOOTPARAMS  NSS_BUFSIZ
 
-/*
- * Reasonable defaults for 'buflen' values passed to _r functions.  The BSD
- * and SunOS 4.x implementations of the getXXXbyYYY() functions used hard-
- * coded array sizes;  the values here are meant to handle anything that
- * those implementations handled.
- * === These might more reasonably go in <pwd.h>, <netdb.h> et al
- */
-
 #define NSS_BUFLEN_GROUP        (NSS_LINELEN_GROUP + 200 * sizeof (char *))
 #define NSS_BUFLEN_HOSTS        \
         (NSS_LINELEN_HOSTS + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
 #define NSS_BUFLEN_NETGROUP     (MAXHOSTNAMELEN * 2 + LOGNAME_MAX + 3)
-#define NSS_BUFLEN_NETWORKS     NSS_LINELEN_NETWORKS    /* === ?  + 35 * 4 */
+#define NSS_BUFLEN_NETWORKS     NSS_LINELEN_NETWORKS
 #define NSS_BUFLEN_PASSWD       NSS_LINELEN_PASSWD
-#define NSS_BUFLEN_PROTOCOLS    NSS_LINELEN_PROTOCOLS   /* === ?  + 35 * 4 */
-#define NSS_BUFLEN_RPC          NSS_LINELEN_RPC         /* === ?  + 35 * 4 */
-#define NSS_BUFLEN_SERVICES     NSS_LINELEN_SERVICES    /* === ?  + 35 * 4 */
+#define NSS_BUFLEN_PROTOCOLS    NSS_LINELEN_PROTOCOLS
+#define NSS_BUFLEN_RPC          NSS_LINELEN_RPC
+#define NSS_BUFLEN_SERVICES     NSS_LINELEN_SERVICES
 #define NSS_BUFLEN_SHADOW       NSS_LINELEN_SHADOW
 #define NSS_BUFLEN_ETHERS       NSS_LINELEN_ETHERS
 #define NSS_BUFLEN_BOOTPARAMS   NSS_LINELEN_BOOTPARAMS

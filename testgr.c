@@ -25,7 +25,7 @@ scan_group()
         {
 		char mem[512];
 		char **p;
-		int doit = (g->gr_mem[0] != NULL);
+		int doit = (g->gr_mem && *(g->gr_mem));
 		p = g->gr_mem;
 		strcpy(mem,"");
 		while(doit) {

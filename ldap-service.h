@@ -38,23 +38,23 @@
 #define LDAP_ATTR_SERVICEPORT           "ipserviceport"
 #define LDAP_ATTR_SERVICEPROTOCOL       "ipserviceprotocol"
 
-static char *serv_attributes[] =
+static const char *serv_attributes[] =
         { LDAP_ATTR_SERVICENAME, LDAP_ATTR_SERVICEPORT,
           LDAP_ATTR_SERVICEPROTOCOL, NULL };
 
-static char filt_getservbyname[] =
+static const char filt_getservbyname[] =
 	"(&(objectclass="LDAP_CLASS_SERVICE")("LDAP_ATTR_SERVICENAME"=%s))";
-static char filt_getservbynameproto[] =
+static const char filt_getservbynameproto[] =
         "(&(objectclass="LDAP_CLASS_SERVICE")("LDAP_ATTR_SERVICENAME"=%s)("LDAP_ATTR_SERVICEPROTOCOL"=%s))";
-static char filt_getservbyport[] =
+static const char filt_getservbyport[] =
         "(&(objectclass="LDAP_CLASS_SERVICE")("LDAP_ATTR_SERVICEPORT"=%d))";
-static char filt_getservbyportproto[] =
+static const char filt_getservbyportproto[] =
         "(&(objectclass="LDAP_CLASS_SERVICE")("LDAP_ATTR_SERVICEPORT"=%d)("LDAP_ATTR_SERVICEPROTOCOL"=%s))";
-static char filt_getservent[] =
+static const char filt_getservent[] =
         "(objectclass="LDAP_CLASS_SERVICE")";
 
 
-PARSER _nss_ldap_parse_serv(
+static NSS_STATUS _nss_ldap_parse_serv(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

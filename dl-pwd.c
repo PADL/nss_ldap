@@ -81,7 +81,9 @@ static char nss_buf[NSS_BUFLEN_PASSWD] = { '\0' };
 static int do_ldap_getpwent = 0;
 
 #ifdef OSF1
-/* this is the OSF/1 interface, anyway. Disgusting. */
+/* this is the OSF/1 interface, anyway. Disgusting. The "right" way is
+ * to use SIA. Oh well. Don't think this is threadsafe.
+ */
 int getpwent_r(struct passwd *pw, char *buffer, int len, FILE **pw_fp)
 {
 	/* returns 0 or errno */

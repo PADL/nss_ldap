@@ -71,12 +71,10 @@ static char rcsId[] = "$Id$";
 #endif
 
 #ifdef GNU_NSS
-static context_key_t hosts_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t hosts_context = { 0 };
+static context_handle_t hosts_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_host(
+static NSS_STATUS _nss_ldap_parse_host(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,
@@ -100,9 +98,26 @@ PARSER _nss_ldap_parse_host(
 	int i;
 
 	*addressbuf = *buffer = '\0';
-	
-	stat = _nss_ldap_getdomainname(ld, e, &host->h_name, &buffer, &buflen);
-	if (stat != NSS_SUCCESS) return stat;
+
+#ifdef notdef
+        /* we no longer care whether the DN determines the canonical name or not
+         * because depending on its semantics is a bad thing (tm). If it doesn't work
+         * then xxx->x_name will be NULL, and _nss_ldap_assign_attrval() will ignore
+         * it accordingly and assigned the "first" value of associatedDomain to x_name.
+         */
+	if (_nss_ldap_getdomainname(ld, e, &host->h_name, &buffer, &buflen) != NSS_SUCCESS)
+		{
+		stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_HOSTNAME, &host->h_name,
+			&buffer, &buflen);
+		if (stat != NSS_SUCCESS)
+			return stat;
+		}
+#else
+	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_HOSTNAME, &host->h_name,
+		&buffer, &buflen);
+	if (stat != NSS_SUCCESS)
+		return stat;
+#endif
 
 	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_HOSTNAME, host->h_name, &host->h_aliases,
 		&buffer, &buflen, NULL);
@@ -142,6 +157,7 @@ PARSER _nss_ldap_parse_host(
 		{
 		buffer += (addresscount + 1) * IN6ADDRSZ;
 		buflen -= (addresscount + 1) * IN6ADDRSZ;
+		}
 	else
 		{
 		buffer += (addresscount + 1) * INADDRSZ;
@@ -195,7 +211,6 @@ PARSER _nss_ldap_parse_host(
 			}
 #else
 		unsigned long haddr;
-/*		debug(addresses[i]); */
 		haddr = inet_addr(addresses[i]);
 #endif
 
@@ -232,12 +247,13 @@ PARSER _nss_ldap_parse_host(
 static NSS_STATUS _nss_ldap_gethostbyname_r(nss_backend_t *be, void *args)
 {
 	ldap_args_t a;
+	NSS_STATUS status;
 
 	LA_INIT(a);
 	LA_STRING(a) = NSS_ARGS(args)->key.name;
 	LA_TYPE(a) = LA_TYPE_STRING;
 
-	NSS_ARGS(args)->status = _nss_ldap_getbyname(&a,
+	status = _nss_ldap_getbyname(&a,
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
@@ -245,12 +261,12 @@ static NSS_STATUS _nss_ldap_gethostbyname_r(nss_backend_t *be, void *args)
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);
 
-	NSS_ARGS(args)->returnval = (NSS_ARGS(args)->status == NSS_SUCCESS) ?
-		NSS_ARGS(args)->buf.result : NULL;
+	if (status == NSS_SUCCESS)
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result;
 
-	MAP_H_ERRNO(NSS_ARGS(args)->status, NSS_ARGS(args)->h_errno);
+	MAP_H_ERRNO(status, NSS_ARGS(args)->h_errno);
 
-	return NSS_ARGS(args)->status;
+	return status;
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_gethostbyname_r(const char *name, struct hostent *result,
@@ -282,13 +298,14 @@ static NSS_STATUS _nss_ldap_gethostbyaddr_r(nss_backend_t *be, void *args)
 {
 	struct in_addr iaddr;
 	ldap_args_t a;
+	NSS_STATUS status;
 
 	memcpy(&iaddr.s_addr, NSS_ARGS(args)->key.hostaddr.addr, NSS_ARGS(args)->key.hostaddr.len);
 	LA_INIT(a);
 	LA_STRING(a) = inet_ntoa(iaddr);
 	LA_TYPE(a) = LA_TYPE_STRING;
 
-	NSS_ARGS(args)->status = _nss_ldap_getbyname(&a,
+	status = _nss_ldap_getbyname(&a,
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
@@ -296,20 +313,20 @@ static NSS_STATUS _nss_ldap_gethostbyaddr_r(nss_backend_t *be, void *args)
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);
 
-	NSS_ARGS(args)->returnval = (NSS_ARGS(args)->status == NSS_SUCCESS) ?
-		NSS_ARGS(args)->buf.result : NULL;
+	if (status == NSS_SUCCESS)
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result;
 
-	MAP_H_ERRNO(NSS_ARGS(args)->status, NSS_ARGS(args)->h_errno);
+	MAP_H_ERRNO(status, NSS_ARGS(args)->h_errno);
 
-	return NSS_ARGS(args)->status;
+	return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_gethostbyaddr_r(int number, struct hostent *result,
-				char *buffer, size_t buflen, int *h_errnop)
+NSS_STATUS _nss_ldap_gethostbyaddr_r(struct in_addr *addr, int len, int type,
+				struct hostent *result, char *buffer,
+				size_t buflen, int *h_errnop)
 {
 	NSS_STATUS status;
 	ldap_args_t a;
-	struct in_addr iaddr;
 
 	/* if querying by IPv6 address, make sure the address is "normalized" --
 	 * it should contain no leading zeros and all components of the address.
@@ -317,7 +334,7 @@ NSS_STATUS _nss_ldap_gethostbyaddr_r(int number, struct hostent *result,
 	 */
 
 	LA_INIT(a);
-	LA_STRING(a) = inet_ntoa(iaddr);
+	LA_STRING(a) = inet_ntoa(*addr);
 	LA_TYPE(a) = LA_TYPE_STRING;
 
 	status = _nss_ldap_getbyname(&a,
@@ -335,9 +352,9 @@ NSS_STATUS _nss_ldap_gethostbyaddr_r(int number, struct hostent *result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_sethostent_r(nss_backend_t *be, void *fakeargs)
+static NSS_STATUS _nss_ldap_sethostent_r(nss_backend_t *hosts_context, void *fakeargs)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_sethostent_r(void)
+NSS_STATUS _nss_ldap_sethostent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -346,9 +363,9 @@ NSS_STATUS _nss_ldap_sethostent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_endhostent_r(nss_backend_t *be, void *fakeargs)
+static NSS_STATUS _nss_ldap_endhostent_r(nss_backend_t *hosts_context, void *fakeargs)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_endhostent_r(void)
+NSS_STATUS _nss_ldap_endhostent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -357,10 +374,10 @@ NSS_STATUS _nss_ldap_endhostent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_gethostent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_gethostent_r(nss_backend_t *hosts_context, void *args)
 {
-	NSS_ARGS(args)->status = _nss_ldap_getent(
-		hosts_context,
+	NSS_STATUS status = _nss_ldap_getent(
+		((nss_ldap_backend_t *)hosts_context)->state,
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
@@ -368,12 +385,12 @@ static NSS_STATUS _nss_ldap_gethostent_r(nss_backend_t *be, void *args)
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);
 
-	NSS_ARGS(args)->returnval = (NSS_ARGS(args)->status == NSS_SUCCESS) ?
-		NSS_ARGS(args)->buf.result : NULL;
+	if (status == NSS_SUCCESS)
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result;
 
-	MAP_H_ERRNO(NSS_ARGS(args)->status, NSS_ARGS(args)->h_errno);
+	MAP_H_ERRNO(status, NSS_ARGS(args)->h_errno);
 
-	return NSS_ARGS(args)->status;
+	return status;
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_gethostent_r(struct hostent *result, char *buffer, size_t buflen, int *h_errnop)
@@ -396,13 +413,12 @@ NSS_STATUS _nss_ldap_gethostent_r(struct hostent *result, char *buffer, size_t b
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_hosts_destr(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_hosts_destr(nss_backend_t *hosts_context, void *args)
 {
-	_nss_ldap_default_destr(&hosts_context);
-	return NSS_SUCCESS;
+	return _nss_ldap_default_destr(hosts_context, args);
 }
 
-static nss_backend_op_t hosts_ops[] =
+static nss_backend_op_t host_ops[] =
 {
 	_nss_ldap_hosts_destr,
 	_nss_ldap_endhostent_r,
@@ -416,15 +432,18 @@ nss_backend_t *_nss_ldap_hosts_constr(const char *db_name,
 	const char *src_name,
 	const char *cfg_args)
 {
-	static nss_backend_t be;
+	nss_ldap_backend_t *be;
 
-	be.ops = hosts_ops;
-	be.n_ops = sizeof(hosts_ops) / sizeof(nss_backend_op_t);
-
-	if (_nss_ldap_default_constr(&hosts_context) != NSS_SUCCESS)
+	if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
 		return NULL;
 
-	return &be;
+	be->ops = host_ops;
+	be->n_ops = sizeof(host_ops) / sizeof(nss_backend_op_t);
+
+	if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
+		return NULL;
+
+	return (nss_backend_t *)be;
 }
 
 #endif /* !GNU_NSS */

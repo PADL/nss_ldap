@@ -1,3 +1,5 @@
+# Makefile for experimental dynamic loading under IRIX 5.x.
+
 # Copyright (C) 1997 Luke Howard.
 # This file is part of the nss_ldap Library.
 
@@ -38,7 +40,9 @@ HDRS=	\
 	ltf.h \
 	irs-nss.h \
 	dl-pwd.h \
-	snprintf.h
+	snprintf.h \
+	resolve.h \
+	dnsconfig.h
 
 SRCS=	ldap-nss.c \
 	ldap-pwd.c \
@@ -54,7 +58,9 @@ SRCS=	ldap-nss.c \
 	globals.c \
 	dl-pwd.c \
 	dl-grp.c \
-	snprintf.o
+	snprintf.c \
+	resolve.c \
+	dnsconfig.c
 
 OBJS=${SRCS:.c=.o}
 LIB=lib${MODULE}.so.1

@@ -36,7 +36,7 @@ struct pvt
 {
 	struct passwd result;
 	char buffer[NSS_BUFLEN_PASSWD];
-	context_key_t state;
+	context_handle_t state;
 };
 
 static struct passwd *

@@ -19,31 +19,33 @@
 
    $Id$
  */
+#include <netinet/ether.h>
 
 #ifndef _LDAP_NSS_LDAP_LDAP_ETHERS_H
 #define _LDAP_NSS_LDAP_LDAP_ETHERS_H
 
-#define LDAP_CLASS_HOST                 "ipHost"
-#define LDAP_ATTR_HOSTNAME              "associateddomain"
-#define LDAP_ATTR_HOSTADDR              "iphostnumber"
+#define LDAP_CLASS_HOST                 "ieee802Device"
+#define LDAP_ATTR_HOSTNAME              "cn"
 #define LDAP_ATTR_ETHERADDR		"macaddress"
 
-static char *ether_attributes[] =
-        { LDAP_ATTR_HOSTNAME, LDAP_ATTR_HOSTADDR, LDAP_ATTR_ETHERADDR, NULL };
+static const char *ether_attributes[] =
+        { LDAP_ATTR_HOSTNAME, LDAP_ATTR_ETHERADDR, NULL };
 
-static char filt_gethostton[] = /* opt filter on null macaddress? */
+static const char filt_gethostton[] = /* opt filter on null macaddress? */
         "(&(objectclass="LDAP_CLASS_HOST")("LDAP_ATTR_HOSTNAME"=%s))";
-static char filt_getntohost[] =
+static const char filt_getntohost[] =
         "(&(objectclass="LDAP_CLASS_HOST")("LDAP_ATTR_ETHERADDR"=%s))";
-static char filt_getetherent[] =
+static const char filt_getetherent[] =
         "(objectclass="LDAP_CLASS_HOST")";
 
 #if defined(TESTING) || defined(DL_NSS)
-/* haven't installed libc.so.6. remove this before release. */
+/* haven't instlled libc.so.6. remove this before release. */
+/*
 typedef u_char ether_addr_t[6];
 struct ether_addr {
         u_char  ether_addr_octet[6];
 };
+*/
 #endif
 
 struct ether
@@ -59,7 +61,7 @@ struct ether_addr {
 };
  */
 
-PARSER _nss_ldap_parse_ether(
+static NSS_STATUS _nss_ldap_parse_ether(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

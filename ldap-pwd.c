@@ -52,14 +52,35 @@ static char rcsId[] = "$Id$";
 #include <port_after.h>
 #endif
 
-
 #ifdef GNU_NSS
-static context_key_t pw_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t pw_context = { 0 };
+static context_handle_t pw_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_pw(
+static INLINE NSS_STATUS _nss_ldap_assign_emptystring(
+        char **valptr,
+        char **buffer,
+        size_t *buflen);
+
+static INLINE NSS_STATUS _nss_ldap_assign_emptystring(
+        char **valptr,
+        char **buffer,
+        size_t *buflen)
+{
+	if (*buflen < 2)
+		return NSS_TRYAGAIN;
+
+	*valptr = *buffer;
+
+	**valptr = '\0';
+
+	(*buffer)++;
+	(*buflen)--;
+
+	return NSS_SUCCESS;
+}
+
+
+static NSS_STATUS _nss_ldap_parse_pw(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,
@@ -71,8 +92,8 @@ PARSER _nss_ldap_parse_pw(
 	char *uid, *gid;
 	NSS_STATUS stat;
 	char tmpbuf[sizeof "-4294967295"];
-	size_t tmplen = sizeof(tmpbuf);
-	char *tmp = tmpbuf;
+	size_t tmplen;
+	char *tmp;
 
 #ifdef IDS_UID
 	/* ids-dirnaming drafts endorses uid values like
@@ -94,16 +115,18 @@ PARSER _nss_ldap_parse_pw(
 	if (stat != NSS_SUCCESS)
 		return stat;
 
+	tmp = tmpbuf;
+	tmplen = sizeof(tmpbuf);
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_UID, &uid, &tmp, &tmplen);
 	if (stat != NSS_SUCCESS)
 		return stat;
-
 	pw->pw_uid = (*uid == '\0') ? UID_NOBODY : (uid_t) atol(uid);
 
+	tmp = tmpbuf;
+	tmplen = sizeof(tmpbuf);
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_USER_GID, &gid, &tmp, &tmplen);
 	if (stat != NSS_SUCCESS)
 		return stat;
-
 	pw->pw_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol(gid);
 
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_GECOS, &pw->pw_gecos, &buffer, &buflen);
@@ -119,8 +142,18 @@ PARSER _nss_ldap_parse_pw(
 	if (stat != NSS_SUCCESS)
 		return stat;
 
-	pw->pw_shell = "";
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_SHELL, &pw->pw_shell, &buffer, &buflen);
+	if (stat != NSS_SUCCESS)
+		(void) _nss_ldap_assign_emptystring(&pw->pw_shell, &buffer, &buflen);
+
+#ifdef SUN_NSS
+	/* Is this field in POSIX, or even used? */
+	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_COMMENT, &pw->pw_comment, &buffer, &buflen);
+	if (stat != NSS_SUCCESS)
+		(void) _nss_ldap_assign_emptystring(&pw->pw_comment, &buffer, &buflen);
+
+	(void) _nss_ldap_assign_emptystring(&pw->pw_age, &buffer, &buflen);
+#endif
 
 	return NSS_SUCCESS;
 }
@@ -158,24 +191,26 @@ static NSS_STATUS _nss_ldap_getpwuid_r(nss_backend_t *be, void *args)
 #endif
 
 #if defined(GNU_NSS) 
-NSS_STATUS _nss_ldap_setpwent_r(void)
-#elif defined(SUN_NSS)
-static NSS_STATUS _nss_ldap_setpwent_r(nss_backend_t *be, void *args)
-#endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+NSS_STATUS _nss_ldap_setpwent(void)
 {
 	LOOKUP_SETENT(pw_context);
+}
+#elif defined(SUN_NSS)
+static NSS_STATUS _nss_ldap_setpwent_r(nss_backend_t *be, void *args)
+{
+	LOOKUP_SETENT(be);
 }
 #endif
 
 #if defined(GNU_NSS) 
-NSS_STATUS _nss_ldap_endpwent_r(void)
-#elif defined(SUN_NSS)
-static NSS_STATUS _nss_ldap_endpwent_r(nss_backend_t *be, void *args)
-#endif
-#if defined(GNU_NSS) || defined(SUN_NSS)
+NSS_STATUS _nss_ldap_endpwent(void)
 {
 	LOOKUP_ENDENT(pw_context);
+}
+#elif defined(SUN_NSS)
+static NSS_STATUS _nss_ldap_endpwent_r(nss_backend_t *be, void *args)
+{
+	LOOKUP_ENDENT(be);
 }
 #endif
 
@@ -190,15 +225,14 @@ NSS_STATUS _nss_ldap_getpwent_r(
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getpwent_r(nss_backend_t *be, void *args)
 {
-	LOOKUP_GETENT(args, pw_context, filt_getpwent, pw_attributes, _nss_ldap_parse_pw);
+	LOOKUP_GETENT(args, be, filt_getpwent, pw_attributes, _nss_ldap_parse_pw);
 }
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_passwd_destr(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_passwd_destr(nss_backend_t *pw_context, void *args)
 {
-	_nss_ldap_default_destr(&pw_context);
-	return NSS_SUCCESS;
+	return _nss_ldap_default_destr(pw_context, args);
 }
 
 static nss_backend_op_t passwd_ops[] =
@@ -215,17 +249,18 @@ nss_backend_t *_nss_ldap_passwd_constr(const char *db_name,
 	const char *src_name,
 	const char *cfg_args)
 {
-	static nss_backend_t be;
+	nss_ldap_backend_t *be;
 
-	debug("_nss_ldap_passwd_constr");
-
-	be.ops = passwd_ops;
-	be.n_ops = sizeof(passwd_ops) / sizeof(nss_backend_op_t);
-
-	if (_nss_ldap_default_constr(&pw_context) != NSS_SUCCESS)
+	if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
 		return NULL;
 
-	return &be;
+	be->ops = passwd_ops;
+	be->n_ops = sizeof(passwd_ops) / sizeof(nss_backend_op_t);
+
+	if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
+		return NULL;
+
+	return (nss_backend_t *)be;
 }
 
 

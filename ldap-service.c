@@ -65,12 +65,10 @@ static char rcsId[] = "$Id$";
 #endif
 
 #ifdef GNU_NSS
-static context_key_t serv_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t serv_context = { 0 };
+static context_handle_t serv_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_serv(
+static NSS_STATUS _nss_ldap_parse_serv(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *state,
@@ -80,7 +78,7 @@ PARSER _nss_ldap_parse_serv(
 {
 	struct servent *service = (struct servent *)result;
 	char *port;
-	NSS_STATUS stat;
+	NSS_STATUS stat = NSS_SUCCESS;
 
 	/* this is complicated and ugly, because some git (me) specified that service
 	 * entries should expand to two entities (or more) if they have multi-valued
@@ -175,6 +173,7 @@ PARSER _nss_ldap_parse_serv(
 		{
 		return stat;
 		}
+
 	service->s_port = htons(atoi(port));
 
 	return NSS_SUCCESS;
@@ -184,6 +183,7 @@ PARSER _nss_ldap_parse_serv(
 static NSS_STATUS _nss_ldap_getservbyname_r(nss_backend_t *be, void *args)
 {
 	ldap_args_t a;
+	NSS_STATUS status;
 
 	LA_INIT(a);
 	LA_STRING(a) = NSS_ARGS(args)->key.serv.serv.name;
@@ -191,7 +191,7 @@ static NSS_STATUS _nss_ldap_getservbyname_r(nss_backend_t *be, void *args)
 		LA_TYPE_STRING : LA_TYPE_STRING_AND_STRING;
 	LA_STRING2(a) = NSS_ARGS(args)->key.serv.proto;
 
-	NSS_ARGS(args)->status = _nss_ldap_getbyname(&a,
+	status = _nss_ldap_getbyname(&a,
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
@@ -200,10 +200,10 @@ static NSS_STATUS _nss_ldap_getservbyname_r(nss_backend_t *be, void *args)
 		(const char **)serv_attributes,
 		_nss_ldap_parse_serv);
 
-	NSS_ARGS(args)->returnval = (NSS_ARGS(args)->status == NSS_SUCCESS) ?
-		NSS_ARGS(args)->buf.result : NULL;
+	if (status == NSS_SUCCESS)
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result;
 
-	return NSS_ARGS(args)->status;
+	return status;
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_getservbyname_r(
@@ -221,7 +221,7 @@ NSS_STATUS _nss_ldap_getservbyname_r(
 	LA_STRING2(a) = proto;
 
 	return _nss_ldap_getbyname(&a, result, buffer, buflen,
-		(proto == NULL) ? filt_getservbyname : filt_getservbynameproto,
+		((proto == NULL) ? filt_getservbyname : filt_getservbynameproto),
 		(const char **)serv_attributes,
 		_nss_ldap_parse_serv);
 }
@@ -231,13 +231,15 @@ NSS_STATUS _nss_ldap_getservbyname_r(
 static NSS_STATUS _nss_ldap_getservbyport_r(nss_backend_t *be, void *args)
 {
 	ldap_args_t a; 
+	NSS_STATUS status;
 
 	LA_INIT(a);
-	LA_NUMBER(a) = NSS_ARGS(args)->key.serv.serv.port;
+	LA_NUMBER(a) = htons(NSS_ARGS(args)->key.serv.serv.port);
 	LA_TYPE(a) = (NSS_ARGS(args)->key.serv.proto == NULL) ?
 		LA_TYPE_NUMBER : LA_TYPE_NUMBER_AND_STRING;
 	LA_STRING2(a) = NSS_ARGS(args)->key.serv.proto;
-	NSS_ARGS(args)->status = _nss_ldap_getbyname(&a,
+
+	status = _nss_ldap_getbyname(&a,
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
@@ -246,14 +248,14 @@ static NSS_STATUS _nss_ldap_getservbyport_r(nss_backend_t *be, void *args)
 			(const char **)serv_attributes,
 			_nss_ldap_parse_serv);
 
-	NSS_ARGS(args)->returnval = (NSS_ARGS(args)->status == NSS_SUCCESS) ?
-		NSS_ARGS(args)->buf.result : NULL;
+	if (status == NSS_SUCCESS)
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result;
 
-	return NSS_ARGS(args)->status;
+	return status;
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_getservbyport_r(
-	int number,
+	int port,
 	const char *proto,
 	struct servent *result,
 	char *buffer,
@@ -262,7 +264,7 @@ NSS_STATUS _nss_ldap_getservbyport_r(
 	ldap_args_t a;
 
 	LA_INIT(a);
-	LA_NUMBER(a) = number;
+	LA_NUMBER(a) = htons(port);
 	LA_TYPE(a) = (proto == NULL) ? LA_TYPE_NUMBER : LA_TYPE_NUMBER_AND_STRING;
 	LA_STRING2(a) = proto;
 	return _nss_ldap_getbyname(&a, result, buffer, buflen,
@@ -273,9 +275,9 @@ NSS_STATUS _nss_ldap_getservbyport_r(
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_setservent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_setservent_r(nss_backend_t *serv_context, void *args)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_setservent_r(void)
+NSS_STATUS _nss_ldap_setservent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -284,9 +286,9 @@ NSS_STATUS _nss_ldap_setservent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_endservent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_endservent_r(nss_backend_t *serv_context, void *args)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_endservent_r(void)
+NSS_STATUS _nss_ldap_endservent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -295,7 +297,7 @@ NSS_STATUS _nss_ldap_endservent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getservent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_getservent_r(nss_backend_t *serv_context, void *args)
 {
 	LOOKUP_GETENT(args, serv_context, filt_getservent, serv_attributes, _nss_ldap_parse_serv);	
 }
@@ -307,10 +309,9 @@ NSS_STATUS _nss_ldap_getservent_r(struct servent *result, char *buffer, size_t b
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_services_destr(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_services_destr(nss_backend_t *serv_context, void *args)
 {
-	_nss_ldap_default_destr(&serv_context);
-	return NSS_SUCCESS;
+	return _nss_ldap_default_destr(serv_context, args);
 }
 
 static nss_backend_op_t services_ops[] =
@@ -327,15 +328,18 @@ nss_backend_t *_nss_ldap_services_constr(const char *db_name,
 	const char *src_name,
 	const char *cfg_args)
 {
-	static nss_backend_t be;
+	nss_ldap_backend_t *be;
 
-	be.ops = services_ops;
-	be.n_ops = sizeof(services_ops) / sizeof(nss_backend_op_t);
-
-	if (_nss_ldap_default_constr(&serv_context) != NSS_SUCCESS)
+	if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
 		return NULL;
 
-	return &be;
+	be->ops = services_ops;
+	be->n_ops = sizeof(services_ops) / sizeof(nss_backend_op_t);
+
+	if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
+		return NULL;
+
+	return (nss_backend_t *)be;
 }
 
 #endif /* !GNU_NSS */

@@ -41,14 +41,17 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
-#include <resolv.h>
-#include "resolve.h"
+#include <string.h>
 
 #ifdef NeXT
-#if NS_TARGET_MAJOR < 5 && NS_TARGET_MINOR < 2
+#include <bsd/resolv.h>
 extern char *strdup(const char *);
+
+#else
+#include <resolv.h>
 #endif
-#endif
+
+#include "resolve.h"
 
 #define HAVE_RES_SEARCH
 #define HAVE_DN_EXPAND

@@ -68,12 +68,10 @@ static char rcsId[] = "$Id$";
 
 
 #ifdef GNU_NSS
-static context_key_t net_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t net_context = { 0 };
+static context_handle_t net_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_net(
+static NSS_STATUS _nss_ldap_parse_net(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,
@@ -94,11 +92,27 @@ PARSER _nss_ldap_parse_net(
 	/* IPv6 support ? XXX */
 	network->n_addrtype = AF_INET;
 
-	stat = _nss_ldap_getdomainname(ld, e, &network->n_name, &buffer, &buflen);
+#ifdef notdef
+	/* we no longer care whether the DN determines the canonical name or not
+	 * because depending on its semantics is a bad thing (tm). If it doesn't work
+	 * then xxx->x_name will be NULL, and _nss_ldap_assign_attrval() will ignore
+	 * it accordingly and assigned the "first" value of associatedDomain to x_name.
+	 */
+	if (_nss_ldap_getdomainname(ld, e, &network->n_name, &buffer, &buflen) != NSS_SUCCESS)
+		{
+		stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_NETWORKNAME, &network->n_name,
+			&buffer, &buflen);
+		if (stat != NSS_SUCCESS)
+			return stat;
+		}
+#else
+	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_NETWORKNAME, &network->n_name,
+		&buffer, &buflen);
 	if (stat != NSS_SUCCESS) return stat;
-
+#endif
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_NETWORKADDR, &tmp, &buffer, &buflen);
 	if (stat != NSS_SUCCESS) return stat;
+
 #ifdef IRS_NSS
 	if (buflen < MAXADDRSIZE)
 		return NSS_TRYAGAIN;
@@ -122,12 +136,13 @@ PARSER _nss_ldap_parse_net(
 static NSS_STATUS _nss_ldap_getnetbyname_r(nss_backend_t *be, void *args)
 {
 	ldap_args_t a;
+	NSS_STATUS status;
 
 	LA_INIT(a);
 	LA_STRING(a) = NSS_ARGS(args)->key.name;
 	LA_TYPE(a) = LA_TYPE_STRING;
 
-	NSS_ARGS(args)->status = _nss_ldap_getbyname(&a,
+	status = _nss_ldap_getbyname(&a,
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
@@ -135,11 +150,12 @@ static NSS_STATUS _nss_ldap_getnetbyname_r(nss_backend_t *be, void *args)
 		(const char **)net_attributes,
 		_nss_ldap_parse_net);
 
-	NSS_ARGS(args)->returnval = (NSS_ARGS(args)->status == NSS_SUCCESS) ? 
-		NSS_ARGS(args)->buf.result : NULL;
-	MAP_H_ERRNO(NSS_ARGS(args)->status, NSS_ARGS(args)->h_errno);
+	if (status == NSS_SUCCESS)
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result;
 
-	return NSS_ARGS(args)->status;
+	MAP_H_ERRNO(status, NSS_ARGS(args)->h_errno);
+
+	return status;
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_getnetbyname_r(const char *name, struct netent *result,
@@ -178,10 +194,10 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 	char buf[256];
 	int blen;
 	ldap_args_t a;
+	NSS_STATUS retval = NSS_NOTFOUND;
 
 	LA_INIT(a);
 	LA_TYPE(a) = LA_TYPE_STRING;
-	LA_STRING(a) = buf;
 	/* we can keep the session open for all our queries here */
 	LA_STAYOPEN(a) = 1;
 
@@ -192,10 +208,10 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 #endif
 	strcpy(buf, inet_ntoa(in));
 	blen = strlen(buf);
+	LA_STRING(a) = buf;
 
 	while (1)
 		{
-		NSS_STATUS retval;
 #ifdef SUN_NSS
 		retval = _nss_ldap_getbyname(&a, NSS_ARGS(args)->buf.result, NSS_ARGS(args)->buf.buffer,
 			 NSS_ARGS(args)->buf.buflen,
@@ -218,10 +234,9 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 					{
 #ifdef SUN_NSS
 					NSS_ARGS(args)->returnval = NULL;
-					NSS_ARGS(args)->status = retval;
-					MAP_H_ERRNO(NSS_ARGS(args)->status, NSS_ARGS(args)->h_errno);
+					MAP_H_ERRNO(retval, NSS_ARGS(args)->h_errno);
 #else
-					MAP_H_ERRNO(NSS_NOTFOUND, *herrnop);
+					MAP_H_ERRNO(retval, *herrnop);
 #endif
 					LA_CLOSE(a);
 					return NSS_NOTFOUND;
@@ -229,37 +244,46 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 				}
 			else
 				{
-#ifndef SUN_NSS
+#ifdef SUN_NSS
+				NSS_ARGS(args)->returnval = NULL;
+				MAP_H_ERRNO(retval, NSS_ARGS(args)->h_errno);
+#else				
 				if (retval == NSS_TRYAGAIN)
-					{
+# if 1
+# warning errno not reentrant?
+					errno = EAGAIN;
+# else
 					__set_errno(EAGAIN);
-					}
-					MAP_H_ERRNO(retval, *herrnop);
-#else
-					NSS_ARGS(args)->returnval = NULL;
-					NSS_ARGS(args)->status = retval;
-					MAP_H_ERRNO(retval, NSS_ARGS(args)->status);
+# endif
+				MAP_H_ERRNO(retval, *herrnop);
 #endif
-					LA_CLOSE(a);
-					return retval;
+				LA_CLOSE(a);
+				return retval;
 				}
 			}
+		else
+			{
+			/* retval == NSS_SUCCESS */
+			break;
+			}
 		}
+
 #ifdef SUN_NSS
 	NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result;
-	MAP_H_ERRNO(NSS_ARGS(args)->status, NSS_ARGS(args)->h_errno);
+	MAP_H_ERRNO(retval, NSS_ARGS(args)->h_errno);
 #else
 	MAP_H_ERRNO(NSS_SUCCESS, *herrnop);
 #endif
+
 	LA_CLOSE(a);
-	return NSS_SUCCESS;
+	return retval;
 }
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_setnetent_r(nss_backend_t *be, void *fakeargs)
+static NSS_STATUS _nss_ldap_setnetent_r(nss_backend_t *net_context, void *fakeargs)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_setnetent_r(void)
+NSS_STATUS _nss_ldap_setnetent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -268,9 +292,9 @@ NSS_STATUS _nss_ldap_setnetent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_endnetent_r(nss_backend_t *be, void *fakeargs)
+static NSS_STATUS _nss_ldap_endnetent_r(nss_backend_t *net_context, void *fakeargs)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_endnetent_r(void)
+NSS_STATUS _nss_ldap_endnetent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -279,10 +303,10 @@ NSS_STATUS _nss_ldap_endnetent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getnetent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_getnetent_r(nss_backend_t *net_context, void *args)
 {
-	NSS_ARGS(args)->status = _nss_ldap_getent(
-		net_context,
+	NSS_STATUS status = _nss_ldap_getent(
+		((nss_ldap_backend_t *)net_context)->state,
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
@@ -290,11 +314,10 @@ static NSS_STATUS _nss_ldap_getnetent_r(nss_backend_t *be, void *args)
 		(const char **)net_attributes,
 		_nss_ldap_parse_net);
 
-	NSS_ARGS(args)->returnval = (NSS_ARGS(args)->status == NSS_SUCCESS) ?
-		NSS_ARGS(args)->buf.result : NULL;
-	MAP_H_ERRNO(NSS_ARGS(args)->status, NSS_ARGS(args)->h_errno);
+	if (status == NSS_SUCCESS)
+		NSS_ARGS(args)->returnval = NSS_ARGS(args)->buf.result;
 
-	return NSS_ARGS(args)->status;
+	return status;
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_getnetent_r(struct netent *result, char *buffer, size_t buflen, int *herrnop)
@@ -317,13 +340,12 @@ NSS_STATUS _nss_ldap_getnetent_r(struct netent *result, char *buffer, size_t buf
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_networks_destr(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_networks_destr(nss_backend_t *net_context, void *args)
 {
-	_nss_ldap_default_destr(&net_context);
-	return NSS_SUCCESS;
+	return _nss_ldap_default_destr(net_context, args);
 }
 
-static nss_backend_op_t networks_ops[] =
+static nss_backend_op_t net_ops[] =
 {
 	_nss_ldap_networks_destr,
 	_nss_ldap_endnetent_r,
@@ -337,15 +359,18 @@ nss_backend_t *_nss_ldap_networks_constr(const char *db_name,
 	const char *src_name,
 	const char *cfg_args)
 {
-	static nss_backend_t be;
+	nss_ldap_backend_t *be;
 
-	be.ops = networks_ops;
-	be.n_ops = sizeof(networks_ops) / sizeof(nss_backend_op_t);
-
-	if (_nss_ldap_default_constr(&net_context) != NSS_SUCCESS)
+	if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
 		return NULL;
 
-	return &be;
+	be->ops = net_ops;
+	be->n_ops = sizeof(net_ops) / sizeof(nss_backend_op_t);
+
+	if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
+		return NULL;
+
+	return (nss_backend_t *)be;
 }
 
 #endif /* !GNU_NSS */

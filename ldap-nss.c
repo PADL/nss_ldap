@@ -44,23 +44,27 @@ static char rcsId[] = "$Id$";
 #include "ltf.h"
 #include "globals.h"
 #include "util.h"
+#ifndef HAVE_SNPRINTF
 #include "snprintf.h"
+#endif
+#include "dnsconfig.h"
 
 /* the configuration is read by the first call to do_open().
  * Pointers to elements of the list are passed around but should not
  * be freed.
  */
-static ldap_config_t __config;
+
 static char __configbuf[NSS_LDAP_CONFIG_BUFSIZ];
 static ldap_config_t *_nss_ldap_config = NULL;
-
-#ifdef SUN_NSS
-static int thread_enabled = 0;
-#endif
 
 static void do_close(ldap_session_t *);
 static NSS_STATUS do_open(ldap_session_t *);
 
+/* Closes connection to the LDAP server.
+ * This assumes that we have exclusive access to sess->ls_conn,
+ * either by some other function having acquired a lock, or by
+ * using a thread safe libldap.
+ */
 static void do_close(ldap_session_t *sess)
 {
 	debug("do_close");
@@ -73,13 +77,16 @@ static void do_close(ldap_session_t *sess)
 }
 
 #ifdef SUN_NSS
-void _nss_ldap_default_destr(context_key_t *pkey)
+/* Default destructor.
+ * The entry point for this function is the destructor in the dispatch
+ * table for the switch. Thus, it's safe to grab the mutex from this
+ * function.
+ */
+NSS_STATUS _nss_ldap_default_destr(nss_backend_t *be, void *args)
 {
-	ent_context_t *ctx;
+	ent_context_t *ctx = ((nss_ldap_backend_t *)be)->state;
 
 	debug("_nss_ldap_default_destr");
-
-	ctx = _nss_ldap_ent_context_get(*pkey);
 
 	nss_context_lock();
 
@@ -91,23 +98,24 @@ void _nss_ldap_default_destr(context_key_t *pkey)
 			}
 		do_close(&ctx->ec_session);
 		free(ctx);
-		}	
+		((nss_ldap_backend_t *)be)->state = NULL;
+		}
 
-	if (thread_enabled)
-		{
-		(void) thr_setspecific(pkey->ck_thread_key, NULL);
-		}
-	else
-		{
-		pkey->ck_context = NULL;
-		}
+	/* Ditch the backend. */
+	free(be);
 
 	nss_context_unlock();
 
 	nss_cleanup();
+
+	return NSS_SUCCESS;
 }
 #endif
 
+/* Opens connection to an LDAP server.
+ * As with do_close(), this assumes ownership of sess.
+ * It also wants to own __config: is there a potential deadlock here? XXX
+ */ 
 static NSS_STATUS do_open(ldap_session_t *sess)
 {
 	ldap_config_t *cfg = NULL;
@@ -123,28 +131,23 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 		sess->ls_config = NULL;
 		}
 
-	/* do this with Netscape's SDK, as Netscape's libldap isn't
-	 * threadsafe UNTIL ldap_open() has completed.
-	 * __nss_lock() is always defined.
-	 */
-
-	__nss_lock();
-
 	if (_nss_ldap_config == NULL)
 		{
-		NSS_STATUS status = _nss_ldap_readconfig(&__config, __configbuf, sizeof(__configbuf));
-		if (status == NSS_SUCCESS)
+		NSS_STATUS status;
+
+		status = _nss_ldap_readconfig(&_nss_ldap_config, __configbuf, sizeof(__configbuf));
+
+		if (status != NSS_SUCCESS)
 			{
-			_nss_ldap_config = &__config;
+			status = _nss_ldap_readconfigfromdns(&_nss_ldap_config, __configbuf, sizeof(__configbuf));
 			}
-		else
+
+		if (status != NSS_SUCCESS)
 			{
-			__nss_unlock();
+			_nss_ldap_config = NULL;
 			return status;
 			}
 		}
-
-	__nss_unlock();
 
 	cfg = _nss_ldap_config;
 
@@ -164,7 +167,7 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 		}
 
 #ifdef NETSCAPE_SDK
-#ifndef DL_NSS
+#ifndef DL_NSS /* XXX */
 	if (_nss_ldap_ltf_thread_init(sess->ls_conn) != NSS_SUCCESS)
 		{
 		do_close(sess);
@@ -184,7 +187,14 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 	return NSS_SUCCESS;
 }
 
-ent_context_t *_nss_ldap_ent_context_init(context_key_t *key)
+/* This function initializes an enumeration context.
+ * It is called from setXXent() directly, and so can safely lock the
+ * mutex. 
+ *
+ * It could be done from the default constructor, under Solaris, but we
+ * delay it until the setXXent() function is called.
+ */
+ent_context_t *_nss_ldap_ent_context_init(context_handle_t *key)
 {
 	ent_context_t *ctx;
 
@@ -192,7 +202,9 @@ ent_context_t *_nss_ldap_ent_context_init(context_key_t *key)
 
 	nss_context_lock();
 
-	if ((ctx = _nss_ldap_ent_context_get(*key)) == NULL)
+	ctx = *key;
+
+	if (ctx == NULL)
 		{
 		ctx = (ent_context_t *)malloc(sizeof(*ctx));
 		if (ctx == NULL)
@@ -201,18 +213,7 @@ ent_context_t *_nss_ldap_ent_context_init(context_key_t *key)
 			return NULL;
 			}
 		ctx->ec_res = NULL;
-#ifndef SUN_NSS
 		*key = ctx;
-#else
-		if (thread_enabled)
-			{
-			(void) thr_setspecific(key->ck_thread_key, ctx);
-			}
-		else
-			{
-			key->ck_context = ctx;
-			}
-#endif
 		}
 	else if (ctx->ec_res != NULL)
 		{
@@ -231,73 +232,33 @@ ent_context_t *_nss_ldap_ent_context_init(context_key_t *key)
 }
 
 #ifdef SUN_NSS
-NSS_STATUS _nss_ldap_default_constr(context_key_t *key)
+/* This is the default "constructor" which gets called from each 
+ * constructor, in the NSS dispatch table.
+ */
+NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be)
 {
 	debug("_nss_ldap_default_constr");
 
-	if (_nss_ldap_lock == NULL)
-		{
-		_nss_ldap_lock = (mutex_t *) calloc(1, sizeof(mutex_t));
-		if (_nss_ldap_lock == NULL || mutex_init(_nss_ldap_lock, USYNC_THREAD, NULL) < 0)
-			{
-			return NSS_UNAVAIL;
-			}
-		}
-
-	__nss_lock();
-
-#ifndef SUNOS_54
-	if (thr_main() != -1)
-		{
-		thread_enabled = 1;
-		}
-	else
-		{
-		thread_enabled = 0;
-		}
-	
-	if (thread_enabled)
-		{
-		(void) thr_keycreate(&key->ck_thread_key, _nss_ldap_ent_context_destr);
-		}
-	else
-		{
-		key->ck_context = NULL;
-		}
-#else
-	if (thread_enabled == 0)
-		{
-		(void) thr_keycreate(&key->ck_thread_key, _nss_ldap_ent_context_destr);
-		if (key->ck_thread_key == 0)
-			{
-			thread_enabled = 0;
-			key->ck_context = NULL;
-			}
-		else
-			{
-			debug("multithreading enabled.");
-			thread_enabled = 1;
-			}
-		}
-#endif
-
-	__nss_unlock();
+	be->state = NULL;
 
 	return NSS_SUCCESS;
 }
 #endif /*SUN_NSS*/
 
-void _nss_ldap_ent_context_free(context_key_t *key)
+/* Frees a given context; this is called from endXXent() and so we
+ * can grab the lock.
+ */
+void _nss_ldap_ent_context_free(context_handle_t *key)
 {
-	ent_context_t *ctx;
+	ent_context_t *ctx = *key;
 
 	debug("_nss_ldap_ent_context_free");
 
 	nss_context_lock();
 
-	ctx = _nss_ldap_ent_context_get(*key);
 	if (ctx == NULL)
 		{
+		nss_context_unlock();
 		return;
 		}
 
@@ -317,30 +278,10 @@ void _nss_ldap_ent_context_free(context_key_t *key)
 	nss_context_unlock();
 }
 
-#ifdef SUN_NSS
-ent_context_t *_nss_ldap_ent_context_get(context_key_t key)
-{
-	ent_context_t *ctx = NULL;
 
-	if (thread_enabled)
-		{
-		thr_getspecific(key.ck_thread_key, (void **)&ctx);
-		}
-	else
-		{
-		ctx = key.ck_context;
-		}
-
-	return ctx;
-}
-
-void _nss_ldap_ent_context_destr(void *fakectx)
-{
-	debug("_nss_ldap_ent_context_destr");
-	/*NOOP*/
-}
-#endif /*SUN_NSS*/
-
+/* The generic lookup cover function.
+ * Assumes ownership of the session.
+ */
 LDAPMessage *_nss_ldap_lookup(
 	ldap_session_t *sess,
 	const ldap_args_t *args,
@@ -424,8 +365,11 @@ do_retry:
 	return res;
 }
 
+/* General entry point for enumeration routines.
+ * Locks mutex.
+ */
 NSS_STATUS _nss_ldap_getent(
-	context_key_t key,
+	ent_context_t *ctx,
 	void *result,
 	char *buffer,
 	size_t buflen,
@@ -434,22 +378,18 @@ NSS_STATUS _nss_ldap_getent(
 	parser_t parser)
 {
 	NSS_STATUS stat = NSS_NOTFOUND;
-	ent_context_t *ctx = NULL;
+
+	if (ctx == NULL)
+		{
+		return NSS_UNAVAIL;
+		}
 
 	/* we need to lock here as the context may not be thread-specific
 	 * data (under glibc, for example). Maybe we should make the lock part
 	 * of the context.
 	 */
 
-	nss_context_lock();
-
-	ctx = _nss_ldap_ent_context_get(key);
-
-	if (ctx == NULL)
-		{
-		nss_context_unlock();
-		return NSS_UNAVAIL;
-		}
+	nss_context_lock(); 
 
 	/* if ec_state.ls_info.ls_index is non-zero, then we don't collect another
 	 * entry off the LDAP chain, and instead refeed the existing result to
@@ -499,9 +439,13 @@ NSS_STATUS _nss_ldap_getent(
 		}
 
 	nss_context_unlock();
+
 	return stat;
 }
 
+/* General match function.
+ * Locks mutex.
+ */
 NSS_STATUS _nss_ldap_getbyname(
 	ldap_args_t *args,
 	void *result,
@@ -513,14 +457,18 @@ NSS_STATUS _nss_ldap_getbyname(
 {
 	LDAPMessage *res;
 	LDAPMessage *e;
-	NSS_STATUS stat;
+	NSS_STATUS stat = NSS_NOTFOUND;
 	ldap_state_t state;
+
+	/* XXX paranoia */
+	nss_context_lock();
 
 	res = _nss_ldap_lookup(&args->la_session, args, filterprot, attrs, 1);
 	if (res == NULL)
 		{
 		do_close(&args->la_session);
-		return NSS_NOTFOUND;
+		nss_context_unlock();
+		return stat;
 		}
 
 	/* we pass this along for the benefit of the services parser,
@@ -535,10 +483,9 @@ NSS_STATUS _nss_ldap_getbyname(
 		e != NULL;
 		e = ldap_next_entry(args->la_session.ls_conn, e))
 		{
-		if ((stat = parser(args->la_session.ls_conn, e, &state, result, buffer, buflen)) == NSS_SUCCESS)
-			{
+		stat = parser(args->la_session.ls_conn, e, &state, result, buffer, buflen);
+		if (stat == NSS_SUCCESS)
 			break;
-			}
 		}
 
 	ldap_msgfree(res);
@@ -546,9 +493,17 @@ NSS_STATUS _nss_ldap_getbyname(
 	if (args->la_stayopen == 0)
 		do_close(&args->la_session);
 
+	nss_context_unlock();
+
 	return stat;
 }
 
+/* These functions are called from within the parser, where it is assumed
+ * to be safe to use the connection and the respective message.
+ */
+
+/* Assign all values, bar omitvalue (if not NULL), to *valptr.
+ */
 NSS_STATUS _nss_ldap_assign_attrvals(
 	LDAP *ld,				 /* IN */
 	LDAPMessage *e, 		/* IN */
@@ -573,14 +528,8 @@ NSS_STATUS _nss_ldap_assign_attrvals(
 		}
 
 	vals = ldap_get_values(ld, e, (char *)attr);
-	if (vals == NULL)
-		{
-		/* no values are good values. */
-		*valptr = NULL;
-		return NSS_SUCCESS;
-		}
 
-	valcount = ldap_count_values(vals);
+	valcount = (vals == NULL) ? 0 : ldap_count_values(vals);
 	if (bytesleft(buffer, buflen) < (valcount + 1) * sizeof(char *))
 		{
 		ldap_value_free(vals);
@@ -589,8 +538,17 @@ NSS_STATUS _nss_ldap_assign_attrvals(
 
 	align(buffer);
 	p = *valptr = (char **)buffer;
+
 	buffer += (valcount + 1) * sizeof(char *);
 	buflen -= (valcount + 1) * sizeof(char *);
+
+	if (valcount == 0)
+		{
+		*p = NULL;
+		*pbuffer = buffer;
+		*pbuflen = buflen;
+		return NSS_SUCCESS;
+		}
 
 	valiter = vals;
 
@@ -638,6 +596,7 @@ NSS_STATUS _nss_ldap_assign_attrvals(
 	return NSS_SUCCESS;
 }
 
+/* Assign a single value to *valptr. */
 NSS_STATUS _nss_ldap_assign_attrval(
 	LDAP *ld,
 	LDAPMessage *e,
@@ -675,6 +634,11 @@ NSS_STATUS _nss_ldap_assign_attrval(
 	return NSS_SUCCESS;
 }
 
+
+/* Assign a single value to *valptr, after examining userPassword for
+ * a syntactically suitable value. The behaviour here is determinable at
+ * runtime from ldap.conf.
+ */
 NSS_STATUS _nss_ldap_assign_passwd(
 	LDAP *ld,
 	LDAPMessage *e,

@@ -47,7 +47,9 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 	char **buf,
 	size_t *len);
 
+#ifdef notdef
 /* transform dc=foo,dc=bar,dc=edu into foo.bar.edu
+ *
  */
 NSS_STATUS _nss_ldap_getdomainname(
 	LDAP *ld,
@@ -55,11 +57,12 @@ NSS_STATUS _nss_ldap_getdomainname(
 	char **rval,
 	char **buffer,
 	size_t *buflen);
+#endif
 
 /*
 	# @(#)/etc/ldap.conf
-	host squid
-	base o=Xedoc Software Development,c=AU
+	host monk
+	base DC=toorak,DC=xedoc,DC=com,DC=au,O=Internet
  */
 
 #define NSS_LDAP_CONFIG_BUFSIZ	1024
@@ -74,27 +77,27 @@ NSS_STATUS _nss_ldap_getdomainname(
 
 /* There are a number of means of obtaining configuration information.
 
-	(a) DHCP
-	(b) a configuration file (/etc/ldap.conf)
+	(a) DHCP (Cf draft-hedstrom-dhc-ldap-00.txt)
+	(b) a configuration file (/etc/ldap.conf) **
 	(c) a coldstart file & subsequent referrals from the LDAP server
 	(d) a custom LDAP bind protocol
-	(e) NIS (As used by ypldapd)
-	(f) NetInfo (As used by LDAPAgent)
+	(e) DNS **
 
    This should be opaque to the rest of the library.
+   ** implemented
 
  */
 
 NSS_STATUS _nss_ldap_readconfig(
-	ldap_config_t *result,
+	ldap_config_t **result,
 	char *buf,
 	size_t buflen
 );
 
-#define MAP_H_ERRNO(nss_status, herr)	do { \
-	if ((unsigned int) (nss_status) > _nss_ldap_herrno2nssstat_tab_count) \
+#define MAP_H_ERRNO(nss_status, herr)   do { \
+	if ((unsigned int) (nss_status - _NSS_LOOKUP_OFFSET) > _nss_ldap_herrno2nssstat_tab_count) \
 		herr = NO_RECOVERY; \
-	herr = _nss_ldap_herrno2nssstat_tab[nss_status]; \
+	herr = _nss_ldap_herrno2nssstat_tab[nss_status - _NSS_LOOKUP_OFFSET]; \
 	} while (0)
 
 #endif /* _LDAP_NSS_LDAP_UTIL_H */

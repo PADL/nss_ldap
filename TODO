@@ -1,9 +1,14 @@
 
+Please contact Luke Howard <lukeh@xedoc.com> if you can help. 
+
+People with spare time and experience need only apply. :-)
+
+There is a list for developers at <nss_ldap@gday.net.au>.
+
 TESTING
 =======
 
-1. passwd: ok, but getent passwd does something funny straight getpwent()
-  doesn't by inserting garbage after the password field.
+1. passwd: ok.
 
 2. group: ok.
 
@@ -30,7 +35,25 @@ TESTING
 TODO:
 =====
 
-Resource assignments are suggested only :-)
+Resource assignments are suggested only.
+
+- we should probably put the session, under Solaris, in the backend. 
+  We need to do so in a way that remains compatible with the GNU NSS,
+  where I expect we need to open a connection for every lookup.
+  In nscd, where the backends are cached, it doesn't make sense to keep
+  opening and closing sockets to the LDAP server, particularly as the
+  rebinding logic was put there to *allow* the connection to be long
+  lived.
+
+- ditto for IRS: the private data should contain the session and be long
+  lived. 
+
+- we could clean up the text segment a bit by generating filters on the
+  fly from object classes and attributes, instead of storing them. This
+  seems to be important under Solaris as the linker doesn't intern strings (?)
+
+- infinite recursion is host lookup -- libldap uses gethostbyname(). Perhaps
+  we should link with a custom gethostbyname() which uses DNS only???
 
 - use one LDAP connection and ldap_init() instead of opening multiple conns?
 
@@ -38,18 +61,17 @@ Resource assignments are suggested only :-)
   closet :-) but no code written yet. It should be implemented as it's a lot
   faster to do (&(objectclass=posixGroup)(memberUid=lukeh)) than looking up every group.
 
-- finish implementing dl-*.c 
+- finish implementing dl-*.c  (LOW priority). In fact I'm tempted to remove
+  this from the line up: SGI have their own LDAP C library support, and the
+  OSF/1 implementation is done the wrong way (it should use SIA, not preloading)
 
 - implement gethostbyname2()
 
-- debug possible race condition in locking due to lack of recursive locks
-  fixed, I think. (Luke)
-
-- debug IPv6 support in ldap-hosts.c (and ldap-network.c?) (Leif)
+- debug IPv6 support in ldap-hosts.c (and ldap-network.c?) (Uli?)
 
 - debug irs-network.c 
 
-- write ldap-netgrp.c and irs-netgrp.c (Leif, +Luke IRS)
+- write ldap-netgrp.c and irs-netgrp.c (Uli, +Luke IRS)
   This is a lot easier now that the schema supports triples:
 
   squid> ldapsearch -L objectclass=nisnetgroup
@@ -70,11 +92,9 @@ Resource assignments are suggested only :-)
   NIS code for the glibc part of the NSS. Or use (b) for both. It's up to you, but the
   netgroup structs will be different...
 
-- fix bug when doing "getent passwd" with termination of password field (weird bug)
-
 - support for bootparams map
 
-- debug Netscape SDK support under Solaris (Leif)
+- debug Netscape SDK support under Solaris (Leif???)
 
 - write testsuite. Build under Linux & BSD/OS.
 
@@ -86,18 +106,10 @@ Resource assignments are suggested only :-)
 	- opaque LDAP struct (not too important)
 	- roll liblber into libldap
 
-  I've started this in the libldap work area.
+  I've started this in the libldap work area. (Uli?)
 
 - fix Makefiles to build under glibc. Makefile.sun, Makefile.gnu, Makefile.bsd
   + Configure.
-
-- destructor stuff. Account for the fact that under Solaris, the destructor is
-  called at the end of every call or enumeration and multiple backends are
-  instantiated for multiple threads. I didn't read the spec properly.
-
-- should we use mutex_t instead of mutex_t* for the lock -- is there a
-  possible race condition where the mutex hasn't been allocated and two
-  constructors are called simultaneously.
 
 - add support for DHCP and coldstart configuration
 

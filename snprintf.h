@@ -1,3 +1,25 @@
+#ifndef HAVE_SNPRINTF
+
+/**************************************************************
+ * Original:
+ * Patrick Powell Tue Apr 11 09:48:21 PDT 1995
+ * A bombproof version of doprnt (dopr) included.
+ * Sigh. This sort of thing is always nasty do deal with. Note that
+ * the version here does not include floating point...
+ *
+ * snprintf() is used instead of sprintf() as it does limit checks
+ * for string length. This covers a nasty loophole.
+ *
+ * The other functions are there to prevent NULL pointers from
+ * causing nast effects.
+ **************************************************************/
+
+/* keep namespace tidy */
+#if defined(GNU_NSS) || defined(SUN_NSS) || defined(IRS_NSS)
+#define vsnprintf	_nss_ldap_vsnprintf
+#define snprintf	_nss_ldap_snprintf
+#endif /* NSS */
+
 /* if you have configure you can use this */
 #if defined(HAVE_CONFIG_H)
 # include config.h
@@ -43,4 +65,6 @@ int vsnprintf ();
 void setproctitle();
 #endif
 
+
+#endif /* HAVE_SNPRINTF */
  

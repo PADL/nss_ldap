@@ -1,3 +1,5 @@
+# Test makefile for OpenStep for Mach 4.2.
+
 # Copyright (C) 1997 Luke Howard.
 # This file is part of the nss_ldap Library.
 
@@ -41,7 +43,8 @@ HDRS=	\
 	irs-nss.h \
 	resolve.h \
 	dnsconfig.h \
-	snprintf.h
+	snprintf.h \
+	resolve.h
 
 SRCS=	ldap-nss.c \
 	ldap-pwd.c \
@@ -55,29 +58,35 @@ SRCS=	ldap-nss.c \
 	ldap-service.c \
 	ldap-ethers.c \
 	ldap-bp.c \
+	irs-nss.c \
 	util.c \
 	ltf.c \
 	snprintf.c \
 	resolve.c \
 	dnsconfig.c \
-	globals.c 
+	globals.c
 
 OBJS=${SRCS:.c=.o}
 LIB=lib${MODULE}.a
 # uncomment NSFLAGS if you are using the Netscape SDK
 #NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
 # uncomment BSDFLAGS if you are building this as part of the BIND IRS
-BSDFLAGS=-DIRS_NSS
+BSDFLAGS=-DIRS_NSS -DDEBUG_LUKEH -DDEBUG
 BIND=../bind/src
 INCDIRS=-I/usr/local/include -I. -I${BIND}/port/next/include -I${BIND}/include -I${BIND}/lib/irs -I${BIND}/port/${PLATFORM}/include
 LIBDIRS=-L/usr/local/lib
-LIBS=-lldap -llber
-GCCFLAGS=-g -Wall #-fPIC #-O
+LIBS=/usr/local/lib/libldap.a /usr/local/lib/liblber.a
+WARNINGS =  -Wwrite-strings \
+	-Wpointer-arith -Wcast-qual -Wcast-align \
+	-Wtraditional -Wstrict-prototypes -Wmissing-prototypes \
+	-Wnested-externs -Winline -Wshadow -pedantic
+#GCCFLAGS=-g $(WARNINGS)
+GCCFLAGS=-g -Wall
 
 CC=cc
 COMPILERFLAGS=${GCCFLAGS}
 
-CFLAGS=-DDEBUG -DLDAP_REFERRALS ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
+CFLAGS= -DLDAP_REFERRALS ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
 
 all: ${MODULE} install
 
@@ -90,4 +99,12 @@ install:
 clean:
 	rm -f ${OBJS} ${LIB}
 
+test: ${MODULE} testpw4.c
+	cc -L../bind/src/lib -L. ${BSDFLAGS} ${COMPILERFLAGS} ${INCDIRS} \
+		-Wl,-m -o testpw4 testpw4.c -lnss_ldap \
+		../bind/src/lib/inet/inet_ntop.o \
+		../bind/src/lib/inet/inet_addr.o \
+		../bind/src/lib/inet/inet_ntoa.o 
 
+
+#-lbind

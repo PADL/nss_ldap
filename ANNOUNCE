@@ -1,6 +1,14 @@
 
-                      ANNOUNCING NSS_LDAP 0.1
+                      ANNOUNCING NSS_LDAP 0.2
                       =======================
+
+       ********************** WARNING ***************************
+       * THIS IS ALPHA SOFTWARE, FOR DEVELOPERS ONLY. IT MAY    *
+       * BLOW UP. PLEASE DO NOT REDISTRIBUTE IT.                *
+       * PLEASE CONTACT THE AUTHOR SO YOU CAN BE ADDED TO A     *
+       * MAILING LIST OF DEVELOPERS.                            *
+       * PLEASE SEND ANY PATCHES TO nss_ldap@gday.net.au	*
+       **********************************************************
 
 1. What is nss_ldap?
 --------------------
@@ -10,7 +18,7 @@ directory servers to be used as a primary source of aliases, ethers,
 groups, hosts, networks, protocol, users, RPCs, services and shadow
 passwords (instead of or in addition to using flat files or NIS).
 
-nss_ldap supports the following operating system libraries:
+nss_ldap nominally supports the following operating system libraries:
 
 	o the Nameservice Switch in Solaris 2.4-2.6
 	o the Nameservice Switch in the GNU C Library 2.0 (as
@@ -18,10 +26,9 @@ nss_ldap supports the following operating system libraries:
 	o the Information Retrieval Service (IRS) in BIND 
 	o preliminary support for generic SVR4 Unix, eg. IRIX
 
-nss_ldap is an implementation of the schema specified in the Internet
-Draft draft-ietf-asid-nis-schema-01.txt (avaiable from ftp://ietf.org),
+nss_ldap is an implementation of the schema specified in RFC 2307
 and is compatible with that used in Xedoc Software Development Inc.'s
-LDAP/NIS gateway (ypldapd) and the Rhapsody LDAPAgent.
+LDAP/NIS gateway (ypldapd) and Rhapsody.
 
 2. What can it do for me?
 -------------------------
@@ -47,7 +54,8 @@ Currently, some "maps" (like bootparams) are not supported. It's also
 alpha software, so use it at your own risk. This should be considered
 with respect to the fact the nss_ldap is loaded into the address space
 of *every* process which uses the C library's resolver functions and
-has LDAP in its search order.
+has LDAP in its search order. (This isn't entirely true under Solaris,
+but the implications are similar.)
 
 Finally, it only supports Linux and Solaris (and some versions of
 BSD). You might want to look at ypldapd (see below) if you need to
@@ -62,21 +70,25 @@ Licence (GLPL). Please read the file COPYING.LIB For more information.
 5. Where do I get it?
 ---------------------
 
-nss_ldap is available from:
+nss_ldap is available from the author directly at the moment, but
+eventually:
 
-	<URL:ftp://ftp.xedoc.com.au/pub/unsupported/nss_ldap-1.0.tar.gz>
+	<URL:http://www.xedoc.com.au/~lukeh/ldap/nss_ldap.tar.gz>
 
 We have also made available some Perl scripts for populating LDAP
 databases from existing flat files, NIS and/or NetInfo data.
 
-	<URL:ftp://ftp.xedoc.com.au/pub/unsupported/MigrationTools.tar.gz>
+	<URL:http://www.xedoc.com.au/~lukeh/ldap/MigrationTools.tar.gz>
 
 You'll need to compile a position-independent LDAP client library
 (libldap). You can either get the entire LDAP package from the University
 of Michigan (see below) and add "-fPIC" (if you're using gcc) to the
-C compiler flags, or download a modified version from:
+C compiler flags, or download binaries for Solaris SPARC 2.6 from:
 
-	<URL:ftp://ftp.xedoc.com.au/pub/unsupported/libldap.tar.gz>
+	<URL:http://www.xedoc.com.au/~lukeh/ldap/libldap.so.gz>
+
+It's easy to build a single, shared, library (libldap.so) from liblber
+and libldap. Contact the author for the makefiles.
 
 6. Where can I get more information?
 ------------------------------------
@@ -89,14 +101,14 @@ to the following mailing list:
 Send an electronic mail message with "subscribe" in the message body to
 join the list.
 
-To contact the authors, email:
+To contact the developers, email:
 
-	<URL:mailto:nss-ldap@xedoc.com>
+	<URL:mailto:nss_ldap@gday.net.au>
 
 For more information on using LDAP for name resolution, and related software,
 see:
 
-	<URL:http://www.xedoc.com.au/~lukeh/ldap>
+	<URL:http://www.xedoc.com.au/~lukeh/ldap/>
 
 And if you need an LDAP server, or some general information on LDAP,
 see:
@@ -106,7 +118,5 @@ see:
 7. Who wrote it?
 ----------------
 
-nss_ldap was written by Leif Hedstrom <leif@netscape.com> and Luke Howard
-<lukeh@xedoc.com>.
-
+nss_ldap was written by Luke Howard <lukeh@xedoc.com>.
 

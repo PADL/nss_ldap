@@ -1,3 +1,5 @@
+#ifndef HAVE_SNPRINTF
+
 /**************************************************************
  * Original:
  * Patrick Powell Tue Apr 11 09:48:21 PDT 1995
@@ -18,6 +20,10 @@ static char *end;
 
 #include "snprintf.h"
 #include <string.h>
+
+#ifdef GNU_NSS
+#include <ctype.h>
+#endif
 
 /* varargs declarations: */
 
@@ -44,11 +50,9 @@ XX ** NO VARARGS ** XX
 #ifdef HAVE_STDARGS
 int snprintf (char *str, size_t count, const char *fmt, ...);
 int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
-void setproctitle( char *fmt, ... );
 #else
 int snprintf ();
 int vsnprintf ();
-void setproctitle();
 #endif
 
 int vsnprintf(str, count, fmt, args)
@@ -294,3 +298,5 @@ static void dopr_outch( c )
  *output++ = c;
  }
 }
+
+#endif /* !HAVE_SNPRINTF */

@@ -8,20 +8,20 @@
 # /etc/netconfig file has a "-" for nametoaddr_libs of "inet" transports.
 
 # the following two lines obviate the "+" entry in /etc/passwd and /etc/group.
-passwd:		files ldap
-group:		files ldap
+passwd:		ldap
+group:		ldap
 
 # consult DNS first, we will need it to resolve the LDAP host. (If we
 # can't resolve it, we're in infinite recursion, because libldap calls
 # gethostbyname(). Careful!)
-hosts:		dns ldap
+hosts:		files ldap
 
 # LDAP is nominally authoritative for the following maps.
-services:   ldap [NOTFOUND=return] files
-networks:   ldap [NOTFOUND=return] files
-protocols:  ldap [NOTFOUND=return] files
-rpc:        ldap [NOTFOUND=return] files
-ethers:     ldap [NOTFOUND=return] files
+services:   ldap 
+networks:   ldap
+protocols:  ldap
+rpc:        ldap
+ethers:     ldap
 
 # no support for netmasks, bootparams, publickey yet.
 netmasks:   files

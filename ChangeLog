@@ -1,0 +1,219 @@
+$Id$
+===============================================================
+
+2.36	Luke Howard <lukeh@xedoc.com>
+
+	* util.c: will use ldap_explode_rdn() if it exists
+
+2.35	Luke Howard <lukeh@xedoc.com>
+
+	* made util.c compile again. Silly me.
+
+2.34	Luke Howard <lukeh@xedoc.com>
+
+	* fixed #endif in testpw.c 
+	* fixed another DN freeing leak in util.c
+	* added RFC 2307 to distribution (fixed the two
+	  typos in it:
+	* fixed bug in ...getrdnvalue() (thanks, Greg)
+
+% diff rfc2307.txt ~/rfc2307.txt
+480c480
+<           MUST ( cn $ ipProtocolNumber )
+---
+>           MUST ( cn $ ipProtocolNumber $ description )
+1038c1038
+<         lester:X5/DBrWPOQQaI:10:10:Lester:/home/lester:/bin/csh
+---
+>         lester:X5/DBrWPOQQaI:10:10:Lester:/home/lester:/bin/sh
+
+2.33	Luke Howard <lukeh@xedoc.com>
+
+	* rolled in more patches from greg@rage.net:
+	* removed _r from setXXXent and endXXXent functions
+	  for GNU_NSS
+	* cleaned up testpw.c to use pthreads and protos
+	* fixed prototype for gethostbyaddr_r on GNU_NSS
+	* braced conditional in getservbyname_r
+	* merged in Makefile.linux and README.LINUX diffs 
+	* added htons(port) in getservbyport_r
+	* added nsswitch.test
+	* added ldaptest.pl
+	* added ldap.conf.ragenet
+
+2.32	Luke Howard <lukeh@xedoc.com>
+
+	* moved Makefile to Makefile.solaris
+	* cleaned up mutex code for Linux, hopefully
+
+2.31	Luke Howard <lukeh@xedoc.com>
+
+	* fixed leak in util.c (need to free dn)
+	* rolled in patches from greg@rage.net:
+	* fixed ldap-ethers.c to use struct ether
+	* fixed bracing in ldap-hosts.c (?)
+	* added SSLEAY patch to ldap-nss.h
+	* fixed locking in ldap-nss.h
+	* Makefile changes incorporated into Makefile.linux
+
+2.30	Luke Howard <lukeh@xedoc.com>
+
+	* synced into DevMan repository again
+	* RFC 2307 is the one!
+
+2.29e	Luke Howard <lhoward@apple.com>
+
+	* util.c: fixed memory leak (call to ldap_value_free())
+
+2.29d	Luke Howard <lhoward@apple.com>
+
+	* ldap-ethers.c: fixed to use HOSTNAME attribute
+
+2.29c	Luke Howard <lhoward@apple.com>
+
+	* ieee8022Device -> ieee802Device
+
+2.29b	Luke Howard <lhoward@apple.com>
+
+	* added ieee8022Device and bootableDevice classes,
+	  at Sun's request.
+
+2.29a	Luke Howard <lhoward@apple.com>
+
+	* dc -> cn
+
+2.29	Luke Howard <lukeh@xedoc.com>
+
+	* changed host/network/ethers naming schema
+	  see the -02 draft revision for more info
+
+2.28	Luke Howard <lukeh@xedoc.com>
+
+	* ldap-pwd.c, ldap-spwd.c: fixed tmpbuf stuff. Yuck.
+
+2.27	Luke Howard <lukeh@xedoc.com>
+
+	* ANNOUNCE: reflected draft-howard-nis-schema-01.txt
+	* ldap-spwd.c: default for shadow integer values is -1, not 0
+	  and fixed crasher (thanks to dj@gregor.com)
+
+2.26	Luke Howard <lukeh@xedoc.com>
+
+	* globals.c: added offset stuff back for mapping errnumbers.
+	  Weird: this stuff *was* in an earlier version of the work
+	  area. I have no idea where it went. Scary.
+
+2.25	Luke Howard <lukeh@xedoc.com>
+
+	* irs-nss.h: added prototype for irs_ldap_acc()
+	* ldap-*.[ch]: removed redundent PARSER macro
+	* unbroke for GNU NSS (context_key_t changed to context_handle_t)
+
+2.24	Luke Howard <lukeh@xedoc.com>
+
+	* irs-nss.c: added dispatch table for IRS library
+	* testpw5.c: added additional test program
+	* ldap-nss.c: removed spurious debug statement
+	* ldap-nss.c, util.c, dnsconfig.c: cleaned up memory
+	  allocation for config. (This could be improved, but
+	  there is no longer a static ldap_config_t structure.)
+	* Makefile: general cleanup
+
+2.23	Luke Howard <lukeh@xedoc.com>
+
+	* default destructor is now simply wrapped around by individual backend
+	  destructors
+	* __EXTENSIONS__ defined for Solaris 2.6 to import strncasecmp()
+	* getbyname: fixed crasher in ldap-nss.c due to uninitialized variable
+	* ldap-parse.h, assorted others: tidied up resolver calls to use
+	  NSS_ARGS() macro and not to interfere with the previous backend's
+	  status (bad thing!)
+	* ldap-service.c: cleaned up potential uninitialized var in parser
+	* ldap-nss.c: no valued arrays are now { NULL } instead of NULL.
+
+2.22	Luke Howard <lukeh@xedoc.com>
+
+	* testpw.c: XXX problem. dies with segfault, but gdb doesn't give
+	  me enough information; it's definitely within nss_ldap.so though.
+	  I just can't see the symbols. (Maybe dbx would be better...)
+	  However, testpw doesn't work at *all* under 2.5.1, and technically
+	  it shouldn't as it's not linked against liblthread. I haven't been
+	  able to duplicate this with testpw2, which is the same code linked
+	  with the thread library.
+	* backported to NeXT
+
+2.21	Luke Howard <lukeh@xedoc.com>
+
+	* resolve.h: renamed functions so as to keep namespace clean
+	* snprintf.h: tidied up for systems which already have snprintf()
+	  and renamed anyway to keep namespace clean (_nss_ldap_snprintf)
+	* ldap-*.h: made character constants const to avoid nasty warnings
+	* globals.[ch]: as above
+	* README, TODO, ANNOUNCE: general documentation updates
+	* ldap-nss.c, et al: general work on Solaris 2.6 port, to get
+	  nscd working. Lots of fiddling with the locking.
+	* Major architectural changes to Solaris NSS implementation.
+	  Thread specific data is now stored in the backend, where it
+	  should be: just like it is in IRS. Locking is a little more
+	  coarse now, but it will do for the moment.
+	* Paul Henson's DCE module gave me the inspiration to do the
+	  backend stuff the "right" way -- thanks, Paul!
+	* As a result, a lot of the bugs listed in TODO have mysteriously
+	  fixed themselves. :-)
+
+2.20	Luke Howard <lukeh@xedoc.com>
+
+	* Makefile.*: ensured resolve.[ch] and dnsconfig.[ch] were there.
+	* Makefile: should link now with gcc -shared instead of requiring
+	  cc.
+
+2.19	Luke Howard <lukeh@xedoc.com>
+
+	* testpw4.c: added irs hostbyname() test
+	* Makefile: added correct flags to build position indepdenent
+	  code with Sun's compiler (thanks, Bill). Added SRV sources.
+	* testpw.c: works under NeXT, cleaned up a bit.
+	* ldap.conf: documented what this file does
+	* util.c: ignore blank lines in ldap.conf properly
+	* resolve.h: fixed up for Solaris
+
+2.18	Luke Howard <lukeh@xedoc.com>
+
+	* ldap-network.c: fixed infinite loop in getnetbyname()
+	* util.c: goto out causes a compiler warning under Solaris.
+	  Documented this. Should fix this, I suppose, but we need
+	  to break out of two blocks. (We could remove the code that
+	  handles multivalued DNs, as it's fairly unlikely that someone
+	  will use a DN of o=Xedoc+dc=xedoc,c=US+dc=com, but who knows?)
+	* ldap-ethers.c: line 215, result was not assigned to an
+	  lvalue (should have been args->status, not args). Fixed.
+
+2.17	Luke Howard <lukeh@xedoc.com>
+
+	* Cleaned up documentation and testpw4.c
+	* dnsconfig.c: Fixed strtok() bug which was clobbering domain
+
+2.16	Luke Howard <lukeh@xedoc.com>
+
+	* util.c (_nss_ldap_readconfig) fixed strtok() typo
+
+2.15	Luke Howard <lukeh@xedoc.com>
+
+	* dnsconfig.c: got DNS SRV support working under NEXTSTEP 
+	* util.c: (_nss_ldap_getdomainname) made host and network DN parsing
+          compliant with current draft 
+
+2.2 - 2.14	Luke Howard <lukeh@xedoc.com>
+
+	* I'll get around to merging in the RCS log here one day.
+	  Nothing very exciting happened, I just backported the code to
+	  NEXTSTEP and compiled it.
+
+2.1 	Luke Howard <lukeh@xedoc.com>
+
+	* merged in old RCS tree (now nss_ldap 0.2)
+
+1.x	Luke Howard <lukeh@xedoc.com>
+
+	* old RCS repository (corresponds to nss_ldap 0.1)
+

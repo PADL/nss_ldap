@@ -33,18 +33,18 @@
 #define LDAP_ATTR_PROTOCOLNAME          "cn"
 #define LDAP_ATTR_PROTOCOLNUMBER        "ipprotocolnumber"
 
-static char *proto_attributes[] =
+static const char *proto_attributes[] =
         { LDAP_ATTR_PROTOCOLNAME, LDAP_ATTR_PROTOCOLNUMBER,
           NULL };
 
-static char filt_getprotobyname[] =
+static const char filt_getprotobyname[] =
         "(&(objectclass="LDAP_CLASS_PROTOCOL")("LDAP_ATTR_PROTOCOLNAME"=%s))";
-static char filt_getprotobynumber[] =
+static const char filt_getprotobynumber[] =
         "(&(objectclass="LDAP_CLASS_PROTOCOL")("LDAP_ATTR_PROTOCOLNUMBER"=%d))";
-static char filt_getprotoent[] =
+static const char filt_getprotoent[] =
         "(objectclass="LDAP_CLASS_PROTOCOL")";
 
-PARSER _nss_ldap_parse_proto(
+static NSS_STATUS _nss_ldap_parse_proto(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

@@ -13,20 +13,21 @@
 # will be used as the server.
 
 # Your LDAP server. Must be resolvable without using LDAP.
-host monk
+host lunchbox
 
 # The distinguished name of the search base.
-base DC=toorak,DC=xedoc,DC=com,DC=au
+base o=rage.net
 
 # The hashing algorith your libc uses. 
 # Optional: default is des
 #crypt md5
 #crypt sha
 #crypt des
+#crypt crypt
 
 # The distinguished name to bind to the server with.
 # Optional: default is to bind anonymously.
-#binddn CN=manager,DC=toorak,DC=xedoc,DC=com,DC=au
+#binddn cn=root ,o=rage.net
 
 # The credentials to bind with. 
 # Optional: default is no credential.
@@ -34,10 +35,10 @@ base DC=toorak,DC=xedoc,DC=com,DC=au
 
 # The port.
 # Optional: default is 389.
-#port 389
+port 389
 
 # The search scope.
 #scope sub
-#scope one
+scope one
 #scope base
 

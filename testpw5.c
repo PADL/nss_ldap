@@ -6,16 +6,14 @@
  */
 
 #ifdef _REENTRANT
-#ifdef GNU_NSS
-#include <pthread.h>
-#else
-#include <thread.h>
-#endif /* _REENTRANT */
-
-#endif /* GNU_NSS */
+ #ifdef SUN_NSS
+  #include <thread.h>
+ #else
+  #include <pthread.h>
+ #endif
+#endif
 #include <stdio.h>
 #include <pwd.h>
-#include <sys/types.h>
 
 #if NeXT
 #define uid_t int
@@ -24,7 +22,6 @@
 #endif
 
 void test_passwd(void);
-void scan_passwd(void);
 
 int ARGC;
 char **ARGV;
@@ -41,15 +38,9 @@ void main(int argc, char **argv)
 
 #ifdef _REENTRANT
 	for (i = 0; i < MAX_THREADS; i++) {
-#ifdef GNU_NSS
-		pthread_t tid;
-		pthread_create(NULL, 0, test_passwd, NULL, 0, &tid);
-		pthread_continue(tid);
-#else
 		thread_t tid;
 		thr_create(NULL, 0, test_passwd, NULL, 0, &tid);
 		thr_continue(tid);
-#endif /* GNU_NSS */
 	}
 	while (thr_join(NULL, NULL, NULL) == 0);
 #else
@@ -75,50 +66,21 @@ void test_passwd(void)
 	struct passwd pbuf;
 #endif
 
-	printf(">>>>>> getpwnam(\"%s\")\n", ARGC > 1 ? ARGV[1] : "root");
-#ifdef _REENTRANT
-	pw = getpwnam_r(ARGC > 1 ? ARGV[1] : "root",
-		&pbuf, buf, sizeof(buf));
-#else
-	pw = getpwnam(ARGC > 1 ? ARGV[1] : "root");
-#endif
 
-	if (!pw)
-		ret(1);
 
-	printf("%s:%s:%d:%d:%s:%s:%s\n", pw->pw_name,pw->pw_passwd,pw->pw_uid,pw->pw_gid,pw->pw_gecos,pw->pw_dir,pw->pw_shell);	
-	uid = pw->pw_uid;
+	printf(">>>>>> setpwent()\n");
+       	setpwent();
 
-	printf(">>>>>> getpwuid(%d)\n", uid);
+	printf(">>>>>> getpwent()\n");
+	scan_passwd();
 
-#ifdef _REENTRANT
-	pw = getpwuid_r(uid, &pbuf, buf, sizeof(buf));
-#else
-	pw = getpwuid(uid);
-#endif
-
-	if (!pw)
-		ret(1);
-
-	printf("%s:%s:%d:%d:%s:%s:%s\n", pw->pw_name,pw->pw_passwd,pw->pw_uid,pw->pw_gid,pw->pw_gecos,pw->pw_dir,pw->pw_shell);	
-
-	if (ARGC > 2 && !strcmp(ARGV[2], "no")) {
-		printf(">>>>>> Enumeration skipped.\n");
-	} else {
-		printf(">>>>>> setpwent()\n");
-       		setpwent();
-
-		printf(">>>>>> getpwent()\n");
-		scan_passwd();
-
-		printf(">>>>>> endpwent()\n");
-       		endpwent();
-	}
+	printf(">>>>>> endpwent()\n");
+       	 endpwent();
 
 	ret(0);
 }
 
-void scan_passwd(void)
+scan_passwd()
 {
 	int i = 1;
         struct passwd *p;
@@ -138,6 +100,27 @@ void scan_passwd(void)
                         p->pw_gecos,
                         p->pw_dir,
                         p->pw_shell);
+
+		if (p == NULL) ret(1);
+
+#ifdef _REENTRANT
+		p = getpwnam_r(p->pw_name,
+			&pbuf, buf, sizeof(buf));
+#else
+		p = getpwnam(p->pw_name);
+#endif
+
+		if (p == NULL) ret(2);
+
+                printf("%s:%s:%d:%d:%s:%s:%s\n",
+                        p->pw_name,
+                        p->pw_passwd,
+                        p->pw_uid,
+                        p->pw_gid,
+                        p->pw_gecos,
+                        p->pw_dir,
+                        p->pw_shell);
+
 		i++;
         }
 }

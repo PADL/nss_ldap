@@ -24,19 +24,13 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_NETWORK_H
 #define _LDAP_NSS_LDAP_LDAP_NETWORK_H
 
-/*
-	_nss_ldap_dn2fqdn() should be used to determine the network's
-	primary name, and any other values of associateddomain (ie.
-	excluding the one that matches the return result from dn2fqdn())
-	for the aliases.
- */
 
 #define LDAP_CLASS_NETWORK              "ipNetwork"
-#define LDAP_ATTR_NETWORKNAME           "associateddomain"
+#define LDAP_ATTR_NETWORKNAME           "cn"
 #define LDAP_ATTR_NETWORKADDR           "ipnetworknumber"
 #define LDAP_ATTR_NETWORKMASK           "ipnetmasknumber"
 
-PARSER _nss_ldap_parse_net(
+static NSS_STATUS _nss_ldap_parse_net(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,
@@ -44,15 +38,15 @@ PARSER _nss_ldap_parse_net(
 	char *buffer,
 	size_t buflen);
 
-static char *net_attributes[] =
+static const char *net_attributes[] =
         { LDAP_ATTR_NETWORKNAME, LDAP_ATTR_NETWORKADDR, 
           NULL };
 
-static char filt_getnetbyname[] =
+static const char filt_getnetbyname[] =
         "(&(objectclass="LDAP_CLASS_NETWORK")("LDAP_ATTR_NETWORKNAME"=%s))";
-static char filt_getnetbyaddr[] =
+static const char filt_getnetbyaddr[] =
         "(&(objectclass="LDAP_CLASS_NETWORK")("LDAP_ATTR_NETWORKADDR"=%s))";
-static char filt_getnetent[] =
+static const char filt_getnetent[] =
         "(objectclass="LDAP_CLASS_NETWORK")";
 
 

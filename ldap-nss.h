@@ -20,20 +20,40 @@
    $Id$
  */
 
+#ifndef SSLEAY
+#define SSL_write( ssl, b, l ) \
+    (fprintf(stderr, "calling SSL_write without SSL defined\n"))
+#define SSL_read( ssl, b, l) \
+    (fprintf(stderr, "calling SSL_read without SSL defined\n"))
+#endif /* ssleay not defined */
+
 
 #ifndef _LDAP_NSS_LDAP_LDAP_NSS_H
 #define _LDAP_NSS_LDAP_LDAP_NSS_H
 
+#ifdef GNU_NSS
+#include <pthread.h>
+#endif
+
 #ifdef DEBUG
+#ifdef SUN_NSS
+#include <syslog.h>
+#define debug(str) syslog(LOG_DEBUG, "nss_ldap - thread %u  - %s", thr_self(), str)
+#else
 #define debug(str) fprintf(stderr,"%s\n",str)
+#endif
 #else
 #define debug(str)
 #endif
 
 #ifdef __GNUC__
 #define alignof(ptr) __alignof__(ptr)
+#define INLINE inline
 #elif defined(OSF1)
 #include <alignof.h>
+#define INLINE
+#else
+#define INLINE
 #endif
 
 
@@ -65,6 +85,7 @@
 
 #endif
 
+/* We dont need this
 #ifdef AF_INET6
 # ifndef TESTING
 #  ifndef INET6
@@ -72,6 +93,7 @@
 #  endif
 # endif
 #endif
+*/
 
 #ifdef GNU_NSS
 # if !defined(TESTING) && !defined(DL_NSS)
@@ -83,7 +105,7 @@
    which has a successful ldap_open() is used. Conceivably the rest
    could be used after a failed or exhausted search.
  */
-typedef struct ldap_config
+struct ldap_config
 {
 	/* space delimited list of servers */
 	char *ldc_host;
@@ -99,30 +121,36 @@ typedef struct ldap_config
 	   entry
 	 */
 	struct ldap_config *ldc_next;
-} ldap_config_t;
+};
+
+typedef struct ldap_config ldap_config_t;
 
 /* convenient wrapper around pointer into global config list, and a
    connection to an LDAP server.
  */
-typedef struct ldap_session
+struct ldap_session
 {
 	/* the connection */
 	LDAP *ls_conn;
 	/* pointer into config table */
 	ldap_config_t *ls_config;
-} ldap_session_t;
+};
+
+typedef struct ldap_session ldap_session_t;
 
 /* glibc supports MD5 encryption. So we should recognise it. This
    is configurable at runtime by putting crypt [md5|crypt|sha] in
    /etc/ldap.conf.
  */
 
-typedef enum crypt_prefix
+enum crypt_prefix
 {
 	UNIX_CRYPT,
 	SHA_CRYPT,
 	MD5_CRYPT
-} crypt_prefix_t;
+};
+
+typedef enum crypt_prefix crypt_prefix_t;
 
 #if !defined(SUN_NSS)
 #ifndef UID_NOBODY
@@ -133,15 +161,17 @@ typedef enum crypt_prefix
 #endif
 #endif
 
-typedef enum ldap_args_types
+enum ldap_args_types
 {
 	LA_TYPE_STRING,
 	LA_TYPE_NUMBER,
 	LA_TYPE_STRING_AND_STRING,
 	LA_TYPE_NUMBER_AND_STRING
-} ldap_args_types_t;
+};
 
-typedef struct ldap_args
+typedef enum ldap_args_types ldap_args_types_t;
+
+struct ldap_args
 {
 	ldap_args_types_t la_type;
 	union {
@@ -153,7 +183,9 @@ typedef struct ldap_args
 	} la_arg2;
 	ldap_session_t la_session;
 	int la_stayopen;
-} ldap_args_t;
+};
+
+typedef struct ldap_args ldap_args_t;
 
 #define LA_INIT(q)				do { \
 							q.la_type = LA_TYPE_STRING; \
@@ -186,7 +218,7 @@ typedef struct ldap_args
    services. State is represented as instances of ldap_state_t; context as
    instances of ent_context_t. The latter contains the former.
  */
-typedef struct ldap_state
+struct ldap_state
 {
 	int ls_type;
 #define LS_TYPE_KEY	(0)
@@ -198,32 +230,40 @@ typedef struct ldap_state
 		const char *ls_key;
 		int ls_index;
 	} ls_info;
-} ldap_state_t;
+};
+
+typedef struct ldap_state ldap_state_t;
 /* LS_INIT only used for enumeration contexts */
 #define LS_INIT(state)	do { state.ls_type = LS_TYPE_INDEX; state.ls_info.ls_index = -1; } while (0)
 
 /* thread specific context: session, result chain, and state data
  */
-typedef struct ent_context
+struct ent_context
 {
 	ldap_session_t ec_session;	/* host & config */
 	ldap_state_t ec_state;		/* eg. for services */
 	LDAPMessage *ec_res;		/* result chain */
 	LDAPMessage *ec_last;		/* current result pointer */
-} ent_context_t;
+};
 
-/* depending on whether the client program is linked against libthread,
-   we need to change our behaviour. thread_enabled is the selector.
+typedef struct ent_context ent_context_t;
+
+/* this is just a pointer to a context, used by the allocation and 
+ * destruction functions, so we can allocate it properly and maybe
+ * destroy it & reset the pointer to NULL. (We don't free the memory
+ * at the moment, we reuse it next time.)
  */
+typedef ent_context_t *context_handle_t;
 
-#ifndef SUN_NSS
-typedef ent_context_t *context_key_t;
-#else
-typedef union context_key
+#ifdef SUN_NSS
+struct nss_ldap_backend
 {
-	ent_context_t *ck_context;
-	thread_key_t ck_thread_key;
-} context_key_t;
+	nss_backend_op_t *ops;
+	int n_ops;
+	context_handle_t state;
+};
+
+typedef struct nss_ldap_backend nss_ldap_backend_t;
 #endif
 
 #if defined(IRS_NSS) || defined(DL_NSS)
@@ -246,8 +286,14 @@ typedef enum nss_status NSS_STATUS;
 
 /* to let us index a lookup table on NSS_STATUSes */
 
+#define _NSS_LOOKUP_OFFSET      NSS_STATUS_TRYAGAIN
+
 #else
 typedef nss_status_t NSS_STATUS;
+#endif
+
+#ifndef _NSS_LOOKUP_OFFSET
+#define _NSS_LOOKUP_OFFSET      (0)
 #endif
 
 #ifdef GNU_NSS
@@ -256,8 +302,8 @@ typedef nss_status_t NSS_STATUS;
 # define __nss_unlock()
 # define __nss_cleanup()
 #else
-# define __nss_lock()		__libc_lock_lock(lock)
-# define __nss_unlock()		__libc_unlock_lock(lock)
+# define __nss_lock()		__libc_lock_lock(_nss_ldap_lock)
+# define __nss_unlock()		__libc_lock_unlock(_nss_ldap_lock)
 # define __nss_cleanup()
 #endif /* TESTING */
 #elif defined(IRS_NSS)
@@ -266,19 +312,11 @@ typedef nss_status_t NSS_STATUS;
 #define __nss_unlock()
 #define __nss_cleanup()
 #else
-#define __nss_lock()		mutex_lock(_nss_ldap_lock)
-#define __nss_unlock()		mutex_unlock(_nss_ldap_lock)
+#define __nss_lock()		mutex_lock(&_nss_ldap_lock)
+#define __nss_unlock()		mutex_unlock(&_nss_ldap_lock)
 #define __nss_cleanup()		do { \
-					(void) mutex_destroy(_nss_ldap_lock); \
-					free(_nss_ldap_lock); \
+					(void) mutex_destroy(&_nss_ldap_lock); \
 				} while (0)
-#endif
-
-
-#ifdef IRS_NSS
-#define PARSER		NSS_STATUS
-#else
-#define PARSER		static NSS_STATUS
 #endif
 
 typedef NSS_STATUS (*parser_t)(LDAP *, LDAPMessage *, ldap_state_t *, void *, char *, size_t);
@@ -286,12 +324,14 @@ typedef NSS_STATUS (*parser_t)(LDAP *, LDAPMessage *, ldap_state_t *, void *, ch
 #ifdef NETSCAPE_SDK
 /* Netscape's libldap is threadsafe, but we use a lock before it is initialized */
 
-typedef struct ldap_error
+struct ldap_error
 {
 	int le_errno;
 	char *le_matched;
 	char *le_errmsg;
-} ldap_error_t;
+};
+
+typedef struct ldap_error ldap_error_t;
 
 #define nss_libldap_lock()
 #define nss_libldap_unlock()
@@ -304,20 +344,24 @@ typedef struct ldap_error
 #endif /* NETSCAPE_SDK */
 
 #ifdef SUN_NSS
-/* we don't need a lock around the context, as it's TSD. */
-#define nss_context_lock()	do { if (!thread_enabled) __nss_lock(); } while (0)
-#define nss_context_unlock()	do { if (!thread_enabled) __nss_unlock(); } while (0)
+/* paranoia - maybe we do need to lock it */
+#define nss_context_lock()	__nss_lock()
+#define nss_context_unlock()	__nss_unlock()
+
 /* (Solaris) we leak a mutex at the expense of avoiding race conditions. */
 #define nss_cleanup()
-#else
+
+#else 
+
 #define nss_context_lock()	__nss_lock()
 #define nss_context_unlock()	__nss_unlock()
 #define nss_cleanup()
+
 #endif
 
 
-#ifndef GNU_NSS
-void _nss_ldap_default_destr(context_key_t *);
+#ifdef SUN_NSS
+NSS_STATUS _nss_ldap_default_destr(nss_backend_t *, void *);
 #endif
 
 
@@ -325,19 +369,13 @@ void _nss_ldap_default_destr(context_key_t *);
    _nss_ldap_default_constr() is called once in the constructor
    ent_context_init() is called for each getXXent() call
    ent_context_free() is used to manually free a context
-   ent_context_destr() is a destructore for automatically freeing a context
  */
-NSS_STATUS _nss_ldap_default_constr(context_key_t *key);
-ent_context_t *_nss_ldap_ent_context_init(context_key_t *key);
-
 #ifdef SUN_NSS
-ent_context_t *_nss_ldap_ent_context_get(context_key_t key);
-#else
-#define _nss_ldap_ent_context_get(key)		(key)
+NSS_STATUS _nss_ldap_default_constr(nss_ldap_backend_t *be);
 #endif
 
-void _nss_ldap_ent_context_free(context_key_t *key);
-void _nss_ldap_ent_context_destr(void *fakectx);
+ent_context_t *_nss_ldap_ent_context_init(context_handle_t *);
+void _nss_ldap_ent_context_free(context_handle_t *);
 
 LDAPMessage *_nss_ldap_lookup(
 	ldap_session_t *session, /* IN/OUT */
@@ -348,7 +386,7 @@ LDAPMessage *_nss_ldap_lookup(
 
 /* common enumeration routine */
 NSS_STATUS _nss_ldap_getent(
-	context_key_t key, /* IN/OUT */
+	ent_context_t *key, /* IN/OUT */
 	void *result, /* IN/OUT */
 	char *buffer, /* IN */
 	size_t buflen, /* IN */

@@ -20,6 +20,8 @@
 
 #ifdef SUN_NSS
 #include <thread.h>
+#elif defined(GNU_NSS)
+#include <pthread.h>
 #endif
 #include <lber.h>
 #include <ldap.h>
@@ -39,18 +41,23 @@
 static char rcsId[] = "$Id$";
 
 #ifdef SUN_NSS
-mutex_t *_nss_ldap_lock = NULL;
+mutex_t _nss_ldap_lock = DEFAULTMUTEX;
+#elif defined(GNU_NSS)
+pthread_mutex_t _nss_ldap_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 #ifdef DL_NSS
 void *_nss_ldap_libc_handle = NULL;
 #endif
 
-#ifdef GNU_NSS
 int _nss_ldap_herrno2nssstat_tab[] =
 {
-#ifndef __GNUC__
-	/* grr. DEC C compiler. */
+#ifdef GNU_NSS
+	[NSS_SUCCESS - _NSS_LOOKUP_OFFSET] = 0,
+	[NSS_TRYAGAIN - _NSS_LOOKUP_OFFSET] = TRY_AGAIN,
+	[NSS_NOTFOUND - _NSS_LOOKUP_OFFSET] = HOST_NOT_FOUND,
+	[NSS_UNAVAIL - _NSS_LOOKUP_OFFSET] = NO_RECOVERY
+#elif !defined(__GNUC__) || defined(NeXT)
 	0,
 	HOST_NOT_FOUND,
 	NO_RECOVERY,
@@ -62,21 +69,12 @@ int _nss_ldap_herrno2nssstat_tab[] =
 	[NSS_UNAVAIL] = NO_RECOVERY
 #endif
 };
-#else
-int _nss_ldap_herrno2nssstat_tab[] =
-{
-	[NSS_SUCCESS] = 0,
-	[NSS_TRYAGAIN] = TRY_AGAIN,
-	[NSS_NOTFOUND] = HOST_NOT_FOUND,
-	[NSS_UNAVAIL] = NO_RECOVERY
-};
-#endif
 
 size_t _nss_ldap_herrno2nssstat_tab_count = (sizeof(_nss_ldap_herrno2nssstat_tab) / sizeof(_nss_ldap_herrno2nssstat_tab[0]));
 
-char *_nss_ldap_crypt_prefixes_tab[] =
+const char *_nss_ldap_crypt_prefixes_tab[] =
 {
-#ifndef __GNUC__
+#if !defined(__GNUC__) || defined(NeXT)
 	"{CRYPT}",
 	"{MD5}",
 	"{SHA}"
@@ -89,7 +87,7 @@ char *_nss_ldap_crypt_prefixes_tab[] =
 
 size_t _nss_ldap_crypt_prefixes_size_tab[] =
 {
-#ifndef __GNUC__
+#if !defined(__GNUC__) || defined(NeXT)
 	sizeof("{CRYPT}") - 1,
 	sizeof("{MD5}") - 1,
 	sizeof("{SHA}") - 1

@@ -27,15 +27,15 @@
 #define LDAP_ATTR_ALIASNAME             "cn"
 #define LDAP_ATTR_MEMBERS               "mail"
 
-static char *alias_attributes[] =
+static const char *alias_attributes[] =
         { LDAP_ATTR_ALIASNAME, LDAP_ATTR_MEMBERS, NULL };
 
-static char filt_getaliasbyname[] =
+static const char filt_getaliasbyname[] =
         "(&(objectclass="LDAP_CLASS_ALIAS")("LDAP_ATTR_ALIASNAME"=%s))";
-static char filt_getaliasent[] =
+static const char filt_getaliasent[] =
         "(objectclass="LDAP_CLASS_ALIAS")";
 
-PARSER _nss_ldap_parse_alias(LDAP *ld,
+static NSS_STATUS _nss_ldap_parse_alias(LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *,
 	void *result,

@@ -1,3 +1,5 @@
+# Makefile for GNU glibc. Not tested.
+
 # Copyright (C) 1996, 1997 Free Software Foundation, Inc.
 # This file is part of the GNU C Library.
 
@@ -21,7 +23,7 @@
 #
 subdir	:= ldap
 
-headers			:= $(wildcard rpcsvc/*.[hx])
+headers			:= 
 distribute		:= 
 
 # These are the databases available for the ldap 

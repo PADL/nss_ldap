@@ -37,13 +37,13 @@
      int endnetgrent(void);
  */
 
-static char *netgr_attributes[] =
+static const char *netgr_attributes[] =
         { LDAP_ATTR_NETGROUPNAME, LDAP_ATTR_NETGROUPTRIPLE, LDAP_ATTR_NETGROUPMEMBER, NULL };
 
-static char *filt_setnetgrent[] = 
+static const char *filt_setnetgrent[] = 
 	"(&(objectclass="LDAP_CLASS_NETGROUP")("LDAP_ATTR_NETGROUPNAME"=%s))";
 
-PARSER _nss_ldap_parse_netgr(
+static NSS_STATUS _nss_ldap_parse_netgr(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

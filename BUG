@@ -1,0 +1,9 @@
+
+Hi Luke,
+  There is a small bug in ldap-service.c (nss_ldap) which can cause the
+_nss_ldap_parse_serv routine to falsely return a NOTFOUND status. In like
+81 an NSS_STATUS variable 'stat' is defined and set to NSS_NOTFOUND.
+If state->ls_type is an LS_TYPE_KEY (line 88) but state->ls_info.ls_key is
+not null (line 90, 'else' on line 101) then on line 153 we return, as
+'stat' was never modified. I've fixed this problem by initializing 'stat'
+

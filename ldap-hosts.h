@@ -22,9 +22,6 @@
 #define _LDAP_NSS_LDAP_LDAP_HOSTS_H
 
 /*
-	_nss_ldap_getdomainname() should be used to determine the host's
-	primary name. Use any other values of associatedDomain for the
-	host aliases.
 
 	It's critical that we support IPv6 both in the IRS and the NSS modules.
 	For code, check out the BIND IRS and the glibc as it stands. Both support
@@ -41,21 +38,21 @@
 #endif
 
 #define LDAP_CLASS_HOST                 "ipHost"
-#define LDAP_ATTR_HOSTNAME              "associateddomain"
+#define LDAP_ATTR_HOSTNAME              "cn"
 #define LDAP_ATTR_HOSTADDR              "iphostnumber"
 
-static char *host_attributes[] =
+static const char *host_attributes[] =
         { LDAP_ATTR_HOSTNAME, LDAP_ATTR_HOSTADDR, NULL };
 
-static char filt_gethostbyname[] =
+static const char filt_gethostbyname[] =
         "(&(objectclass="LDAP_CLASS_HOST")("LDAP_ATTR_HOSTNAME"=%s))";
-static char filt_gethostbyaddr[] =
+static const char filt_gethostbyaddr[] =
         "(&(objectclass="LDAP_CLASS_HOST")("LDAP_ATTR_HOSTADDR"=%s))";
-static char filt_gethostent[] =
+static const char filt_gethostent[] =
         "(objectclass="LDAP_CLASS_HOST")";
 
 
-PARSER _nss_ldap_parse_host(
+static NSS_STATUS _nss_ldap_parse_host(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,

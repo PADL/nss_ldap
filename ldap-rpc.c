@@ -70,12 +70,10 @@ static char rcsId[] = "$Id$";
 #endif
 
 #ifdef GNU_NSS
-static context_key_t rpc_context = NULL;
-#elif defined(SUN_NSS)
-static context_key_t rpc_context = { 0 };
+static context_handle_t rpc_context = NULL;
 #endif
 
-PARSER _nss_ldap_parse_rpc(
+static NSS_STATUS _nss_ldap_parse_rpc(
 	LDAP *ld,
 	LDAPMessage *e,
 	ldap_state_t *pvt,
@@ -94,7 +92,7 @@ PARSER _nss_ldap_parse_rpc(
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_RPCNUMBER, &number, &buffer, &buflen);
 	if (stat != NSS_SUCCESS) return stat;
 	
-	rpc->r_number = atol(number); /* threadsafe? */
+	rpc->r_number = atol(number);
 
 	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_RPCNAME, rpc->r_name, &rpc->r_aliases,
 		&buffer, &buflen, NULL);
@@ -130,9 +128,9 @@ NSS_STATUS _nss_ldap_getrpcbynumber_r(int number, struct rpcent *result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_setrpcent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_setrpcent_r(nss_backend_t *rpc_context, void *args)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_setrpcent_r(void)
+NSS_STATUS _nss_ldap_setrpcent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -141,9 +139,9 @@ NSS_STATUS _nss_ldap_setrpcent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_endrpcent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_endrpcent_r(nss_backend_t *rpc_context, void *args)
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_endrpcent_r(void)
+NSS_STATUS _nss_ldap_endrpcent(void)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
 {
@@ -152,7 +150,7 @@ NSS_STATUS _nss_ldap_endrpcent_r(void)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getrpcent_r(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_getrpcent_r(nss_backend_t *rpc_context, void *args)
 {
 	LOOKUP_GETENT(args, rpc_context, filt_getrpcent, rpc_attributes, _nss_ldap_parse_rpc);
 }
@@ -164,10 +162,9 @@ NSS_STATUS _nss_ldap_getrpcent_r(struct rpcent *result, char *buffer, size_t buf
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_rpc_destr(nss_backend_t *be, void *args)
+static NSS_STATUS _nss_ldap_rpc_destr(nss_backend_t *rpc_context, void *args)
 {
-	_nss_ldap_default_destr(&rpc_context);
-	return NSS_SUCCESS;
+	return _nss_ldap_default_destr(rpc_context, args);
 }
 
 static nss_backend_op_t rpc_ops[] =
@@ -184,15 +181,18 @@ nss_backend_t *_nss_ldap_rpc_constr(const char *db_name,
 	const char *src_name,
 	const char *cfg_args)
 {
-	static nss_backend_t be;
+	nss_ldap_backend_t *be;
 
-	be.ops = rpc_ops;
-	be.n_ops = sizeof(rpc_ops) / sizeof(nss_backend_op_t);
-
-	if (_nss_ldap_default_constr(&rpc_context) != NSS_SUCCESS)
+	if (!(be = (nss_ldap_backend_t *)malloc(sizeof(*be))))
 		return NULL;
 
-	return &be;
+	be->ops = rpc_ops;
+	be->n_ops = sizeof(rpc_ops) / sizeof(nss_backend_op_t);
+
+	if (_nss_ldap_default_constr(be) != NSS_SUCCESS)
+		return NULL;
+
+	return (nss_backend_t *)be;
 }
 
 #endif /* !GNU_NSS */
