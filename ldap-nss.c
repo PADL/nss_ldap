@@ -245,6 +245,7 @@ do_close_no_unbind (void)
       extern int ldap_ld_free (LDAP * ld, int close);
       (void) ldap_ld_free (__session.ls_conn, 0);
 #endif /* OPENLDAP 2.x */
+      __session.ls_conn = NULL;
 #else
       /*
        * We'll be rude and close the socket ourselves. 
@@ -265,8 +266,9 @@ do_close_no_unbind (void)
 	  __session.ls_conn->ld_sb.sb_sd = sd;
 #endif /*  LDAP_VERSION3_API */
 	}
+	/* hope we closed it OK! */
+	ldap_unbind(__session.ls_conn);
 #endif /* HAVE_LDAP_LD_FREE */
-      __session.ls_conn = NULL;
     }
   debug ("<== do_close_no_unbind");
 
