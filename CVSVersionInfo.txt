@@ -2,4 +2,4 @@
 # $Id$
 # $Name$
 ProjectName: nss_ldap
-ProjectVersion: 2.43
+ProjectVersion: 2.44
