@@ -78,7 +78,7 @@
 #define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
 
 #ifdef HAVE_NSSWITCH_H
-#define LDAP_NSS_MAXNETGR_DEPTH	10 /* maximum depth of netgroup nesting */
+#define LDAP_NSS_MAXNETGR_DEPTH  16	/* maximum depth of netgroup nesting */
 #endif /* HAVE_NSSWITCH_H */
 
 #ifdef PAGE_RESULTS
