@@ -37,9 +37,6 @@ static char rcsId[] =
 #include <netinet/in.h>
 #include <lber.h>
 #include <ldap.h>
-#ifdef SSL
-#include <ldap_ssl.h> 
-#endif /* SSL */ 
 
 #ifdef GNU_NSS
 #include <nss.h>
@@ -344,7 +341,7 @@ do_open (void)
        */
       if (cfg->ldc_ssl_on)
 	{
-	  if (ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
+	  if (ldapssl_client_init (cfg->ldc_ssl_path, NULL) != LDAP_SUCCESS)
 	    {
 	      continue;
 	    }

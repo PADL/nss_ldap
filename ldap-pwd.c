@@ -210,7 +210,7 @@ _nss_ldap_getpwuid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_setpwent (void)
 {
   LOOKUP_SETENT (pw_context);
@@ -224,7 +224,7 @@ _nss_ldap_setpwent_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_endpwent (void)
 {
   LOOKUP_ENDENT (pw_context);

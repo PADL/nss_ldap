@@ -481,7 +481,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SSL))
 	{
-	  result->ldc_ssl_on = !strcasecmp(v, "yes");
+	  result->ldc_ssl_on = 1;
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_VERSION))
 	{

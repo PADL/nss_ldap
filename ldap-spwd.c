@@ -133,7 +133,7 @@ _nss_ldap_getspnam_r (nss_backend_t * be, void *args)
 #endif /* GNU_NSS */
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_setspent (void)
 #else
 static NSS_STATUS
@@ -146,7 +146,7 @@ _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_endspent (void)
 #else
 static NSS_STATUS

@@ -230,9 +230,10 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	  result->ldc_port = rr->u.srv->port;
 #ifdef SSL
 	  /* Hack: if the port is the registered SSL port, enable SSL. */
-	  if (result->ldc_port == LDAPS_PORT) {
-		result->ldc_ssl_on = 1;
-	  }
+	  if (result->ldc_port == LDAPS_PORT)
+	    {
+	      result->ldc_ssl_on = 1;
+	    }
 #endif /* SSL */
 
 	  /* DN */

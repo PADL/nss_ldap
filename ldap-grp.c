@@ -364,7 +364,7 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
@@ -378,7 +378,7 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
