@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+159	Luke Howard <lukeh@padl.com>
+
+	* make do_ssl_options() take a config parameter;
+	  avoid segfault with SSL?
+
 158	Luke Howard <lukeh@padl.com>
 
 	* in the distinguished name to login cache (dn2uid)
