@@ -13,9 +13,6 @@
 #ifndef _LUTIL_LDAP_H
 #define _LUTIL_LDAP_H 1
 
-#include <ldap_cdefs.h>
-#include <lber_types.h>
-
 /*
  * Include file for lutil LDAP routines
  */
