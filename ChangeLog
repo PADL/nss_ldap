@@ -3,6 +3,7 @@ $Header$
 
 178	Luke Howard <lukeh@padl.com>
 
+	* added simple authentication support for AIX
 	* cleaned up SASL patch to not break if Cyrus
 	  SASL is not installed
 	* cleaned up IBM patch to not break building

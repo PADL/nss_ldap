@@ -15,3 +15,7 @@
 
 /* define to enable attribute/objectclass mapping */
 #undef AT_OC_MAP
+
+/* define to enable proxy authentication for AIX */
+#undef PROXY_AUTH
+

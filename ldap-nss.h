@@ -501,7 +501,7 @@ LDAPMessage *_nss_ldap_first_entry (LDAPMessage * res);
 LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
 
 /*
- * Synchronous search cover.
+ * Synchronous search cover (caller acquires lock).
  */
 NSS_STATUS _nss_ldap_search_s (const ldap_args_t * args,	/* IN */
 			       const char *filterprot,	/* IN */
@@ -510,7 +510,7 @@ NSS_STATUS _nss_ldap_search_s (const ldap_args_t * args,	/* IN */
 			       LDAPMessage ** pRes /* OUT */ );
 
 /*
- * Asynchronous search cover.
+ * Asynchronous search cover (caller acquires lock).
  */
 NSS_STATUS _nss_ldap_search (const ldap_args_t * args,	/* IN */
 			     const char *filterprot,	/* IN */
@@ -606,5 +606,19 @@ NSS_STATUS _nss_ldap_ocmap_get (ldap_config_t * config,
 const char *_nss_ldap_map_at (const char *pChar);
 const char *_nss_ldap_map_oc (const char *pChar);
 #endif /* AT_OC_MAP */
+
+#ifdef PROXY_AUTH
+/*
+ * Proxy bind support for AIX.
+ */
+struct ldap_proxy_bind_args {
+	char *binddn;
+	const char *bindpw;
+};
+
+typedef struct ldap_proxy_bind_args ldap_proxy_bind_args_t;
+
+NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password);
+#endif /* PROXY_AUTH */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

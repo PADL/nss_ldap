@@ -75,6 +75,12 @@ for modifying user/group attributes (which means you won't be able to use
 the "chuser" command etc. to alter user/group attributes; you have to make
 all modifications directly via LDAP).
 
+NB: As of January 2002, PADL have added preliminary support for the
+authentication interfaces. Really, pam_ldap should be ported to AIX
+as an authentication-only module. But you can certainly give this
+a try. Note that we have not tested it due to not having access to
+an AIX box, so the standard disclaimers apply.
+
 Enjoy.
 
 Gabor Gombas <gombasg@inf.elte.hu>

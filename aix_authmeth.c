@@ -4,6 +4,10 @@
 
    Note: only information functions are supported, so you need to
    specify "options = dbonly" in /usr/lib/security/methods.cfg
+
+   (Note: the is now experimental support for authentication
+   functions - getpasswd/authenticate. This has not been tested
+   as PADL do not have access to an AIX machine.)
  */
 #include "config.h"
 
@@ -61,7 +65,7 @@ _nss_ldap_close (void *token)
   pw_close (pwd_conn);
   pwd_conn = NULL;
 
-  return 0;
+  return AUTH_SUCCESS;
 }
 
 static struct group *
@@ -109,6 +113,65 @@ _nss_ldap_getgracct (void *id, int type)
     return _nss_ldap_getgrnam ((char *) id);
 }
 
+#ifdef PROXY_AUTH
+int
+_nss_ldap_authenticate (char *user, char *response, int **reenter, char **message)
+{
+    NSS_STATUS stat;
+    int rc;
+
+    *reenter = 0;
+    *message = NULL;
+
+    stat = _nss_ldap_proxy_bind(user, response);
+
+    switch (stat) {
+	case NSS_TRYAGAIN:
+	    rc = AUTH_FAILURE;
+	    break;
+	case NSS_NOTFOUND:
+	    rc = AUTH_NOTFOUND;
+	    break;
+	case NSS_SUCCESS:
+	    rc = AUTH_SUCCESS;
+	    break;
+	default:
+	case NSS_UNAVAIL:
+	    rc = AUTH_UNAVAIL;
+	    break;
+    }
+
+    return rc;
+}
+#endif /* PROXY_AUTH */
+
+/*
+ * Support this for when proxy authentication is disabled.
+ * There may be some re-entrancy issues here; not sure
+ * if we are supposed to return allocated memory or not,
+ * this is not documented. I am assuming not in line with
+ * the other APIs.
+ */
+char *
+_nss_ldap_getpasswd (char *user)
+{
+    struct passwd *pw;
+    static char pwdbuf[32];
+    char *p = NULL;
+
+    pw = _nss_ldap_getpwnam(user);
+    if (pw != NULL) {
+	if (strlen(pw->pw_passwd) > sizeof(pwdbuf) - 1) {
+		errno = ERANGE;
+	} else {
+		strcpy(pwdbuf, pw->pw_passwd);
+		p = pwdbuf;
+	}
+    }
+
+    return p;
+}
+
 int
 nss_ldap_initialize (struct secmethod_table *meths)
 {
@@ -126,7 +189,18 @@ nss_ldap_initialize (struct secmethod_table *meths)
   meths->method_open = _nss_ldap_open;
   meths->method_close = _nss_ldap_close;
 
-  return 0;
+  /* Authentication methods */
+#ifdef PROXY_AUTH
+  meths->method_authenticate = _nss_ldap_authenticate;
+#else
+  meths->method_authenticate = NULL;
+#endif
+
+  meths->method_getpasswd = _nss_ldap_getpasswd;
+  meths->method_chpass = NULL;
+  meths->method_passwordexpired = NULL;
+
+  return AUTH_SUCCESS;
 }
 
 #endif /* _AIX */

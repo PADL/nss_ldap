@@ -798,24 +798,24 @@ do_open (void)
 
   if (__config == NULL)
     {
-      NSS_STATUS status;
+      NSS_STATUS stat;
 
-      status =
+      stat =
 	_nss_ldap_readconfig (&__config, __configbuf, sizeof (__configbuf));
 
-      if (status != NSS_SUCCESS)
+      if (stat != NSS_SUCCESS)
 	{
 	  __config = NULL;	/* reset otherwise heap is corrupted */
-	  status =
+	  stat =
 	    _nss_ldap_readconfigfromdns (&__config, __configbuf,
 					 sizeof (__configbuf));
 	}
 
-      if (status != NSS_SUCCESS)
+      if (stat != NSS_SUCCESS)
 	{
 	  __config = NULL;
 	  debug ("<== do_open");
-	  return status;
+	  return stat;
 	}
     }
 
@@ -2646,3 +2646,155 @@ _nss_ldap_ocmap_get (ldap_config_t * config,
   return NSS_SUCCESS;
 }
 #endif /* AT_OC_MAP */
+
+#ifdef PROXY_AUTH
+/*
+ * Proxy bind support for AIX. Very simple, but should do 
+ * the job.
+ */
+
+#if LDAP_SET_REBIND_PROC_ARGS < 3
+static ldap_proxy_bind_args_t __proxy_args = { NULL, NULL };
+#endif
+
+#if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+#if LDAP_SET_REBIND_PROC_ARGS == 3
+static int
+do_proxy_rebind (LDAP * ld, LDAP_CONST char *url, ber_tag_t request,
+	   ber_int_t msgid, void *arg)
+#else
+static int
+do_proxy_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
+#endif
+{
+  int timelimit;
+#if LDAP_SET_REBIND_PROC_ARGS == 3
+  ldap_proxy_bind_args_t *who = (ldap_proxy_bind_args_t *)arg;
+#else
+  ldap_proxy_bind_args_t *who = &__proxy_args;
+#endif
+
+  timelimit = __session.ls_config->ldc_bind_timelimit;
+
+  return do_bind (ld, timelimit, who->binddn, who->bindpw, 0);
+}
+#else
+#if LDAP_SET_REBIND_PROC_ARGS == 3
+static int
+do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+	   int freeit, void *arg)
+#elif LDAP_SET_REBIND_PROC_ARGS == 2
+     static int
+       do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+		  int freeit)
+#endif
+{
+#if LDAP_SET_REBIND_PROC_ARGS == 3
+  ldap_proxy_bind_args_t *who = (ldap_proxy_bind_args_t *)arg;
+#else
+  ldap_proxy_bind_args_t *who = &__proxy_args;
+#endif
+  if (freeit)
+    {
+      if (*whop != NULL)
+	free (*whop);
+      if (*credp != NULL)
+	free (*credp);
+    }
+
+  *whop = who->binddn ? strdup(who->binddn) : NULL;
+  *credp = who->bindpw ? strdup(who->bindpw) : NULL;
+
+  *methodp = LDAP_AUTH_SIMPLE;
+
+  return LDAP_SUCCESS;
+}
+#endif
+
+NSS_STATUS _nss_ldap_proxy_bind(const char *user, const char *password)
+{
+	ldap_args_t args;
+	LDAPMessage *res, *e;
+	NSS_STATUS stat;
+	int rc;
+#if LDAP_SET_REBIND_PROC_ARGS == 3
+	ldap_proxy_bind_args_t proxy_args_buf;
+	ldap_proxy_bind_args_t *proxy_args = &proxy_args_buf;
+#else
+	ldap_proxy_bind_args_t *proxy_args = __proxy_args;
+#endif
+
+	LA_INIT(args);
+	LA_TYPE(args) = LA_TYPE_STRING;
+	LA_STRING(args) = user;
+
+	/*
+	 * Binding with an empty password will always work, so don't let
+	 * the user in if they try that.
+	 */
+	if (password == NULL || password[0] == '\0') {
+		/* XXX overload */
+		return NSS_TRYAGAIN;
+	}
+
+	nss_lock();
+
+	stat = _nss_ldap_search_s(&args, _nss_ldap_filt_getpwnam,
+		LM_PASSWD, 1, &res);
+	if (stat == NSS_SUCCESS) {
+		e = ldap_first_entry(__session.ls_conn, res);
+		if (e != NULL) {
+			proxy_args->binddn = _nss_ldap_get_dn(e);
+			proxy_args->bindpw = password;
+
+			if (proxy_args->binddn != NULL) {
+				/* Use our special rebind procedure. */
+#if LDAP_SET_REBIND_PROC_ARGS == 3
+				ldap_set_rebind_proc (__session.ls_conn, do_proxy_rebind, NULL);
+#elif LDAP_SET_REBIND_PROC_ARGS == 2
+				ldap_set_rebind_proc (__session.ls_conn, do_proxy_rebind);
+#endif
+				rc = do_bind(__session.ls_conn,
+					__session.ls_config->ldc_bind_timelimit,
+					proxy_args->binddn,
+					proxy_args->bindpw,
+					0);
+				switch (rc) {
+					case LDAP_INVALID_CREDENTIALS:
+						/* XXX overload */
+						stat = NSS_TRYAGAIN;
+						break;
+					case LDAP_NO_SUCH_OBJECT:
+						stat = NSS_NOTFOUND;
+						break;
+					case LDAP_SUCCESS:
+						stat = NSS_SUCCESS;
+						break;
+					default:
+						stat = NSS_UNAVAIL;
+						break;
+				}
+				/*
+				 * Close the connection, don't want to continue
+				 * being bound as this user or using this rebind proc.
+				 */
+				do_close();
+				ldap_memfree(proxy_args->binddn);
+			} else {
+				stat = NSS_NOTFOUND;
+			}
+			proxy_args->binddn = NULL;
+			proxy_args->bindpw = NULL;
+		} else {
+			stat = NSS_NOTFOUND;
+		}
+		ldap_msgfree(res);
+	}
+
+	nss_unlock();
+
+	return stat;
+}
+
+#endif /* PROXY_AUTH */
+
