@@ -79,8 +79,8 @@ ldap_initgroups_args_t;
 # ifdef HAVE_NSSWITCH_H
 typedef struct ldap_initgroups_args
 {
-   struct nss_groupsbymem *gbm;
-   int depth;
+  struct nss_groupsbymem *gbm;
+  int depth;
 }
 ldap_initgroups_args_t;
 # else
@@ -108,9 +108,7 @@ ng_chase (LDAP * ld, const char *dn, ldap_initgroups_args_t * lia);
 
 static NSS_STATUS
 do_parse_range (const char *attributeType,
-		char *attributeDescription,
-		int *start,
-		int *end)
+		char *attributeDescription, int *start, int *end)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
   size_t attributeTypeLength;
@@ -123,11 +121,11 @@ do_parse_range (const char *attributeType,
   *start = 0;
   *end = -1;
 
-  if (strcasecmp(attributeType, attributeDescription) == 0)
+  if (strcasecmp (attributeType, attributeDescription) == 0)
     return NSS_SUCCESS;
 
-  attributeDescriptionLength = strlen(attributeDescription);
-  attributeTypeLength = strlen(attributeType);
+  attributeDescriptionLength = strlen (attributeDescription);
+  attributeTypeLength = strlen (attributeType);
 
   if (attributeDescriptionLength < attributeTypeLength)
     {
@@ -136,53 +134,49 @@ do_parse_range (const char *attributeType,
     }
 
 #ifndef HAVE_STRTOK_R
-  for (p = strtok(attributeDescription, ";");
-	p != NULL;
-        p = strtok (NULL, ";"))
+  for (p = strtok (attributeDescription, ";");
+       p != NULL; p = strtok (NULL, ";"))
 #else
-  for (p = strtok_r(attributeDescription, ";", &st);
-	p != NULL;
-        p = strtok_r (NULL, ";", &st))
+  for (p = strtok_r (attributeDescription, ";", &st);
+       p != NULL; p = strtok_r (NULL, ";", &st))
 #endif /* !HAVE_STRTOK_R */
     {
       char *q;
 
       if (p == attributeDescription)
 	{
-	  if (strcasecmp(p, attributeType) != 0)
+	  if (strcasecmp (p, attributeType) != 0)
 	    return NSS_NOTFOUND;
 	}
-      else if (strncasecmp(p, "range=", sizeof("range=") - 1) == 0)
-        {
-      p += sizeof("range=") - 1;
+      else if (strncasecmp (p, "range=", sizeof ("range=") - 1) == 0)
+	{
+	  p += sizeof ("range=") - 1;
 
-      q = strchr(p, '-');
-      if (q == NULL)
-	return NSS_NOTFOUND;
+	  q = strchr (p, '-');
+	  if (q == NULL)
+	    return NSS_NOTFOUND;
 
-      *q++ = '\0';
+	  *q++ = '\0';
 
-      *start = strtoul (p, (char **)NULL, 10);
-      if (strcmp(q, "*") == 0)
-	*end = -1;
-      else
-	*end = strtoul (q, (char **)NULL, 10);
+	  *start = strtoul (p, (char **) NULL, 10);
+	  if (strcmp (q, "*") == 0)
+	    *end = -1;
+	  else
+	    *end = strtoul (q, (char **) NULL, 10);
 
-        stat = NSS_SUCCESS;
-        break;
-       }
+	  stat = NSS_SUCCESS;
+	  break;
+	}
     }
 
   return stat;
 }
 
 static NSS_STATUS
-do_get_range_values (LDAP *ld,
-		     LDAPMessage *e,
+do_get_range_values (LDAP * ld,
+		     LDAPMessage * e,
 		     const char *attributeType,
-		     int *start,
-		     int *end,
-		     char ***pGroupMembers)
+		     int *start, int *end, char ***pGroupMembers)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
   BerElement *ber = NULL;
@@ -190,14 +184,13 @@ do_get_range_values (LDAP *ld,
 
   *pGroupMembers = NULL;
 
-  for (attribute = ldap_first_attribute(ld, e, &ber);
-       attribute != NULL;
-       attribute = ldap_next_attribute(ld, e, ber))
+  for (attribute = ldap_first_attribute (ld, e, &ber);
+       attribute != NULL; attribute = ldap_next_attribute (ld, e, ber))
     {
-      stat = do_parse_range(attributeType, attribute, start, end);
+      stat = do_parse_range (attributeType, attribute, start, end);
       if (stat == NSS_SUCCESS)
 	{
-	  *pGroupMembers = ldap_get_values(ld, e, attribute);
+	  *pGroupMembers = ldap_get_values (ld, e, attribute);
 	  if (*pGroupMembers == NULL)
 	    {
 	      stat = NSS_NOTFOUND;
@@ -214,7 +207,7 @@ do_get_range_values (LDAP *ld,
     }
 
   if (ber != NULL)
-    ber_free(ber, 0);
+    ber_free (ber, 0);
 
   return stat;
 }
@@ -228,29 +221,29 @@ do_construct_range_attribute (const char *attribute,
 			      int start,
 			      int end,
 			      char **buffer,
-			      size_t *buflen,
+			      size_t * buflen,
 			      const char **pAttributeWithRange)
 {
   size_t len;
   char startbuf[32], endbuf[32];
 
-  snprintf(startbuf, sizeof(startbuf), "%u", start);
+  snprintf (startbuf, sizeof (startbuf), "%u", start);
 
   if (end != -1)
-    snprintf(endbuf, sizeof(endbuf), "%u", end);
+    snprintf (endbuf, sizeof (endbuf), "%u", end);
   else
-    snprintf(endbuf, sizeof(endbuf), "*");
+    snprintf (endbuf, sizeof (endbuf), "*");
 
-  len = strlen(attribute) + sizeof(";range=") - 1;
-  len += strlen(startbuf) + 1 /* - */ + strlen(endbuf);
-  len++; /* \0 */
+  len = strlen (attribute) + sizeof (";range=") - 1;
+  len += strlen (startbuf) + 1 /* - */  + strlen (endbuf);
+  len++;			/* \0 */
 
   if (*buflen < len)
     return NSS_TRYAGAIN;
 
   *pAttributeWithRange = *buffer;
 
-  snprintf(*buffer, len, "%s;range=%s-%s", attribute, startbuf, endbuf);
+  snprintf (*buffer, len, "%s;range=%s-%s", attribute, startbuf, endbuf);
 
   *buffer += len;
   *buflen -= len;
@@ -435,8 +428,7 @@ next_range:
 					   end + 1,
 					   -1,
 					   buffer,
-					   buflen,
-					   &uniquemember_attrs[0]);
+					   buflen, &uniquemember_attrs[0]);
       if (stat == NSS_SUCCESS)
 	{
 	  if (dnValues != NULL)
@@ -469,7 +461,7 @@ next_range:
 	  if (stat != NSS_SUCCESS)
 	    goto out;
 
-	  e = ldap_first_entry(ld, res);
+	  e = ldap_first_entry (ld, res);
 	  goto next_range;
 	}
     }
@@ -826,7 +818,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #if defined(HAVE_NSS_H) || defined(AIX)
   LA_STRING (a) = user;
 #else
-  LA_STRING (a) = ((struct nss_groupsbymem *)args)->username;
+  LA_STRING (a) = ((struct nss_groupsbymem *) args)->username;
 #endif /* HAVE_NSS_H || AIX */
   LA_TYPE (a) = LA_TYPE_STRING;
 
@@ -994,8 +986,7 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_setgrent (void)
+NSS_STATUS _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -1008,8 +999,7 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_endgrent (void)
+NSS_STATUS _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
