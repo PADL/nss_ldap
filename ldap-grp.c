@@ -232,7 +232,6 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #ifdef RFC2307BIS
   char *userdn = NULL;
   const char *filter;
-  char filt[LDAP_FILT_MAXSIZ];
 #endif /* RFC2307BIS */
   ldap_args_t a;
   NSS_STATUS stat;
@@ -269,9 +268,8 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #endif /* !AIX */
     }
 
-  /* lookup the user's DN. XXX: import this filter from somewhere else */
-  snprintf (filt, LDAP_FILT_MAXSIZ, "(%s=%s)", AT (uid), "%s");
-  stat = _nss_ldap_search_s (&a, filt, LM_NONE, 1, &res);
+  /* lookup the user's DN. */
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwnam, LM_PASSWD, 1, &res);
   if (stat == NSS_SUCCESS)
     {
       e = _nss_ldap_first_entry (res);
