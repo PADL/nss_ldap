@@ -2833,8 +2833,6 @@ do_next_page (const ldap_args_t * args,
   ldap_service_search_descriptor_t *sd = NULL;
   LDAPControl *serverctrls[2] = { NULL, NULL };
 
-  _nss_ldap_enter ();
-
   /* Set some reasonable defaults. */
   base = __session.ls_config->ldc_base;
   scope = __session.ls_config->ldc_scope;
@@ -2870,7 +2868,6 @@ do_next_page (const ldap_args_t * args,
     do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf), &filter);
   if (stat != NSS_SUCCESS)
     {
-      _nss_ldap_leave ();
       return stat;
     }
 
@@ -2879,7 +2876,6 @@ do_next_page (const ldap_args_t * args,
 			      &serverctrls[0]);
   if (stat != LDAP_SUCCESS)
     {
-      _nss_ldap_leave ();
       return NSS_UNAVAIL;
     }
 
@@ -2890,7 +2886,6 @@ do_next_page (const ldap_args_t * args,
 		     sizelimit, msgid);
   ldap_control_free (serverctrls[0]);
 
-  _nss_ldap_leave ();
   return (*msgid < 0) ? NSS_UNAVAIL : NSS_SUCCESS;
 }
 #endif /* PAGE_RESULTS */
