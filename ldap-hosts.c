@@ -20,7 +20,6 @@
    $Id$
  */
 
-
 static char rcsId[] =
   "$Id$";
 
