@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+104	Luke Howard <lukeh@padl.com>
+
+	* new spec file
+
 103	Luke Howard <lukeh@padl.com>
 
 	* don't call ldap_parse_result() with V2 API

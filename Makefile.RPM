@@ -109,8 +109,6 @@ install:
 	ln -sf $(NSSLIB) $(RPM_BUILD_ROOT)/lib/lib$(MODULE).so.1
 	ln -sf $(NSSLIB) $(RPM_BUILD_ROOT)/lib/lib$(MODULE).so.2	
 	ln -sf /lib/$(NSSLIB) $(RPM_BUILD_ROOT)/usr/lib/$(MODULE).so
-	if [ ! -f /etc/nsswitch.ldap ]; then cp nsswitch.ldap /etc/nsswitch.ldap; fi
-	if [ ! -f /etc/ldap.conf ]; then cp ldap.conf /etc/ldap.conf; fi
 
 clean:
 	rm -f $(OBJS) $(NSSLIB) core
