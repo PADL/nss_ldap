@@ -1,7 +1,7 @@
 $Id$
 ===============================================================
 
-231	Luke Howard <lukeh@padl.com>
+232	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#138 (blind last char remove in ldap.secret)
 
