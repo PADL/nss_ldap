@@ -492,7 +492,7 @@ _nss_ldap_enter (void)
 #ifdef HAVE_SIGPROCMASK
   sigemptyset (&sigset);
   sigaddset (&sigset, SIGPIPE);
-  __sigprocmask_retval = sigprocmask (SIG_BLOCK, &sigset, &__signal_mask); 
+  __sigprocmask_retval = sigprocmask (SIG_IGN, &sigset, &__signal_mask); 
 #elif defined(HAVE_SIGSET)
   __sigpipe_handler = sigset (SIGPIPE, SIG_IGN);
 #else
@@ -2991,7 +2991,7 @@ _nss_ldap_atmap_put (ldap_config_t * config,
 #if DB_VERSION_MAJOR > 2
 					  NULL, /* DB_TXN */
 #endif /* DB_VERSION_MAJOR */
-					  &val, &val, 0);
+					  &key, &val, 0);
 
   return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
 }
