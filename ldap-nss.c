@@ -388,6 +388,9 @@ do_open (void)
   ldap_config_t *cfg = NULL;
   pid_t pid;
   uid_t euid;
+#ifdef LDAP_X_OPT_CONNECT_TIMEOUT
+  int timeout;
+#endif
 
   debug ("==> do_open");
 
@@ -588,6 +591,16 @@ do_open (void)
 #else
   __session.ls_conn->ld_timelimit = cfg->ldc_timelimit;
 #endif /* LDAP_VERSION3_API */
+
+#ifdef LDAP_X_OPT_CONNECT_TIMEOUT
+  /*
+   * This is a new option in the Netscape SDK which sets
+   * the TCP connect timeout. For want of a better value,
+   * we use the bind_timelimit to control this.
+   */
+  timeout = cfg->ldc_bind_timelimit * 1000;
+  ldap_set_option (__session->ls_conn, LDAP_X_OPT_CONNECT_TIMEOUT, &timeout);
+#endif /* LDAP_X_OPT_CONNECT_TIMEOUT */
 
 #ifdef LDAP_OPT_REFERRALS
   ldap_set_option (__session.ls_conn, LDAP_OPT_REFERRALS,
