@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+160	Luke Howard <lukeh@padl.com>
+
+	* patch from RedHat to check for DB3, override
+	  install user/group optionally
+
 159	Luke Howard <lukeh@padl.com>
 
 	* make do_ssl_options() take a config parameter;
