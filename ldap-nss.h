@@ -79,7 +79,7 @@
 
 #ifdef HAVE_NSSWITCH_H
 #define LDAP_NSS_MAXNETGR_DEPTH	10 /* maximum depth of netgroup nesting */
-#endif
+#endif /* HAVE_NSSWITCH_H */
 
 #ifdef PAGE_RESULTS
 #define LDAP_PAGESIZE 1000
