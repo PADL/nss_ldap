@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+116	Luke Howard <lukeh@padl.com>
+
+	* added irs-nss.diff and README.IRS from Emile
+	  Heitor
+
 115	Luke Howard <lukeh@padl.com>
 
 	* fixed filter escaping
