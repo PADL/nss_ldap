@@ -63,6 +63,7 @@ resolve.c	2.1	0
 resolve.h	2.1	0
 snprintf.c	2.1	0
 snprintf.h	2.1	0
+testd.c	2.1	0
 testgr.c	2.1	0
 testpw.c	2.1	0
 testpw3.c	2.1	0
