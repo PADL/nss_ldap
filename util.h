@@ -42,11 +42,13 @@ NSS_STATUS _nss_ldap_getrdnvalue (LDAP * ld,
 
 #ifdef RFC2307BIS
 /*
- * map a distinguished name to a login naem.
+ * map a distinguished name to a login name, or group entry
  */
 NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 			     const char *dn,
-			     char **uid, char **buf, size_t * len);
+			     char **uid, char **buf, size_t * len,
+			     int *pIsNestedGroup,
+			     LDAPMessage **pRes);
 #endif /* RFC2307BIS */
 
 #ifdef AT_OC_MAP

@@ -5,6 +5,8 @@ $Id$
 
 	* AIX fix from <carlos.celso@embraer.com.br>
 	  Recall #169033
+	* support for nested groups
+	* fix memory leak with private contexts
 
 220	Luke Howard <lukeh@padl.com>
 

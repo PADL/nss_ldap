@@ -81,6 +81,9 @@
 #define LDAP_NSS_MAXNETGR_DEPTH  16	/* maximum depth of netgroup nesting for innetgr() */
 #endif /* HAVE_NSSWITCH_H */
 
+#define LDAP_NSS_MAXGR_DEPTH     16     /* maximum depth of group nesting for getgrent() */
+#define LDAP_NSS_MAXGR_BUFSIZ	 256	/* maximum number of group members in static buffer */
+
 #ifdef PAGE_RESULTS
 #define LDAP_PAGESIZE 1000
 #endif /* PAGE_RESULTS */

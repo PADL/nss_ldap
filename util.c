@@ -231,11 +231,14 @@ static int lock_inited = 0;
 
 NSS_STATUS
 _nss_ldap_dn2uid (LDAP * ld,
-		  const char *dn, char **uid, char **buffer, size_t * buflen)
+		  const char *dn, char **uid, char **buffer, size_t * buflen,
+		  int *pIsNestedGroup, LDAPMessage **pRes)
 {
   NSS_STATUS status;
 
   debug ("==> _nss_ldap_dn2uid");
+
+  *pIsNestedGroup = 0;
 
 #ifdef HPUX
   /* XXX this is not thread-safe */
@@ -246,27 +249,34 @@ _nss_ldap_dn2uid (LDAP * ld,
     }
 #endif
 
-  status = do_getrdnvalue (dn, ATM (group, uid), uid, buffer, buflen);
-  if (status == NSS_NOTFOUND)
-    {
 #ifdef DN2UID_CACHE
       status = dn2uid_cache_get (dn, uid, buffer, buflen);
       if (status == NSS_NOTFOUND)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[2];
+	  const char *attrs[4];
 	  LDAPMessage *res;
 
-	  attrs[0] = ATM (group, uid);
-	  attrs[1] = NULL;
+	  attrs[0] = ATM (passwd, uid);
+	  attrs[1] = ATM (group, uniqueMember);
+	  attrs[2] = AT (objectClass);
+	  attrs[3] = NULL;
 
 	  if (_nss_ldap_read (dn, attrs, &res) == NSS_SUCCESS)
 	    {
 	      LDAPMessage *e = ldap_first_entry (ld, res);
 	      if (e != NULL)
 		{
+		  if (_nss_ldap_oc_check(ld, e, OC (posixGroup)) == NSS_SUCCESS)
+		    {
+		      *pIsNestedGroup = 1;
+		      *pRes = res;
+		      debug ("<== _nss_ldap_dn2uid (nested group)");
+		      return NSS_SUCCESS;
+		    }
+
 		  status =
-		    _nss_ldap_assign_attrval (ld, e, ATM (group, uid), uid,
+		    _nss_ldap_assign_attrval (ld, e, ATM (passwd, uid), uid,
                                               buffer, buflen);
 #ifdef DN2UID_CACHE
 		  if (status == NSS_SUCCESS)
@@ -276,7 +286,6 @@ _nss_ldap_dn2uid (LDAP * ld,
 	    }
 	  ldap_msgfree (res);
 	}
-    }
 
   debug ("<== _nss_ldap_dn2uid");
 

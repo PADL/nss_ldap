@@ -90,6 +90,180 @@ ldap_initgroups_args_t;
 # endif
 #endif /* AIX */
 
+#ifdef RFC2307BIS
+/* 
+ * Expand group members, including nested groups
+ */
+static NSS_STATUS
+do_parse_group_members (LDAP *ld,
+			LDAPMessage *e,
+			char ***pGroupMembers,
+			size_t *pGroupMembersCount,
+			size_t *pGroupMembersBufferSize,
+			int *pGroupMembersBufferIsMalloced,
+			char **buffer,
+			size_t *buflen,
+			int *depth)
+{
+	NSS_STATUS stat = NSS_SUCCESS;
+	char **dnValues;
+	char **uidValues;
+	char **groupMembers;
+	size_t groupMembersCount, i;
+	char **valiter;
+
+	if (*depth > LDAP_NSS_MAXGR_DEPTH || e == NULL) {
+		return NSS_NOTFOUND;
+	}
+
+	groupMembersCount = 0; /* number of members in this group */
+	i = *pGroupMembersCount; /* index of next member */
+
+	dnValues = ldap_get_values (ld, e, ATM (group, uniqueMember));
+	if (dnValues != NULL) {
+		groupMembersCount += ldap_count_values (dnValues);
+	}
+
+	uidValues = ldap_get_values (ld, e, ATM (group, memberUid));
+	if (uidValues != NULL) {
+		groupMembersCount += ldap_count_values (uidValues);
+	}
+
+	/*
+	 * Check whether we need to increase the group membership buffer.
+	 * As an optimization the buffer is preferentially allocated off
+	 * the stack
+	 */
+	if ((*pGroupMembersCount + groupMembersCount) * sizeof(char *) > *pGroupMembersBufferSize) {
+		*pGroupMembersBufferSize = (*pGroupMembersCount + groupMembersCount) * sizeof(char *);
+		*pGroupMembersBufferSize += (LDAP_NSS_MAXGR_BUFSIZ * sizeof(char *)) - 1;
+		*pGroupMembersBufferSize -= (*pGroupMembersBufferSize % (LDAP_NSS_MAXGR_BUFSIZ * sizeof(char *)));
+
+		if (*pGroupMembersBufferIsMalloced == 0) {
+			groupMembers = *pGroupMembers;
+			*pGroupMembers = NULL; /* force malloc() */
+		}
+
+		*pGroupMembers = (char **)realloc(*pGroupMembers, *pGroupMembersBufferSize);
+		if (*pGroupMembers == NULL) {
+			stat = NSS_TRYAGAIN;
+			goto out;
+		}
+
+		if (*pGroupMembersBufferIsMalloced == 0) {
+			memcpy(*pGroupMembers, groupMembers, *pGroupMembersCount * sizeof(char *));
+			groupMembers = NULL; /* defensive programming */
+			*pGroupMembersBufferIsMalloced = 1;
+		}
+	}
+
+	groupMembers = *pGroupMembers;
+
+	/* Parse distinguished name members */
+	if (dnValues != NULL) {
+		for (valiter = dnValues; *valiter != NULL; valiter++) {
+			LDAPMessage *res;
+			NSS_STATUS parseStat;
+			int isNestedGroup = 0;
+			char *uid;
+
+			uid = strrchr(*valiter, '#');
+			if (uid != NULL) {
+				*uid = '\0';
+			}
+
+			parseStat = _nss_ldap_dn2uid(ld, *valiter, &groupMembers[i],
+				buffer, buflen, &isNestedGroup, &res);
+			if (parseStat == NSS_SUCCESS) {
+				if (isNestedGroup == 0) {
+					/* just a normal user which we have flattened */
+					i++;
+					continue;
+				}
+
+				/* is nested group */
+				(*depth)++;
+				parseStat = do_parse_group_members(ld, ldap_first_entry(ld, res),
+					&groupMembers, &i, pGroupMembersBufferSize,
+					pGroupMembersBufferIsMalloced, buffer, buflen, depth);
+				(*depth)--;
+
+				if (parseStat == NSS_TRYAGAIN) {
+					stat = NSS_TRYAGAIN;
+					goto out;
+				}
+
+				ldap_msgfree (res);
+			} else if (parseStat == NSS_TRYAGAIN) {
+				stat = NSS_TRYAGAIN;
+				goto out;
+			}
+		}
+	}
+
+	/* Parse RFC 2307 (flat) members */
+	if (uidValues != NULL) {
+		for (valiter = uidValues; *valiter != NULL; valiter++) {
+			size_t len = strlen(*valiter) + 1;
+			if (*buflen < len) {
+				stat = NSS_TRYAGAIN;
+				goto out;
+			}
+			groupMembers[i] = *buffer;
+			*buffer += len;
+			*buflen -= len;
+
+			memcpy(groupMembers[i++], *valiter, len);
+		}
+	}
+
+out:
+	if (dnValues != NULL)
+		ldap_value_free (dnValues);
+	if (uidValues != NULL)
+		ldap_value_free (uidValues);
+
+	*pGroupMembers = groupMembers;
+	*pGroupMembersCount = i;
+
+	return stat;
+}
+
+/*
+ * "Fix" group membership list into caller provided buffer
+ */
+static NSS_STATUS
+do_fix_group_members_buffer (char **mallocedGroupMembers,
+			     size_t groupMembersCount,
+			     char ***pGroupMembers,
+			     char **buffer,
+			     size_t *buflen)
+{
+	size_t len;
+
+	if (groupMembersCount == 0) {
+		*pGroupMembers = _nss_ldap_no_members;
+		return NSS_SUCCESS;
+	}
+
+	len = (groupMembersCount + 1) * sizeof(char *);
+
+	if (bytesleft (*buffer, *buflen, char *) < len) {
+		return NSS_TRYAGAIN;
+	}
+
+	align (*buffer, *buflen, char *);
+	*pGroupMembers = (char **) *buffer;
+	*buffer += len;
+	*buflen -= len;
+
+	memcpy(*pGroupMembers, mallocedGroupMembers, groupMembersCount * sizeof(char *));
+	(*pGroupMembers)[groupMembersCount] = NULL;
+
+	return NSS_SUCCESS;
+}
+#endif /* RFC2307BIS */
+
 static NSS_STATUS
 _nss_ldap_parse_gr (LDAP * ld,
 		    LDAPMessage * e,
@@ -100,8 +274,12 @@ _nss_ldap_parse_gr (LDAP * ld,
   char *gid;
   NSS_STATUS stat;
 #ifdef RFC2307BIS
-  char **uid_mems, **dn_mems, **vals;
-  size_t uid_mems_c = 0, dn_mems_c = 0;
+  char **groupMembers;
+  size_t groupMembersCount;
+  size_t groupMembersBufferSize;
+  char *groupMembersBuffer[LDAP_NSS_MAXGR_BUFSIZ];
+  int groupMembersBufferIsMalloced;
+  int depth;
 #endif /* RFC2307BIS */
 
   stat =
@@ -129,98 +307,35 @@ _nss_ldap_parse_gr (LDAP * ld,
 
 #ifndef RFC2307BIS
   stat =
-    _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &gr->gr_mem,
+    _nss_ldap_assign_attrvals (ld, e, ATM (group, memberUid), NULL, &gr->gr_mem,
 			       &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
 #else
-  dn_mems = NULL;
-  vals = ldap_get_values (ld, e, AT (uniqueMember));
-  if (vals != NULL)
+  groupMembers = groupMembersBuffer;
+  groupMembersCount = 0;
+  groupMembersBufferSize = sizeof(groupMembers);
+  groupMembersBufferIsMalloced = 0;
+  depth = 0;
+
+  stat = do_parse_group_members (ld, e, &groupMembers, &groupMembersCount,
+				 &groupMembersBufferSize, &groupMembersBufferIsMalloced,
+				 &buffer, &buflen, &depth);
+  if (stat != NSS_SUCCESS)
     {
-      char **mem_p, **valiter;
-
-      dn_mems_c = ldap_count_values (vals);
-
-      if (bytesleft (buffer, buflen, char *) <
-	  (dn_mems_c + 1) * sizeof (char *))
-	{
-	  ldap_value_free (vals);
-	  return NSS_TRYAGAIN;
-	}
-      align (buffer, buflen, char *);
-      mem_p = dn_mems = (char **) buffer;
-      buffer += (dn_mems_c + 1) * sizeof (char *);
-      buflen -= (dn_mems_c + 1) * sizeof (char *);
-      for (valiter = vals; *valiter != NULL; valiter++)
-	{
-	  char *uid;
-
-	  /*
-	   * Remove optional UID (as in unique identifier)
-	   * only for uniqueMember; member does not have UID
-	   */
-	  if ((uid = strrchr (*valiter, '#')) != NULL)
-	    {
-	      *uid = '\0';
-	    }
-
-	  stat = _nss_ldap_dn2uid (ld, *valiter, &uid, &buffer, &buflen);
-	  switch (stat)
-	    {
-	    case NSS_SUCCESS:
-	      *mem_p = uid;
-	      mem_p++;
-	      break;
-	    case NSS_TRYAGAIN:
-	      ldap_value_free (vals);
-	      return NSS_TRYAGAIN;
-	      break;
-	    case NSS_NOTFOUND:
-	    default:
-	      dn_mems_c--;
-	      break;
-	    }
-	}
-      ldap_value_free (vals);
+      if (groupMembersBufferIsMalloced)
+	free (groupMembers);
+      return stat;
     }
 
-  stat =
-    _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &uid_mems,
-			       &buffer, &buflen, &uid_mems_c);
+  stat = do_fix_group_members_buffer (groupMembers, groupMembersCount,
+				      &gr->gr_mem, &buffer, &buflen);
 
-  if (stat == NSS_TRYAGAIN)
-    return NSS_TRYAGAIN;
+  if (groupMembersBufferIsMalloced)
+    free (groupMembers);
 
   if (stat != NSS_SUCCESS)
-    uid_mems = NULL;
-
-  if (dn_mems == NULL)
-    {
-      if (uid_mems == NULL)
-	gr->gr_mem = _nss_ldap_no_members;
-      else
-	gr->gr_mem = uid_mems;
-    }
-  else
-    {
-      if (uid_mems == NULL)
-	gr->gr_mem = dn_mems;
-      else
-	{
-	  if (bytesleft (buffer, buflen, char *) <
-	      (dn_mems_c + uid_mems_c + 1) * sizeof (char *))
-	      return NSS_TRYAGAIN;
-	  align (buffer, buflen, char *);
-	  gr->gr_mem = (char **) buffer;
-	  buffer += (dn_mems_c + uid_mems_c + 1) * sizeof (char *);
-	  buflen -= (dn_mems_c + uid_mems_c + 1) * sizeof (char *);
-	  memcpy (gr->gr_mem, dn_mems, (dn_mems_c * sizeof (char *)));
-	  memcpy (&gr->gr_mem[dn_mems_c], uid_mems,
-		  (uid_mems_c * sizeof (char *)));
-	  gr->gr_mem[dn_mems_c + uid_mems_c] = NULL;
-	}
-    }
+    return stat;
 #endif /* RFC2307BIS */
 
   return NSS_SUCCESS;
@@ -490,6 +605,8 @@ char *_nss_ldap_getgrset (char *user)
       if (erange)
 	errno = ERANGE;
 #endif /* HAVE_NSS_H */
+      _nss_ldap_ent_context_release (ctx);
+      free (ctx);
       _nss_ldap_leave ();
 #ifndef AIX
       return stat;
@@ -498,6 +615,8 @@ char *_nss_ldap_getgrset (char *user)
 #endif
     }
 
+  _nss_ldap_ent_context_release (ctx);
+  free (ctx);
   _nss_ldap_leave ();
 
 #ifdef HAVE_NSS_H
