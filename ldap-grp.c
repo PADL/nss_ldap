@@ -77,7 +77,12 @@ typedef struct ldap_initgroups_args
 ldap_initgroups_args_t;
 #else
 # ifdef HAVE_NSSWITCH_H
-typedef struct nss_groupsbymem ldap_initgroups_args_t;
+typedef struct ldap_initgroups_args
+{
+   struct nss_groupsbymem *gbm;
+   int depth;
+}
+ldap_initgroups_args_t;
 # else
 typedef struct ldap_initgroups_args
 {
@@ -431,13 +436,13 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
 
 # ifdef HAVE_NSSWITCH_H
   /* weed out duplicates; is this really our resposibility? */
-  for (i = 0; i < lia->numgids; i++)
+  for (i = 0; i < lia->gbm->numgids; i++)
     {
-      if (lia->gid_array[i] == (gid_t) gid)
+      if (lia->gbm->gid_array[i] == (gid_t) gid)
 	return NSS_NOTFOUND;
     }
 
-  if (lia->numgids == lia->maxgids)
+  if (lia->gbm->numgids == lia->gbm->maxgids)
     {
       /* can't fit any more */
       /*
@@ -447,7 +452,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       return NSS_SUCCESS;
     }
 
-  lia->gid_array[lia->numgids++] = (gid_t) gid;
+  lia->gbm->gid_array[lia->gbm->numgids++] = (gid_t) gid;
 # else
   if (gid == lia->group)
     {
@@ -499,13 +504,9 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
     {
       NSS_STATUS stat;
 
-#ifndef HAVE_NSSWITCH_H		/* XXX not yet implemented for Solaris */
       lia->depth++;
-#endif
       stat = ng_chase (ld, groupdn, lia);
-#ifndef HAVE_NSSWITCH_H
       lia->depth--;
-#endif
       ldap_memfree (groupdn);
 
       return stat;
@@ -581,12 +582,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
      char *_nss_ldap_getgrset (char *user)
 #endif
 {
-#ifdef HAVE_NSSWITCH_H
-  ldap_initgroups_args_t *liap = (struct nss_groupsbymem *) args;
-#else
   ldap_initgroups_args_t lia;
-  ldap_initgroups_args_t *liap = &lia;
-#endif /* HAVE_NSSWITCH_H */
 #ifndef HAVE_NSS_H
   int erange = 0;
 #endif /* HAVE_NSS_H */
@@ -605,22 +601,23 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #if defined(HAVE_NSS_H) || defined(AIX)
   LA_STRING (a) = user;
 #else
-  LA_STRING (a) = liap->username;
+  LA_STRING (a) = ((struct nss_groupsbymem *)args)->username;
 #endif /* HAVE_NSS_H || AIX */
   LA_TYPE (a) = LA_TYPE_STRING;
 
 #ifdef AIX
   lia.grplist = NULL;
   lia.listlen = 0;
-  lia.depth = 0;
-#elif !defined(HAVE_NSSWITCH_H)
+#elif defined(HAVE_NSSWITCH_H)
+  lia.gbm = (struct nss_groupsbymem *) args;
+#else
   lia.group = group;
   lia.start = start;
   lia.size = size;
   lia.groups = groupsp;
   lia.limit = limit;
-  lia.depth = 0;
 #endif /* AIX */
+  lia.depth = 0;
 
   _nss_ldap_enter ();
 
@@ -677,7 +674,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   gidnumber_attrs[0] = ATM (group, gidNumber);
   gidnumber_attrs[1] = NULL;
 
-  stat = _nss_ldap_getent_ex (&a, &ctx, (void *) liap, NULL, 0,
+  stat = _nss_ldap_getent_ex (&a, &ctx, (void *) &lia, NULL, 0,
 #ifdef HAVE_NSS_H
 			      errnop,
 #else
