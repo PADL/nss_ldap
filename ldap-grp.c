@@ -520,7 +520,6 @@ out:
     free (groupdn);
 #endif
 
-//  *pGroupMembers = groupMembers;
   *pGroupMembersCount = i;
 
   return stat;
