@@ -289,7 +289,7 @@ do_parse_group_members (LDAP * ld,
   groupMembersCount = 0;	/* number of members in this group */
   i = *pGroupMembersCount;	/* index of next member */
 
-next_range:
+  do {
   if (e == NULL)
     {
       stat = NSS_NOTFOUND;
@@ -422,7 +422,7 @@ next_range:
     }
 
   /* Get next range for Active Directory compatability */
-  if (end > 0)
+  if (end != -1)
     {
       stat = do_construct_range_attribute (uniquemember_attr,
 					   end + 1,
@@ -465,6 +465,7 @@ next_range:
 	  goto next_range;
 	}
     }
+   } while (end != -1);
 
 out:
   if (dnValues != NULL)
