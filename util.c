@@ -630,6 +630,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       /* terminate keyword */
       *(v++) = '\0';
 
+      /* skip empty lines with more than 3 spaces at the start of the line */
+      /* rds.oliver@samera.com.py 01-set-2004                              */
+      if (*v == '\n')
+	continue;
+
       /* skip all whitespaces between keyword and value */
       /* Lars Oergel <lars.oergel@innominate.de>, 05.10.2000 */
       while (*v == ' ' || *v == '\t')
