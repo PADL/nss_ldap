@@ -110,8 +110,8 @@ install: install_lib install_conf
 
 install_lib:
 	install -m 644 -o root -g root ${NSSLIB} /lib/$(NSSLIB)
-	ln -s $(NSSLIB) /lib/$(SOLIB)
-	ln -s /lib/$(NSSLIB) /usr/lib/$(MODULE).so
+	ln -sf $(NSSLIB) /lib/$(SOLIB)
+	ln -sf /lib/$(NSSLIB) /usr/lib/$(MODULE).so
 
 install_conf:
 	cp nsswitch.ldap /etc/nsswitch.ldap
