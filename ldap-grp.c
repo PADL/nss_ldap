@@ -285,7 +285,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
   if (lia->numgids == lia->maxgids)
     {
       /* can't fit any more */
-      return NSS_NOTFOUND;
+      return NSS_TRYAGAIN;
     }
 
   lia->gid_array[lia->numgids++] = (gid_t) gid;
@@ -301,7 +301,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       if (*(lia->start) >= lia->limit)
 	{
 	  /* can't fit any more */
-	  return NSS_NOTFOUND;
+	  return NSS_TRYAGAIN;
 	}
     }
   else if (*(lia->start) == *(lia->size))
@@ -312,7 +312,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
 					  sizeof (gid_t));
       if (*(lia->groups) == NULL)
 	{
-	  return NSS_NOTFOUND;
+	  return NSS_TRYAGAIN;
 	}
       *(lia->size) *= 2;
     }
