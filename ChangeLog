@@ -15,6 +15,8 @@ $Id$
 	  correctly
 	* fix for BUG#161: remove redundant lock in
 	  _nss_ldap_innetgr()
+	* fix deadlock if getXXXent() called without first
+	  calling setXXXent()
 
 215	Luke Howard <lukeh@padl.com>
 

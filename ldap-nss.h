@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2003 Luke Howard.
+/* Copyright (C) 1997-2004 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -636,10 +636,22 @@ NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be);
 #endif
 
 /* 
- * do_ent_context_init() is called for each getXXent() call
- * do_ent_context_release() is used to manually free a context
+ * _nss_ldap_ent_context_init() is called for each getXXent() call
+ * This will acquire the global mutex.
  */
 ent_context_t *_nss_ldap_ent_context_init (ent_context_t **);
+
+/*
+ * _nss_ldap_ent_context_init_locked() has the same behaviour
+ * as above, except it assumes that the caller has acquired
+ * the lock
+ */
+
+ent_context_t *_nss_ldap_ent_context_init_locked (ent_context_t **);
+
+/*
+ * _nss_ldap_ent_context_release() is used to manually free a context 
+ */
 void _nss_ldap_ent_context_release (ent_context_t *);
 
 /*
@@ -683,7 +695,7 @@ NSS_STATUS _nss_ldap_read (const char *dn,	/* IN */
 
 /*
  * extended enumeration routine; uses asynchronous API.
- * Caller holds lock
+ * Caller must have acquired the global mutex
  */
 NSS_STATUS _nss_ldap_getent_ex (ldap_args_t * args, /* IN */
 				ent_context_t ** key,	/* IN/OUT */
@@ -697,7 +709,7 @@ NSS_STATUS _nss_ldap_getent_ex (ldap_args_t * args, /* IN */
 
 /*
  * common enumeration routine; uses asynchronous API.
- * Acquires lock
+ * Acquires the global mutex
  */
 NSS_STATUS _nss_ldap_getent (ent_context_t ** key,	/* IN/OUT */
 			     void *result,	/* IN/OUT */

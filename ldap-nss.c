@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2003 Luke Howard.
+/* Copyright (C) 1997-2004 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -1567,9 +1567,8 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 }
 
 /*
- * This function initializes an enumeration context.
- * It is called from setXXent() directly, and so can safely lock the
- * mutex. 
+ * This function initializes an enumeration context, acquiring
+ * the global mutex.
  *
  * It could be done from the default constructor, under Solaris, but we
  * delay it until the setXXent() function is called.
@@ -1579,9 +1578,27 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 {
   ent_context_t *ctx;
 
-  debug ("==> _nss_ldap_ent_context_init");
-
   _nss_ldap_enter ();
+
+  ctx = _nss_ldap_ent_context_init_locked (pctx);
+
+  _nss_ldap_leave ();
+
+  return ctx;
+}
+
+/*
+ * This function initializes an enumeration context.
+ *
+ * It could be done from the default constructor, under Solaris, but we
+ * delay it until the setXXent() function is called.
+ */
+ent_context_t *
+_nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
+{
+  ent_context_t *ctx;
+
+  debug ("==> _nss_ldap_ent_context_init_locked");
 
   ctx = *pctx;
 
@@ -1590,8 +1607,7 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
       ctx = (ent_context_t *) malloc (sizeof (*ctx));
       if (ctx == NULL)
 	{
-	  _nss_ldap_leave ();
-	  debug ("<== _nss_ldap_ent_context_init");
+	  debug ("<== _nss_ldap_ent_context_init_locked");
 	  return NULL;
 	}
       *pctx = ctx;
@@ -1623,9 +1639,8 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 
   LS_INIT (ctx->ec_state);
 
-  _nss_ldap_leave ();
+  debug ("<== _nss_ldap_ent_context_init_locked");
 
-  debug ("<== _nss_ldap_ent_context_init");
   return ctx;
 }
 
@@ -2748,6 +2763,10 @@ _nss_ldap_getent (ent_context_t ** ctx,
   return status;
 }
 
+/*
+ * Internal entry point for enumeration routines.
+ * Caller holds global mutex
+ */
 NSS_STATUS
 _nss_ldap_getent_ex (ldap_args_t *args,
 		     ent_context_t ** ctx,
@@ -2768,7 +2787,7 @@ _nss_ldap_getent_ex (ldap_args_t *args,
        * implicitly call setent() if this is the first time
        * or there is no active search
        */
-      if (_nss_ldap_ent_context_init (ctx) == NULL)
+      if (_nss_ldap_ent_context_init_locked (ctx) == NULL)
 	{
 	  debug ("<== _nss_ldap_getent_ex");
 	  return NSS_UNAVAIL;
@@ -2782,8 +2801,6 @@ _nss_ldap_getent_ex (ldap_args_t *args,
    */
 
 next:
-  _nss_ldap_enter ();
-
   /*
    * If ctx->ec_msgid < 0, then we haven't searched yet. Let's do it!
    */
@@ -2795,16 +2812,12 @@ next:
 			       &(*ctx)->ec_sd);
       if (stat != NSS_SUCCESS)
 	{
-	  _nss_ldap_leave ();
 	  debug ("<== _nss_ldap_getent_ex");
 	  return stat;
 	}
 
       (*ctx)->ec_msgid = msgid;
     }
-
-
-  _nss_ldap_leave ();
 
   stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
 

@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2003 Luke Howard.
+/* Copyright (C) 1997-2004 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -246,8 +246,6 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       return NSS_SUCCESS;
     }
 
-  ldap_value_free (values);
-
 #ifdef AIX
   i = strlen (values[0]);
   lia->grplist = realloc (lia->grplist, lia->listlen + i + 2);
@@ -296,7 +294,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       /* Need a bigger buffer */
       *(lia->groups) = (gid_t *) realloc (*(lia->groups),
 					  2 * *(lia->size) *
-					  sizeof (gid_t *));
+					  sizeof (gid_t));
       if (*(lia->groups) == NULL)
 	{
 	  return NSS_TRYAGAIN;
@@ -304,20 +302,23 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       *(lia->size) *= 2;
     }
   /* weed out duplicates; is this really our responsibility? */
-  for (i = 0; i < *(lia->size); i++)
+  for (i = 0; i < *(lia->start); i++)
     {
-      if ((*(lia->groups)[i]) == gid)
+      if ((*(lia->groups))[i] == gid)
 	{
 	  return NSS_SUCCESS;
 	}
     }
+
+  /* add to group list */
+  *(lia->groups)[*(lia->start)] = gid;
+  *(lia->start) += 1;
+
   if (*(lia->start) == lia->limit)
     {
       /* can't fit any more */
       return NSS_SUCCESS;
     }
-
-  *(lia->groups)[(*(lia->start))++] = gid;
 # endif				/* HAVE_NSSWITCH_H */
 #endif /* AIX */
 
@@ -426,7 +427,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
       filter = _nss_ldap_filt_getgroupsbymember;
     }
 
-  if (_nss_ldap_ent_context_init (&ctx) == NULL)
+  if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
     {
       _nss_ldap_leave ();
 # ifdef AIX

@@ -1,7 +1,7 @@
-/* Copyright (C) 2002-2003 Luke Howard.
+/* Copyright (C) 2002-2004 Luke Howard.
    This file is part of the nss_ldap library.
    Linux support contributed by Larry Lile, <llile@dreamworks.com>, 2002.
-   Solaris support contributed by Luke Howard, <lukeh@padl.com>, 2003.
+   Solaris support contributed by Luke Howard, <lukeh@padl.com>, 2004.
 
    The nss_ldap library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Library General Public License as
@@ -763,6 +763,9 @@ do_parse_innetgr (LDAP * ld, LDAPMessage * e, ldap_state_t * pvt,
   return stat;
 }
 
+/*
+ * NB: caller has acquired the global lock
+ */
 static NSS_STATUS
 do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
 {
@@ -783,7 +786,7 @@ do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
   LA_TYPE (a) = LA_TYPE_STRING;
   LA_STRING (a) = nested;	/* memberNisNetgroup */
 
-  if (_nss_ldap_ent_context_init (&ctx) == NULL)
+  if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
     {
       debug ("<== do_innetgr_nested: failed to initialize context");
       return NSS_UNAVAIL;
@@ -803,6 +806,9 @@ do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
   return stat;
 }
 
+/*
+ * NB: caller has acquired the global lock
+ */
 static NSS_STATUS
 do_innetgr (ldap_innetgr_args_t * li_args,
 	    const char *machine, const char *user, const char *domain)
@@ -822,7 +828,7 @@ do_innetgr (ldap_innetgr_args_t * li_args,
   LA_TRIPLE (a).host = machine;
   LA_TRIPLE (a).domain = domain;
 
-  if (_nss_ldap_ent_context_init (&ctx) == NULL)
+  if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
     {
       debug ("<== do_innetgr: failed to initialize context");
       return NSS_UNAVAIL;
