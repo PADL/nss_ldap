@@ -47,10 +47,10 @@ You can build a position independent LDAP client library by compiling
 -fPIC and linking with -shared, or downloading the Mozilla or Netscape
 LDAP SDKs.
 
+
+
 --
-Luke Howard
-PADL Software Pty Ltd
-lukeh@padl.com
-
-
+[ PADL Software Pty Ltd ]
+Email: dev@padl.com
+Internet: http://www.padl.com
 
