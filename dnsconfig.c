@@ -169,7 +169,11 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   result->ldc_bindpw = NULL;
   result->ldc_rootbinddn = NULL;
   result->ldc_rootbindpw = NULL;
+#ifdef LDAP_VERSION3
+  result->ldc_version = LDAP_VERSION3;
+#else
   result->ldc_version = LDAP_VERSION2;
+#endif /* LDAP_VERSION3 */
   result->ldc_timelimit = LDAP_NO_LIMIT;
   result->ldc_bind_timelimit = 30;
   result->ldc_ssl_on = SSL_OFF;

@@ -3,6 +3,7 @@ $Header$
 
 127	Luke Howard <lukeh@padl.com>
 
+	* default to LDAP protocol version 3
 	* added support for "referrals" and "restart"
 	  options to ldap.conf
 	* use OpenLDAP 2.x rebind proc with correct
