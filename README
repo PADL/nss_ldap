@@ -31,6 +31,7 @@ To install:
 % make
 % make install
 
+NB: you need to use GNU make! (often called gmake or gnumake)
 
 1. Installation
 ---------------
