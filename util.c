@@ -63,7 +63,15 @@ static char ** do_namingcontextconfig (const char *key, char **result);
 #endif /* GNU_NSS */
 
 #ifdef DN2UID_CACHE
-#include <db_185.h>
+#if defined(__GLIBC__)
+# if __GLIBC_MINOR__ < 2
+#  include <db_185.h> 
+# else
+#  include <db1/db.h>
+# endif
+#else
+#include <db.h>
+#endif
 #include <fcntl.h>
 static DB *__cache = NULL;
 #ifdef SUN_NSS
@@ -556,11 +564,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	{
 	  result->ldc_version = atoi (v);
 	}
-      else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_TIMELIMIT))
+      else if (!strcasecmp (k, NSS_LDAP_KEY_TIMELIMIT))
 	{
 	  result->ldc_timelimit = atoi (v);
 	}
-      else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_BIND_TIMELIMIT))
+      else if (!strcasecmp (k, NSS_LDAP_KEY_BIND_TIMELIMIT))
 	{
 	  result->ldc_bind_timelimit = atoi (v);
 	}
