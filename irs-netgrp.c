@@ -91,7 +91,7 @@ ng_rewind (struct irs_ng *this, const char *group)
 			     LM_NETGROUP, NULL, 1, &ngbe->state->ec_res);
 
   if (stat == NSS_SUCCESS)
-    nn_push (&ngbe->known_groups, group);
+    _nss_ldap_namelist_push (&ngbe->known_groups, group);
 
   if (stat != NSS_SUCCESS)
     _nss_ldap_ent_context_release (ngbe->state);
