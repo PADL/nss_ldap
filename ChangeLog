@@ -1,7 +1,11 @@
 $Id$
 ===============================================================
 
-81	Luke Howard <ulkeh@padl.com>
+84	Luke Howard <lukeh@padl.com>
+
+	* implemented _nss_ldap_initgroups()
+
+81	Luke Howard <lukeh@padl.com>
 
 	* removed extraneous do_sleep() code
 	* updated spec file

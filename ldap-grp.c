@@ -162,9 +162,17 @@ _nss_ldap_parse_gr (
 #ifdef SUN_NSS
 static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
+#elif defined(GNU_NSS)
+  NSS_STATUS
+_nss_ldap_initgroups (const char *user, gid_t group, long int *start,
+		long int *size, gid_t * groups, long int limit, int *errnop)
+#endif
+#if defined(SUN_NSS) || defined(GNU_NSS)
 {
   ldap_args_t a;
+#ifdef SUN_NSS
   struct nss_groupsbymem *gbm = (struct nss_groupsbymem *) args;
+#endif /* SUN_NSS */
 #ifdef RFC2307BIS
   char *userdn = NULL;
   const char **attrs =
@@ -174,7 +182,11 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
   LDAPMessage *res, *e;
 
   LA_INIT (a);
+#ifdef GNU_NSS
+  LA_STRING (a) = user;
+#else
   LA_STRING (a) = gbm->username;
+#endif /* GNU_NSS */
   LA_TYPE (a) = LA_TYPE_STRING;
 
 #ifdef RFC2307BIS
@@ -220,7 +232,8 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
       char **values = _nss_ldap_get_values (e, AT (gidNumber));
       if (values != NULL)
 	{
-	  int i, gid;
+	  int i;
+	  long int gid;
 
 	  gid = strtol (values[0], (char **) NULL, 10);
 	  ldap_value_free (values);
@@ -230,16 +243,14 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 	      continue;
 	    }
 
+#ifdef SUN_NSS
 	  /* weed out duplicates */
 	  for (i = 0; i < gbm->numgids; i++)
 	    {
 	      if (gbm->gid_array[i] == (gid_t) gid)
-		{
-		  continue;
-		}
+		continue;
 	    }
 
-	  ldap_value_free (values);
 	  gbm->gid_array[gbm->numgids++] = (gid_t) gid;
 
 	  if (gbm->numgids == gbm->maxgids)
@@ -247,26 +258,50 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 	      ldap_msgfree (res);
 	      return NSS_SUCCESS;
 	    }
+#else
+	  if (gid != group)
+	    {
+	      if (*start == *size && limit <= 0)
+		{
+		  /* Need a bigger buffer */
+		  groups = realloc (groups, *size * sizeof (*groups));
+		  if (groups == NULL)
+		    {
+		      ldap_msgfree (res);
+		      *errnop = ENOMEM;
+		      return NSS_TRYAGAIN;
+		    }
+		  *size *= 2;
+		}
+              /* weed out duplicates */
+	      for (i = 0; i < *size; i++)
+		{
+		  if (groups[i] == gid)
+		    continue;
+		}
+	      groups[*start] = gid;
+	      *start += 1;
+
+	      if (*start == limit)
+		{
+		  ldap_msgfree (res);
+		  return NSS_SUCCESS;
+		}
+	    }
+#endif /* SUN_NSS */
 	}
 
     }
   ldap_msgfree (res);
 
-#if 0
-  {
-    int i;
-    for (i = 0; i < gbm->numgids; i++)
-      {
-	printf ("%d ", gbm->gid_array[i]);
-      }
-    printf (".\n");
-  }
-#endif
-
+#ifdef GNU_NSS
+  return NSS_SUCCESS;
+#else
   /* yes, NSS_NOTFOUND is the successful errno code. see nss_dbdefs.h */
   return NSS_NOTFOUND;
+#endif /* GNU_NSS */
 }
-#endif /* SUN_NSS */
+#endif /* SUN_NSS || GNU_NSS */
 
 #ifdef GNU_NSS
 NSS_STATUS
