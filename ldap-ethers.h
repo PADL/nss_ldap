@@ -43,15 +43,6 @@ static const char filt_getntohost[] =
 static const char filt_getetherent[] =
         "(objectclass="LDAP_CLASS_HOST")";
 
-#if defined(TESTING) || defined(DL_NSS)
-/* haven't instlled libc.so.6. remove this before release. */
-/*
-typedef u_char ether_addr_t[6];
-struct ether_addr {
-        u_char  ether_addr_octet[6];
-};
-*/
-#endif
 
 struct ether
 {

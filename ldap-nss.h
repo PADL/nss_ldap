@@ -80,7 +80,7 @@
 #endif
 
 #ifdef GNU_NSS
-# if !defined(TESTING) && !defined(DL_NSS)
+# if !defined(DL_NSS)
 #  if (__GLIBC__ == 2) && (__GLIBC_MINOR__ > 0)
 #   include <bits/libc-lock.h>
 #  else
@@ -282,7 +282,7 @@ typedef nss_status_t NSS_STATUS;
 #endif
 
 #ifdef GNU_NSS
-#if defined(TESTING) || defined(DL_NSS)
+#if defined(DL_NSS)
 # define __nss_lock()
 # define __nss_unlock()
 # define __nss_cleanup()
@@ -290,7 +290,7 @@ typedef nss_status_t NSS_STATUS;
 # define __nss_lock()		__libc_lock_lock(_nss_ldap_lock)
 # define __nss_unlock()		__libc_lock_unlock(_nss_ldap_lock)
 # define __nss_cleanup()
-#endif /* TESTING */
+#endif /* */
 #elif defined(IRS_NSS)
 /* XXX no mutex support */
 #define __nss_lock()		pthread_lock(&_nss_ldap_lock)
