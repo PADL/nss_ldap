@@ -694,7 +694,7 @@ do_innetgr_nested (const char *netgroup,
 
   if (*depth > LDAP_NSS_MAXNETGR_DEPTH)
     {
-      debug ("<== do_innetgr_nested: depth exceeded");
+      debug ("<== do_innetgr_nested: maximum depth exceeded");
       return NSS_NOTFOUND;
     }
 
@@ -732,7 +732,7 @@ do_innetgr_nested (const char *netgroup,
 
   assert (values[0] != NULL);
 
-  *depth++;
+  (*depth)++;
 
   if (strcasecmp (netgroup, values[0]) == 0)
     {
