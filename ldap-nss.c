@@ -379,8 +379,7 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -405,8 +404,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -528,7 +526,7 @@ do_set_sockopts (void)
       int off = 0;
       int namelen = sizeof (struct sockaddr);
 
-      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *)&off, sizeof (off));
+      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *) &off, sizeof (off));
       (void) fcntl (sd, F_SETFD, FD_CLOEXEC);
       /*
        * NSS modules shouldn't open file descriptors that the program/utility
@@ -620,122 +618,165 @@ do_close_no_unbind (void)
   if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_OPT_DESC */
     {
-		struct sockaddr sockname; 
-		struct sockaddr peername;
-		int socknamelen;
-		int peernamelen;
+      struct sockaddr sockname;
+      struct sockaddr peername;
+      int socknamelen;
+      int peernamelen;
 
-		/*
-		 * Important to perform comparison "family-aware" to not count
-		 * sin_zero padding as significant.
-		 */
-		if (getsockname(sd, &sockname, &socknamelen) != 0) {
-			__session.ls_conn = NULL;
-			debug ("<== do_close_no_unbind (could not get socket name)");
-			return;
-		}
-		if (sockname.sa_family != __session.ls_sockname.sa_family) {
-			__session.ls_conn = NULL;
-			debug ("<== do_close_no_unbind (socket family differs)");
-			return;
-		}
-		switch (sockname.sa_family) {
-			case AF_INET:
-				if (((struct sockaddr_in *)&sockname)->sin_port != ((struct sockaddr_in *)&__session.ls_sockname)->sin_port) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (socket port differs)");
-					return;
-				}
-				if (memcmp(&((struct sockaddr_in *)&sockname)->sin_addr, &((struct sockaddr_in *)&__session.ls_sockname)->sin_addr, sizeof(struct in_addr)) != 0) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (socket address differs)");
-					return;
-				}
-				break;
-#ifdef AF_INET6
-			case AF_INET6:
-				if (((struct sockaddr_in6 *)&sockname)->sin6_port != ((struct sockaddr_in6 *)&__session.ls_sockname)->sin6_port) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (socket port differs)");
-					return;
-				}
-				if (memcmp(&((struct sockaddr_in6 *)&sockname)->sin6_addr, &((struct sockaddr_in6 *)&__session.ls_sockname)->sin6_addr, sizeof(struct in6_addr)) != 0) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (socket address differs)");
-					return;
-				}
-				if (((struct sockaddr_in6 *)&sockname)->sin6_scope_id != ((struct sockaddr_in6 *)&__session.ls_sockname)->sin6_scope_id) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (socket scope ID differs)");
-					return;
-				}
-				break;
+      /*
+       * Important to perform comparison "family-aware" to not count
+       * sin_zero padding as significant.
+       */
+      if (getsockname (sd, &sockname, &socknamelen) != 0)
+	{
+	  __session.ls_conn = NULL;
+	  debug ("<== do_close_no_unbind (could not get socket name)");
+	  return;
+	}
+      if (sockname.sa_family != __session.ls_sockname.sa_family)
+	{
+	  __session.ls_conn = NULL;
+	  debug ("<== do_close_no_unbind (socket family differs)");
+	  return;
+	}
+      switch (sockname.sa_family)
+	{
+	case AF_INET:
+	  if (((struct sockaddr_in *) &sockname)->sin_port !=
+	      ((struct sockaddr_in *) &__session.ls_sockname)->sin_port)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (socket port differs)");
+	      return;
+	    }
+	  if (memcmp
+	      (&((struct sockaddr_in *) &sockname)->sin_addr,
+	       &((struct sockaddr_in *) &__session.ls_sockname)->sin_addr,
+	       sizeof (struct in_addr)) != 0)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (socket address differs)");
+	      return;
+	    }
+	  break;
+#ifdef INET6
+	case AF_INET6:
+	  if (((struct sockaddr_in6 *) &sockname)->sin6_port !=
+	      ((struct sockaddr_in6 *) &__session.ls_sockname)->sin6_port)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (socket port differs)");
+	      return;
+	    }
+	  if (memcmp
+	      (&((struct sockaddr_in6 *) &sockname)->sin6_addr,
+	       &((struct sockaddr_in6 *) &__session.ls_sockname)->sin6_addr,
+	       sizeof (struct in6_addr)) != 0)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (socket address differs)");
+	      return;
+	    }
+	  if (((struct sockaddr_in6 *) &sockname)->sin6_scope_id !=
+	      ((struct sockaddr_in6 *) &__session.ls_sockname)->sin6_scope_id)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (socket scope ID differs)");
+	      return;
+	    }
+	  break;
 #endif
-			case AF_UNIX:
-				if (strcmp(((struct sockaddr_un *)&sockname)->sun_path, ((struct sockaddr_un *)&__session.ls_sockname)->sun_path) != 0) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (socket path differs)");
-					return;
-				}
-				break;
-			default:
-				if (memcmp(&sockname, &__session.ls_sockname, socknamelen) != 0) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (socket data differs)");
-					return;
-				}
-			}
-		if (getpeername(sd, &peername, &peernamelen) != 0) {
-			__session.ls_conn = NULL;
-			debug ("<== do_close_no_unbind (could not get peer name)");
-			return;
-		}
-		switch (peername.sa_family) {
-			case AF_INET:
-				if (((struct sockaddr_in *)&peername)->sin_port != ((struct sockaddr_in *)&__session.ls_peername)->sin_port) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (peer port differs)");
-					return;
-				}
-				if (memcmp(&((struct sockaddr_in *)&peername)->sin_addr, &((struct sockaddr_in *)&__session.ls_peername)->sin_addr, sizeof(struct in_addr)) != 0) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (peer address differs)");
-					return;
-				}
-				break;
-#ifdef AF_INET6
-			case AF_INET6:
-				if (((struct sockaddr_in6 *)&peername)->sin6_port != ((struct sockaddr_in6 *)&__session.ls_peername)->sin6_port) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (peer port differs)");
-					return;
-				}
-				if (memcmp(&((struct sockaddr_in6 *)&peername)->sin6_addr, &((struct sockaddr_in6 *)&__session.ls_peername)->sin6_addr, sizeof(struct in6_addr)) != 0) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (peer address differs)");
-					return;
-				}
-				if (((struct sockaddr_in6 *)&peername)->sin6_scope_id != ((struct sockaddr_in6 *)&__session.ls_peername)->sin6_scope_id) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (peer scope ID differs)");
-					return;
-				}
-				break;
+	case AF_UNIX:
+	  if (strcmp
+	      (((struct sockaddr_un *) &sockname)->sun_path,
+	       ((struct sockaddr_un *) &__session.ls_sockname)->sun_path) !=
+	      0)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (socket path differs)");
+	      return;
+	    }
+	  break;
+	default:
+	  if (memcmp (&sockname, &__session.ls_sockname, socknamelen) != 0)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (socket data differs)");
+	      return;
+	    }
+	}
+      if (getpeername (sd, &peername, &peernamelen) != 0)
+	{
+	  __session.ls_conn = NULL;
+	  debug ("<== do_close_no_unbind (could not get peer name)");
+	  return;
+	}
+      switch (peername.sa_family)
+	{
+	case AF_INET:
+	  if (((struct sockaddr_in *) &peername)->sin_port !=
+	      ((struct sockaddr_in *) &__session.ls_peername)->sin_port)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (peer port differs)");
+	      return;
+	    }
+	  if (memcmp
+	      (&((struct sockaddr_in *) &peername)->sin_addr,
+	       &((struct sockaddr_in *) &__session.ls_peername)->sin_addr,
+	       sizeof (struct in_addr)) != 0)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (peer address differs)");
+	      return;
+	    }
+	  break;
+#ifdef INET6
+	case AF_INET6:
+	  if (((struct sockaddr_in6 *) &peername)->sin6_port !=
+	      ((struct sockaddr_in6 *) &__session.ls_peername)->sin6_port)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (peer port differs)");
+	      return;
+	    }
+	  if (memcmp
+	      (&((struct sockaddr_in6 *) &peername)->sin6_addr,
+	       &((struct sockaddr_in6 *) &__session.ls_peername)->sin6_addr,
+	       sizeof (struct in6_addr)) != 0)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (peer address differs)");
+	      return;
+	    }
+	  if (((struct sockaddr_in6 *) &peername)->sin6_scope_id !=
+	      ((struct sockaddr_in6 *) &__session.ls_peername)->sin6_scope_id)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (peer scope ID differs)");
+	      return;
+	    }
+	  break;
 #endif
-			case AF_UNIX:
-				if (strcmp(((struct sockaddr_un *)&peername)->sun_path, ((struct sockaddr_un *)&__session.ls_peername)->sun_path) != 0) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (peer path differs)");
-					return;
-				}
-				break;
-			default:
-				if (memcmp(&peername, &__session.ls_peername, peernamelen) != 0) {
-					__session.ls_conn = NULL;
-					debug ("<== do_close_no_unbind (peer data differs)");
-					return;
-				}
-		}
+	case AF_UNIX:
+	  if (strcmp
+	      (((struct sockaddr_un *) &peername)->sun_path,
+	       ((struct sockaddr_un *) &__session.ls_peername)->sun_path) !=
+	      0)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (peer path differs)");
+	      return;
+	    }
+	  break;
+	default:
+	  if (memcmp (&peername, &__session.ls_peername, peernamelen) != 0)
+	    {
+	      __session.ls_conn = NULL;
+	      debug ("<== do_close_no_unbind (peer data differs)");
+	      return;
+	    }
+	}
     }
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
 
@@ -770,8 +811,7 @@ do_close_no_unbind (void)
 /*
  * A simple alias around do_open().
  */
-NSS_STATUS
-_nss_ldap_init (void)
+NSS_STATUS _nss_ldap_init (void)
 {
   return do_open ();
 }
@@ -1805,8 +1845,7 @@ do_with_reconnect (const char *base, int scope,
       syslog (LOG_ERR,
 	      "nss_ldap: could not %s %sconnect to LDAP server - %s",
 	      hard ? "hard" : "soft",
-	      tries ? "re" : "",
-	      ldap_err2string (rc));
+	      tries ? "re" : "", ldap_err2string (rc));
       stat = NSS_UNAVAIL;
       break;
     case NSS_SUCCESS:
@@ -2149,8 +2188,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2757,8 +2795,7 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -3004,8 +3041,7 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 }
 #endif
 
-NSS_STATUS
-_nss_ldap_proxy_bind (const char *user, const char *password)
+NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password)
 {
   ldap_args_t args;
   LDAPMessage *res, *e;
