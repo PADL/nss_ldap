@@ -23,8 +23,7 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_ALIAS_H
 #define _LDAP_NSS_LDAP_LDAP_ALIAS_H
 
-static NSS_STATUS _nss_ldap_parse_alias (LDAP * ld,
-					 LDAPMessage * e,
+static NSS_STATUS _nss_ldap_parse_alias (LDAPMessage * e,
 					 ldap_state_t *,
 					 void *result,
 					 char *buffer, size_t buflen);

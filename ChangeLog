@@ -5,6 +5,7 @@ $Id$
 
 	* don't double-free on realloc() failure in
 	  do_pasre_group_members()
+	* avoid using stale LDAP handles
 
 223	Luke Howard <lukeh@padl.com>
 

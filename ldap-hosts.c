@@ -73,30 +73,27 @@ static ent_context_t *hosts_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_hostv4 (LDAP * ld,
-			LDAPMessage * e,
+_nss_ldap_parse_hostv4 (LDAPMessage * e,
 			ldap_state_t * pvt,
 			void *result, char *buffer, size_t buflen)
 {
-  return _nss_ldap_parse_host (ld, e, pvt, result, buffer, buflen,
+  return _nss_ldap_parse_host (e, pvt, result, buffer, buflen,
 			       AF_INET);
 }
 
 #ifdef INET6
 static NSS_STATUS
-_nss_ldap_parse_hostv6 (LDAP * ld,
-			LDAPMessage * e,
+_nss_ldap_parse_hostv6 (LDAPMessage * e,
 			ldap_state_t * pvt,
 			void *result, char *buffer, size_t buflen)
 {
-  return _nss_ldap_parse_host (ld, e, pvt, result, buffer, buflen,
+  return _nss_ldap_parse_host (e, pvt, result, buffer, buflen,
 			       AF_INET6);
 }
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_host (LDAP * ld,
-		      LDAPMessage * e,
+_nss_ldap_parse_host (LDAPMessage * e,
 		      ldap_state_t * pvt,
 		      void *result, char *buffer, size_t buflen,
 		      int af)
@@ -119,19 +116,19 @@ _nss_ldap_parse_host (LDAP * ld,
 
   *addressbuf = *buffer = '\0';
 
-  stat = _nss_ldap_assign_attrval (ld, e, ATM (hosts, cn), &host->h_name,
+  stat = _nss_ldap_assign_attrval (e, ATM (hosts, cn), &host->h_name,
 				   &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, ATM (hosts, cn), host->h_name,
+    _nss_ldap_assign_attrvals (e, ATM (hosts, cn), host->h_name,
                                &host->h_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, AT (ipHostNumber), NULL, &addresses,
+    _nss_ldap_assign_attrvals (e, AT (ipHostNumber), NULL, &addresses,
 			       &p_addressbuf, &addresslen, &addresscount);
   if (stat != NSS_SUCCESS)
     return stat;

@@ -76,20 +76,20 @@ typedef struct ldap_uess_args
 }
 ldap_uess_args_t;
 
-static NSS_STATUS uess_get_char (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_char_ex (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index, const char *attribute);
-static NSS_STATUS uess_get_int (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_groupsids (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_gecos (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_pwd (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_dn (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_char (LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_char_ex (LDAPMessage * e, ldap_uess_args_t * arg, int index, const char *attribute);
+static NSS_STATUS uess_get_int (LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_pgrp (LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_groupsids (LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_gecos (LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_pwd (LDAPMessage * e, ldap_uess_args_t * arg, int index);
+static NSS_STATUS uess_get_dn (LDAPMessage * e, ldap_uess_args_t * arg, int index);
 
 /* dispatch table for retrieving UESS attribute from an LDAP entry */
 struct ldap_uess_fn
 {
   const char *luf_attribute;
-  NSS_STATUS (*luf_translator) (LDAP * ld, LDAPMessage * e,
+  NSS_STATUS (*luf_translator) (LDAPMessage * e,
 				ldap_uess_args_t *, int);
 }
 ldap_uess_fn_t;
@@ -366,7 +366,7 @@ uess2ldapattr (ldap_map_selector_t map, const char *attribute)
  * Get primary group name for a user
  */
 static NSS_STATUS
-uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
+uess_get_pgrp (LDAPMessage * e, ldap_uess_args_t * lua, int i)
 {
   char **vals;
   LDAPMessage *res;
@@ -374,7 +374,7 @@ uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
   NSS_STATUS stat;
   ldap_args_t a;
 
-  vals = ldap_get_values (ld, e, ATM (passwd, gidNumber));
+  vals = _nss_ldap_get_values (e, ATM (passwd, gidNumber));
   if (vals == NULL)
     return NSS_NOTFOUND;
 
@@ -395,14 +395,14 @@ uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
 
   ldap_value_free (vals);
 
-  e = ldap_first_entry (ld, res);
+  e = _nss_ldap_first_entry (res);
   if (e == NULL)
     {
       ldap_msgfree (res);
       return NSS_NOTFOUND;
     }
 
-  stat = uess_get_char_ex (ld, e, lua, i, attrs[0]);
+  stat = uess_get_char_ex (e, lua, i, attrs[0]);
 
   ldap_msgfree (res);
 
@@ -413,7 +413,7 @@ uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
  * Get groups to which a user belongs 
  */
 static NSS_STATUS
-uess_get_groupsids (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
+uess_get_groupsids (LDAPMessage * e, ldap_uess_args_t * lua, int i)
 {
   char *p, *q;
   size_t len;
@@ -451,7 +451,7 @@ uess_get_groupsids (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
  * Get a mapped UESS string attribute
  */
 static NSS_STATUS
-uess_get_char (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
+uess_get_char (LDAPMessage * e, ldap_uess_args_t * lua, int i)
 {
   const char *attribute;
 
@@ -459,20 +459,20 @@ uess_get_char (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
   if (attribute == NULL)
     return NSS_NOTFOUND;
 
-  return uess_get_char_ex (ld, e, lua, i, attribute);
+  return uess_get_char_ex (e, lua, i, attribute);
 }
 
 /*
  * Get a specific LDAP attribute
  */
 static NSS_STATUS
-uess_get_char_ex (LDAP * ld, LDAPMessage * e,
+uess_get_char_ex (LDAPMessage * e,
 		  ldap_uess_args_t * lua, int i, const char *attribute)
 {
   char **vals;
   attrval_t *av = &lua->lua_results[i];
 
-  vals = ldap_get_values (ld, e, attribute);
+  vals = _nss_ldap_get_values (e, attribute);
   if (vals == NULL)
     return NSS_NOTFOUND;
 
@@ -497,7 +497,7 @@ uess_get_char_ex (LDAP * ld, LDAPMessage * e,
  * Get an encoded crypt password
  */
 static NSS_STATUS
-uess_get_pwd (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
+uess_get_pwd (LDAPMessage * e, ldap_uess_args_t * lua, int i)
 {
   char **vals;
   attrval_t *av = &lua->lua_results[i];
@@ -508,7 +508,7 @@ uess_get_pwd (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
   if (attribute == NULL)
     return NSS_NOTFOUND;
 
-  vals = ldap_get_values (ld, e, attribute);
+  vals = _nss_ldap_get_values (e, attribute);
   pwd = _nss_ldap_locate_userpassword (vals);
 
   av->attr_un.au_char = strdup (pwd);
@@ -522,7 +522,7 @@ uess_get_pwd (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
  * Get a UESS integer attribute
  */
 static NSS_STATUS
-uess_get_int (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
+uess_get_int (LDAPMessage * e, ldap_uess_args_t * lua, int i)
 {
   const char *attribute;
   char **vals;
@@ -532,7 +532,7 @@ uess_get_int (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
   if (attribute == NULL)
     return NSS_NOTFOUND;
 
-  vals = ldap_get_values (ld, e, attribute);
+  vals = _nss_ldap_get_values (e, attribute);
   if (vals == NULL)
     return NSS_NOTFOUND;
 
@@ -551,14 +551,14 @@ uess_get_int (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
  * Get the GECOS/cn attribute
  */
 static NSS_STATUS
-uess_get_gecos (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
+uess_get_gecos (LDAPMessage * e, ldap_uess_args_t * lua, int i)
 {
   NSS_STATUS stat;
 
-  stat = uess_get_char (ld, e, lua, i);
+  stat = uess_get_char (e, lua, i);
   if (stat == NSS_NOTFOUND)
     {
-      stat = uess_get_char_ex (ld, e, lua, i, ATM (passwd, cn));
+      stat = uess_get_char_ex (e, lua, i, ATM (passwd, cn));
     }
 
   return stat;
@@ -568,9 +568,9 @@ uess_get_gecos (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
  * Get the DN 
  */
 static NSS_STATUS
-uess_get_dn (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
+uess_get_dn (LDAPMessage * e, ldap_uess_args_t * lua, int i)
 {
-  lua->lua_results[i].attr_un.au_char = ldap_get_dn (ld, e);
+  lua->lua_results[i].attr_un.au_char = _nss_ldap_get_dn (e);
   if (lua->lua_results[i].attr_un.au_char == NULL)
     return NSS_NOTFOUND;
 
@@ -578,7 +578,7 @@ uess_get_dn (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
 }
 
 static NSS_STATUS
-do_parse_uess_getentry (LDAP * ld, LDAPMessage * e,
+do_parse_uess_getentry (LDAPMessage * e,
 			ldap_state_t * pvt, void *result,
 			char *buffer, size_t buflen)
 {
@@ -598,7 +598,7 @@ do_parse_uess_getentry (LDAP * ld, LDAPMessage * e,
       if (attribute == NULL)
 	return NSS_NOTFOUND;
 
-      vals = ldap_get_values (ld, e, attribute);
+      vals = _nss_ldap_get_values (e, attribute);
       if (vals == NULL)
 	return NSS_NOTFOUND;
 
@@ -658,7 +658,7 @@ do_parse_uess_getentry (LDAP * ld, LDAPMessage * e,
 	      if (strcmp (__uess_fns[j].luf_attribute, lua->lua_attributes[i])
 		  == 0)
 		{
-		  stat = (__uess_fns[j].luf_translator) (ld, e, lua, i);
+		  stat = (__uess_fns[j].luf_translator) (e, lua, i);
 		  switch (stat)
 		    {
 		    case NSS_SUCCESS:

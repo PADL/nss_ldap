@@ -72,8 +72,7 @@ static ent_context_t *serv_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_serv (LDAP * ld,
-		      LDAPMessage * e,
+_nss_ldap_parse_serv (LDAPMessage * e,
 		      ldap_state_t * state,
 		      void *result, char *buffer, size_t buflen)
 {
@@ -92,7 +91,7 @@ _nss_ldap_parse_serv (LDAP * ld,
 	{
 	  /* non-deterministic behaviour is ok */
 	  stat =
-	    _nss_ldap_assign_attrval (ld, e, AT (ipServiceProtocol),
+	    _nss_ldap_assign_attrval (e, AT (ipServiceProtocol),
 				      &service->s_proto, &buffer, &buflen);
 	  if (stat != NSS_SUCCESS)
 	    {
@@ -116,7 +115,7 @@ _nss_ldap_parse_serv (LDAP * ld,
     }
   else
     {
-      char **vals = ldap_get_values (ld, e, AT (ipServiceProtocol));
+      char **vals = _nss_ldap_get_values (e, AT (ipServiceProtocol));
       int len;
       if (vals == NULL)
 	{
@@ -160,7 +159,7 @@ _nss_ldap_parse_serv (LDAP * ld,
     }
 
   stat =
-    _nss_ldap_getrdnvalue (ld, e, ATM (services, cn), &service->s_name,
+    _nss_ldap_getrdnvalue (e, ATM (services, cn), &service->s_name,
                            &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     {
@@ -168,7 +167,7 @@ _nss_ldap_parse_serv (LDAP * ld,
     }
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, ATM (services, cn), service->s_name,
+    _nss_ldap_assign_attrvals (e, ATM (services, cn), service->s_name,
 			       &service->s_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     {
@@ -176,7 +175,7 @@ _nss_ldap_parse_serv (LDAP * ld,
     }
 
   stat =
-    _nss_ldap_assign_attrval (ld, e, AT (ipServicePort), &port, &buffer,
+    _nss_ldap_assign_attrval (e, AT (ipServicePort), &port, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
     {

@@ -266,8 +266,7 @@ _nss_ldap_parse_netgr (void *vresultp, char *buffer, size_t buflen)
 
 #ifdef HAVE_NSS_H
 static NSS_STATUS
-_nss_ldap_load_netgr (LDAP * ld,
-		      LDAPMessage * e,
+_nss_ldap_load_netgr (LDAPMessage * e,
 		      ldap_state_t * pvt,
 		      void *vresultp, char *buffer, size_t buflen)
 {
@@ -284,10 +283,10 @@ _nss_ldap_load_netgr (LDAP * ld,
       switch (attr)
 	{
 	case 1:
-	  vals = ldap_get_values (ld, e, AT (nisNetgroupTriple));
+	  vals = _nss_ldap_get_values (e, AT (nisNetgroupTriple));
 	  break;
 	default:
-	  vals = ldap_get_values (ld, e, AT (memberNisNetgroup));
+	  vals = _nss_ldap_get_values (e, AT (memberNisNetgroup));
 	  break;
 	}
 
@@ -625,7 +624,7 @@ do_getnetgrent (nss_ldap_netgr_backend_t *be,
  * Test a 4-tuple
  */
 static NSS_STATUS
-do_parse_innetgr (LDAP * ld, LDAPMessage * e, ldap_state_t * pvt,
+do_parse_innetgr (LDAPMessage * e, ldap_state_t * pvt,
 		  void *result, char *buffer, size_t buflen)
 {
   ldap_innetgr_args_t *li_args = (ldap_innetgr_args_t *) result;

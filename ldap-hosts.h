@@ -37,8 +37,7 @@
 #endif
 
 
-static NSS_STATUS _nss_ldap_parse_host (LDAP * ld,
-					LDAPMessage * e,
+static NSS_STATUS _nss_ldap_parse_host (LDAPMessage * e,
 					ldap_state_t * pvt,
 					void *result,
 					char *buffer, size_t buflen, int af);

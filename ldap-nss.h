@@ -574,7 +574,7 @@ typedef enum nss_status NSS_STATUS;
 #define _NSS_LOOKUP_OFFSET      (0)
 #endif
 
-typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *,
+typedef NSS_STATUS (*parser_t) (LDAPMessage *, ldap_state_t *, void *,
 				char *, size_t);
 
 #ifdef HPUX
@@ -690,6 +690,9 @@ char **_nss_ldap_get_values (LDAPMessage * e, const char *attr);
 char *_nss_ldap_get_dn (LDAPMessage * e);
 LDAPMessage *_nss_ldap_first_entry (LDAPMessage * res);
 LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
+char *_nss_ldap_first_attribute (LDAPMessage * entry, BerElement **berptr);
+char *_nss_ldap_next_attribute (LDAPMessage * entry, BerElement *ber);
+
 
 /*
  * Synchronous search cover (caller acquires lock).
@@ -760,8 +763,7 @@ NSS_STATUS _nss_ldap_getbyname (ldap_args_t * args,	/* IN/OUT */
 				parser_t parser /* IN */ );
 
 /* parsing utility functions */
-NSS_STATUS _nss_ldap_assign_attrvals (LDAP * ld,	/* IN */
-				      LDAPMessage * e,	/* IN */
+NSS_STATUS _nss_ldap_assign_attrvals (LDAPMessage * e,	/* IN */
 				      const char *attr,	/* IN */
 				      const char *omitvalue,	/* IN */
 				      char ***valptr,	/* OUT */
@@ -769,8 +771,7 @@ NSS_STATUS _nss_ldap_assign_attrvals (LDAP * ld,	/* IN */
 				      size_t * buflen,	/* IN/OUT */
 				      size_t * pvalcount /* OUT */ );
 
-NSS_STATUS _nss_ldap_assign_attrval (LDAP * ld,	/* IN */
-				     LDAPMessage * e,	/* IN */
+NSS_STATUS _nss_ldap_assign_attrval (LDAPMessage * e,	/* IN */
 				     const char *attr,	/* IN */
 				     char **valptr,	/* OUT */
 				     char **buffer,	/* IN/OUT */
@@ -779,14 +780,13 @@ NSS_STATUS _nss_ldap_assign_attrval (LDAP * ld,	/* IN */
 
 const char *_nss_ldap_locate_userpassword (char **vals);
 
-NSS_STATUS _nss_ldap_assign_userpassword (LDAP * ld,	/* IN */
-					  LDAPMessage * e,	/* IN */
+NSS_STATUS _nss_ldap_assign_userpassword (LDAPMessage * e,	/* IN */
 					  const char *attr,	/* IN */
 					  char **valptr,	/* OUT */
 					  char **buffer,	/* IN/OUT */
 					  size_t * buflen);	/* IN/OUT */
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc);
+NSS_STATUS _nss_ldap_oc_check (LDAPMessage * e, const char *oc);
 
 #if defined(AT_OC_MAP) && defined(HAVE_SHADOW_H)
 int _nss_ldap_shadow_date(const char *val);

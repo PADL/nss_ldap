@@ -65,8 +65,7 @@ static ent_context_t *bp_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_bp (LDAP * ld,
-		    LDAPMessage * e,
+_nss_ldap_parse_bp (LDAPMessage * e,
 		    ldap_state_t * pvt,
 		    void *result, char *buffer, size_t buflen)
 {
@@ -74,13 +73,13 @@ _nss_ldap_parse_bp (LDAP * ld,
   NSS_STATUS stat;
 
   stat =
-    _nss_ldap_assign_attrval (ld, e, ATM (bootparams, cn), &bp->bp_name,
+    _nss_ldap_assign_attrval (e, ATM (bootparams, cn), &bp->bp_name,
                               &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, AT (bootParameter), NULL,
+    _nss_ldap_assign_attrvals (e, AT (bootParameter), NULL,
 			       &bp->bp_params, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

@@ -23,8 +23,7 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_NETWORK_H
 #define _LDAP_NSS_LDAP_LDAP_NETWORK_H
 
-static NSS_STATUS _nss_ldap_parse_net (LDAP * ld,
-				       LDAPMessage * e,
+static NSS_STATUS _nss_ldap_parse_net (LDAPMessage * e,
 				       ldap_state_t * pvt,
 				       void *result,
 				       char *buffer, size_t buflen);

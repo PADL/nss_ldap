@@ -23,8 +23,7 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_GRP_H
 #define _LDAP_NSS_LDAP_LDAP_GRP_H
 
-static NSS_STATUS _nss_ldap_parse_gr (LDAP * ld,
-				      LDAPMessage * e,
+static NSS_STATUS _nss_ldap_parse_gr (LDAPMessage * e,
 				      ldap_state_t * pvt,
 				      void *result,
 				      char *buffer, size_t buflen);

@@ -2358,9 +2358,8 @@ do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
        * find one which is parseable, or exhaust avialable
        * entries, whichever is first.
        */
-      parseStat =
-	parser (__session.ls_conn, ctx->ec_res, &ctx->ec_state, result,
-		buffer, buflen);
+      parseStat = parser (ctx->ec_res, &ctx->ec_state, result,
+			  buffer, buflen);
 
       /* hold onto the state if we're out of memory XXX */
       ctx->ec_state.ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
@@ -2431,8 +2430,7 @@ do_parse_s (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
        * find one which is parseable, or exhaust avialable
        * entries, whichever is first.
        */
-      parseStat =
-	parser (__session.ls_conn, e, &ctx->ec_state, result, buffer, buflen);
+      parseStat = parser (e, &ctx->ec_state, result, buffer, buflen);
 
       /* hold onto the state if we're out of memory XXX */
       ctx->ec_state.ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
@@ -2513,6 +2511,26 @@ _nss_ldap_next_entry (LDAPMessage * res)
       return NULL;
     }
   return ldap_next_entry (__session.ls_conn, res);
+}
+
+char *
+_nss_ldap_first_attribute (LDAPMessage *entry, BerElement **berptr)
+{
+  if (__session.ls_conn == NULL)
+    {
+      return NULL;
+    }
+  return ldap_first_attribute (__session.ls_conn, entry, berptr);
+}
+
+char *
+_nss_ldap_next_attribute (LDAPMessage *entry, BerElement *ber)
+{
+  if (__session.ls_conn == NULL)
+    {
+      return NULL;
+    }
+  return ldap_next_attribute (__session.ls_conn, entry, ber);
 }
 
 /*
@@ -2954,8 +2972,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
  * Assign all values, bar omitvalue (if not NULL), to *valptr.
  */
 NSS_STATUS
-_nss_ldap_assign_attrvals (LDAP * ld,
-			   LDAPMessage * e,
+_nss_ldap_assign_attrvals (LDAPMessage * e,
 			   const char *attr,
 			   const char *omitvalue,
 			   char ***valptr,
@@ -2975,7 +2992,12 @@ _nss_ldap_assign_attrvals (LDAP * ld,
       *pvalcount = 0;
     }
 
-  vals = ldap_get_values (ld, e, (char *) attr);
+  if (__session.ls_conn == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
+
+  vals = ldap_get_values (__session.ls_conn, e, (char *) attr);
 
   valcount = (vals == NULL) ? 0 : ldap_count_values (vals);
   if (bytesleft (buffer, buflen, char *) < (valcount + 1) * sizeof (char *))
@@ -3046,8 +3068,7 @@ _nss_ldap_assign_attrvals (LDAP * ld,
 
 /* Assign a single value to *valptr. */
 NSS_STATUS
-_nss_ldap_assign_attrval (LDAP * ld,
-			  LDAPMessage * e,
+_nss_ldap_assign_attrval (LDAPMessage * e,
 			  const char *attr,
 			  char **valptr, char **buffer, size_t * buflen)
 {
@@ -3077,7 +3098,12 @@ _nss_ldap_assign_attrval (LDAP * ld,
     }
 #endif /* AT_OC_MAP */
 
-  vals = ldap_get_values (ld, e, (char *) attr);
+  if (__session.ls_conn == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
+
+  vals = ldap_get_values (__session.ls_conn, e, (char *) attr);
   if (vals == NULL)
 #ifdef AT_OC_MAP
     {
@@ -3193,8 +3219,7 @@ _nss_ldap_locate_userpassword (char **vals)
  * a syntactically suitable value. 
  */
 NSS_STATUS
-_nss_ldap_assign_userpassword (LDAP * ld,
-			       LDAPMessage * e,
+_nss_ldap_assign_userpassword (LDAPMessage * e,
 			       const char *attr,
 			       char **valptr, char **buffer, size_t * buflen)
 {
@@ -3204,7 +3229,12 @@ _nss_ldap_assign_userpassword (LDAP * ld,
 
   debug ("==> _nss_ldap_assign_userpassword");
 
-  vals = ldap_get_values (ld, e, (char *) attr);
+  if (__session.ls_conn == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
+
+  vals = ldap_get_values (__session.ls_conn, e, (char *) attr);
   pwd = _nss_ldap_locate_userpassword (vals);
 
   vallen = strlen (pwd);
@@ -3237,12 +3267,17 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
 
-  vals = ldap_get_values (ld, e, "objectClass");
+  if (__session.ls_conn == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
+
+  vals = ldap_get_values (__session.ls_conn, e, "objectClass");
   if (vals != NULL)
     {
       for (valiter = vals; *valiter != NULL; valiter++)

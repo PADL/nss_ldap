@@ -35,8 +35,7 @@
  * get the RDN's value: eg. if the RDN was cn=lukeh, getrdnvalue(entry)
  * would return lukeh.
  */
-NSS_STATUS _nss_ldap_getrdnvalue (LDAP * ld,
-				  LDAPMessage * entry,
+NSS_STATUS _nss_ldap_getrdnvalue (LDAPMessage * entry,
 				  const char *rdntype,
 				  char **rval, char **buf, size_t * len);
 
@@ -44,8 +43,7 @@ NSS_STATUS _nss_ldap_getrdnvalue (LDAP * ld,
 /*
  * map a distinguished name to a login name, or group entry
  */
-NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
-			     const char *dn,
+NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 			     char **uid, char **buf, size_t * len,
 			     int *pIsNestedGroup, LDAPMessage ** pRes);
 #endif /* RFC2307BIS */

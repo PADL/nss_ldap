@@ -162,8 +162,7 @@ static int lock_inited = 0;
 #endif
 
 NSS_STATUS
-_nss_ldap_dn2uid (LDAP * ld,
-		  const char *dn, char **uid, char **buffer, size_t * buflen,
+_nss_ldap_dn2uid (const char *dn, char **uid, char **buffer, size_t * buflen,
 		  int *pIsNestedGroup, LDAPMessage ** pRes)
 {
   NSS_STATUS stat;
@@ -194,10 +193,10 @@ _nss_ldap_dn2uid (LDAP * ld,
 
       if (_nss_ldap_read (dn, attrs, &res) == NSS_SUCCESS)
 	{
-	  LDAPMessage *e = ldap_first_entry (ld, res);
+	  LDAPMessage *e = _nss_ldap_first_entry (res);
 	  if (e != NULL)
 	    {
-	      if (_nss_ldap_oc_check (ld, e, OC (posixGroup)) == NSS_SUCCESS)
+	      if (_nss_ldap_oc_check (e, OC (posixGroup)) == NSS_SUCCESS)
 		{
 		  *pIsNestedGroup = 1;
 		  *pRes = res;
@@ -206,7 +205,7 @@ _nss_ldap_dn2uid (LDAP * ld,
 		}
 
 	      stat =
-		_nss_ldap_assign_attrval (ld, e, ATM (passwd, uid), uid,
+		_nss_ldap_assign_attrval (e, ATM (passwd, uid), uid,
 					  buffer, buflen);
 	      if (stat == NSS_SUCCESS)
 		dn2uid_cache_put (dn, *uid);
@@ -222,15 +221,14 @@ _nss_ldap_dn2uid (LDAP * ld,
 #endif /* RFC2307BIS */
 
 NSS_STATUS
-_nss_ldap_getrdnvalue (LDAP * ld,
-		       LDAPMessage * entry,
+_nss_ldap_getrdnvalue (LDAPMessage * entry,
 		       const char *rdntype,
 		       char **rval, char **buffer, size_t * buflen)
 {
   char *dn;
   NSS_STATUS status;
 
-  dn = ldap_get_dn (ld, entry);
+  dn = _nss_ldap_get_dn (entry);
   if (dn == NULL)
     {
       return NSS_NOTFOUND;
@@ -252,7 +250,7 @@ _nss_ldap_getrdnvalue (LDAP * ld,
     {
       char **vals;
 
-      vals = ldap_get_values (ld, entry, rdntype);
+      vals = _nss_ldap_get_values (entry, rdntype);
 
       if (vals != NULL)
 	{

@@ -72,8 +72,7 @@ static ent_context_t *net_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_net (LDAP * ld,
-		     LDAPMessage * e,
+_nss_ldap_parse_net (LDAPMessage * e,
 		     ldap_state_t * pvt,
 		     void *result, char *buffer, size_t buflen)
 {
@@ -90,13 +89,13 @@ _nss_ldap_parse_net (LDAP * ld,
   /* IPv6 support ? XXX */
   network->n_addrtype = AF_INET;
 
-  stat = _nss_ldap_assign_attrval (ld, e, ATM (networks, cn), &network->n_name,
+  stat = _nss_ldap_assign_attrval (e, ATM (networks, cn), &network->n_name,
 				   &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_attrval (ld, e, AT (ipNetworkNumber), &tmp, &buffer,
+    _nss_ldap_assign_attrval (e, AT (ipNetworkNumber), &tmp, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -114,7 +113,7 @@ _nss_ldap_parse_net (LDAP * ld,
 #endif
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, ATM (networks, cn), network->n_name,
+    _nss_ldap_assign_attrvals (e, ATM (networks, cn), network->n_name,
 			       &network->n_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

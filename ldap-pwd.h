@@ -23,8 +23,7 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_PWD_H
 #define _LDAP_NSS_LDAP_LDAP_PWD_H
 
-static NSS_STATUS _nss_ldap_parse_pw (LDAP * ld,
-				      LDAPMessage * e,
+static NSS_STATUS _nss_ldap_parse_pw (LDAPMessage * e,
 				      ldap_state_t * pvt,
 				      void *result,
 				      char *buffer, size_t buflen);

@@ -57,8 +57,7 @@ static char rcsId[] =
 static ent_context_t *alias_context = NULL;
 
 static NSS_STATUS
-_nss_ldap_parse_alias (LDAP * ld,
-		       LDAPMessage * e,
+_nss_ldap_parse_alias (LDAPMessage * e,
 		       ldap_state_t * pvt,
 		       void *result, char *buffer, size_t buflen)
 {
@@ -67,13 +66,13 @@ _nss_ldap_parse_alias (LDAP * ld,
   NSS_STATUS stat;
 
   stat =
-    _nss_ldap_getrdnvalue (ld, e, ATM (aliases, cn), &alias->alias_name,
+    _nss_ldap_getrdnvalue (e, ATM (aliases, cn), &alias->alias_name,
                            &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, AT (rfc822MailMember), NULL,
+    _nss_ldap_assign_attrvals (e, AT (rfc822MailMember), NULL,
 			       &alias->alias_members, &buffer, &buflen,
 			       &alias->alias_members_len);
 

@@ -43,8 +43,7 @@ struct ether
 };
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
-static NSS_STATUS _nss_ldap_parse_ether (LDAP * ld,
-					 LDAPMessage * e,
+static NSS_STATUS _nss_ldap_parse_ether (LDAPMessage * e,
 					 ldap_state_t * pvt,
 					 void *result,
 					 char *buffer, size_t buflen);

@@ -97,8 +97,7 @@ static ent_context_t *ether_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_ether (LDAP * ld,
-		       LDAPMessage * e,
+_nss_ldap_parse_ether (LDAPMessage * e,
 		       ldap_state_t * pvt,
 		       void *result, char *buffer, size_t buflen)
 {
@@ -107,12 +106,12 @@ _nss_ldap_parse_ether (LDAP * ld,
   NSS_STATUS stat;
   struct ether_addr *addr;
 
-  stat = _nss_ldap_assign_attrval (ld, e, ATM (ethers, cn),
+  stat = _nss_ldap_assign_attrval (e, ATM (ethers, cn),
 				   &ether->e_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (macAddress), &saddr,
+  stat = _nss_ldap_assign_attrval (e, AT (macAddress), &saddr,
 				   &buffer, &buflen);
 
   if (stat != NSS_SUCCESS || ((addr = ether_aton (saddr)) == NULL))

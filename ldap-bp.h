@@ -31,8 +31,7 @@ struct bootparams
 };
 
 
-static NSS_STATUS _nss_ldap_parse_bp (LDAP * ld,
-				      LDAPMessage * e,
+static NSS_STATUS _nss_ldap_parse_bp (LDAPMessage * e,
 				      ldap_state_t * pvt,
 				      void *result,
 				      char *buffer, size_t buflen);

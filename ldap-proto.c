@@ -67,8 +67,7 @@ static ent_context_t *proto_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_proto (LDAP * ld,
-		       LDAPMessage * e,
+_nss_ldap_parse_proto (LDAPMessage * e,
 		       ldap_state_t * pvt,
 		       void *result, char *buffer, size_t buflen)
 {
@@ -78,13 +77,13 @@ _nss_ldap_parse_proto (LDAP * ld,
   NSS_STATUS stat;
 
   stat =
-    _nss_ldap_getrdnvalue (ld, e, ATM (protocols, cn), &proto->p_name,
+    _nss_ldap_getrdnvalue (e, ATM (protocols, cn), &proto->p_name,
                            &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_attrval (ld, e, AT (ipProtocolNumber), &number, &buffer,
+    _nss_ldap_assign_attrval (e, AT (ipProtocolNumber), &number, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -92,7 +91,7 @@ _nss_ldap_parse_proto (LDAP * ld,
   proto->p_proto = atoi (number);
 
   stat =
-    _nss_ldap_assign_attrvals (ld, e, ATM (protocols, cn), proto->p_name,
+    _nss_ldap_assign_attrvals (e, ATM (protocols, cn), proto->p_name,
 			       &proto->p_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
