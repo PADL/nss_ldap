@@ -677,8 +677,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 				       &buflen);
 	  if (stat == NSS_UNAVAIL)
 	    {
-	      free (result);
-	      return stat;
+	      break;
 	    }
 	}
 
