@@ -734,7 +734,7 @@ LDAPMessage *_nss_ldap_first_entry (LDAPMessage * res);
 LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
 char *_nss_ldap_first_attribute (LDAPMessage * entry, BerElement **berptr);
 char *_nss_ldap_next_attribute (LDAPMessage * entry, BerElement *ber);
-
+const char **_nss_ldap_get_attributes (ldap_map_selector_t sel);
 
 /*
  * Synchronous search cover (caller acquires lock).

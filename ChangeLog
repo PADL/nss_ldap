@@ -3,7 +3,10 @@ $Id$
 
 229	Luke Howard <lukeh@padl.com>
 
-	* more debugging in initgroups
+	* more debugging in initgroups and _nss_ldap_getentry()
+	* fix _nss_ldap_getentry() enumeration behaviour, and
+	  optimize by not searching if the requested attribute
+	  cannot be mapped
 
 228	Luke Howard <lukeh@padl.com>
 

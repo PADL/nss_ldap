@@ -3820,4 +3820,26 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 }
 #endif
 
+const char **_nss_ldap_get_attributes (ldap_map_selector_t sel)
+{
+  const char **attrs = NULL;
+
+  debug ("==> _nss_ldap_get_attributes");
+
+  if (sel < LM_NONE)
+    {
+      if (do_init() != NSS_SUCCESS)
+	{
+	  debug ("<== _nss_ldap_get_attributes (init failed)");
+	  return NULL;
+	}
+
+      attrs = __session.ls_config->ldc_attrtab[sel];
+    }
+
+  debug ("<== _nss_ldap_get_attributes");
+
+  return attrs;
+}
+
 /* #include "sldap-compat.c" */

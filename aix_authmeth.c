@@ -73,6 +73,7 @@ typedef struct ldap_uess_args
   size_t lua__bufsiz;
   size_t lua__buflen;
   char *lua__buffer;
+  const char *lua_naming_attribute;
 }
 ldap_uess_args_t;
 
@@ -586,7 +587,6 @@ do_parse_uess_getentry (LDAPMessage * e,
   int i;
   char **vals;
   size_t len;
-  const char *attribute;
   NSS_STATUS stat;
 
   /* If a buffer is supplied, then we are enumerating. */
@@ -594,11 +594,7 @@ do_parse_uess_getentry (LDAPMessage * e,
     {
       attrval_t *av = lua->lua_results;
 
-      attribute = uess2ldapattr (lua->lua_map, lua->lua_attributes[0]);
-      if (attribute == NULL)
-	return NSS_NOTFOUND;
-
-      vals = _nss_ldap_get_values (e, attribute);
+      vals = _nss_ldap_get_values (e, lua->lua_naming_attribute);
       if (vals == NULL)
 	return NSS_NOTFOUND;
 
@@ -690,19 +686,24 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
   ldap_uess_args_t lua;
   const char *namingAttributes[2];
 
-  debug ("==> _nss_ldap_getentry");
+  debug ("==> _nss_ldap_getentry (key=%s table=%s attributes[0]=%s size=%d)",
+	 (key != NULL) ? key : "(null)",
+	 (table != NULL) ? table : "(null)",
+ 	 (size >= 1) ? attributes[0] : "(null)",
+	 size);
 
   lua.lua_key = key;
   lua.lua_table = table;
   lua.lua_attributes = attributes;
   lua.lua_results = results;
   lua.lua_size = size;
+  lua.lua_naming_attribute = NULL;
 
   lua.lua_map = table2map (table);
   if (lua.lua_map == LM_NONE)
     {
       errno = ENOSYS;
-      debug ("<== _nss_ldap_getentry");
+      debug ("<== _nss_ldap_getentry (no such map)");
       return -1;
     }
 
@@ -713,12 +714,17 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
   ap = key2filter (key, lua.lua_map, &a, &filter);
   if (ap == NULL)		/* enumeration */
     {
+      const char **attrs;
+
       if (size != 1)
 	{
 	  errno = EINVAL;
-	  debug ("<== _nss_ldap_getentry");
+	  debug ("<== _nss_ldap_getentry (size != 1)");
 	  return -1;
 	}
+
+      debug (":== _nss_ldap_getentry filter=%s attribute=%s",
+	     filter, lua.lua_attributes[0]);
 
       lua.lua__bufsiz = NSS_BUFSIZ;
       lua.lua__buflen = lua.lua__bufsiz;
@@ -726,14 +732,44 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
       if (lua.lua__buffer == NULL)
 	{
 	  errno = ENOMEM;
-	  debug ("<== _nss_ldap_getentry");
+	  debug ("<== _nss_ldap_getentry (no memory)");
 	  return -1;
 	}
       results[0].attr_flag = -1;
 
       /* just request the naming attributes */
-      namingAttributes[0] = uess2ldapattr (lua.lua_map, lua.lua_attributes[0]);
+      attrs = _nss_ldap_get_attributes (lua.lua_map);
+      if (attrs == NULL || attrs[0] == NULL)
+	{
+	  errno = ENOENT;
+	  debug ("<== _nss_ldap_getentry (could not read schema)");
+	  return -1;
+	}
+
+      lua.lua_naming_attribute = attrs[0];
+      namingAttributes[0] = lua.lua_naming_attribute;
       namingAttributes[1] = NULL;
+    }
+  else
+    {
+      /* Check at least one attribute is mapped before searching */
+      int i, found = 0;
+
+      for (i = 0; i < size; i++)
+	{
+	  if (uess2ldapattr (lua.lua_map, lua.lua_attributes[i]) != NULL)
+	    {
+	      found++;
+	      break;
+	    }
+	}
+
+      if (!found)
+	{
+	  errno = ENOENT;
+	  debug ("<== _nss_ldap_getentry (no mappable attribute requested)");
+	  return -1;
+	}
     }
 
   _nss_ldap_enter ();
@@ -743,7 +779,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
       if (results[0].attr_un.au_char != NULL)
 	free (results[0].attr_un.au_char);
       errno = ENOMEM;
-      debug ("<== _nss_ldap_getentry");
+      debug ("<== _nss_ldap_getentry (ent_context_init failed)");
       return -1;
     }
 
@@ -780,11 +816,11 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
       else
 	errno = ENOENT;
 
-      debug ("<== _nss_ldap_getentry");
+      debug ("<== _nss_ldap_getentry (failed with stat=%d)", stat);
       return -1;
     }
 
-  debug ("<== _nss_ldap_getentry");
+  debug ("<== _nss_ldap_getentry (success)");
   return AUTH_SUCCESS;
 }
 
