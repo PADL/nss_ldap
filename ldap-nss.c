@@ -14,7 +14,7 @@
 
    You should have received a copy of the GNU Library General Public
    License along with the nss_ldap library; see the file COPYING.LIB.  If not,
-   write to the Free Software Foundatiosess->ls_connn, Inc., 59 Temple Place - Suite 330,
+   write to the Free Software Foundatio__session.ls_connn, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.
  */
 
@@ -46,7 +46,7 @@ static char rcsId[] = "$Id$";
 #include "util.h"
 #ifndef HAVE_SNPRINTF
 #include "snprintf.h"
-#endif
+#endif /* HAVE_SNPRINTF */
 #include "dnsconfig.h"
 
 /*
@@ -58,24 +58,24 @@ static char rcsId[] = "$Id$";
 static char __configbuf[NSS_LDAP_CONFIG_BUFSIZ];
 static ldap_config_t *__config = NULL;
 static ldap_session_t __session = { NULL, NULL };
-
-static void do_close(ldap_session_t *);
-static NSS_STATUS do_open(ldap_session_t *);
+static int __pid = -1;
+static void do_close(void);
+static NSS_STATUS do_open(void);
 
 /*
  * Closes connection to the LDAP server.
- * This assumes that we have exclusive access to sess->ls_conn,
+ * This assumes that we have exclusive access to __session.ls_conn,
  * either by some other function having acquired a lock, or by
  * using a thread safe libldap.
  */
-static void do_close(ldap_session_t *sess)
+static void do_close(void)
 {
 	debug("==> do_close");
 
-	if (sess->ls_conn != NULL)
+	if (__session.ls_conn != NULL)
 		{
-		ldap_unbind(sess->ls_conn);
-		sess->ls_conn = NULL;
+		ldap_unbind(__session.ls_conn);
+		__session.ls_conn = NULL;
 		}
 
 	debug("<== do_close");
@@ -124,21 +124,34 @@ NSS_STATUS _nss_ldap_default_destr(nss_backend_t *be, void *args)
  * As with do_close(), this assumes ownership of sess.
  * It also wants to own __config: is there a potential deadlock here? XXX
  */ 
-static NSS_STATUS do_open(ldap_session_t *sess)
+static NSS_STATUS do_open(void)
 {
 	ldap_config_t *cfg = NULL;
+	int pid;
 
 	debug("==> do_open");
 
-	if (sess->ls_config != NULL && sess->ls_conn != NULL)
+	pid = getpid();
+
+	if (__pid != pid)
 		{
+		/*
+		 * If we've forked, then we need to close the session.
+		 */
+		__pid = pid;
+		do_close();
+		}
+	else if (__session.ls_conn != NULL && __session.ls_config != NULL)
+		{
+		/*
+		 * Otherwise we can hand back this process' global
+		 * LDAP session.
+		 */
 		debug("<== do_open");
 		return NSS_SUCCESS;
 		}
-	else
-		{
-		sess->ls_config = NULL;
-		}
+
+	__session.ls_config = NULL;
 
 	if (__config == NULL)
 		{
@@ -165,51 +178,52 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 		{
 #ifdef NETSCAPE_SDK
 		debug("==> ldap_init");
-		sess->ls_conn = ldap_init(cfg->ldc_host, cfg->ldc_port);
+		__session.ls_conn = ldap_init(cfg->ldc_host, cfg->ldc_port);
 		debug("<== ldap_init");
 #else	
 		debug("==> ldap_open");
-		sess->ls_conn = ldap_open(cfg->ldc_host, cfg->ldc_port);
+		__session.ls_conn = ldap_open(cfg->ldc_host, cfg->ldc_port);
 		debug("<== ldap_open");
-#endif
-		if (sess->ls_conn != NULL || cfg->ldc_next == cfg)
+#endif /* NETSCAPE_SDK */
+		if (__session.ls_conn != NULL || cfg->ldc_next == cfg)
 			{
 			break;
 			}
 		cfg = cfg->ldc_next;
 		}
 
-	if (sess->ls_conn == NULL)
+	if (__session.ls_conn == NULL)
 		{
 		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
 
 #ifdef NETSCAPE_SDK
-	if (_nss_ldap_ltf_thread_init(sess->ls_conn) != NSS_SUCCESS)
+	if (_nss_ldap_ltf_thread_init(__session.ls_conn) != NSS_SUCCESS)
 		{
-		do_close(sess);
+		do_close();
 		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
-#endif
+#endif /* NETSCAPE_SDK */
 
 #ifdef NETSCAPE_SDK
-	ldap_set_option(sess->ls_conn, LDAP_OPT_PROTOCOL_VERSION, &cfg->ldc_version);
+	ldap_set_option(__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION, &cfg->ldc_version);
 #else
-	sess->ls_conn->ld_version = cfg->ldc_version;
-#endif
+	__session.ls_conn->ld_version = cfg->ldc_version;
+#endif /* NETSCAPE_SDK */
 
-	if (ldap_simple_bind_s(sess->ls_conn, cfg->ldc_binddn, cfg->ldc_bindpw) != LDAP_SUCCESS)
+	if (ldap_simple_bind_s(__session.ls_conn, cfg->ldc_binddn, cfg->ldc_bindpw) != LDAP_SUCCESS)
 		{
-		do_close(sess);
+		do_close();
 		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
 
-	sess->ls_config = cfg;
+	__session.ls_config = cfg;
 
 	debug("<== do_open");
+
 	return NSS_SUCCESS;
 }
 
@@ -328,7 +342,7 @@ LDAPMessage *_nss_ldap_lookup(
 
 	debug("==> _nss_ldap_lookup");
 
-	if (do_open(&__session) != NSS_SUCCESS)
+	if (do_open() != NSS_SUCCESS)
 		{
 		__session.ls_conn = NULL;
 		debug("<== _nss_ldap_lookup");
@@ -383,8 +397,8 @@ do_retry:
 		case LDAP_TIMELIMIT_EXCEEDED:
 			break;
 		case LDAP_SERVER_DOWN:
-			do_close(&__session);
-			if (retry || do_open(&__session) != NSS_SUCCESS)
+			do_close();
+			if (retry || do_open() != NSS_SUCCESS)
 				{
 				res = NULL;
 				break;

@@ -14,6 +14,7 @@
 #endif
 #include <stdio.h>
 #include <pwd.h>
+#include <stdlib.h>
 
 #if NeXT
 #define uid_t int
