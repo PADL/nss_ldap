@@ -25,7 +25,7 @@
 
 /* $Id$ */
 
-#ifdef __AIX__
+#ifdef _AIX
 void *pw_pvtinit (void);
 #endif
 IRS_EXPORT void pw_close (struct irs_pw *);
@@ -58,7 +58,7 @@ IRS_EXPORT void
 pw_close (struct irs_pw *this)
 {
   LOOKUP_ENDENT (this);
-#ifdef __AIX__
+#ifdef _AIX
   free (this->private);
   free (this);
 #endif
@@ -81,7 +81,7 @@ pw_minimize (struct irs_pw *this)
 {
 }
 
-#ifdef __AIX__
+#ifdef _AIX
 void *
 pw_pvtinit (void)
 #else

@@ -70,7 +70,7 @@ _nss_ldap_parse_gr (LDAP * ld,
   NSS_STATUS stat;
 #ifdef RFC2307BIS
   char **uid_mems, **dn_mems, **vals;
-  int uid_mems_c = 0, dn_mems_c = 0;
+  size_t uid_mems_c = 0, dn_mems_c = 0;
 #endif /* RFC2307BIS */
 
   stat =

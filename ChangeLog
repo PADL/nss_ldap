@@ -1,6 +1,12 @@
 $Header$
 ===============================================================
 
+136	Luke Howard <lukeh@padl.com>
+
+	* define -DPIC for FreeBSD
+	* link with -shared not --shared
+	* fixes for AIX
+
 135	Luke Howard <lukeh@padl.com>
 
 	* merged ldap.conf

@@ -105,15 +105,9 @@ debug (char *fmt, ...)
 # include <alignof.h>
 # define INLINE
 #else
-#define INLINE
+# define alignof(ptr) (sizeof(char *))
+# define INLINE
 #endif /* __GNUC__ */
-
-#ifndef alignof
-
-#define align(ptr, blen)
-#define bytesleft(ptr, blen)    (blen)
-
-#else
 
 #define align(ptr, blen)              do { \
 					char *qtr = ptr; \
@@ -124,8 +118,6 @@ debug (char *fmt, ...)
 
 /* worst case */
 #define bytesleft(ptr, blen)    (blen - alignof(char *) + 1)
-
-#endif /* alignof */
 
 #ifdef HAVE_NSS_H
 # if (__GLIBC__ == 2) && (__GLIBC_MINOR__ > 0)

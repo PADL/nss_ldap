@@ -51,7 +51,7 @@ struct irs_acc *irs_ldap_acc __P ((const char *));
 extern int              make_group_list(struct irs_gr *, const char *,
                                         gid_t, gid_t *, int *);
 
-#ifdef __AIX__
+#ifdef _AIX
 #define IRS_EXPORT
 #else
 #define IRS_EXPORT static

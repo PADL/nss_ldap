@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 135)
+AM_INIT_AUTOMAKE(nss_ldap, 136)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -21,12 +21,15 @@ if test "$ac_cv_prog_gcc" = "yes"; then CFLAGS="$CFLAGS -Wall -fPIC"; fi
 
 dnl This is needed for the native Solaris LDAP SDK
 CPPFLAGS="$CPPFLAGS -DLDAP_REFERRALS"
-CPPFLAGS="$CPPFLAGS -D_REENTRANT"
 
-dnl This depends on building on Solaris with gcc
-dnl because that accepts -Wl. Is this a good idea?
 case "$target_os" in
-aix*) nss_ldap_so_LDFLAGS="-bM:SRE -bnoentry -bE:exports.aix" ;;
+freebsd*) CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
+aix*) CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" ;;
+*) CPPFLAGS="$CPPFLAGS -D_REENTRANT" ;;
+esac
+
+case "$target_os" in
+aix*) nss_ldap_so_LDFLAGS="-bM:SRE -bnoentry -bE:\$(srcdir)/exports.aix" ;;
 solaris*) nss_ldap_so_LDFLAGS="-Wl,-M -Wl,mapfile -Wl,-G" ;;
 *) nss_ldap_so_LDFLAGS="-shared" ;;
 esac
@@ -118,6 +121,5 @@ AC_TRY_COMPILE([
 #include <lber.h>
 #include <ldap.h>], [ldap_set_rebind_proc(0, 0, 0);], [nss_ldap_cv_ldap_set_rebind_proc=3], [nss_ldap_cv_ldap_set_rebind_proc=2]) ])
 AC_DEFINE_UNQUOTED(LDAP_SET_REBIND_PROC_ARGS, $nss_ldap_cv_ldap_set_rebind_proc)
-
 
 AC_OUTPUT(Makefile)

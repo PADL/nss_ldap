@@ -49,10 +49,17 @@ int _nss_ldap_herrno2nssstat_tab[] =
   [NSS_NOTFOUND - _NSS_LOOKUP_OFFSET] = HOST_NOT_FOUND,
   [NSS_UNAVAIL - _NSS_LOOKUP_OFFSET] = NO_RECOVERY
 #else
+#ifdef __GNUC__
   [NSS_SUCCESS] = 0,
   [NSS_TRYAGAIN] = TRY_AGAIN,
   [NSS_NOTFOUND] = HOST_NOT_FOUND,
   [NSS_UNAVAIL] = NO_RECOVERY
+#else
+  0,
+  TRY_AGAIN,
+  HOST_NOT_FOUND,
+  NO_RECOVERY
+#endif /* __GNUC__ */
 #endif
 };
 

@@ -25,7 +25,7 @@
 
 /* $Id$ */
 
-#ifdef __AIX__
+#ifdef _AIX
 void *sv_pvtinit (void);
 #endif
 IRS_EXPORT void sv_close (struct irs_sv *);
@@ -103,7 +103,7 @@ IRS_EXPORT void
 sv_close (struct irs_sv *this)
 {
   LOOKUP_ENDENT (this);
-#ifdef __AIX__
+#ifdef _AIX
   free (this->private);
   free (this);
 #endif
@@ -127,7 +127,7 @@ sv_minimize (struct irs_sv *this)
 {
 }
 
-#ifdef __AIX__
+#ifdef _AIX
 void *
 sv_pvtinit (void)
 #else
