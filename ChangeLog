@@ -1,7 +1,12 @@
 $Id$
 ===============================================================
 
-2.79.1	Luke Howard <lukeh@padl.com>
+80	Luke Howard <lukeh@padl.com>
+
+	* (really 2.80) changed version number a la Solaris 7!
+	* cleaned up schema stuff into ldap-schema.h
+
+2.79	Luke Howard <lukeh@padl.com>
 
 	* implemented exponential backoff reconnect logic
 
