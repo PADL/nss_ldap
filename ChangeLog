@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+97	Luke Howard <lukeh@padl.com>
+
+	* #ifndef HAVE_LDAP_LD_FREE, still call ldap_unbind(),
+	  but having closed the descriptor.
+
 96	Luke Howard <lukeh@padl.com>
 
 	* re-orged
