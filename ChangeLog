@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+120	Luke Howard <lukeh@padl.com>
+
+	* added Makefile.aix and exports.aix (forgot)
+
 119	Luke Howard <lukeh@padl.com>
 
 	* patch from Gabor Gombas <gombasg@inf.elte.hu>
