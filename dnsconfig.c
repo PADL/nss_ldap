@@ -181,17 +181,17 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	      *presult = result;
 	    }
 
-	  len = strlen (rr->u.srv->target) + 1;
-	  if (len < buflen)
+	  len = strlen (rr->u.srv->target);
+	  if (buflen < (size_t) (len + 1))
 	    {
 	      dns_free_data (r);
 	      return NSS_TRYAGAIN;
 	    }
 	  /* Server Host */
-	  memcpy (buffer, rr->u.srv->target, len);
+	  memcpy (buffer, rr->u.srv->target, len + 1);
 	  result->ldc_host = buffer;
-	  buffer += len;
-	  buflen -= len;
+	  buffer += len + 1;
+	  buflen -= len + 1;
 
 	  /* Port */
 	  result->ldc_port = rr->u.srv->port;
