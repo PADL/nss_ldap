@@ -5,6 +5,7 @@ $Id$
 
 	* fix for BUG#183: support pw_change and pw_expire
 	  on BSD
+	* fix for glibc 2.1 from Alexander Spannagel
 
 226	Luke Howard <lukeh@padl.com>
 

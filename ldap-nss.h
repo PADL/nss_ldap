@@ -387,7 +387,7 @@ typedef socklen_t SOCKLEN_T;
 typedef int SOCKLEN_T;
 #endif /* HAVE_SOCKLEN_T */
 
-#ifdef __GLIBC__
+#if defined(__GLIBC__) && __GLIBC_MINOR__ > 1
 typedef struct sockaddr_storage SOCKADDR_STORAGE;
 #else
 typedef struct sockaddr SOCKADDR_STORAGE;
