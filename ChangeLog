@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+156	Luke Howard <lukeh@padl.com>
+
+	* --disable-ssl option for configure
+	* removed "Obsoletes: pam_ldap" from spec file
+
 155	Luke Howard <lukeh@padl.com>
 
 	* do not use private API when setting OpenLDAP TLS
