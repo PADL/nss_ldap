@@ -23,6 +23,12 @@
 
 #include "config.h"
 
+#ifdef HAVE_THREAD_H
+#include <thread.h>
+#elif defined(HAVE_PTHREAD_H)
+#include <pthread.h>
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #ifdef HAVE_STRINGS_H
