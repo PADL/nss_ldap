@@ -133,8 +133,8 @@ _nss_ldap_parse_gr (LDAP * ld,
       buflen -= (dn_mems_c + 1) * sizeof (char *);
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
-#if !defined(MSSFU_SCHEMA) && !defined(NDS_SCHEMA)
 	  char *uid;
+#if !defined(MSSFU_SCHEMA) && !defined(NDS_SCHEMA)
 	  /*
 	   * Remove optional UID (as in unique identifier)
 	   * only for uniqueMember; member does not have UID

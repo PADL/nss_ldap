@@ -18,7 +18,8 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] = "$Id$";
+static char rcsId[] =
+  "$Id$";
 
 #include "config.h"
 
@@ -105,8 +106,10 @@ _nss_ldap_parse_pw (LDAP * ld,
   else
     {
 #ifdef MSSFU_SCHEMA
-	/* I don't think mssfu schema prefixes with {crypt} */
-	stat = _nss_ldap_assign_attrval(ld, e, AT(userPassword), &pw->passwd, &buffer, &buflen);
+      /* I don't think mssfu schema prefixes with {crypt} */
+      stat =
+	_nss_ldap_assign_attrval (ld, e, AT (userPassword), &pw->pw_passwd,
+				  &buffer, &buflen);
 #elif defined(AUTHPASSWORD)
       stat =
 	_nss_ldap_assign_authpassword (ld, e, AT (authPassword),
@@ -225,8 +228,7 @@ _nss_ldap_getpwuid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS 
-_nss_ldap_setpwent (void)
+NSS_STATUS _nss_ldap_setpwent (void)
 {
   LOOKUP_SETENT (pw_context);
 }
@@ -239,8 +241,7 @@ _nss_ldap_setpwent_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS 
-_nss_ldap_endpwent (void)
+NSS_STATUS _nss_ldap_endpwent (void)
 {
   LOOKUP_ENDENT (pw_context);
 }
@@ -275,8 +276,7 @@ _nss_ldap_passwd_destr (nss_backend_t * pw_context, void *args)
   return _nss_ldap_default_destr (pw_context, args);
 }
 
-static nss_backend_op_t passwd_ops[] =
-{
+static nss_backend_op_t passwd_ops[] = {
   _nss_ldap_passwd_destr,
   _nss_ldap_endpwent_r,		/* NSS_DBOP_ENDENT */
   _nss_ldap_setpwent_r,		/* NSS_DBOP_SETENT */
