@@ -1,6 +1,4 @@
 /*
-   Unix SMB/CIFS implementation.
- 
    Donated by HP to enable Winbindd to build on HPUX 11.x.
    Copyright (C) Jeremy Allison 2002.
  
