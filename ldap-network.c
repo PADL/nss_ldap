@@ -56,7 +56,6 @@ static char rcsId[] =
 
 #include "ldap-nss.h"
 #include "ldap-network.h"
-#include "globals.h"
 #include "util.h"
 
 #if defined(HAVE_IRS_H) || defined(AIX)

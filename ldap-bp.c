@@ -52,7 +52,6 @@ static char rcsId[] = "$Id$";
 
 #include "ldap-nss.h"
 #include "ldap-bp.h"
-#include "globals.h"
 #include "util.h"
 
 #ifdef HAVE_PORT_AFTER_H

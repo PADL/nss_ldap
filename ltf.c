@@ -44,7 +44,6 @@ static char rcsId[] = "$Id$";
 #endif
 
 #include "ldap-nss.h"
-#include "globals.h"
 
 #if defined(LDAP_OPT_THREAD_FN_PTRS) && (defined(HAVE_THREAD_H) || defined(HAVE_PTHREAD_H))
 

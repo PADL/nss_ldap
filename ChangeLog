@@ -4,6 +4,9 @@ $Header$
 211	Luke Howard <lukeh@padl.com>
 
 	* do AT_OC_MAP cache initialization at config init
+	* BSD build fixes
+	* replace [h]errno2nssstat lookup tables with switch
+	  statement; should help building on AIX!
 
 210	Luke Howard <lukeh@padl.com>
 

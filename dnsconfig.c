@@ -55,7 +55,6 @@ static char rcsId[] =
 #endif
 
 #include "ldap-nss.h"
-#include "globals.h"
 #include "util.h"
 #include "resolve.h"
 #include "dnsconfig.h"

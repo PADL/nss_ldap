@@ -91,10 +91,12 @@ static char rcsId[] =
 
 #include "ldap-nss.h"
 #include "ltf.h"
-#include "globals.h"
 #include "util.h"
 #include "dnsconfig.h"
+
+#ifdef PAGE_RESULTS
 #include "pagectrl.h"
+#endif
 
 #ifdef HAVE_THREAD_H
 #ifdef HAVE_PTHREAD_ATFORK
@@ -556,7 +558,11 @@ do_set_sockopts (void)
 #endif /* LDAP_OPT_DESC */
     {
       int off = 0;
+#ifdef HAVE_SOCKLEN_T
       socklen_t namelen = sizeof (struct sockaddr);
+#else
+      int namelen = sizeof (struct sockaddr);
+#endif
 
       (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *) &off,
 			 sizeof (off));
@@ -655,8 +661,13 @@ do_close_no_unbind (void)
     {
       struct sockaddr sockname;
       struct sockaddr peername;
+#ifdef HAVE_SOCKLEN_T
       socklen_t socknamelen = sizeof (sockname);
       socklen_t peernamelen = sizeof (peername);
+#else
+      int socknamelen = sizeof (sockname);
+      int peernamelen = sizeof (peername);
+#endif /* HAVE_SOCKLEN_T */
 
       /*
        * Important to perform comparison "family-aware" to not count
@@ -3022,6 +3033,8 @@ _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 }
 
 #ifdef AT_OC_MAP
+
+#ifdef HAVE_SHADOW_H
 int
 _nss_ldap_shadow_date (const char *val)
 {
@@ -3049,6 +3062,7 @@ _nss_ldap_shadow_handle_flag (struct spwd *sp)
       sp->sp_flag = 0;
     }
 }
+#endif /* HAVE_SHADOW_H */
 
 const char *
 _nss_ldap_map_at (const char *attribute)

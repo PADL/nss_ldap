@@ -53,7 +53,6 @@
 #endif
 
 #include "ldap-nss.h"
-#include "globals.h"
 #include "util.h"
 
 static char rcsId[] = "$Id$";

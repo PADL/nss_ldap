@@ -38,7 +38,9 @@
 #include <time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#ifdef HAVE_SHADOW_H
 #include <shadow.h>
+#endif
 
 #ifndef __P
 # if defined(__STDC__) || defined(__GNUC__)
@@ -675,7 +677,7 @@ NSS_STATUS _nss_ldap_assign_userpassword (LDAP * ld,	/* IN */
 
 NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc);
 
-#ifdef AT_OC_MAP
+#if defined(AT_OC_MAP) && defined(HAVE_SHADOW_H)
 int _nss_ldap_shadow_date(const char *val);
 void _nss_ldap_shadow_handle_flag(struct spwd *sp);
 #else

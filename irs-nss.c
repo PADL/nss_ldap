@@ -42,7 +42,6 @@ static char rcsId[] = "$Id$";
 #include "irs-nss.h"
 #include "ldap-nss.h"
 #include "ltf.h"
-#include "globals.h"
 #include "util.h"
 
 static void ldap_close (struct irs_acc *this);

@@ -129,16 +129,40 @@ NSS_STATUS _nss_ldap_escape_string (const char *str,
 				    char *buf, size_t buflen);
 
 #define MAP_H_ERRNO(nss_status, herr)   do { \
-	if ((unsigned int) (nss_status - _NSS_LOOKUP_OFFSET) > _nss_ldap_herrno2nssstat_tab_count) \
-		herr = NO_RECOVERY; \
-	herr = _nss_ldap_herrno2nssstat_tab[nss_status - _NSS_LOOKUP_OFFSET]; \
+		switch ((nss_status)) {		\
+		case NSS_SUCCESS:		\
+			(herr) = 0;		\
+			break;			\
+		case NSS_TRYAGAIN:		\
+			(herr) = TRY_AGAIN;	\
+			break;			\
+		case NSS_NOTFOUND:		\
+			(herr) = HOST_NOT_FOUND;\
+			break;			\
+		case NSS_UNAVAIL:		\
+		default:			\
+			(herr) = NO_RECOVERY;	\
+			break;			\
+		}				\
 	} while (0)
 
 #ifdef HAVE_IRS_H
-#define MAP_ERRNO(nss_status, herr)	do { \
-	if ((unsigned int) nss_status > _nss_ldap_errno2nssstat_tab_count) \
-		errno = EPERM; \
-	errno = _nss_ldap_errno2nssstat_tab[nss_status]; \
+#define MAP_ERRNO(nss_status, err)   do {	\
+		switch ((nss_status)) {		\
+		case NSS_SUCCESS:		\
+			(err) = 0;		\
+			break;			\
+		case NSS_TRYAGAIN:		\
+			(err) = ERANGE;		\
+			break;			\
+		case NSS_NOTFOUND:		\
+			(err) = ENOENT;		\
+			break;			\
+		case NSS_UNAVAIL:		\
+		default:			\
+			(err) = EPERM;		\
+			break;			\
+		}				\
 	} while (0)
 #endif /* HAVE_IRS_H */
 
