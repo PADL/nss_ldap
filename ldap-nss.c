@@ -1681,13 +1681,6 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
       ldap_msgfree (ctx->ec_res);
       ctx->ec_res = NULL;
     }
-#ifdef PAGE_RESULTS
-  if (ctx->ec_cookie != NULL)
-    {
-      ber_bvfree (ctx->ec_cookie);
-      ctx->ec_cookie = NULL;
-    }
-#endif /* PAGE_RESULTS */
 
   /*
    * Abandon the search if there were more results to fetch.
@@ -1697,6 +1690,14 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
       ldap_abandon (__session.ls_conn, ctx->ec_msgid);
       ctx->ec_msgid = -1;
     }
+
+#ifdef PAGE_RESULTS
+  if (ctx->ec_cookie != NULL)
+    {
+      ber_bvfree (ctx->ec_cookie);
+      ctx->ec_cookie = NULL;
+    }
+#endif /* PAGE_RESULTS */
 
   ctx->ec_sd = NULL;
 
@@ -1952,6 +1953,12 @@ do_result (ent_context_t * ctx, int all)
 
   do
     {
+      if (ctx->ec_res != NULL)
+	{
+	  ldap_msgfree (ctx->ec_res);
+	  ctx->ec_res = NULL;
+	}
+
       rc =
 	ldap_result (__session.ls_conn, ctx->ec_msgid, all, tvp,
 		     &ctx->ec_res);

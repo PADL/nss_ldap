@@ -12,10 +12,11 @@ passwords (instead of or in addition to using flat files or NIS).
 
 nss_ldap nominally supports the following operating system libraries:
 
-	o the Nameservice Switch in Solaris 2.4 to 8
+	o the Nameservice Switch in Solaris 2.4 to 9
 	o the Nameservice Switch in HP-UX 11
 	o the Nameservice Switch in the GNU C Library 2.1 (as
           in libc.so.6 under Linux)
+	o the Nameservice Switch in FreeBSD 5.x
 	o the Information Retrieval Service (IRS) in BIND 
 	o the Information Retrieval Service (IRS) and proprietary
 	  authentication and identity interface in AIX 4.3.3
@@ -60,7 +61,7 @@ support NIS clients.
 -------------------------
 
 It's free, and distributed under the GNU General Library Public
-Licence (GLPL). Please read the file COPYING.LIB For more information.
+Licence (LGPL). Please read the file COPYING.LIB For more information.
 
 5. Where do I get it?
 ---------------------
