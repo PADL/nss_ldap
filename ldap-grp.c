@@ -289,7 +289,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 	      if (*start == *size && limit <= 0)
 		{
 		  /* Need a bigger buffer */
-		  groups = realloc (groups, *size * sizeof (*groups));
+		  groups = realloc (groups, 2 * *size * sizeof (*groups));
 		  if (groups == NULL)
 		    {
 		      ldap_msgfree (res);
