@@ -228,7 +228,7 @@ _nss_ldap_getetherent_r (nss_backend_t * ether_context, void *args)
   NSS_STATUS status;
 
   status = _nss_ldap_getent (
-			      ((nss_ldap_backend_t *) ether_context)->state,
+			      &((nss_ldap_backend_t *) ether_context)->state,
 			      &result,
 			      NSS_ARGS (args)->buf.buffer,
 			      NSS_ARGS (args)->buf.buflen,
