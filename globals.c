@@ -59,7 +59,7 @@ int _nss_ldap_herrno2nssstat_tab[] =
   TRY_AGAIN,
   HOST_NOT_FOUND,
   NO_RECOVERY
-#endif /* __GNUC__ */
+#endif				/* __GNUC__ */
 #endif
 };
 

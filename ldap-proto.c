@@ -64,7 +64,7 @@ static char rcsId[] =
 #endif
 
 #ifdef HAVE_NSS_H
-static ent_context_t * proto_context = NULL;
+static ent_context_t *proto_context = NULL;
 #endif
 
 static NSS_STATUS

@@ -39,7 +39,7 @@ struct pvt
   {
     struct passwd result;
     char buffer[NSS_BUFLEN_PASSWD];
-    ent_context_t * state;
+    ent_context_t *state;
   };
 
 IRS_EXPORT struct passwd *

@@ -39,7 +39,7 @@ struct pvt
   {
     struct nwent result;
     char buffer[NSS_BUFLEN_NETWORKS];
-    ent_context_t * state;
+    ent_context_t *state;
   };
 
 IRS_EXPORT struct nwent *

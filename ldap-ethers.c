@@ -78,7 +78,7 @@ extern char *ether_ntoa (struct ether_addr *e);
 #endif
 
 #ifdef HAVE_NSS_H
-static ent_context_t * ether_context = NULL;
+static ent_context_t *ether_context = NULL;
 #endif
 
 static NSS_STATUS

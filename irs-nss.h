@@ -48,14 +48,14 @@ struct irs_acc *irs_ldap_acc __P ((const char *));
 
 #define make_group_list __make_group_list
 
-extern int              make_group_list(struct irs_gr *, const char *,
-                                        gid_t, gid_t *, int *);
+extern int make_group_list (struct irs_gr *, const char *,
+			    gid_t, gid_t *, int *);
 
 #ifdef _AIX
 #define IRS_EXPORT
 #else
 #define IRS_EXPORT static
-#endif 
+#endif
 
 /*
  * These lengths were derived from the Solaris headers.
@@ -76,14 +76,14 @@ extern int              make_group_list(struct irs_gr *, const char *,
 #define NSS_LINELEN_SHADOW      NSS_BUFSIZ
 #define NSS_LINELEN_BOOTPARAMS  NSS_BUFSIZ
 
-#ifndef NSS_BUFLEN_GROUP /* defined on Linux */
+#ifndef NSS_BUFLEN_GROUP	/* defined on Linux */
 #define NSS_BUFLEN_GROUP        (NSS_LINELEN_GROUP + 200 * sizeof (char *))
 #endif /* NSS_BUFLEN_GROUP */
 #define NSS_BUFLEN_HOSTS        \
         (NSS_LINELEN_HOSTS + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
 #define NSS_BUFLEN_NETGROUP     (MAXHOSTNAMELEN * 2 + LOGNAME_MAX + 3)
 #define NSS_BUFLEN_NETWORKS     NSS_LINELEN_NETWORKS
-#ifndef NSS_BUFLEN_PASSWD /* defined on Linux */
+#ifndef NSS_BUFLEN_PASSWD	/* defined on Linux */
 #define NSS_BUFLEN_PASSWD       NSS_LINELEN_PASSWD
 #endif /* NSS_BUFLEN_PASSWD */
 #define NSS_BUFLEN_PROTOCOLS    NSS_LINELEN_PROTOCOLS

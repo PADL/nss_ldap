@@ -39,7 +39,7 @@ struct pvt
   {
     struct protoent result;
     char buffer[NSS_BUFLEN_PROTOCOLS];
-    ent_context_t * state;
+    ent_context_t *state;
   };
 
 IRS_EXPORT struct protoent *

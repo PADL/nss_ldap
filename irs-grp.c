@@ -39,7 +39,7 @@ struct pvt
   {
     struct group result;
     char buffer[NSS_BUFLEN_GROUP];
-    ent_context_t * state;
+    ent_context_t *state;
   };
 
 IRS_EXPORT struct group *

@@ -54,18 +54,18 @@ static const char *pw_attributes[] =
 {AT (uid), AT (userPassword),
 #ifdef AUTHPASSWORD
  AT (authPassword),
-#endif /* AUTHPASSWORD */
+#endif				/* AUTHPASSWORD */
  AT (uidNumber), AT (gidNumber),
  AT (cn), AT (homeDirectory),
  AT (loginShell), AT (gecos),
  AT (description), AT (objectClass),
  NULL};
- 
+
 static const char *sp_attributes[] =
 {AT (uid), AT (userPassword),
 #ifdef AUTHPASSWORD
  AT (authPassword),
-#endif /* AUTHPASSWORD */
+#endif				/* AUTHPASSWORD */
  AT (shadowLastChange), AT (shadowMax),
  AT (shadowMin), AT (shadowWarning),
  AT (shadowInactive), AT (shadowExpire),
@@ -75,7 +75,7 @@ static const char *gr_attributes[] =
 {AT (cn), AT (userPassword),
 #ifdef AUTHPASSWORD
  AT (authPassword),
-#endif /* AUTHPASSWORD */
+#endif				/* AUTHPASSWORD */
  AT (memberUid),
 #ifdef RFC2307BIS
 #ifdef NDS
@@ -137,14 +137,13 @@ const char **_nss_ldap_attrtab[] =
 #else
 const char **_nss_ldap_attrtab[] =
 /* These must be ordered per selectors in ldap-nss.h */
-{ pw_attributes, sp_attributes, 
-  gr_attributes,
-  host_attributes, serv_attributes,
-  net_attributes, proto_attributes,
-  rpc_attributes, ether_attributes,
-  net_attributes, bp_attributes,
-  alias_attributes, netgr_attributes,
-  NULL
+{pw_attributes, sp_attributes,
+ gr_attributes,
+ host_attributes, serv_attributes,
+ net_attributes, proto_attributes,
+ rpc_attributes, ether_attributes,
+ net_attributes, bp_attributes,
+ alias_attributes, netgr_attributes,
+ NULL
 };
 #endif /* __GNUC__ */
-

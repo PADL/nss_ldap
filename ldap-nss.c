@@ -92,7 +92,8 @@ static ldap_config_t *__config = NULL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session = { NULL, NULL };
+static ldap_session_t __session =
+{NULL, NULL};
 
 #if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
 static pthread_once_t __once = PTHREAD_ONCE_INIT;
@@ -200,9 +201,9 @@ typedef NSS_STATUS (*search_func_t) (const char *, int, const char *,
  * Do a search with a reconnect harness.
  */
 static NSS_STATUS
-do_with_reconnect (const char *base, int scope,
-		   const char *filter, const char **attrs, int sizelimit,
-		   void *private, search_func_t func);
+  do_with_reconnect (const char *base, int scope,
+		     const char *filter, const char **attrs, int sizelimit,
+		     void *private, search_func_t func);
 
 /*
  * Do a bind with a defined timeout
@@ -540,7 +541,7 @@ do_open (void)
 	  (__pthread_atfork == NULL ? pid : -1), __euid, euid);
 #else
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif
 #endif /* DEBUG */
@@ -695,7 +696,7 @@ do_open (void)
       if (cfg->ldc_ssl_on == SSL_LDAPS)
 	{
 	  if (__ssl_initialized == 0
-	      && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
+	    && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
 	    {
 	      continue;
 	    }
@@ -1080,9 +1081,9 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	{
 	case LA_TYPE_STRING:
 	  if (
-	      (stat =
-	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
-					sizeof (buf1))) != NSS_SUCCESS)
+	       (stat =
+		_nss_ldap_escape_string (args->la_arg1.la_string, buf1,
+					 sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
 	  snprintf (filterBufP, filterSiz, filterprot, buf1);
 	  break;
@@ -1092,20 +1093,20 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  break;
 	case LA_TYPE_STRING_AND_STRING:
 	  if (
-	      (stat =
-	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
-					sizeof (buf1))) != NSS_SUCCESS
-	      || (stat =
-		  _nss_ldap_escape_string (args->la_arg2.la_string, buf2,
-					   sizeof (buf2)) != NSS_SUCCESS))
+	       (stat =
+		_nss_ldap_escape_string (args->la_arg1.la_string, buf1,
+					 sizeof (buf1))) != NSS_SUCCESS
+	       || (stat =
+		   _nss_ldap_escape_string (args->la_arg2.la_string, buf2,
+					    sizeof (buf2)) != NSS_SUCCESS))
 	    return stat;
 	  snprintf (filterBufP, filterSiz, filterprot, buf1, buf2);
 	  break;
 	case LA_TYPE_NUMBER_AND_STRING:
 	  if (
-	      (stat =
-	       _nss_ldap_escape_string (args->la_arg2.la_string, buf1,
-					sizeof (buf1))) != NSS_SUCCESS)
+	       (stat =
+		_nss_ldap_escape_string (args->la_arg2.la_string, buf1,
+					 sizeof (buf1))) != NSS_SUCCESS)
 	    return stat;
 	  snprintf (filterBufP, filterSiz, filterprot,
 		    args->la_arg1.la_number, buf1);
@@ -1175,7 +1176,7 @@ do_result (ent_context_t * ctx, int all)
 	case 0:
 #ifdef LDAP_OPT_ERROR_NUMBER
 	  if (ldap_get_option
-	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+	    (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	    {
 	      rc = LDAP_UNAVAILABLE;
 	    }
@@ -1263,7 +1264,7 @@ do_with_reconnect (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+	   "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
 		  backoff);
 	  (void) sleep (backoff);
 	}
@@ -1289,7 +1290,7 @@ do_with_reconnect (const char *base, int scope,
 	{
 #ifdef LDAP_OPT_ERROR_NUMBER
 	  if (ldap_get_option
-	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+	    (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
 	    {
 	      rc = LDAP_UNAVAILABLE;
 	    }

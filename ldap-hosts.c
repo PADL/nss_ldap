@@ -121,18 +121,18 @@ _nss_ldap_parse_host (LDAP * ld,
   if (_res.options & RES_USE_INET6)
     {
       if (bytesleft (buffer, buflen, char *) <
-	  (size_t) ((addresscount + 1) * IN6ADDRSZ))
+	    (size_t) ((addresscount + 1) * IN6ADDRSZ))
 	  return NSS_TRYAGAIN;
     }
   else
     {
       if (bytesleft (buffer, buflen, char *) <
-	  (size_t) ((addresscount + 1) * INADDRSZ))
+	    (size_t) ((addresscount + 1) * INADDRSZ))
 	  return NSS_TRYAGAIN;
     }
 #else
   if (bytesleft (buffer, buflen, char *) <
-      (size_t) ((addresscount + 1) * INADDRSZ))
+        (size_t) ((addresscount + 1) * INADDRSZ))
       return NSS_TRYAGAIN;
 #endif
 
@@ -403,7 +403,7 @@ _nss_ldap_gethostent_r (struct hostent * result, char *buffer, size_t buflen,
 			     buffer,
 			     buflen,
 			     errnop,
-			     filt_gethostent, LM_HOSTS, _nss_ldap_parse_host);
+			   filt_gethostent, LM_HOSTS, _nss_ldap_parse_host);
 
   MAP_H_ERRNO (status, *h_errnop);
 
@@ -418,7 +418,8 @@ _nss_ldap_hosts_destr (nss_backend_t * hosts_context, void *args)
   return _nss_ldap_default_destr (hosts_context, args);
 }
 
-static nss_backend_op_t host_ops[] = {
+static nss_backend_op_t host_ops[] =
+{
   _nss_ldap_hosts_destr,
   _nss_ldap_endhostent_r,
   _nss_ldap_sethostent_r,

@@ -31,9 +31,9 @@ void *ho_pvtinit (void);
 IRS_EXPORT void ho_close (struct irs_ho *this);
 IRS_EXPORT struct hostent *ho_byname (struct irs_ho *this, const char *name);
 IRS_EXPORT struct hostent *ho_byname2 (struct irs_ho *this, const char *name,
-				   int af);
+				       int af);
 IRS_EXPORT struct hostent *ho_byaddr (struct irs_ho *this, const void *addr,
-				  int len, int af);
+				      int len, int af);
 IRS_EXPORT struct hostent *ho_next (struct irs_ho *this);
 IRS_EXPORT void ho_rewind (struct irs_ho *this);
 IRS_EXPORT void ho_minimize (struct irs_ho *this);
@@ -48,7 +48,7 @@ struct pvt
   {
     struct hostent result;
     char buffer[NSS_BUFLEN_HOSTS];
-    ent_context_t * state;
+    ent_context_t *state;
   };
 
 IRS_EXPORT struct hostent *

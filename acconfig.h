@@ -18,4 +18,3 @@
 
 /* define to enable authPassword checking code */
 #undef AUTHPASSWORD
-

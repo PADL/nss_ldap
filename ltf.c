@@ -57,7 +57,7 @@ static int ltf_get_ld_error (char **matched, char **errmsg, void *dummy);
 static void ltf_set_errno (int err);
 static int ltf_get_errno (void);
 
-#ifndef HAVE_THREAD_H /* thus, pthreads */
+#ifndef HAVE_THREAD_H		/* thus, pthreads */
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 
  * The contents of this file are subject to the Netscape Public License
@@ -129,9 +129,9 @@ static int
 ltf_mutex_lock (void *mutexp)
 {
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  return __libc_lock_lock(*(pthread_mutex_t *)mutexp);
+  return __libc_lock_lock (*(pthread_mutex_t *) mutexp);
 #else
-  return pthread_mutex_lock((pthread_mutex_t *)mutexp);
+  return pthread_mutex_lock ((pthread_mutex_t *) mutexp);
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
 }
 
@@ -139,9 +139,9 @@ static int
 ltf_mutex_unlock (void *mutexp)
 {
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  return __libc_lock_unlock(*(pthread_mutex_t *)mutexp);
+  return __libc_lock_unlock (*(pthread_mutex_t *) mutexp);
 #else
-  return pthread_mutex_unlock((pthread_mutex_t *)mutexp);
+  return pthread_mutex_unlock ((pthread_mutex_t *) mutexp);
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
 }
 
@@ -188,11 +188,11 @@ ltf_set_ld_error (int err, char *matched, char *errmsg, void *dummy)
   le->le_errno = err;
 
   if (le->le_matched != NULL)
-      ldap_memfree (le->le_matched);
+    ldap_memfree (le->le_matched);
   le->le_matched = matched;
 
   if (le->le_errmsg != NULL)
-      ldap_memfree (le->le_errmsg);
+    ldap_memfree (le->le_errmsg);
   le->le_errmsg = errmsg;
 }
 
@@ -207,13 +207,13 @@ ltf_get_ld_error (char **matched, char **errmsg, void *dummy)
   le = pthread_getspecific (key);
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
   if (le == NULL)
-      return LDAP_LOCAL_ERROR;
+    return LDAP_LOCAL_ERROR;
 
   if (matched != NULL)
-      *matched = le->le_matched;
+    *matched = le->le_matched;
 
   if (errmsg != NULL)
-      *errmsg = le->le_errmsg;
+    *errmsg = le->le_errmsg;
 
   return (le->le_errno);
 }

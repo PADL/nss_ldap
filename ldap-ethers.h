@@ -80,4 +80,3 @@ OC (ieee802Device) ")(" AT (cn) "=%s))";
 
 
 #endif /* _LDAP_NSS_LDAP_LDAP_ETHERS_H */
-

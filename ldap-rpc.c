@@ -71,7 +71,7 @@ static char rcsId[] =
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 
 #ifdef HAVE_NSS_H
-static ent_context_t * rpc_context = NULL;
+static ent_context_t *rpc_context = NULL;
 #endif
 
 static NSS_STATUS

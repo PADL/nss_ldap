@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997-2001 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -182,7 +183,8 @@ _nss_ldap_dn2uid (LDAP * ld,
       if (status != NSS_SUCCESS)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[] = { "uid", NULL };
+	  const char *attrs[] =
+	  {"uid", NULL};
 	  LDAPMessage *res;
 
 	  status = NSS_NOTFOUND;
@@ -752,7 +754,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   return stat;
 }
 
-NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+NSS_STATUS 
+_nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
   int ret = NSS_TRYAGAIN;
   char *p = buf;

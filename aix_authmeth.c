@@ -1,9 +1,10 @@
+
 /*
    Glue code to support AIX loadable authentication modules.
 
    Note: only information functions are supported, so you need to
    specify "options = dbonly" in /usr/lib/security/methods.cfg
-*/
+ */
 #include "config.h"
 
 #ifdef _AIX
@@ -40,70 +41,78 @@ void pw_close (struct irs_pw *);
 
 char *_nss_ldap_getgrset (char *user);
 
-static void *_nss_ldap_open(const char *name, const char *domain,
-	const int mode, char *options)
+static void *
+_nss_ldap_open (const char *name, const char *domain,
+		const int mode, char *options)
 {
   /* Currently we do not use the above parameters */
 
-  grp_conn = (struct irs_gr *)gr_pvtinit();
-  pwd_conn = (struct irs_pw *)pw_pvtinit();
+  grp_conn = (struct irs_gr *) gr_pvtinit ();
+  pwd_conn = (struct irs_pw *) pw_pvtinit ();
   return NULL;
 }
 
-static int _nss_ldap_close(void *token)
+static int 
+_nss_ldap_close (void *token)
 {
-  gr_close(grp_conn);
+  gr_close (grp_conn);
   grp_conn = NULL;
-  
-  pw_close(pwd_conn);
+
+  pw_close (pwd_conn);
   pwd_conn = NULL;
 
   return 0;
 }
 
-static struct group *_nss_ldap_getgrgid(gid_t gid)
+static struct group *
+_nss_ldap_getgrgid (gid_t gid)
 {
   if (!grp_conn)
     return NULL;
-  
-  return gr_bygid(grp_conn, gid);
+
+  return gr_bygid (grp_conn, gid);
 }
 
-static struct group *_nss_ldap_getgrnam(const char *name)
+static struct group *
+_nss_ldap_getgrnam (const char *name)
 {
   if (!grp_conn)
     return NULL;
-  
-  return gr_byname(grp_conn, name);
+
+  return gr_byname (grp_conn, name);
 }
 
-static struct passwd *_nss_ldap_getpwuid(uid_t uid)
+static struct passwd *
+_nss_ldap_getpwuid (uid_t uid)
 {
   if (!pwd_conn)
     return NULL;
-  
-  return pw_byuid(pwd_conn, uid);
+
+  return pw_byuid (pwd_conn, uid);
 }
 
-static struct passwd *_nss_ldap_getpwnam(const char *name)
+static struct passwd *
+_nss_ldap_getpwnam (const char *name)
 {
   if (!pwd_conn)
     return NULL;
-  
-  return pw_byname(pwd_conn, name);
+
+  return pw_byname (pwd_conn, name);
 }
 
-static struct group *_nss_ldap_getgracct(void *id, int type)
+static struct group *
+_nss_ldap_getgracct (void *id, int type)
 {
   if (type == SEC_INT)
-    return _nss_ldap_getgrgid(*(gid_t *)id);
+    return _nss_ldap_getgrgid (*(gid_t *) id);
   else
-    return _nss_ldap_getgrnam((char *)id);
+    return _nss_ldap_getgrnam ((char *) id);
 }
 
-int nss_ldap_initialize(struct secmethod_table *meths)
+int 
+nss_ldap_initialize (struct secmethod_table *meths)
 {
-  bzero(meths, sizeof(*meths));
+  bzero (meths, sizeof (*meths));
 
   /* Identification methods */
   meths->method_getpwnam = _nss_ldap_getpwnam;
@@ -112,7 +121,7 @@ int nss_ldap_initialize(struct secmethod_table *meths)
   meths->method_getgrgid = _nss_ldap_getgrgid;
   meths->method_getgrset = _nss_ldap_getgrset;
   meths->method_getgracct = _nss_ldap_getgracct;
-  
+
   /* Support methods */
   meths->method_open = _nss_ldap_open;
   meths->method_close = _nss_ldap_close;

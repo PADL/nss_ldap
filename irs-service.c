@@ -31,7 +31,7 @@ void *sv_pvtinit (void);
 IRS_EXPORT void sv_close (struct irs_sv *);
 IRS_EXPORT struct servent *sv_next (struct irs_sv *);
 IRS_EXPORT struct servent *sv_byname (struct irs_sv *, const char *,
-				  const char *);
+				      const char *);
 IRS_EXPORT struct servent *sv_byport (struct irs_sv *, int, const char *);
 IRS_EXPORT void sv_rewind (struct irs_sv *);
 IRS_EXPORT void sv_minimize (struct irs_sv *);
@@ -40,7 +40,7 @@ struct pvt
   {
     struct servent result;
     char buffer[NSS_BUFLEN_PROTOCOLS];
-    ent_context_t * state;
+    ent_context_t *state;
   };
 
 IRS_EXPORT struct servent *
@@ -65,7 +65,7 @@ sv_byname (struct irs_sv *this, const char *name, const char *proto)
 
   if (s != NSS_SUCCESS)
     {
-      MAP_ERRNO(s, errno);
+      MAP_ERRNO (s, errno);
       return NULL;
     }
   return &pvt->result;
@@ -93,7 +93,7 @@ sv_byport (struct irs_sv *this, int port, const char *proto)
 
   if (s != NSS_SUCCESS)
     {
-      MAP_ERRNO(s, errno);
+      MAP_ERRNO (s, errno);
       return NULL;
     }
   return &pvt->result;

@@ -70,7 +70,7 @@ static char rcsId[] =
 #endif
 
 #ifdef HAVE_NSS_H
-static ent_context_t * net_context = NULL;
+static ent_context_t *net_context = NULL;
 #endif
 
 static NSS_STATUS
@@ -302,7 +302,7 @@ static NSS_STATUS
 _nss_ldap_getnetent_r (nss_backend_t * net_context, void *args)
 {
   NSS_STATUS status = _nss_ldap_getent (
-				      &((nss_ldap_backend_t *) net_context)->
+				     &((nss_ldap_backend_t *) net_context)->
 					 state,
 					 NSS_ARGS (args)->buf.result,
 					 NSS_ARGS (args)->buf.buffer,

@@ -57,7 +57,7 @@ static char rcsId[] =
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 
 #ifdef HAVE_NSS_H
-static ent_context_t * sp_context = NULL;
+static ent_context_t *sp_context = NULL;
 #endif
 
 static NSS_STATUS
@@ -71,19 +71,19 @@ _nss_ldap_parse_sp (LDAP * ld,
   char *tmp = NULL;
 
 #ifdef AUTHPASSWORD
+  stat =
+    _nss_ldap_assign_authpassword (ld, e, AT (authPassword),
+				   &sp->sp_pwdp, &buffer, &buflen);
+  if (stat == NSS_NOTFOUND)
+    {
       stat =
-	_nss_ldap_assign_authpassword (ld, e, AT (authPassword),
+	_nss_ldap_assign_userpassword (ld, e, AT (userPassword),
 				       &sp->sp_pwdp, &buffer, &buflen);
-      if (stat == NSS_NOTFOUND)
-	{
-	  stat =
-	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword),
-					   &sp->sp_pwdp, &buffer, &buflen);
-	}
+    }
 #else
   stat =
     _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &sp->sp_pwdp, &buffer,
-			     &buflen);
+				   &buflen);
 #endif /* AUTHPASSWORD */
   if (stat != NSS_SUCCESS)
     return stat;
@@ -225,6 +225,6 @@ _nss_ldap_shadow_constr (const char *db_name,
 }
 
 #endif /* !HAVE_NSS_H */
-#endif 
+#endif
 
 #endif /* HAVE_SHADOW_H */

@@ -51,4 +51,3 @@ int snprintf ();
 int vsnprintf ();
 void setproctitle ();
 #endif
-

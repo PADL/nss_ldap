@@ -55,7 +55,7 @@ static char rcsId[] =
 #endif
 
 #ifdef HAVE_NSS_H
-static ent_context_t * alias_context = NULL;
+static ent_context_t *alias_context = NULL;
 
 static NSS_STATUS
 _nss_ldap_parse_alias (LDAP * ld,
@@ -111,5 +111,5 @@ _nss_ldap_getaliasent_r (struct aliasent *result, char *buffer, size_t buflen,
 		 filt_getaliasent, LM_ALIASES, _nss_ldap_parse_alias);
 }
 
-#endif  /* HAVE_NSS_H */
-#endif  /* HAVE_ALIASES_H */
+#endif /* HAVE_NSS_H */
+#endif /* HAVE_ALIASES_H */
