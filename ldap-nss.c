@@ -894,7 +894,7 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
       *pConfig = NULL;
     }
 
-  if (*pEuid != NULL)
+  if (pEuid != NULL)
     {
       *pEuid = UID_NOBODY;
     }
