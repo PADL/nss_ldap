@@ -89,7 +89,7 @@ _nss_ldap_parse_gr (LDAP * ld,
   gr->gr_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol (gid);
 
   stat =
-    _nss_ldap_assign_attrval (ld, e, AT (cn), &gr->gr_name, &buffer, &buflen);
+    _nss_ldap_getrdnvalue (ld, e, AT (cn), &gr->gr_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 

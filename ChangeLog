@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+170	Luke Howard <lukeh@padl.com>
+
+	* use _nss_ldap_getrdnvalue() for determining canonical	
+	  group name
+
 169	Luke Howard <lukeh@padl.com>
 
 	* fixed typo in ldap-service.c; prefix filters now
