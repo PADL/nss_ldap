@@ -1,0 +1,201 @@
+/* Copyright (C) 1997 Luke Howard.
+   This file is part of the nss_ldap library.
+   Contributed by Luke Howard, <lukeh@xedoc.com>, 1997.
+
+   The nss_ldap library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+
+   The nss_ldap library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
+
+   You should have received a copy of the GNU Library General Public
+   License along with the nss_ldap library; see the file COPYING.LIB.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.
+
+   $Id$
+ */
+
+/*
+    Determine the canonical name of the RPC with _nss_ldap_getrdnvalue(),
+    and assign any values of "cn" which do NOT match this canonical name
+    as aliases.
+ */
+
+
+static char rcsId[] = "$Id$";
+
+#ifndef IRS_NSS /* not supported at the moment */
+
+#ifdef IRS_NSS
+#include <port_before.h>
+#endif
+
+#ifdef SUN_NSS
+#include <thread.h>
+#endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#if defined(IRS_NSS) || defined(GNU_NSS) || defined(DL_NSS)
+#include <netdb.h>
+#elif defined(SUN_NSS)
+#include <rpc/rpcent.h>
+#endif
+
+#include <lber.h>
+#include <ldap.h>
+
+#ifdef GNU_NSS
+#include <nss.h>
+#elif defined(SUN_NSS)
+#include <nss_common.h>
+#include <nss_dbdefs.h>
+#include <nsswitch.h>
+#endif
+
+#include "ldap-nss.h"
+#include "ldap-rpc.h"
+#include "globals.h"
+#include "util.h"
+
+#ifdef IRS_NSS
+#include <port_after.h>
+#endif
+
+#ifdef GNU_NSS
+static context_key_t rpc_context = NULL;
+#elif defined(SUN_NSS)
+static context_key_t rpc_context = { 0 };
+#endif
+
+PARSER _nss_ldap_parse_rpc(
+	LDAP *ld,
+	LDAPMessage *e,
+	ldap_state_t *pvt,
+	void *result,
+	char *buffer,
+	size_t buflen)
+{
+
+	struct rpcent *rpc = (struct rpcent *)result;
+	char *number;
+	NSS_STATUS stat;
+
+	stat = _nss_ldap_getrdnvalue(ld, e, &rpc->r_name, &buffer, &buflen);
+	if (stat != NSS_SUCCESS) return stat;
+
+	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_RPCNUMBER, &number, &buffer, &buflen);
+	if (stat != NSS_SUCCESS) return stat;
+	
+	rpc->r_number = atol(number); /* threadsafe? */
+
+	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_RPCNAME, rpc->r_name, &rpc->r_aliases,
+		&buffer, &buflen, NULL);
+	if (stat != NSS_SUCCESS) return stat;
+
+	return NSS_SUCCESS;
+}
+
+#ifdef SUN_NSS
+static NSS_STATUS _nss_ldap_getrpcbyname_r(nss_backend_t *be, void *args)
+{
+	LOOKUP_NAME(args, filt_getrpcbyname, rpc_attributes, _nss_ldap_parse_rpc);
+}
+#elif defined(GNU_NSS)
+NSS_STATUS _nss_ldap_getrpcbyname_r(const char *name, struct rpcent *result,
+				char *buffer, size_t buflen)
+{
+	LOOKUP_NAME(name, result, buffer, buflen, filt_getrpcbyname, rpc_attributes, _nss_ldap_parse_rpc);
+}
+#endif
+
+#ifdef SUN_NSS
+static NSS_STATUS _nss_ldap_getrpcbynumber_r(nss_backend_t *be, void *args)
+{
+	LOOKUP_NUMBER(args, key.number, filt_getrpcbynumber, rpc_attributes, _nss_ldap_parse_rpc);
+}
+#elif defined(GNU_NSS)
+NSS_STATUS _nss_ldap_getrpcbynumber_r(int number, struct rpcent *result,
+				char *buffer, size_t buflen)
+{
+	LOOKUP_NUMBER(number, result, buffer, buflen, filt_getrpcbynumber, rpc_attributes, _nss_ldap_parse_rpc);
+}
+#endif
+
+#ifdef SUN_NSS
+static NSS_STATUS _nss_ldap_setrpcent_r(nss_backend_t *be, void *args)
+#elif defined(GNU_NSS)
+NSS_STATUS _nss_ldap_setrpcent_r(void)
+#endif
+#if defined(GNU_NSS) || defined(SUN_NSS)
+{
+	LOOKUP_SETENT(rpc_context);
+}
+#endif
+
+#ifdef SUN_NSS
+static NSS_STATUS _nss_ldap_endrpcent_r(nss_backend_t *be, void *args)
+#elif defined(GNU_NSS)
+NSS_STATUS _nss_ldap_endrpcent_r(void)
+#endif
+#if defined(GNU_NSS) || defined(SUN_NSS)
+{
+	LOOKUP_ENDENT(rpc_context);
+}
+#endif
+
+#ifdef SUN_NSS
+static NSS_STATUS _nss_ldap_getrpcent_r(nss_backend_t *be, void *args)
+{
+	LOOKUP_GETENT(args, rpc_context, filt_getrpcent, rpc_attributes, _nss_ldap_parse_rpc);
+}
+#elif defined(GNU_NSS)
+NSS_STATUS _nss_ldap_getrpcent_r(struct rpcent *result, char *buffer, size_t buflen)
+{
+	LOOKUP_GETENT(rpc_context, result, buffer, buflen, filt_getrpcent, rpc_attributes, _nss_ldap_parse_rpc);
+}
+#endif
+
+#ifdef SUN_NSS
+static NSS_STATUS _nss_ldap_rpc_destr(nss_backend_t *be, void *args)
+{
+	_nss_ldap_default_destr(&rpc_context);
+	return NSS_SUCCESS;
+}
+
+static nss_backend_op_t rpc_ops[] =
+{
+	_nss_ldap_rpc_destr,
+	_nss_ldap_endrpcent_r,
+	_nss_ldap_setrpcent_r,
+	_nss_ldap_getrpcent_r,
+	_nss_ldap_getrpcbyname_r,
+	_nss_ldap_getrpcbynumber_r
+};
+
+nss_backend_t *_nss_ldap_rpc_constr(const char *db_name,
+	const char *src_name,
+	const char *cfg_args)
+{
+	static nss_backend_t be;
+
+	be.ops = rpc_ops;
+	be.n_ops = sizeof(rpc_ops) / sizeof(nss_backend_op_t);
+
+	if (_nss_ldap_default_constr(&rpc_context) != NSS_SUCCESS)
+		return NULL;
+
+	return &be;
+}
+
+#endif /* !GNU_NSS */
+
+#endif /* !IRS_NSS */
+

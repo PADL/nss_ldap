@@ -1,0 +1,89 @@
+# Copyright (C) 1997 Luke Howard.
+# This file is part of the nss_ldap Library.
+
+# The nss_ldap library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public License as
+# published by the Free Software Foundation; either version 2 of the
+# License, or (at your option) any later version.
+
+# The nss_ldap Library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+
+# You should have received a copy of the GNU Library General Public
+# License along with the nss_ldap Library; see the file COPYING.LIB.  If not,
+# write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 02111-1307, USA.
+
+#
+# $Id$
+#
+
+MODULE=nss_ldap
+HDRS=	\
+	ldap-ethers.h \
+	ldap-grp.h \
+	ldap-hosts.h \
+	ldap-netgrp.h \
+	ldap-network.h \
+	ldap-nss.h \
+	ldap-proto.h \
+	ldap-pwd.h \
+	ldap-rpc.h \
+	ldap-service.h \
+	util.h \
+	globals.h \
+	ltf.h \
+	irs-nss.h \
+	dl-pwd.h \
+	snprintf.h
+
+SRCS=	ldap-nss.c \
+	ldap-pwd.c \
+	ldap-grp.c \
+	ldap-rpc.c \
+	ldap-hosts.c \
+	ldap-network.c \
+	ldap-proto.c \
+	ldap-service.c \
+	ldap-ethers.c \
+	util.c \
+	globals.c \
+	dl-pwd.c \
+	dl-grp.c \
+	snprintf.o
+
+OBJS=${SRCS:.c=.o}
+LIB=lib${MODULE}.so
+# uncomment NSFLAGS if you are using the Netscape SDK
+#NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
+# uncomment GNUFLAGS if you are building a GNU glibc-2.x module
+GNUFLAGS=-DDL_NSS -DOSF1  -DNEEDPROTOS -D_REENTRANT
+INCDIRS=-I. -I/u2/local/include
+LIBDIRS=-L../nss_libldap
+LIBS=-lldap -lc_r
+CCFLAGS= -w0 
+
+CC=cc
+COMPILERFLAGS=${CCFLAGS}
+
+CFLAGS=-DDEBUG -DLDAP_REFERRALS ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
+
+all: ${MODULE} install
+
+#HIDEOPTS=-hidden -exported_symbol "`cat exports.osf`"
+
+${MODULE}: ${OBJS}
+	ld -shared ${HIDEOPTS} -o ${LIB} ${OBJS} ${LIBDIRS} ${LIBS}
+
+#-rodata_shared -no_unresolved
+
+install:
+
+clean:
+	rm -f ${OBJS} ${LIB}
+
+test:
+	cc -o testpw testpw.c dl-pwd.o ldap-pwd.o globals.o ldap-nss.o util.o snprintf.o -L/usr/local/ldapsdk/lib -lldap
+

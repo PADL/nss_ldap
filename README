@@ -1,0 +1,48 @@
+
+LDAP NAMESERVICE SWITCH LIBRARY
+===============================
+
+This is version 0.1 of nss_ldap, an LDAP module for the Solaris Nameservice
+Switch (NSS). This should be compatible with the GNU glibc if GNU_NSS is
+defined, and the ISC BIND IRS if IRS_NSS is defined.
+
+The LDAP schema used is described in draft-ietf-asid-nis-schema-01.txt.
+
+Insert this:
+
+passwd:     files nis ldap
+group:      files nis ldap
+
+or something similar to /etc/nsswitch.conf.
+
+The source code is distributed under the GNU General Library Public Licence
+(see COPYING.LIB). Neither authors' employers are affiliated with this project.
+
+Platforms this has been tested under:
+
+	o Linux 2.0
+	o Solaris 2.4
+
+Platforms this ought to be tested under:
+
+	o Solaris 2.[56]
+	o BSD/OS
+	o FreeBSD
+
+To install, type
+
+	$ Configure
+	$ make
+
+You want to ensure libnss_ldap.so.1 (or nss_ldap.so.1, for Solaris) is in
+/usr/lib. Under IRIX, you'll need to set _RLD_LIST to
+
+	libnss_ldap.so:libldap.so:DEFAULT
+
+(Netscape's SDK has libldap.so if you don't want to build your own.)
+
+--
+Luke Howard                                                     Leif Hedstrom
+Xedoc Software Development Inc.                 Netscape Communications Corp.
+lukeh@xedoc.com                                             leif@netscape.com
+

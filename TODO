@@ -1,0 +1,106 @@
+
+TESTING
+=======
+
+1. passwd: ok, but getent passwd does something funny straight getpwent()
+  doesn't by inserting garbage after the password field.
+
+2. group: ok.
+
+3. ethers: ok.
+
+4. services: ok.
+
+5. protocols: ok.
+
+6. hosts: ok.
+
+7. networks: ok.
+
+8. bootparams: not done.
+
+9. netgroup: not done.
+
+10. aliases: not supported for solaris.
+
+11. shadow: untested.
+
+12. rpc: ok.
+
+TODO:
+=====
+
+Resource assignments are suggested only :-)
+
+- use one LDAP connection and ldap_init() instead of opening multiple conns?
+
+- support getgroupsbymember() in ldap-group.c. There's a skeleton in this
+  closet :-) but no code written yet. It should be implemented as it's a lot
+  faster to do (&(objectclass=posixGroup)(memberUid=lukeh)) than looking up every group.
+
+- finish implementing dl-*.c 
+
+- implement gethostbyname2()
+
+- debug possible race condition in locking due to lack of recursive locks
+  fixed, I think. (Luke)
+
+- debug IPv6 support in ldap-hosts.c (and ldap-network.c?) (Leif)
+
+- debug irs-network.c 
+
+- write ldap-netgrp.c and irs-netgrp.c (Leif, +Luke IRS)
+  This is a lot easier now that the schema supports triples:
+
+  squid> ldapsearch -L objectclass=nisnetgroup
+  dn: cn=nightfly, o=Xedoc Software Development, c=AU
+  cn: nightfly
+  ttl: 86400
+  objectclass: nisNetgroup
+  objectclass: cacheObject
+  objectclass: top
+  membernisnetgroup: kamakiriad
+  membernisnetgroup: ruby-baby
+  nisnetgrouptriple: (lukeh,penguin,yp.xedoc.com.au)
+  nisnetgrouptriple: (fagen,grep.next.com,yp.xedoc.com.au)
+
+  You should be able to (a) rip out the flat file parser under Solaris -- the semantics
+  are complicated, which is why I haven't done it (!), but basically you get a function
+  pointer which will parse a flatfile entry into whatever struct and (b) use the glibc
+  NIS code for the glibc part of the NSS. Or use (b) for both. It's up to you, but the
+  netgroup structs will be different...
+
+- fix bug when doing "getent passwd" with termination of password field (weird bug)
+
+- support for bootparams map
+
+- debug Netscape SDK support under Solaris (Leif)
+
+- write testsuite. Build under Linux & BSD/OS.
+
+- Build PIC LDAP library for Linux. Maybe we want to make mods to libldap (to the
+  extent of the Netscape modifications used by nss_ldap) and include that. eg.
+
+	- thread safety (probably avoidable given global mutex)
+	- not returning quasi-static data off the LDAP *ld eg. ldap_get_dn()
+	- opaque LDAP struct (not too important)
+	- roll liblber into libldap
+
+  I've started this in the libldap work area.
+
+- fix Makefiles to build under glibc. Makefile.sun, Makefile.gnu, Makefile.bsd
+  + Configure.
+
+- destructor stuff. Account for the fact that under Solaris, the destructor is
+  called at the end of every call or enumeration and multiple backends are
+  instantiated for multiple threads. I didn't read the spec properly.
+
+- should we use mutex_t instead of mutex_t* for the lock -- is there a
+  possible race condition where the mutex hasn't been allocated and two
+  constructors are called simultaneously.
+
+- add support for DHCP and coldstart configuration
+
+
+$Id$
+

@@ -1,0 +1,743 @@
+/* Copyright (C) 1997 Luke Howard.
+   This file is part of the nss_ldap library.
+   Contributed by Luke Howard, <lukeh@xedoc.com>, 1997.
+
+   The nss_ldap library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+
+   The nss_ldap library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
+
+   You should have received a copy of the GNU Library General Public
+   License along with the nss_ldap library; see the file COPYING.LIB.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.
+ */
+
+static char rcsId[] = "$Id$";
+
+#ifdef SUN_NSS
+#include <thread.h>
+#endif
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <lber.h>
+#include <ldap.h>
+
+#ifdef GNU_NSS
+#include <nss.h>
+#elif defined(IRS_NSS)
+#include "irs-nss.h"
+#elif defined(SUN_NSS)
+#include <nss_common.h>
+#include <nss_dbdefs.h>
+#include <nsswitch.h>
+#endif
+
+#include "ldap-nss.h"
+#include "ltf.h"
+#include "globals.h"
+#include "util.h"
+#include "snprintf.h"
+
+/* the configuration is read by the first call to do_open().
+ * Pointers to elements of the list are passed around but should not
+ * be freed.
+ */
+static ldap_config_t __config;
+static char __configbuf[NSS_LDAP_CONFIG_BUFSIZ];
+static ldap_config_t *_nss_ldap_config = NULL;
+
+#ifdef SUN_NSS
+static int thread_enabled = 0;
+#endif
+
+static void do_close(ldap_session_t *);
+static NSS_STATUS do_open(ldap_session_t *);
+
+static void do_close(ldap_session_t *sess)
+{
+	debug("do_close");
+
+	if (sess->ls_conn != NULL)
+		{
+		ldap_unbind(sess->ls_conn);
+		sess->ls_conn = NULL;
+		}
+}
+
+#ifdef SUN_NSS
+void _nss_ldap_default_destr(context_key_t *pkey)
+{
+	ent_context_t *ctx;
+
+	debug("_nss_ldap_default_destr");
+
+	ctx = _nss_ldap_ent_context_get(*pkey);
+
+	nss_context_lock();
+
+	if (ctx != NULL)
+		{
+		if (ctx->ec_res != NULL)
+			{
+			ldap_msgfree(ctx->ec_res);
+			}
+		do_close(&ctx->ec_session);
+		free(ctx);
+		}	
+
+	if (thread_enabled)
+		{
+		(void) thr_setspecific(pkey->ck_thread_key, NULL);
+		}
+	else
+		{
+		pkey->ck_context = NULL;
+		}
+
+	nss_context_unlock();
+
+	nss_cleanup();
+}
+#endif
+
+static NSS_STATUS do_open(ldap_session_t *sess)
+{
+	ldap_config_t *cfg = NULL;
+
+	debug("do_open");
+
+	if (sess->ls_config != NULL && sess->ls_conn != NULL)
+		{
+		return NSS_SUCCESS;
+		}
+	else
+		{
+		sess->ls_config = NULL;
+		}
+
+	/* do this with Netscape's SDK, as Netscape's libldap isn't
+	 * threadsafe UNTIL ldap_open() has completed.
+	 * __nss_lock() is always defined.
+	 */
+
+	__nss_lock();
+
+	if (_nss_ldap_config == NULL)
+		{
+		NSS_STATUS status = _nss_ldap_readconfig(&__config, __configbuf, sizeof(__configbuf));
+		if (status == NSS_SUCCESS)
+			{
+			_nss_ldap_config = &__config;
+			}
+		else
+			{
+			__nss_unlock();
+			return status;
+			}
+		}
+
+	__nss_unlock();
+
+	cfg = _nss_ldap_config;
+
+	while (1)
+		{
+		sess->ls_conn = ldap_open(cfg->ldc_host, cfg->ldc_port);
+		if (sess->ls_conn != NULL || cfg->ldc_next == cfg)
+			{
+			break;
+			}
+		cfg = cfg->ldc_next;
+		}
+
+	if (sess->ls_conn == NULL)
+		{
+		return NSS_UNAVAIL;
+		}
+
+#ifdef NETSCAPE_SDK
+#ifndef DL_NSS
+	if (_nss_ldap_ltf_thread_init(sess->ls_conn) != NSS_SUCCESS)
+		{
+		do_close(sess);
+		return NSS_UNAVAIL;
+		}
+#endif
+#endif
+
+	if (ldap_simple_bind_s(sess->ls_conn, cfg->ldc_binddn, cfg->ldc_bindpw) != LDAP_SUCCESS)
+		{
+		do_close(sess);
+		return NSS_UNAVAIL;
+		}
+
+	sess->ls_config = cfg;
+
+	return NSS_SUCCESS;
+}
+
+ent_context_t *_nss_ldap_ent_context_init(context_key_t *key)
+{
+	ent_context_t *ctx;
+
+	debug("_nss_ldap_ent_context_init");
+
+	nss_context_lock();
+
+	if ((ctx = _nss_ldap_ent_context_get(*key)) == NULL)
+		{
+		ctx = (ent_context_t *)malloc(sizeof(*ctx));
+		if (ctx == NULL)
+			{
+			nss_context_unlock();
+			return NULL;
+			}
+		ctx->ec_res = NULL;
+#ifndef SUN_NSS
+		*key = ctx;
+#else
+		if (thread_enabled)
+			{
+			(void) thr_setspecific(key->ck_thread_key, ctx);
+			}
+		else
+			{
+			key->ck_context = ctx;
+			}
+#endif
+		}
+	else if (ctx->ec_res != NULL)
+		{
+		ldap_msgfree(ctx->ec_res);
+		}
+
+	ctx->ec_session.ls_conn = NULL;
+	ctx->ec_session.ls_config = NULL;
+	ctx->ec_res = NULL;
+	ctx->ec_last = NULL;
+	LS_INIT(ctx->ec_state);
+
+	nss_context_unlock();
+	
+	return ctx;
+}
+
+#ifdef SUN_NSS
+NSS_STATUS _nss_ldap_default_constr(context_key_t *key)
+{
+	debug("_nss_ldap_default_constr");
+
+	if (_nss_ldap_lock == NULL)
+		{
+		_nss_ldap_lock = (mutex_t *) calloc(1, sizeof(mutex_t));
+		if (_nss_ldap_lock == NULL || mutex_init(_nss_ldap_lock, USYNC_THREAD, NULL) < 0)
+			{
+			return NSS_UNAVAIL;
+			}
+		}
+
+	__nss_lock();
+
+#ifndef SUNOS_54
+	if (thr_main() != -1)
+		{
+		thread_enabled = 1;
+		}
+	else
+		{
+		thread_enabled = 0;
+		}
+	
+	if (thread_enabled)
+		{
+		(void) thr_keycreate(&key->ck_thread_key, _nss_ldap_ent_context_destr);
+		}
+	else
+		{
+		key->ck_context = NULL;
+		}
+#else
+	if (thread_enabled == 0)
+		{
+		(void) thr_keycreate(&key->ck_thread_key, _nss_ldap_ent_context_destr);
+		if (key->ck_thread_key == 0)
+			{
+			thread_enabled = 0;
+			key->ck_context = NULL;
+			}
+		else
+			{
+			debug("multithreading enabled.");
+			thread_enabled = 1;
+			}
+		}
+#endif
+
+	__nss_unlock();
+
+	return NSS_SUCCESS;
+}
+#endif /*SUN_NSS*/
+
+void _nss_ldap_ent_context_free(context_key_t *key)
+{
+	ent_context_t *ctx;
+
+	debug("_nss_ldap_ent_context_free");
+
+	nss_context_lock();
+
+	ctx = _nss_ldap_ent_context_get(*key);
+	if (ctx == NULL)
+		{
+		return;
+		}
+
+	if (ctx->ec_res != NULL)
+		{
+		ldap_msgfree(ctx->ec_res);
+		}
+
+	do_close(&ctx->ec_session);
+
+	ctx->ec_session.ls_conn = NULL;
+	ctx->ec_session.ls_config = NULL;
+	ctx->ec_res = NULL;
+	ctx->ec_last = NULL;
+	LS_INIT(ctx->ec_state);
+
+	nss_context_unlock();
+}
+
+#ifdef SUN_NSS
+ent_context_t *_nss_ldap_ent_context_get(context_key_t key)
+{
+	ent_context_t *ctx = NULL;
+
+	if (thread_enabled)
+		{
+		thr_getspecific(key.ck_thread_key, (void **)&ctx);
+		}
+	else
+		{
+		ctx = key.ck_context;
+		}
+
+	return ctx;
+}
+
+void _nss_ldap_ent_context_destr(void *fakectx)
+{
+	debug("_nss_ldap_ent_context_destr");
+	/*NOOP*/
+}
+#endif /*SUN_NSS*/
+
+LDAPMessage *_nss_ldap_lookup(
+	ldap_session_t *sess,
+	const ldap_args_t *args,
+	const char *filterprot,
+	const char **attrs,
+	int sizelimit)
+{
+	char filter[LDAP_FILT_MAXSIZ + 1];
+	LDAPMessage *res = NULL;
+	int lstatus;
+	int retry = 0;
+
+	debug("_nss_ldap_lookup");
+
+	if (do_open(sess) != NSS_SUCCESS)
+		{
+		sess->ls_conn = NULL;
+		return NULL;
+		}
+
+	if (args != NULL)
+		{
+		switch (args->la_type)
+			{
+			case LA_TYPE_STRING:
+#ifdef HAVE_SNPRINTF
+				snprintf(filter, sizeof(filter), filterprot, args->la_arg1.la_string);
+#else
+				sprintf(filter, filterprot, args->la_arg1.la_string);
+#endif
+			case LA_TYPE_NUMBER:
+#ifdef HAVE_SNPRINTF
+				snprintf(filter, sizeof(filter), filterprot, args->la_arg1.la_number);
+#else
+				sprintf(filter, filterprot, args->la_arg1.la_number);
+#endif
+			case LA_TYPE_STRING_AND_STRING:
+#ifdef HAVE_SNPRINTF
+				snprintf(filter, sizeof(filter), filterprot, args->la_arg1.la_string, args->la_arg2);
+#else
+				sprintf(filter, filterprot, args->la_arg1.la_string, args->la_arg2);
+#endif
+			case LA_TYPE_NUMBER_AND_STRING:
+#ifdef HAVE_SNPRINTF
+				snprintf(filter, sizeof(filter), filterprot, args->la_arg1.la_number, args->la_arg2);
+#else
+				sprintf(filter, filterprot, args->la_arg1.la_number, args->la_arg2);
+#endif
+			}
+		}
+
+#ifdef NETSCAPE_SDK
+	ldap_set_option(sess->ls_conn, LDAP_OPT_SIZELIMIT, (void *)&sizelimit);
+#else
+	sess->ls_conn->ld_sizelimit = sizelimit;
+#endif
+
+do_retry:
+	lstatus = ldap_search_s(sess->ls_conn, sess->ls_config->ldc_base, sess->ls_config->ldc_scope,
+		(args == NULL ? (char *)filterprot : filter), (char **)attrs, 0, &res);
+
+	switch (lstatus)
+		{
+		case LDAP_SUCCESS:
+		case LDAP_SIZELIMIT_EXCEEDED:
+		case LDAP_TIMELIMIT_EXCEEDED:
+			break;
+		case LDAP_SERVER_DOWN:
+			do_close(sess);
+			if (retry || do_open(sess) != NSS_SUCCESS)
+				{
+				res = NULL;
+				break;
+				}
+			retry = 1;
+			goto do_retry;
+		default:
+			break;
+		}
+
+	return res;
+}
+
+NSS_STATUS _nss_ldap_getent(
+	context_key_t key,
+	void *result,
+	char *buffer,
+	size_t buflen,
+	const char *filterprot,
+	const char **attrs,
+	parser_t parser)
+{
+	NSS_STATUS stat = NSS_NOTFOUND;
+	ent_context_t *ctx = NULL;
+
+	/* we need to lock here as the context may not be thread-specific
+	 * data (under glibc, for example). Maybe we should make the lock part
+	 * of the context.
+	 */
+
+	nss_context_lock();
+
+	ctx = _nss_ldap_ent_context_get(key);
+
+	if (ctx == NULL)
+		{
+		nss_context_unlock();
+		return NSS_UNAVAIL;
+		}
+
+	/* if ec_state.ls_info.ls_index is non-zero, then we don't collect another
+	 * entry off the LDAP chain, and instead refeed the existing result to
+	 * the parser. Once the parser has finished with it, it will return
+	 * NSS_NOTFOUND and reset the index to -1, at which point we'll retrieve
+	 * another entry.
+	 */
+	if (ctx->ec_session.ls_conn == NULL && ctx->ec_res == NULL)
+		{
+		LDAPMessage *res;
+
+		res = _nss_ldap_lookup(&ctx->ec_session, NULL, filterprot, attrs, LDAP_NO_LIMIT);
+		if (res == NULL)
+			{
+			nss_context_unlock();
+			return NSS_NOTFOUND;
+			}
+
+		ctx->ec_res = res;		
+		ctx->ec_last = ldap_first_entry(ctx->ec_session.ls_conn, ctx->ec_res);
+		}
+	else
+		{
+		if (ctx->ec_state.ls_info.ls_index == -1)
+			{
+			ctx->ec_last = ldap_next_entry(ctx->ec_session.ls_conn, ctx->ec_last);
+			}
+		}
+
+	while (ctx->ec_last != NULL)
+		{
+		stat = parser(ctx->ec_session.ls_conn, ctx->ec_last, &ctx->ec_state, result, buffer, buflen);
+		if (stat == NSS_SUCCESS)
+			{
+			break;
+			}
+		if (ctx->ec_state.ls_info.ls_index == -1)
+			{
+			ctx->ec_last = ldap_next_entry(ctx->ec_session.ls_conn, ctx->ec_last);
+			}
+		}
+
+	if (ctx->ec_last == NULL)
+		{
+		ldap_msgfree(ctx->ec_res);
+		ctx->ec_res = NULL;
+		}
+
+	nss_context_unlock();
+	return stat;
+}
+
+NSS_STATUS _nss_ldap_getbyname(
+	ldap_args_t *args,
+	void *result,
+	char *buffer,
+	size_t buflen,
+	const char *filterprot,
+	const char **attrs,
+	parser_t parser)
+{
+	LDAPMessage *res;
+	LDAPMessage *e;
+	NSS_STATUS stat;
+	ldap_state_t state;
+
+	res = _nss_ldap_lookup(&args->la_session, args, filterprot, attrs, 1);
+	if (res == NULL)
+		{
+		do_close(&args->la_session);
+		return NSS_NOTFOUND;
+		}
+
+	/* we pass this along for the benefit of the services parser,
+	 * which uses it to figure out which protocol we really wanted.
+	 * we only pass the second argument along, as that's what we need
+	 * in services.
+	 */
+	state.ls_type = LS_TYPE_KEY;
+	state.ls_info.ls_key = args->la_arg2.la_string;
+
+	for (e = ldap_first_entry(args->la_session.ls_conn, res);
+		e != NULL;
+		e = ldap_next_entry(args->la_session.ls_conn, e))
+		{
+		if ((stat = parser(args->la_session.ls_conn, e, &state, result, buffer, buflen)) == NSS_SUCCESS)
+			{
+			break;
+			}
+		}
+
+	ldap_msgfree(res);
+
+	if (args->la_stayopen == 0)
+		do_close(&args->la_session);
+
+	return stat;
+}
+
+NSS_STATUS _nss_ldap_assign_attrvals(
+	LDAP *ld,				 /* IN */
+	LDAPMessage *e, 		/* IN */
+	const char *attr, 		/* IN */
+	const char *omitvalue, /* IN */
+	char ***valptr,			 /* OUT */
+	char **pbuffer, /* IN/OUT */
+	size_t *pbuflen, /* IN/OUT */
+	size_t *pvalcount /* OUT */)
+{
+	char **vals;
+	char **valiter;
+	int valcount;
+	char **p = NULL;
+
+	register int buflen = *pbuflen;
+	register char *buffer = *pbuffer; 
+
+	if (pvalcount != NULL)
+		{
+		*pvalcount = 0;
+		}
+
+	vals = ldap_get_values(ld, e, (char *)attr);
+	if (vals == NULL)
+		{
+		/* no values are good values. */
+		*valptr = NULL;
+		return NSS_SUCCESS;
+		}
+
+	valcount = ldap_count_values(vals);
+	if (bytesleft(buffer, buflen) < (valcount + 1) * sizeof(char *))
+		{
+		ldap_value_free(vals);
+		return NSS_TRYAGAIN;
+		}
+
+	align(buffer);
+	p = *valptr = (char **)buffer;
+	buffer += (valcount + 1) * sizeof(char *);
+	buflen -= (valcount + 1) * sizeof(char *);
+
+	valiter = vals;
+
+	while (*valiter != NULL)
+		{
+		int vallen;
+		char *elt = NULL;
+
+		if (omitvalue != NULL && strcmp(*valiter, omitvalue) == 0)
+			{
+			valcount--;
+			}
+		else
+			{
+			vallen = strlen(*valiter);
+			if (buflen < (size_t)(vallen + 1))
+				{
+				ldap_value_free(vals);
+				return NSS_TRYAGAIN;
+				}
+
+			/* copy this value into the next block of buffer space */
+			elt = buffer;
+			buffer += vallen + 1;
+			buflen -= vallen + 1;	
+	
+			strncpy(elt, *valiter, vallen);
+			elt[vallen] = '\0';
+			*p = elt; 
+			p++;
+			}
+		valiter++;
+		}
+
+	*p = NULL;
+	*pbuffer = buffer;
+	*pbuflen = buflen;
+
+	if (pvalcount != NULL)
+		{
+		*pvalcount = valcount;
+		}
+
+	ldap_value_free(vals); 
+	return NSS_SUCCESS;
+}
+
+NSS_STATUS _nss_ldap_assign_attrval(
+	LDAP *ld,
+	LDAPMessage *e,
+	const char *attr,
+	char **valptr,
+	char **buffer,
+	size_t *buflen)
+{
+	char **vals;
+	int vallen;
+
+	vals = ldap_get_values(ld, e, (char *)attr);
+	if (vals == NULL)
+		{
+		return NSS_NOTFOUND;
+		}
+
+	vallen = strlen(*vals);
+	if (*buflen < (size_t)(vallen + 1)) 
+		{
+		ldap_value_free(vals);
+		return NSS_TRYAGAIN;
+		}
+
+	*valptr = *buffer;
+
+	strncpy(*valptr, *vals, vallen);
+	(*valptr)[vallen] = '\0';
+
+	*buffer += vallen + 1;
+	*buflen -= vallen + 1;
+
+	ldap_value_free(vals);
+
+	return NSS_SUCCESS;
+}
+
+NSS_STATUS _nss_ldap_assign_passwd(
+	LDAP *ld,
+	LDAPMessage *e,
+	const char *attr,
+	char **valptr,
+	char **buffer,
+	size_t *buflen)
+{
+	char **vals;
+	char **valiter;
+	char *pwd = NULL;
+	int vallen;
+
+	vals = ldap_get_values(ld, e, (char *)attr);
+	if (vals != NULL)
+		{
+		for(valiter = vals;
+			*valiter != NULL;
+			valiter++)
+			{
+			if (strncasecmp(*valiter,
+				_nss_ldap_crypt_prefixes_tab[_nss_ldap_crypt_prefix],
+				_nss_ldap_crypt_prefixes_size_tab[_nss_ldap_crypt_prefix]) == 0)
+					{
+					pwd = *valiter;
+					break;
+					}
+			}
+		}
+
+	if (pwd == NULL)
+		{
+		pwd = "x";
+		}
+	else
+		{
+		pwd += _nss_ldap_crypt_prefixes_size_tab[_nss_ldap_crypt_prefix];
+		}
+
+	vallen = strlen(pwd);
+
+	if (*buflen < (size_t)(vallen + 1))
+		{
+		if (vals != NULL)
+			{
+			ldap_value_free(vals);
+			}
+		return NSS_TRYAGAIN;
+		}
+
+	*valptr = *buffer;
+
+	strncpy(*valptr, pwd, vallen);
+	(*valptr)[vallen] = '\0';
+
+	*buffer += vallen + 1;
+	*buflen -= vallen + 1;
+
+	if (vals != NULL)
+		{
+		ldap_value_free(vals);
+		}
+
+	return NSS_SUCCESS;
+}
+
