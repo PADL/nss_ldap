@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+107	Luke Howard <lukeh@padl.com>
+
+	* fixed argument to _nss_ldap_getent() in ldap-ethers.c
+
 106.2	Luke Howard <lukeh@padl.com>
 
 	* if root, use rootbinddn/rootbindpw in rebind proc
