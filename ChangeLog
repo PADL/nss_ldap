@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+213	Luke Howard <lukeh@padl.com>
+
+	* fix netgroup compilation error when debugging is
+	  enabled
+
 212	Luke Howard <lukeh@padl.com>
 
 	* Solaris netgroup support test release

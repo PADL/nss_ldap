@@ -810,7 +810,7 @@ do_innetgr (ldap_innetgr_args_t *li_args,
   ldap_args_t a;
   ent_context_t *ctx = NULL;
 
-  debug ("==> do_innetgr netgroup=%s", netgroup);
+  debug ("==> do_innetgr netgroup=%s", li_args->lia_netgroup);
 
   /*
    * First, find which netgroup the 3-tuple belongs to.
