@@ -88,7 +88,7 @@ static uid_t __euid = -1;
 
 static void do_close (void);
 static void do_close_no_unbind (void);
-static void do_disable_keepalive (LDAP *ld);
+static void do_disable_keepalive (LDAP * ld);
 static NSS_STATUS do_open (void);
 static NSS_STATUS do_search_s (const char *base, int scope,
 			       const char *filter, const char **attrs,
@@ -269,25 +269,28 @@ do_close_no_unbind (void)
       __session.ls_conn = NULL;
     }
   debug ("<== do_close_no_unbind");
-	return;
+
+  return;
 }
 
 static INLINE void
-do_disable_keepalive (LDAP *ld)
+do_disable_keepalive (LDAP * ld)
 {
-	debug("==> do_disable_keepalive");
-      int sd = -1;
+  int sd = -1;
+
+  debug ("==> do_disable_keepalive");
 #ifdef LDAP_VERSION3_API
-      if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
+  if (ldap_get_option (ld, LDAP_OPT_DESC, &sd) == 0)
 #else
-      if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
+  if ((sd = ld->ld_sb.sb_sd) > 0)
 #endif /* LDAP_VERSION3_API */
-	{
-		int on = 0;
-		(void) setsockopt(sd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof on);	
-	}
-	debug("<== do_disable_keepalive");
-	return;
+    {
+      int off = 0;
+      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, &off, sizeof off);
+    }
+  debug ("<== do_disable_keepalive");
+
+  return;
 }
 
 /*
@@ -329,6 +332,13 @@ do_open (void)
   else if (__session.ls_conn != NULL && __session.ls_config != NULL)
     {
       /*
+       * Commented out for the moment -- see whether disabling
+       * SO_KEEPALIVE fixes this. Just return.
+       */
+      debug ("<== do_open");
+      return NSS_SUCCESS;
+#ifdef notdef
+      /*
        * Otherwise we can hand back this process' global
        * LDAP session.
        *
@@ -338,6 +348,9 @@ do_open (void)
        * dying on a SIGPIPE. I'm not entirely convinced that we
        * ought not to block SIGPIPE elsewhere, but at least this is
        * the entry point where connections get woken up.
+       *
+       * Also: this may not be necessary now that keepaliave is
+       * disabled (the signal code that is). 
        *
        * The W2K client library sends an ICMP echo to the server to
        * check it is up. Perhaps we shold do the same.
@@ -385,6 +398,7 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_SUCCESS;
 	}
+#endif /* notdef */
     }
 
   __pid = pid;
@@ -525,6 +539,11 @@ do_open (void)
 	  return NSS_UNAVAIL;
 	}
     }
+
+  /*
+   * Disable SO_KEEPALIVE on the session's socket.
+   */
+  do_disable_keepalive (__session.ls_conn);
 
   __session.ls_config = cfg;
 
