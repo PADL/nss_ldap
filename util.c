@@ -495,9 +495,9 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
       if (fgets (b, sizeof (b), fp) != NULL)
 	{
 	  int len;
-	   
-	  len = strlen(b);
-	  if (len > 0)
+
+	  len = strlen (b);
+	  if (*b != '\0')
 	    len--;
 
 	  strncpy (p, b, len);

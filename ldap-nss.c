@@ -644,12 +644,11 @@ _nss_ldap_lookup (const ldap_args_t * args,
 
   debug ("==> _nss_ldap_lookup");
 
-  stat = do_open ();
-  if (stat != NSS_SUCCESS)
+  if (do_open () != NSS_SUCCESS)
     {
       __session.ls_conn = NULL;
       debug ("<== _nss_ldap_lookup");
-      return stat;
+      return NSS_UNAVAIL;
     }
 
   if (args != NULL)
