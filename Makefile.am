@@ -32,10 +32,10 @@ NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
 DEFS = @DEFS@
 
 if GLIBC
-LIBC_VERS = `ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
+LIBC_VERS = `ls /lib/libc-*.so | tail -n 1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 NSS_LDAP_LIBC_VERSIONED = libnss_ldap-$(LIBC_VERS).so
 
-NSS_VERS = $(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
+NSS_VERS = $(shell ls /lib/libnss_files.so.? | tail -n 1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 NSS_LDAP_NSS_VERSIONED = libnss_ldap.so.$(NSS_VERS)
 endif
 
