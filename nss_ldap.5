@@ -16,7 +16,7 @@ or NIS.)
 Features of the PADL nss_ldap module include support for both the
 RFC 2307 and RFC 2307bis schema, a common implementation across multiple
 platforms, Kerberos and SSL security, configurable schema mapping,
-and configuration file compatability with the
+and configuration file compatibility with the
 .BR pam_ldap (5)
 module.
 .LP
@@ -67,8 +67,7 @@ OpenLDAP, also use a configuration file of the same name.
 nss_ldap
 supports many of the same configuration file options as OpenLDAP,
 but it adds several that are specific to the functionality it provides.
-Unlike OpenLDAP, nss_ldap configuration file keywords are not case
-sensitive. Additionally, it is not guaranteed that
+Additionally, it is not guaranteed that
 .B
 nss_ldap
 will continue to match the configuration file semantics of OpenLDAP.
@@ -362,10 +361,10 @@ is a search filter to be added to the default search filter for a
 specific map, such that the effective filter is the logical
 intersection of the two. The base DN, scope and filter are separated
 with literal question marks (?) as given above; this is for
-compatability with the DUA configuration profile schema and the
+compatibility with the DUA configuration profile schema and the
 .B
 ldapprofile
-tool.
+tool. This option may be specified multiple times.
 .TP
 .B nss_map_attribute <from_attribute> <to_attribute>
 This option may be specified multiple times, and directs
