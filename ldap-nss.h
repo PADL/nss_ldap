@@ -77,16 +77,6 @@
 
 #endif
 
-/* We dont need this
-#ifdef AF_INET6
-# ifndef TESTING
-#  ifndef INET6
-#  define INET6
-#  endif
-# endif
-#endif
-*/
-
 #ifdef GNU_NSS
 # if !defined(TESTING) && !defined(DL_NSS)
 #  if (__GLIBC__ == 2) && (__GLIBC_MINOR__ > 0)

@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.60	Luke Howard <lukeh@padl.com>
+
+	* fixed missing close brace
+
 2.59	Luke Howard <lukeh@padl.com>
 
 	* pw_comment field defaults to pw_gecos (Solaris only)

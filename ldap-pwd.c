@@ -146,13 +146,16 @@ static NSS_STATUS _nss_ldap_parse_pw(
 		(void) _nss_ldap_assign_emptystring(&pw->pw_shell, &buffer, &buflen);
 
 #ifdef SUN_NSS
-	/* Is this field in POSIX, or even used? */
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_COMMENT, &pw->pw_comment, &buffer, &buflen);
 	if (stat != NSS_SUCCESS)
+		{
+		/* 
+		 * Fix for recall #233
+		 */
 		pw->pw_comment = pw->pw_gecos;
-
+		}
 	(void) _nss_ldap_assign_emptystring(&pw->pw_age, &buffer, &buflen);
-#endif
+#endif /* SUN_NSS */
 
 	return NSS_SUCCESS;
 }
@@ -270,5 +273,5 @@ nss_backend_t *_nss_ldap_passwd_constr(const char *db_name,
 
 #ifdef IRS_NSS
 #include "irs-pwd.c"
-#endif
+#endif /* IRS_NSS */
 

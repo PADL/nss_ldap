@@ -82,7 +82,7 @@ LIB=$(MODULE).so.1
 # uncomment this SUNFLAGS if you're building under Solaris 2.6
 SUNFLAGS=-DSUN_NSS -D_REENTRANT -DHAVE_SNPRINTF -D__EXTENSIONS__
 INCDIRS=-I/usr/local/include -I../libldap
-LIBDIRS=-L/usr/ucblib -L/usr/local/lib
+LIBDIRS=-L/usr/local/lib
 
 # uncomment this LIBS if you're linking against my PIC LDAP libs
 #LIBS=-lldap_pic -llber_pic -lnsl
