@@ -16,7 +16,7 @@ $Header$
 	  "start_tls" for Start TLS
 	* hopefully fixed Berkeley DB include 
 	  mess in util.c
-	* fixed leaks in util.c
+	* fixed leaks in util.c, dnsconfig.c
  
 126	Luke Howard <lukeh@padl.com>
 
