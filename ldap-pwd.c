@@ -151,7 +151,7 @@ _nss_ldap_parse_pw (LDAP * ld,
     _nss_ldap_assign_attrval (ld, e, AT (homeDirectory), &pw->pw_dir, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
-    return stat;
+    (void) _nss_ldap_assign_emptystring (&pw->pw_dir, &buffer, &buflen);
 
   stat =
     _nss_ldap_assign_attrval (ld, e, AT (loginShell), &pw->pw_shell, &buffer,
