@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+87	Luke Howard <lukeh@padl.com>
+
+	* fixed looking up DN-membered groups by member. Thanks
+	  to Jeff Mandel for spotting this hard to find bug.
+
 86	Luke Howard <lukeh@padl.com>
 
 	* member for NDS vs uniqueMember (needs further

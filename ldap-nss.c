@@ -571,15 +571,15 @@ _nss_ldap_lookup (
 #endif
 	case LA_TYPE_STRING_AND_STRING:
 #ifdef HAVE_SNPRINTF
-	  snprintf (filter, sizeof (filter), filterprot, args->la_arg1.la_string, args->la_arg2);
+	  snprintf (filter, sizeof (filter), filterprot, args->la_arg1.la_string, args->la_arg2.la_string);
 #else
-	  sprintf (filter, filterprot, args->la_arg1.la_string, args->la_arg2);
+	  sprintf (filter, filterprot, args->la_arg1.la_string, args->la_arg2.la_string);
 #endif
 	case LA_TYPE_NUMBER_AND_STRING:
 #ifdef HAVE_SNPRINTF
-	  snprintf (filter, sizeof (filter), filterprot, args->la_arg1.la_number, args->la_arg2);
+	  snprintf (filter, sizeof (filter), filterprot, args->la_arg1.la_number, args->la_arg2.la_string);
 #else
-	  sprintf (filter, filterprot, args->la_arg1.la_number, args->la_arg2);
+	  sprintf (filter, filterprot, args->la_arg1.la_number, args->la_arg2.la_string);
 #endif
 	}
     }
