@@ -3,3 +3,9 @@
 # $Name$
 ProjectName: nss_ldap
 ProjectVersion: 2.50
+#
+# run this before building in RC. @@@PLATFORM@@@ is
+# substituted for our platform names (linux, solaris etc)
+PreBuild: ln -s Makefile.@@@PLATFORM@@@.mozilla Makefile
+# binaries to ship (although we don't do that at the moment)
+Shippables: nss_ldap.so.1
