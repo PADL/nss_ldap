@@ -4,6 +4,9 @@ $Header$
 140	Luke Howard <lukeh@padl.com>
 
 	* fix configure bug for DISABLE_SO_KEEPALIVE
+	* fix alignment bug in util.c; this was causing
+	  Solaris to crash whenever per-map search
+	  descriptors were specified in ldap.conf
 
 139	Luke Howard <lukeh@padl.com>
 

@@ -116,15 +116,15 @@ debug (char *fmt, ...)
 # define INLINE
 #endif /* __GNUC__ */
 
-#define align(ptr, blen)              do { \
+#define align(ptr, blen, TYPE)              do { \
 					char *qtr = ptr; \
-					ptr += alignof(char *) - 1; \
-					ptr -= ((ptr - (char *)NULL) % alignof(char *)); \
+					ptr += alignof(TYPE) - 1; \
+					ptr -= ((ptr - (char *)NULL) % alignof(TYPE)); \
 					blen -= (ptr - qtr); \
 				} while (0)
 
 /* worst case */
-#define bytesleft(ptr, blen)    (blen - alignof(char *) + 1)
+#define bytesleft(ptr, blen, TYPE)    (blen - alignof(TYPE) + 1)
 
 /* selectors for different maps */
 enum ldap_map_selector

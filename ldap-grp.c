@@ -56,10 +56,11 @@ static char rcsId[] =
 #endif
 
 #ifdef HAVE_NSS_H
-static ent_context_t * gr_context = NULL;
+static ent_context_t *gr_context = NULL;
 #endif
 
-static char *_nss_ldap_no_members[] = { NULL };
+static char *_nss_ldap_no_members[] =
+{NULL};
 
 static NSS_STATUS
 _nss_ldap_parse_gr (LDAP * ld,
@@ -112,12 +113,12 @@ _nss_ldap_parse_gr (LDAP * ld,
 
       dn_mems_c = ldap_count_values (vals);
 
-      if (bytesleft (buffer, buflen) < (dn_mems_c + 1) * sizeof (char *))
+      if (bytesleft (buffer, buflen, char *) < (dn_mems_c + 1) * sizeof (char *))
 	{
 	  ldap_value_free (vals);
 	  return NSS_TRYAGAIN;
 	}
-      align (buffer, buflen);
+      align (buffer, buflen, char *);
       mem_p = dn_mems = (char **) buffer;
       buffer += (dn_mems_c + 1) * sizeof (char *);
       buflen -= (dn_mems_c + 1) * sizeof (char *);
@@ -162,10 +163,10 @@ _nss_ldap_parse_gr (LDAP * ld,
 	gr->gr_mem = dn_mems;
       else
 	{
-	  if (bytesleft (buffer, buflen) <
-	      (dn_mems_c + uid_mems_c + 1) * sizeof (char *))
+	  if (bytesleft (buffer, buflen, char *) <
+	        (dn_mems_c + uid_mems_c + 1) * sizeof (char *))
 	      return NSS_TRYAGAIN;
-	  align (buffer, buflen);
+	  align (buffer, buflen, char *);
 	  gr->gr_mem = (char **) buffer;
 	  buffer += (dn_mems_c + uid_mems_c + 1) * sizeof (char *);
 	  buflen -= (dn_mems_c + uid_mems_c + 1) * sizeof (char *);
@@ -190,8 +191,8 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 		      long int *size, gid_t * groups, long int limit,
 		      int *errnop)
 #elif defined(_AIX)
-char *
-_nss_ldap_getgrset (char *user)
+     char *
+       _nss_ldap_getgrset (char *user)
 #endif
 {
 #ifdef HAVE_NSSWITCH_H
@@ -251,7 +252,7 @@ _nss_ldap_getgrset (char *user)
 #else
   stat =
     _nss_ldap_search_s (&a, filt_getgroupsbymember, LM_GROUP,
-		      LDAP_NO_LIMIT, &res);
+			LDAP_NO_LIMIT, &res);
 #endif /* RFC2307BIS */
 
   if (stat != NSS_SUCCESS)
@@ -269,20 +270,20 @@ _nss_ldap_getgrset (char *user)
       char **values = _nss_ldap_get_values (e, AT (cn));
       if (values != NULL)
 	{
-          size_t l = strlen (values[0]);
+	  size_t l = strlen (values[0]);
 
-          grplist = realloc (grplist, listlen + l + 2);
-          if (grplist == NULL)
+	  grplist = realloc (grplist, listlen + l + 2);
+	  if (grplist == NULL)
 	    {
 	      ldap_value_free (values);
 	      ldap_msgfree (res);
 	      return NULL;
 	    }
-          memcpy (grplist + listlen, values[0], l);
-          grplist[listlen + l] = ',';
-          listlen += l + 1;
+	  memcpy (grplist + listlen, values[0], l);
+	  grplist[listlen + l] = ',';
+	  listlen += l + 1;
 
-          ldap_value_free (values);
+	  ldap_value_free (values);
 	}
 #else
       char **values = _nss_ldap_get_values (e, AT (gidNumber));

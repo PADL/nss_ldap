@@ -72,7 +72,7 @@ static char rcsId[] =
 #endif
 
 #ifdef HAVE_NSS_H
-static ent_context_t * hosts_context = NULL;
+static ent_context_t *hosts_context = NULL;
 #endif
 
 static NSS_STATUS
@@ -121,22 +121,22 @@ _nss_ldap_parse_host (LDAP * ld,
 #ifdef INET6
   if (_res.options & RES_USE_INET6)
     {
-      if (bytesleft (buffer, buflen) <
-	  (size_t) ((addresscount + 1) * IN6ADDRSZ))
-	return NSS_TRYAGAIN;
+      if (bytesleft (buffer, buflen, char *) <
+	    (size_t) ((addresscount + 1) * IN6ADDRSZ))
+	  return NSS_TRYAGAIN;
     }
   else
     {
-      if (bytesleft (buffer, buflen) <
-	  (size_t) ((addresscount + 1) * INADDRSZ))
-	return NSS_TRYAGAIN;
+      if (bytesleft (buffer, buflen, char *) <
+	    (size_t) ((addresscount + 1) * INADDRSZ))
+	  return NSS_TRYAGAIN;
     }
 #else
-  if (bytesleft (buffer, buflen) < (size_t) ((addresscount + 1) * INADDRSZ))
-    return NSS_TRYAGAIN;
+  if (bytesleft (buffer, buflen, char *) < (size_t) ((addresscount + 1) * INADDRSZ))
+      return NSS_TRYAGAIN;
 #endif
 
-  align (buffer, buflen);
+  align (buffer, buflen, char *);
   host_addresses = (char **) buffer;
   host->h_addr_list = host_addresses;
   host_addresses[addresscount] = NULL;
@@ -380,7 +380,7 @@ _nss_ldap_gethostent_r (nss_backend_t * hosts_context, void *args)
 {
   NSS_STATUS status = _nss_ldap_getent (
 					 &((nss_ldap_backend_t *)
-					  hosts_context)->state,
+					   hosts_context)->state,
 					 NSS_ARGS (args)->buf.result,
 					 NSS_ARGS (args)->buf.buffer,
 					 NSS_ARGS (args)->buf.buflen,

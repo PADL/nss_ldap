@@ -68,16 +68,16 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
  * right API!
  */
 #ifdef RFC2307BIS
-# ifdef HAVE_DB_185_H
-#  include <db_185.h>
-#  define DN2UID_CACHE
-# elif defined(HAVE_DB1_DB_H)
-#  include <db1/db.h>
-#  define DN2UID_CACHE
-# elif defined(HAVE_DB_H)
-#  include <db.h>
-#  define DN2UID_CACHE
-# endif	/* HAVE_DB1_DB_H */
+#ifdef HAVE_DB_185_H
+#include <db_185.h>
+#define DN2UID_CACHE
+#elif defined(HAVE_DB1_DB_H)
+#include <db1/db.h>
+#define DN2UID_CACHE
+#elif defined(HAVE_DB_H)
+#include <db.h>
+#define DN2UID_CACHE
+#endif /* HAVE_DB1_DB_H */
 
 #ifdef DN2UID_CACHE
 #include <fcntl.h>
@@ -85,20 +85,20 @@ static DB *__cache = NULL;
 
 #ifdef HAVE_THREAD_H
 static mutex_t __cache_mutex = DEFAULTMUTEX;
-# define cache_lock()      mutex_lock(&__cache_mutex)
-# define cache_unlock()    mutex_unlock(&__cache_mutex)
+#define cache_lock()      mutex_lock(&__cache_mutex)
+#define cache_unlock()    mutex_unlock(&__cache_mutex)
 #elif defined(HAVE_PTHREAD_H)
 static pthread_mutex_t __cache_mutex = PTHREAD_MUTEX_INITIALIZER;
-# if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-#  define cache_lock()     __libc_lock_lock(__cache_mutex)
-#  define cache_unlock()   __libc_lock_unlock(__cache_mutex)
-# else
-#  define cache_lock()     pthread_mutex_lock(&__cache_mutex)
-#  define cache_unlock()   pthread_mutex_unlock(&__cache_mutex)
-# endif	/* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
+#if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+#define cache_lock()     __libc_lock_lock(__cache_mutex)
+#define cache_unlock()   __libc_lock_unlock(__cache_mutex)
 #else
-# define cache_lock()
-# define cache_unlock()
+#define cache_lock()     pthread_mutex_lock(&__cache_mutex)
+#define cache_unlock()   pthread_mutex_unlock(&__cache_mutex)
+#endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
+#else
+#define cache_lock()
+#define cache_unlock()
 #endif /* HAVE_THREAD_H */
 
 static NSS_STATUS
@@ -182,7 +182,8 @@ _nss_ldap_dn2uid (LDAP * ld,
       if (status != NSS_SUCCESS)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[] = { "uid", NULL };
+	  const char *attrs[] =
+	  {"uid", NULL};
 	  LDAPMessage *res;
 
 	  status = NSS_NOTFOUND;
@@ -385,7 +386,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 			   ldap_service_search_descriptor_t ** result,
 			   char **buffer, size_t * buflen)
 {
-  ldap_service_search_descriptor_t **t, *p;
+  ldap_service_search_descriptor_t **t;
   char *base;
   char *filter, *s;
   int scope;
@@ -453,31 +454,19 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 	}
     }
 
-  /* now we need MORE space for a descriptor, do we have it? */
-  if (*buflen - alignof (ldap_service_search_descriptor_t) + 1 <
-      sizeof (ldap_service_search_descriptor_t))
+  if (bytesleft (*buffer, *buflen, ldap_service_search_descriptor_t) < sizeof (ldap_service_search_descriptor_t))
     return NSS_UNAVAIL;
 
-  /* align so we can put a descriptor in here */
-  p = *t = (ldap_service_search_descriptor_t *) *buffer;
-  *t += alignof (ldap_service_search_descriptor_t) - 1;
-  *t -=
-    ((*t - (ldap_service_search_descriptor_t *) NULL) %
-     alignof (ldap_service_search_descriptor_t));
+  align (*buffer, *buflen, ldap_service_search_descriptor_t);
 
-  len = (*t - p);
-
-  *buffer += len;
-  *buflen -= len;
-
-  *t = (ldap_service_search_descriptor_t *) *buffer;
-
-  *buffer += sizeof (ldap_service_search_descriptor_t);
-  *buflen -= sizeof (ldap_service_search_descriptor_t);
+  *t = (ldap_service_search_descriptor_t *) * buffer;
 
   (*t)->lsd_base = base;
   (*t)->lsd_scope = scope;
   (*t)->lsd_filter = filter;
+
+  *buffer += sizeof (ldap_service_search_descriptor_t);
+  *buflen -= sizeof (ldap_service_search_descriptor_t);
 
   return NSS_SUCCESS;
 }
