@@ -4,6 +4,7 @@ $Header$
 185	Luke Howard <lukeh@padl.com>
 
 	* updated copyrights
+	* fix for bug #82: set close on exec (Debian bug 136953)
 
 184	Luke Howard <lukeh@padl.com>
 
