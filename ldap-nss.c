@@ -469,6 +469,13 @@ do_open (void)
 #endif /* SUN_NSS */
 	    }
 	}
+#else
+      /* XXX Permanently ignore SIGPIPE. */
+#ifdef SUN_NSS
+      (void) sigset (SIGPIPE, SIG_IGN);
+#else
+      (void) signal (SIGPIPE, SIG_IGN);
+#endif /* SUN_NSS */
 #endif /* SSL */
       /*
        * If the connection is still there (ie. do_close() wasn't
