@@ -15,7 +15,7 @@ $Id$
 	  correctly
 	* fix for BUG#161: remove redundant lock in
 	  _nss_ldap_innetgr()
-	* fix for BUG#155: make _nss_ldap_result() private
+	* fix for BUG#165: make _nss_ldap_result() private
 	* fix for BUG#166: chase all nested netgroups in
 	  innetgr()
 	* fix deadlock if getXXXent() called without first
