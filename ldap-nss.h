@@ -394,6 +394,15 @@ typedef struct sockaddr SOCKADDR_STORAGE;
 #define ss_family sa_family
 #endif /* __GLIBC__ */
 
+enum ldap_session_state
+{
+  LS_UNINITIALIZED = -1,
+  LS_INITIALIZED,
+  LS_CONNECTED_TO_DSA
+};
+
+typedef enum ldap_session_state ldap_session_state_t;
+
 /*
  * convenient wrapper around pointer into global config list, and a
  * connection to an LDAP server.
@@ -406,6 +415,8 @@ struct ldap_session
   ldap_config_t *ls_config;
   /* timestamp of last activity */
   time_t ls_timestamp;
+  /* has session been connected? */
+  ldap_session_state_t ls_state;
   /* keep track of the LDAP sockets */
   SOCKADDR_STORAGE ls_sockname;
   SOCKADDR_STORAGE ls_peername;

@@ -136,7 +136,7 @@ static void (*__sigpipe_handler) (int) = SIG_DFL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session = { NULL, NULL, 0 };
+static ldap_session_t __session = { NULL, NULL, 0, LS_UNINITIALIZED };
 
 #if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
 static pthread_once_t __once = PTHREAD_ONCE_INIT;
@@ -205,7 +205,7 @@ static int do_ssl_options (ldap_config_t * cfg);
 /*
  * Read configuration file and initialize schema
  */
-static NSS_STATUS do_init (ldap_config_t **, uid_t *pEuid);
+static NSS_STATUS do_init (void);
 
 /*
  * Open the global session
@@ -613,14 +613,16 @@ do_close (void)
 {
   debug ("==> do_close");
 
-  if (__session.ls_conn != NULL)
+  if (__session.ls_state != LS_UNINITIALIZED)
     {
 #ifdef DEBUG
       syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
 	      __session.ls_conn);
 #endif /* DEBUG */
+      assert (__session.ls_conn != NULL);
       ldap_unbind (__session.ls_conn);
       __session.ls_conn = NULL;
+      __session.ls_state = LS_UNINITIALIZED;
     }
 
   debug ("<== do_close");
@@ -649,8 +651,9 @@ do_close_no_unbind (void)
 
   debug ("==> do_close_no_unbind");
 
-  if (__session.ls_conn == NULL)
+  if (__session.ls_state == LS_UNINITIALIZED)
     {
+      assert (__session.ls_conn == NULL);
       debug ("<== do_close_no_unbind (connection was not open)");
       return;
     }
@@ -862,6 +865,7 @@ do_close_no_unbind (void)
 #endif /* HAVE_LDAP_LD_FREE */
 
   __session.ls_conn = NULL;
+  __session.ls_state = LS_UNINITIALIZED;
 
   debug ("<== do_close_no_unbind");
 
@@ -873,10 +877,10 @@ do_close_no_unbind (void)
  */
 NSS_STATUS _nss_ldap_init (void)
 {
-  return do_init (NULL, NULL);
+  return do_init ();
 }
 
-static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
+static NSS_STATUS do_init (void)
 {
   ldap_config_t *cfg;
 #ifndef HAVE_PTHREAD_ATFORK
@@ -888,16 +892,6 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
   uid_t euid;
 
   debug ("==> do_init");
-
-  if (pConfig != NULL)
-    {
-      *pConfig = NULL;
-    }
-
-  if (pEuid != NULL)
-    {
-      *pEuid = UID_NOBODY;
-    }
 
 #ifndef HAVE_PTHREAD_ATFORK
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
@@ -935,19 +929,20 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
 #ifdef DEBUG
 #ifdef HAVE_PTHREAD_ATFORK
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
-	  __session.ls_conn, __euid, euid);
+	  "nss_ldap: __session.ls_state=%d, __session.ls_conn=%p, __euid=%i, euid=%i",
+	  __session.ls_state, __session.ls_conn, __euid, euid);
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   syslog (LOG_DEBUG,
-	  "nss_ldap: libpthreads=%s, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  "nss_ldap: libpthreads=%s, __session.ls_state=%d, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  (__pthread_once == NULL ? "FALSE" : "TRUE"),
+	  __session.ls_state,
 	  __session.ls_conn,
 	  (__pthread_once == NULL ? __pid : -1),
 	  (__pthread_once == NULL ? pid : -1), __euid, euid);
 #else
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
-	  __session.ls_conn, __pid, pid, __euid, euid);
+	  "nss_ldap: __session.ls_state=%d, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  __session.ls_state, __session.ls_conn, __pid, pid, __euid, euid);
 #endif
 #endif /* DEBUG */
 
@@ -970,7 +965,7 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
        */
       do_close ();
     }
-  else if (__session.ls_conn != NULL && __session.ls_config != NULL)
+  else if (__session.ls_state == LS_CONNECTED_TO_DSA)
     {
       /*
        * Patch from Steven Barrus <sbarrus@eng.utah.edu> to
@@ -984,6 +979,10 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
        * Patch from Steven Barrus <sbarrus@eng.utah.edu> to
        * close the session after an idle timeout. 
        */
+
+      assert (__session.ls_conn != NULL);
+      assert (__session.ls_config != NULL);
+
       if (__session.ls_config->ldc_idle_timelimit)
 	{
 	  time (&current_time);
@@ -999,19 +998,20 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
        * If the connection is still there (ie. do_close() wasn't
        * called) then we can return the cached connection.
        */
-      if (__session.ls_conn != NULL)
+      if (__session.ls_state == LS_CONNECTED_TO_DSA)
 	{
-	  debug ("<== do_init");
+	  debug ("<== do_init (cached session)");
 	  return NSS_SUCCESS;
 	}
     }
 
   __session.ls_conn = NULL;
+  __session.ls_state = LS_UNINITIALIZED;
 
 #ifdef HAVE_PTHREAD_ATFORK
   if (pthread_once (&__once, do_atfork_setup) != 0)
     {
-      debug ("<== do_init");
+      debug ("<== do_init (pthread_once failed)");
       return NSS_UNAVAIL;
     }
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
@@ -1049,7 +1049,7 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
 
       if (stat != NSS_SUCCESS)
 	{
-	  debug ("<== do_init");
+	  debug ("<== do_init (failed to read config)");
 	  return NSS_UNAVAIL;
 	}
     }
@@ -1139,20 +1139,14 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
 
   if (__session.ls_conn == NULL)
     {
-      debug ("<== do_init");
+      debug ("<== do_init (failed to initialize session)");
       return NSS_UNAVAIL;
     }
 
-  if (pConfig != NULL)
-    {
-      *pConfig = cfg;
-    }
-  if (pEuid != NULL)
-    {
-      *pEuid = euid;
-    }
+  __session.ls_config = cfg;
+  __session.ls_state = LS_INITIALIZED;
 
-  debug ("<== do_init");
+  debug ("<== do_init (initialized session)");
 
   return NSS_SUCCESS;
 }
@@ -1168,11 +1162,10 @@ static NSS_STATUS do_init (ldap_config_t **pConfig, uid_t *pEuid)
 static NSS_STATUS
 do_open (void)
 {
-  ldap_config_t *cfg = NULL;
+  ldap_config_t *cfg;
   int usesasl;
   char *bindarg;
   NSS_STATUS stat;
-  uid_t euid;
 #ifdef LDAP_OPT_NETWORK_TIMEOUT
   struct timeval tv;
 #endif
@@ -1180,20 +1173,30 @@ do_open (void)
   debug ("==> do_open");
 
   /* Moved the head part of do_open() into do_init() */
-  stat = do_init (&cfg, &euid);
+  stat = do_init ();
   if (stat != NSS_SUCCESS)
     {
-      debug ("<== do_open");
+      debug ("<== do_open (session initialization failed)");
       return stat;
     }
 
   assert (__session.ls_conn != NULL);
+  assert (__session.ls_config != NULL);
+  assert (__session.ls_state != LS_UNINITIALIZED);
+
+  if (__session.ls_state == LS_CONNECTED_TO_DSA)
+    {
+      debug ("<== do_open (cached session)");
+      return NSS_SUCCESS;
+    }
+
+  cfg = __session.ls_config;
 
 #ifdef LDAP_OPT_THREAD_FN_PTRS
   if (_nss_ldap_ltf_thread_init (__session.ls_conn) != NSS_SUCCESS)
     {
       do_close ();
-      debug ("<== do_open");
+      debug ("<== do_open (thread initialization failed)");
       return NSS_UNAVAIL;
     }
 #endif /* LDAP_OPT_THREAD_FN_PTRS */
@@ -1270,25 +1273,21 @@ do_open (void)
       /* set up SSL context */
       if (do_ssl_options (cfg) != LDAP_SUCCESS)
 	{
-	  debug ("Setting of SSL options failed");
 	  do_close ();
-	  debug ("<== do_open");
+	  debug ("<== do_open (SSL setup failed)");
 	  return NSS_UNAVAIL;
 	}
 
-      debug ("==> start_tls");
       if (ldap_start_tls_s (__session.ls_conn, NULL, NULL) == LDAP_SUCCESS)
 	{
-	  debug ("TLS startup succeeded");
+	  debug (":== do_open (TLS startup succeeded)");
 	}
       else
 	{
-	  debug ("TLS startup failed");
 	  do_close ();
-	  debug ("<== do_open");
+	  debug ("<== do_open (TLS startup failed)");
 	  return NSS_UNAVAIL;
 	}
-      debug ("<== start_tls");
     }
   else
 #endif /* HAVE_LDAP_START_TLS_S */
@@ -1304,7 +1303,7 @@ do_open (void)
 	  LDAP_SUCCESS)
 	{
 	  do_close ();
-	  debug ("<== do_open");
+	  debug ("<== do_open (TLS setup failed)");
 	  return NSS_UNAVAIL;
 	}
 
@@ -1312,7 +1311,7 @@ do_open (void)
       if (do_ssl_options (cfg) != LDAP_SUCCESS)
 	{
 	  do_close ();
-	  debug ("<== do_open");
+	  debug ("<== do_open (SSL setup failed)");
 	  return NSS_UNAVAIL;
 	}
 
@@ -1320,7 +1319,7 @@ do_open (void)
       if (ldapssl_install_routines (__session.ls_conn) != LDAP_SUCCESS)
 	{
 	  do_close ();
-	  debug ("<== do_open");
+	  debug ("<== do_open (SSL setup failed)");
 	  return NSS_UNAVAIL;
 	}
 /* not in Solaris 9? */
@@ -1331,7 +1330,7 @@ do_open (void)
 	  LDAP_SUCCESS)
 	{
 	  do_close ();
-	  debug ("<== do_open");
+	  debug ("<== do_open (SSL setup failed)");
 	  return NSS_UNAVAIL;
 	}
 #endif
@@ -1343,7 +1342,7 @@ do_open (void)
    * Thanks to Doug Nazar <nazard@dragoninc.on.ca> for this
    * patch.
    */
-  if (euid == 0 && cfg->ldc_rootbinddn != NULL)
+  if (__euid == 0 && cfg->ldc_rootbinddn != NULL)
     {
 #if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
       usesasl = cfg->ldc_rootusesasl;
@@ -1359,7 +1358,7 @@ do_open (void)
 	   bindarg, usesasl) != LDAP_SUCCESS)
 	{
 	  do_close ();
-	  debug ("<== do_open");
+	  debug ("<== do_open (bind failed)");
 	  return NSS_UNAVAIL;
 	}
     }
@@ -1378,18 +1377,18 @@ do_open (void)
 	   cfg->ldc_bindpw, usesasl) != LDAP_SUCCESS)
 	{
 	  do_close ();
-	  debug ("<== do_open");
+	  debug ("<== do_open (bind failed)");
 	  return NSS_UNAVAIL;
 	}
     }
 
   do_set_sockopts ();
 
-  __session.ls_config = cfg;
-
   time (&__session.ls_timestamp);
 
-  debug ("<== do_open");
+  __session.ls_state = LS_CONNECTED_TO_DSA;
+
+  debug ("<== do_open (session connected to DSA)");
 
   return NSS_SUCCESS;
 }
@@ -2516,10 +2515,12 @@ _nss_ldap_read (const char *dn, const char **attributes, LDAPMessage ** res)
 char **
 _nss_ldap_get_values (LDAPMessage * e, const char *attr)
 {
-  if (__session.ls_conn == NULL)
+  if (__session.ls_state != LS_CONNECTED_TO_DSA)
     {
       return NULL;
     }
+  assert (__session.ls_conn != NULL);
+
   return ldap_get_values (__session.ls_conn, e, (char *) attr);
 }
 
@@ -2530,10 +2531,12 @@ _nss_ldap_get_values (LDAPMessage * e, const char *attr)
 char *
 _nss_ldap_get_dn (LDAPMessage * e)
 {
-  if (__session.ls_conn == NULL)
+  if (__session.ls_state != LS_CONNECTED_TO_DSA)
     {
       return NULL;
     }
+  assert (__session.ls_conn != NULL);
+
   return ldap_get_dn (__session.ls_conn, e);
 }
 
@@ -2544,10 +2547,12 @@ _nss_ldap_get_dn (LDAPMessage * e)
 LDAPMessage *
 _nss_ldap_first_entry (LDAPMessage * res)
 {
-  if (__session.ls_conn == NULL)
+  if (__session.ls_state != LS_CONNECTED_TO_DSA)
     {
       return NULL;
     }
+  assert (__session.ls_conn != NULL);
+
   return ldap_first_entry (__session.ls_conn, res);
 }
 
@@ -2558,30 +2563,36 @@ _nss_ldap_first_entry (LDAPMessage * res)
 LDAPMessage *
 _nss_ldap_next_entry (LDAPMessage * res)
 {
-  if (__session.ls_conn == NULL)
+  if (__session.ls_state != LS_CONNECTED_TO_DSA)
     {
       return NULL;
     }
+  assert (__session.ls_conn != NULL);
+
   return ldap_next_entry (__session.ls_conn, res);
 }
 
 char *
 _nss_ldap_first_attribute (LDAPMessage *entry, BerElement **berptr)
 {
-  if (__session.ls_conn == NULL)
+  if (__session.ls_state != LS_CONNECTED_TO_DSA)
     {
       return NULL;
     }
+  assert (__session.ls_conn != NULL);
+
   return ldap_first_attribute (__session.ls_conn, entry, berptr);
 }
 
 char *
 _nss_ldap_next_attribute (LDAPMessage *entry, BerElement *ber)
 {
-  if (__session.ls_conn == NULL)
+  if (__session.ls_state != LS_CONNECTED_TO_DSA)
     {
       return NULL;
     }
+  assert (__session.ls_conn != NULL);
+
   return ldap_next_attribute (__session.ls_conn, entry, ber);
 }
 
@@ -2605,7 +2616,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
 
   debug ("==> _nss_ldap_search_s");
 
-  stat = do_init (NULL, NULL);
+  stat = do_init ();
   if (stat != NSS_SUCCESS)
     {
       debug ("<== _nss_ldap_search_s");
@@ -2694,7 +2705,7 @@ _nss_ldap_search (const ldap_args_t * args,
 
   *msgid = -1;
 
-  stat = do_init (NULL, NULL);
+  stat = do_init ();
   if (stat != NSS_SUCCESS)
     {
       debug ("<== _nss_ldap_search");
