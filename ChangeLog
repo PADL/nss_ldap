@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+85	Luke Howard <lukeh@padl.com>
+
+	* check non-NULLity of userdn before freeing
+	* use AT(uid) for groupsbymember filter
+
 84	Luke Howard <lukeh@padl.com>
 
 	* implemented _nss_ldap_initgroups()

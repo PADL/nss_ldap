@@ -159,17 +159,17 @@ _nss_ldap_parse_gr (
   return NSS_SUCCESS;
 }
 
+#if defined(SUN_NSS) || defined(GNU_NSS)
 #ifdef SUN_NSS
 static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 #elif defined(GNU_NSS)
   NSS_STATUS
 _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
-		long int *size, gid_t * groups, long int limit, int *errnop)
+		      long int *size, gid_t * groups, long int limit,
+		      int *errnop)
 #endif
-#if defined(SUN_NSS) || defined(GNU_NSS)
 {
-  ldap_args_t a;
 #ifdef SUN_NSS
   struct nss_groupsbymem *gbm = (struct nss_groupsbymem *) args;
 #endif /* SUN_NSS */
@@ -179,6 +179,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
   {NULL};
   const char *filter;
 #endif /* RFC2307BIS */
+  ldap_args_t a;
   LDAPMessage *res, *e;
 
   LA_INIT (a);
@@ -191,7 +192,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 
 #ifdef RFC2307BIS
   /* lookup the user's DN. XXX: import this filter from somewhere else */
-  res = _nss_ldap_lookup (&a, "(uid=%s)", attrs, 1);
+  res = _nss_ldap_lookup (&a, "(" AT (uid) "=%s)", attrs, 1);
   if (res != NULL)
     {
       e = _nss_ldap_first_entry (res);
@@ -212,11 +213,14 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
       filter = filt_getgroupsbymember;
     }
   res = _nss_ldap_lookup (&a, filter, gr_attributes, LDAP_NO_LIMIT);
+  if (userdn != NULL)
+    {
 #ifdef LDAP_VERSION3_API
-  ldap_memfree (userdn);
+      ldap_memfree (userdn);
 #else
-  free (userdn);
+      free (userdn);
 #endif /* LDAP_VERSION3_API */
+    }
 #else
   res = _nss_ldap_lookup (&a, filt_getgroupsbymember, gr_attributes, LDAP_NO_LIMIT);
 #endif /* RFC2307BIS */
@@ -244,7 +248,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 	    }
 
 #ifdef SUN_NSS
-	  /* weed out duplicates */
+	  /* weed out duplicates: is this really our responsibility? */
 	  for (i = 0; i < gbm->numgids; i++)
 	    {
 	      if (gbm->gid_array[i] == (gid_t) gid)
@@ -273,7 +277,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 		    }
 		  *size *= 2;
 		}
-              /* weed out duplicates */
+	      /* weed out duplicates: is this really our responsibility? */
 	      for (i = 0; i < *size; i++)
 		{
 		  if (groups[i] == gid)
