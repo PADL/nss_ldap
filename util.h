@@ -90,6 +90,16 @@ NSS_STATUS _nss_ldap_readconfig (
 				  size_t buflen
 );
 
+/*
+ * Escape '*' in a string for use as a filter
+ */
+
+int _nss_ldap_escape_string (
+			      const char *str,
+			      char *buf,
+			      size_t buflen
+);
+
 #define MAP_H_ERRNO(nss_status, herr)   do { \
 	if ((unsigned int) (nss_status - _NSS_LOOKUP_OFFSET) > _nss_ldap_herrno2nssstat_tab_count) \
 		herr = NO_RECOVERY; \

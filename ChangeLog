@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+111	Luke Howard <lukeh@padl.com>
+
+	* patch from Ben Collins to escape '*' in filters
+
 110	Luke Howrad <lukeh@padl.com>
 
 	* patch from Phlilip Liu for async binds

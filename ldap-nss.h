@@ -45,15 +45,15 @@
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
 #ifdef SUN_NSS
-#define debug(str) syslog(LOG_DEBUG, "nss_ldap: thread %u - %s", thr_self(), str);
+#define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, thr_self() , ## args);
 #else
-#define debug(str) syslog(LOG_DEBUG, "nss_ldap: thread %u - %s", pthread_self(), str)
+#define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, pthread_self() , ## args)
 #endif /* SUN_NSS */
 #else
-#define debug(str) fprintf(stderr, "%s\n", str)
+#define debug(fmt, args...) fprintf(stderr, "nss_ldap: " fmt "\n" , ## args)
 #endif /* DEBUG_SYSLOG */
 #else
-#define debug(str)
+#define debug(fmt, args...)
 #endif /* DEBUG */
 
 #ifdef __GNUC__
