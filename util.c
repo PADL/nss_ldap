@@ -201,8 +201,11 @@ _nss_ldap_dn2uid (LDAP * ld,
       if (status != NSS_SUCCESS)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[] = { AT (uid), NULL };
+	  const char *attrs[2];
 	  LDAPMessage *res;
+
+	  attrs[0] = AT (uid);
+	  attrs[1] = NULL;
 
 	  status = NSS_NOTFOUND;
 

@@ -1,4 +1,4 @@
-# Makefile.in generated automatically by automake 1.4a from Makefile.am
+# Makefile.in generated automatically by automake 1.4 from Makefile.am
 
 # Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 # This Makefile.in is free software; the Free Software Foundation
@@ -9,6 +9,7 @@
 # but WITHOUT ANY WARRANTY, to the extent permitted by law; without
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
+
 
 SHELL = @SHELL@
 
@@ -45,10 +46,9 @@ AUTOMAKE = @AUTOMAKE@
 AUTOHEADER = @AUTOHEADER@
 
 INSTALL = @INSTALL@
-INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@ $(AM_INSTALL_PROGRAM_FLAGS)
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
-INSTALL_STRIP_FLAG =
 transform = @program_transform_name@
 
 NORMAL_INSTALL = :
@@ -63,50 +63,36 @@ host_alias = @host_alias@
 host_triplet = @host@
 target_alias = @target_alias@
 target_triplet = @target@
-AMTAR = @AMTAR@
-AMTARFLAGS = @AMTARFLAGS@
-AWK = @AWK@
 CC = @CC@
 CPP = @CPP@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
-install_sh = @install_sh@
-nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
-
-@AIX_TRUE@authmod = @AIX_TRUE@NSS_LDAP
+@AIX_TRUE@authmod = NSS_LDAP
 @AIX_FALSE@authmod = 
 
 noinst_PROGRAMS = nss_ldap.so $(authmod)
 INST_UID = root
 INST_GID = root
 
-EXTRA_DIST = COPYING.LIB CVSVersionInfo.txt ChangeLog README \
-	     README.IRS ldap.conf nss_ldap.spec nsswitch.ldap aix_authmeth.c
+EXTRA_DIST = COPYING.LIB CVSVersionInfo.txt ChangeLog README 	     README.IRS ldap.conf nss_ldap.spec nsswitch.ldap aix_authmeth.c
 
 
-nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-rpc.c \
-	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
-	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
-	ldap-bp.c util.c globals.c ltf.c snprintf.c resolve.c \
-	dnsconfig.c irs-nss.c
+nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-rpc.c 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c 	ldap-bp.c util.c globals.c ltf.c snprintf.c resolve.c 	dnsconfig.c irs-nss.c
 
 
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 
-NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c \
-	util.c globals.c ltf.c snprintf.c resolve.c dnsconfig.c \
-	irs-nss.c aix_authmeth.c
+NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c 	util.c globals.c ltf.c snprintf.c resolve.c dnsconfig.c 	irs-nss.c aix_authmeth.c
 
 
 NSS_LDAP_LDFLAGS = -enss_ldap_initialize -lsys -lcsys -lc
 
-@GLIBC_TRUE@LIBC_VERS = @GLIBC_TRUE@`ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
-@GLIBC_TRUE@NSS_LDAP_LIBC_VERSIONED = @GLIBC_TRUE@libnss_ldap-$(LIBC_VERS).so
+@GLIBC_TRUE@LIBC_VERS = `ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
+@GLIBC_TRUE@NSS_LDAP_LIBC_VERSIONED = libnss_ldap-$(LIBC_VERS).so
 
-@GLIBC_TRUE@NSS_VERS = @GLIBC_TRUE@$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
-@GLIBC_TRUE@NSS_LDAP_NSS_VERSIONED = @GLIBC_TRUE@libnss_ldap.so.$(NSS_VERS)
-subdir = .
+@GLIBC_TRUE@NSS_VERS = $(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
+@GLIBC_TRUE@NSS_LDAP_NSS_VERSIONED = libnss_ldap.so.$(NSS_VERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_HEADER = config.h
@@ -118,40 +104,38 @@ DEFS = @DEFS@ -I. -I$(srcdir) -I.
 CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
-am_NSS_LDAP_OBJECTS =  ldap-nss.o ldap-grp.o ldap-pwd.o ldap-schema.o \
-util.o globals.o ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o \
-aix_authmeth.o
-NSS_LDAP_OBJECTS =  $(am_NSS_LDAP_OBJECTS)
-NSS_LDAP_LDADD = $(LDADD)
-NSS_LDAP_DEPENDENCIES = 
-am_nss_ldap_so_OBJECTS =  ldap-nss.o ldap-pwd.o ldap-grp.o ldap-rpc.o \
+nss_ldap_so_OBJECTS =  ldap-nss.o ldap-pwd.o ldap-grp.o ldap-rpc.o \
 ldap-hosts.o ldap-network.o ldap-proto.o ldap-spwd.o ldap-alias.o \
 ldap-service.o ldap-schema.o ldap-ethers.o ldap-bp.o util.o globals.o \
 ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o
-nss_ldap_so_OBJECTS =  $(am_nss_ldap_so_OBJECTS)
 nss_ldap_so_LDADD = $(LDADD)
 nss_ldap_so_DEPENDENCIES = 
-COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+NSS_LDAP_OBJECTS =  ldap-nss.o ldap-grp.o ldap-pwd.o ldap-schema.o \
+util.o globals.o ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o \
+aix_authmeth.o
+NSS_LDAP_LDADD = $(LDADD)
+NSS_LDAP_DEPENDENCIES = 
 CFLAGS = @CFLAGS@
+COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-DIST_SOURCES =  $(NSS_LDAP_SOURCES) $(nss_ldap_so_SOURCES)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(LDFLAGS) -o $@
 DIST_COMMON =  README ./stamp-h.in AUTHORS COPYING ChangeLog INSTALL \
 Makefile.am Makefile.in NEWS acconfig.h aclocal.m4 config.guess \
 config.h.in config.sub configure configure.in install-sh missing \
 mkinstalldirs
 
 
-DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
+TAR = tar
 GZIP_ENV = --best
-SOURCES = $(NSS_LDAP_SOURCES) $(nss_ldap_so_SOURCES)
-OBJECTS = $(am_NSS_LDAP_OBJECTS) $(am_nss_ldap_so_OBJECTS)
+SOURCES = $(nss_ldap_so_SOURCES) $(NSS_LDAP_SOURCES)
+OBJECTS = $(nss_ldap_so_OBJECTS) $(NSS_LDAP_OBJECTS)
 
 all: all-redirect
 .SUFFIXES:
-.SUFFIXES: .c .o
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/$(altdir)configure.in $(ACLOCAL_M4) 
+.SUFFIXES: .S .c .o .s
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --gnu --include-deps Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
@@ -163,8 +147,8 @@ $(ACLOCAL_M4):  configure.in
 
 config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
-$(srcdir)/configure: $(srcdir)/$(altdir)configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
-	cd $(srcdir) && $(AUTOCONF) 
+$(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+	cd $(srcdir) && $(AUTOCONF)
 
 config.h: stamp-h
 	@if test ! -f $@; then \
@@ -172,22 +156,18 @@ config.h: stamp-h
 		$(MAKE) stamp-h; \
 	else :; fi
 stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
-	@rm -f stamp-h stamp-hT
-	@echo timestamp > stamp-hT 2> /dev/null
 	cd $(top_builddir) \
 	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
 	     $(SHELL) ./config.status
-	@mv stamp-hT stamp-h
-$(srcdir)/config.h.in: $(srcdir)/./stamp-h.in
+	@echo timestamp > stamp-h 2> /dev/null
+$(srcdir)/config.h.in: $(srcdir)/stamp-h.in
 	@if test ! -f $@; then \
-		rm -f $(srcdir)/./stamp-h.in; \
-		$(MAKE) $(srcdir)/./stamp-h.in; \
+		rm -f $(srcdir)/stamp-h.in; \
+		$(MAKE) $(srcdir)/stamp-h.in; \
 	else :; fi
-$(srcdir)/./stamp-h.in: $(top_srcdir)/$(altdir)configure.in $(ACLOCAL_M4) acconfig.h
-	@rm -f $(srcdir)/./stamp-h.in $(srcdir)/./stamp-h.inT
-	@echo timestamp > $(srcdir)/./stamp-h.inT 2> /dev/null
-	cd $(top_srcdir) && $(AUTOHEADER) 
-	@mv $(srcdir)/./stamp-h.inT $(srcdir)/./stamp-h.in
+$(srcdir)/stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) acconfig.h
+	cd $(top_srcdir) && $(AUTOHEADER)
+	@echo timestamp > $(srcdir)/stamp-h.in 2> /dev/null
 
 mostlyclean-hdr:
 
@@ -207,6 +187,15 @@ distclean-noinstPROGRAMS:
 
 maintainer-clean-noinstPROGRAMS:
 
+.c.o:
+	$(COMPILE) -c $<
+
+.s.o:
+	$(COMPILE) -c $<
+
+.S.o:
+	$(COMPILE) -c $<
+
 mostlyclean-compile:
 	-rm -f *.o core *.core
 
@@ -217,39 +206,33 @@ distclean-compile:
 
 maintainer-clean-compile:
 
+nss_ldap.so: $(nss_ldap_so_OBJECTS) $(nss_ldap_so_DEPENDENCIES)
+	@rm -f nss_ldap.so
+	$(LINK) $(nss_ldap_so_LDFLAGS) $(nss_ldap_so_OBJECTS) $(nss_ldap_so_LDADD) $(LIBS)
+
 NSS_LDAP: $(NSS_LDAP_OBJECTS) $(NSS_LDAP_DEPENDENCIES)
 	@rm -f NSS_LDAP
 	$(LINK) $(NSS_LDAP_LDFLAGS) $(NSS_LDAP_OBJECTS) $(NSS_LDAP_LDADD) $(LIBS)
 
-nss_ldap.so: $(nss_ldap_so_OBJECTS) $(nss_ldap_so_DEPENDENCIES)
-	@rm -f nss_ldap.so
-	$(LINK) $(nss_ldap_so_LDFLAGS) $(nss_ldap_so_OBJECTS) $(nss_ldap_so_LDADD) $(LIBS)
-.c.o:
-	$(COMPILE) -c $<
-
 tags: TAGS
 
-ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
+ID: $(HEADERS) $(SOURCES) $(LISP)
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
-	mkid -f$$here/ID $$unique $(LISP)
+	here=`pwd` && cd $(srcdir) \
+	  && mkid -f$$here/ID $$unique $(LISP)
 
-TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
-		$(TAGS_FILES) $(LISP)
+TAGS:  $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) $(LISP)
 	tags=; \
 	here=`pwd`; \
-	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
-	unique=`for i in $$list; do \
-	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
-	  done | \
-	  $(AWK) '    { files[$$0] = 1; } \
+	list='$(SOURCES) $(HEADERS)'; \
+	unique=`for i in $$list; do echo $$i; done | \
+	  awk '    { files[$$0] = 1; } \
 	       END { for (i in files) print i; }'`; \
 	test -z "$(ETAGS_ARGS)config.h.in$$unique$(LISP)$$tags" \
-	  || etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP)
+	  || (cd $(srcdir) && etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP) -o $$here/TAGS)
 
 mostlyclean-tags:
 
@@ -268,11 +251,11 @@ top_distdir = $(distdir)
 # tarfile.
 distcheck: dist
 	-rm -rf $(distdir)
-	GZIP=$(GZIP_ENV) gunzip -c $(distdir).tar.gz | $(AMTAR) xf -
+	GZIP=$(GZIP_ENV) $(TAR) zxf $(distdir).tar.gz
 	mkdir $(distdir)/=build
 	mkdir $(distdir)/=inst
-	dc_install_base=`cd $(distdir)/=inst && pwd` \
-	  && cd $(distdir)/=build \
+	dc_install_base=`cd $(distdir)/=inst && pwd`; \
+	cd $(distdir)/=build \
 	  && ../configure --srcdir=.. --prefix=$$dc_install_base \
 	  && $(MAKE) $(AM_MAKEFLAGS) \
 	  && $(MAKE) $(AM_MAKEFLAGS) dvi \
@@ -287,26 +270,21 @@ distcheck: dist
 	echo "$$banner"; \
 	echo "$$dashes"
 dist: distdir
-	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
-	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
-	  ! -type d ! -perm -444 -exec $(SHELL) $(install_sh) -c -m a+r {} {} \; \
-	|| chmod -R a+r $(distdir)
-	$(AMTAR) ch$(AMTARFLAGS)f - $(distdir) | GZIP=$(GZIP_ENV) gzip -c > $(distdir).tar.gz
+	-chmod -R a+r $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
 	-rm -rf $(distdir)
 dist-all: distdir
-	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
-	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
-	  ! -type d ! -perm -444 -exec $(SHELL) $(install_sh) -c -m a+r {} {} \; \
-	|| chmod -R a+r $(distdir)
-	$(AMTAR) ch$(AMTARFLAGS)f - $(distdir) | GZIP=$(GZIP_ENV) gzip -c > $(distdir).tar.gz
+	-chmod -R a+r $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
 	-rm -rf $(distdir)
 distdir: $(DISTFILES)
 	-rm -rf $(distdir)
 	mkdir $(distdir)
+	-chmod 777 $(distdir)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
-	    cp -pr $$d/$$file $(distdir)/$$file; \
+	    cp -pr $$/$$file $(distdir)/$$file; \
 	  else \
 	    test -f $(distdir)/$$file \
 	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
@@ -338,7 +316,7 @@ uninstall: uninstall-am
 all-am: Makefile $(PROGRAMS) config.h
 all-redirect: all-am
 install-strip:
-	$(MAKE) $(AM_MAKEFLAGS) INSTALL_STRIP_FLAG=-s install
+	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
 
 
@@ -387,8 +365,8 @@ clean-tags maintainer-clean-tags distdir info-am info dvi-am dvi check \
 check-am installcheck-am installcheck all-recursive-am \
 install-exec-local install-exec-am install-exec install-data-local \
 install-data-am install-data install-am install uninstall-local \
-uninstall-am uninstall all-redirect all-am all install-strip \
-installdirs mostlyclean-generic distclean-generic clean-generic \
+uninstall-am uninstall all-redirect all-am all installdirs \
+mostlyclean-generic distclean-generic clean-generic \
 maintainer-clean-generic clean mostlyclean distclean maintainer-clean
 
 
