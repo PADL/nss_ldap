@@ -776,11 +776,13 @@ do_innetgr (const char *netgroup,
   char triple[LDAP_FILT_MAXSIZ];
   LDAPMessage *e, *res;
   char **values;
-  char escaped_machine[MAXHOSTNAMELEN];
-  char escaped_user[LOGNAME_MAX];
-  char escaped_domain[MAXHOSTNAMELEN];
+  char escaped_machine[3 * MAXHOSTNAMELEN];
+  char escaped_user[3 * LOGNAME_MAX];
+  char escaped_domain[3 * MAXHOSTNAMELEN];
 
   *status = NSS_NETGR_NO;
+
+  debug ("==> do_innetgr netgroup=%s", netgroup);
 
   /*
    * First, find which netgroup the 3-tuple belongs to.
@@ -790,8 +792,10 @@ do_innetgr (const char *netgroup,
       stat =
 	_nss_ldap_escape_string (machine, escaped_machine,
 				 sizeof (escaped_machine));
-      if (stat != NSS_SUCCESS)
+      if (stat != NSS_SUCCESS) {
+	debug ("<== do_innetgr: failed to escape machine %s", machine);
 	return stat;
+      }
     }
   else
     {
@@ -803,8 +807,10 @@ do_innetgr (const char *netgroup,
     {
       stat =
 	_nss_ldap_escape_string (user, escaped_user, sizeof (escaped_user));
-      if (stat != NSS_SUCCESS)
+      if (stat != NSS_SUCCESS) {
+	debug ("<== do_innetgr: failed to escape user %s", user);
 	return stat;
+      }
     }
   else
     {
@@ -817,8 +823,10 @@ do_innetgr (const char *netgroup,
       stat =
 	_nss_ldap_escape_string (domain, escaped_domain,
 				 sizeof (escaped_domain));
-      if (stat != NSS_SUCCESS)
+      if (stat != NSS_SUCCESS) {
+	debug ("<== do_innetgr: failed to escape domain %s", domain);
 	return stat;
+      }
     }
   else
     {
@@ -829,7 +837,7 @@ do_innetgr (const char *netgroup,
   snprintf (triple, sizeof (triple), "(%s,%s,%s)",
 	    escaped_machine, escaped_user, escaped_domain);
 
-  debug ("==> do_innetgr %s %s", netgroup, triple);
+  debug (":== do_innetgr triple=%s", triple);
 
   LA_INIT (a);
   LA_TYPE (a) = LA_TYPE_STRING_UNESCAPED;
@@ -899,6 +907,12 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
    * component matching to be done efficiently.
    */
 
+  debug ("==> _nss_ldap_innetgr MACHINE.argc=%d USER.argc=%d DOMAIN.argc=%d groups.argc=%d",
+	args->arg[NSS_NETGR_MACHINE].argc,
+	args->arg[NSS_NETGR_USER].argc,
+	args->arg[NSS_NETGR_DOMAIN].argc,
+	args->groups.argc);
+
   /* Presume these are harmonized -- this is a bit odd API */
   assert (args->arg[NSS_NETGR_MACHINE].argc == 0 ||
 	  args->arg[NSS_NETGR_MACHINE].argc == args->groups.argc);
@@ -933,6 +947,8 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 	}
     }
   _nss_ldap_leave ();
+
+  debug ("<== _nss_ldap_innetgr");
 
   return stat;
 }
