@@ -5,6 +5,7 @@ $Id$
 
 	* allow empty lines in /etc/ldap.conf
 	* do loop detection in nested groups
+	* fixes for building with IRS on FreeBSD 4.10
 
 222	Luke Howard <lukeh@padl.com>
 
