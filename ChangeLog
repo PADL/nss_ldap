@@ -4,6 +4,10 @@ $Header$
 198	 Luke Howard <lukeh@padl.com>
 
 	* fix potential buffer overflow in dnsconfig.c
+	  (could be triggered if no flat file configuration
+	  for nss_ldap and a large number of DNS SRV records)
+	* do not malloc() configuration structure; use 
+	  buffer
 
 197	Luke Howard <lukeh@padl.com>
 
