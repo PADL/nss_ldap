@@ -91,7 +91,7 @@ Solaris 7 users get patch cluster 106541-12)
 - check return value of ldap_simple_bind() (FIXED in nss_ldap-122)
 
 [BUG#63]
-- integrate support for runtime schema mapping
+- integrate support for runtime schema mapping (FIXED in nss_ldap-168)
 
 To: linux-ldap@rage.net
 Cc: ldap-nis@padl.com
