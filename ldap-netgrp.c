@@ -807,15 +807,14 @@ do_innetgr_nested (ldap_innetgr_args_t *li_args, const char *nested)
 }
 
 static NSS_STATUS
-do_innetgr (const char *netgroup,
+do_innetgr (ldap_innetgr_args_t *li_args,
 	    const char *machine,
 	    const char *user,
-	    const char *domain, enum nss_netgr_status *status)
+	    const char *domain)
 {
   NSS_STATUS stat;
   ldap_args_t a;
   ent_context_t *ctx = NULL;
-  ldap_innetgr_args_t li_args;
 
   debug ("==> do_innetgr netgroup=%s", netgroup);
 
@@ -834,23 +833,14 @@ do_innetgr (const char *netgroup,
       return NSS_UNAVAIL;
     }
 
-  li_args.lia_netgroup = netgroup;
-  li_args.lia_netgr_status = NSS_NETGR_NO;
-  li_args.lia_depth = 0;
-  li_args.lia_erange = 0;
-
-  stat = _nss_ldap_getent_ex (&a, &ctx, (void *)&li_args, NULL, 0,
-			      &li_args.lia_erange, NULL, LM_NETGROUP,
+  stat = _nss_ldap_getent_ex (&a, &ctx, (void *)li_args, NULL, 0,
+			      &li_args->lia_erange, NULL, LM_NETGROUP,
 			      do_parse_innetgr);
 
   _nss_ldap_ent_context_release (ctx);
 
-  *status = li_args.lia_netgr_status;
-
-  if (li_args.lia_erange != 0)
-    errno = ERANGE;
-
-  debug ("<== do_innetgr status=%d netgr_status=%d", stat, *status);
+  debug ("<== do_innetgr status=%d netgr_status=%d",
+	 stat, li_args->lia_netgr_status);
 
   return stat;
 }
@@ -885,8 +875,8 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
   for (i = 0; i < args->groups.argc; i++)
     {
       NSS_STATUS parseStat;
+      ldap_innetgr_args_t li_args;
 
-      const char *netgroup = args->groups.argv[i];
       const char *machine = (args->arg[NSS_NETGR_MACHINE].argc != 0) ?
 	args->arg[NSS_NETGR_MACHINE].argv[i] : NULL;
       const char *user = (args->arg[NSS_NETGR_USER].argc != 0) ?
@@ -894,12 +884,21 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
       const char *domain = (args->arg[NSS_NETGR_DOMAIN].argc != 0) ?
 	args->arg[NSS_NETGR_DOMAIN].argv[i] : NULL;
 
-      parseStat = do_innetgr (netgroup, machine, user, domain, &args->status);
+      li_args.lia_netgroup = args->groups.argv[i];
+      li_args.lia_netgr_status = NSS_NETGR_NO;
+      li_args.lia_depth = 0;
+      li_args.lia_erange = 0;
+
+      parseStat = do_innetgr (&li_args, machine, user, domain);
       if (parseStat != NSS_SUCCESS && parseStat != NSS_NOTFOUND)
 	{
 	  /* fatal error */
+	  if (li_args.lia_erange != 0)
+	    errno = ERANGE;
 	  break;
 	}
+
+      args->status = li_args.lia_netgr_status;
 
       if (args->status == NSS_NETGR_FOUND)
 	{
