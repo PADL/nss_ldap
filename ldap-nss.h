@@ -179,6 +179,14 @@ enum ldap_ssl_options
 
 typedef enum ldap_ssl_options ldap_ssl_options_t;
 
+enum ldap_reconnect_policy
+{
+  LP_RECONNECT_HARD,
+  LP_RECONNECT_SOFT
+};
+
+typedef enum ldap_reconnect_policy ldap_reconnect_policy_t;
+
 /*
  * POSIX profile information (not used yet)
  * see draft-joslin-config-schema-00.txt
@@ -262,7 +270,8 @@ struct ldap_config
   char *ldc_tls_key;
   /* idle timeout */
   time_t ldc_idle_timelimit;
-  /* next configuration. loops back onto itself for last entry */
+  /* reconnect policy */
+  ldap_reconnect_policy_t ldc_reconnect_pol;
 
 #ifdef AT_OC_MAP
   /*
@@ -283,6 +292,7 @@ struct ldap_config
    */
   const char **ldc_attrtab[LM_NONE];
 
+  /* next configuration. loops back onto itself for last entry */
   struct ldap_config *ldc_next;
 };
 

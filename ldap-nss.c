@@ -1607,11 +1607,12 @@ do_with_reconnect (const char *base, int scope,
 		   void *private, search_func_t search_func)
 {
   int rc = LDAP_UNAVAILABLE, tries = 0, backoff = 0;
+  int hard = 1;
   NSS_STATUS stat = NSS_TRYAGAIN;
 
   debug ("==> do_with_reconnect");
 
-  while (stat == NSS_TRYAGAIN &&
+  while (stat == NSS_TRYAGAIN && hard &&
 	 tries < LDAP_NSS_MAXCONNTRIES + LDAP_NSS_TRIES)
     {
       if (tries > LDAP_NSS_MAXCONNTRIES)
@@ -1635,6 +1636,14 @@ do_with_reconnect (const char *base, int scope,
       if (do_open () != NSS_SUCCESS)
 	{
 	  __session.ls_conn = NULL;
+	  /*
+	   * If a soft reconnect policy is specified, then do not
+	   * try to reconnect to the LDAP server if it is down.
+	   */
+	  if (__session.ls_config != NULL &&
+	      __session.ls_config->ldc_reconnect_pol == LP_RECONNECT_SOFT)
+	    hard = 0;
+
 	  ++tries;
 	  continue;
 	}
@@ -1688,7 +1697,9 @@ do_with_reconnect (const char *base, int scope,
       break;
     case NSS_TRYAGAIN:
       syslog (LOG_ERR,
-	      "nss_ldap: could not reconnect to LDAP server - %s",
+	      "nss_ldap: could not %s %sconnect to LDAP server - %s",
+	      hard ? "hard" : "soft",
+	      tries ? "re" : "",
 	      ldap_err2string (rc));
       stat = NSS_UNAVAIL;
       break;

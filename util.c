@@ -567,6 +567,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   result->ldc_tls_cert = NULL;
   result->ldc_tls_key = NULL;
   result->ldc_idle_timelimit = 0;
+  result->ldc_reconnect_pol = LP_RECONNECT_HARD;
 #ifdef AT_OC_MAP
   result->ldc_at_map = NULL;
   result->ldc_oc_map = NULL;
@@ -751,6 +752,17 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       else if (!strcasecmp (k, NSS_LDAP_KEY_IDLE_TIMELIMIT))
 	{
 	  result->ldc_idle_timelimit = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_POLICY))
+	{
+	  if (!strcasecmp (v, "hard"))
+	    {
+	      result->ldc_reconnect_pol = LP_RECONNECT_HARD;
+	    }
+	  else if (!strcasecmp (v, "soft"))
+	    {
+	      result->ldc_reconnect_pol = LP_RECONNECT_SOFT;
+	    }
 	}
       else if (!strcasecmp (k, "tls_checkpeer"))
 	{

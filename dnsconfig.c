@@ -181,6 +181,7 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   result->ldc_tls_cert = NULL;
   result->ldc_tls_key = NULL;
   result->ldc_idle_timelimit = 0;
+  result->ldc_reconnect_pol = LP_RECONNECT_HARD;
 #ifdef AT_OC_MAP
   result->ldc_at_map = NULL;
   result->ldc_oc_map = NULL;

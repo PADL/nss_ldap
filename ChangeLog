@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+191	Luke Howard <lukeh@padl.com>
+
+	* added configurable [hard|soft] reconnect, see the
+	  bind_policy parameter in ldap.conf.
+
 190	Luke Howard <lukeh@padl.com>
 
 	* check for Netscape 4 SDK without SSL; don't require

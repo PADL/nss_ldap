@@ -76,6 +76,7 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 #define NSS_LDAP_KEY_RESTART		"restart"
 #define NSS_LDAP_KEY_URI		"uri"
 #define NSS_LDAP_KEY_IDLE_TIMELIMIT     "idle_timelimit"
+#define NSS_LDAP_KEY_RECONNECT_POLICY	"bind_policy"
 
 /*
  * support separate naming contexts for each map 
