@@ -42,10 +42,18 @@ extern const char **_nss_ldap_attrtab[];
  */
 #define AT_objectClass            "objectClass"
 #define AT_cn                     "cn"
+#ifdef MSSFU_SCHEMA
+#define AT_uid                    "msSFUName"
+#else
 #define AT_uid                    "uid"
+#endif /* MSSFU_SCHEMA */
 #define AT_description            "description"
 #define AT_member                 "member"
+#ifdef MSSFU_SCHEMA
+#define AT_uniqueMember           "member"
+#else
 #define AT_uniqueMember           "uniqueMember"
+#endif /* MSSFU_SCHEMA */
 #define AT_l                      "l"
 #define AT_manager                "manager"
 
@@ -66,12 +74,21 @@ extern const char **_nss_ldap_attrtab[];
  *   MUST ( cn $ uid $ uidNumber $ gidNumber $ homeDirectory )
  *   MAY ( userPassword $ loginShell $ gecos $ description ) )
  */
+#ifdef MSSFU_SCHEMA
+#define OC_posixAccount           "User"
+#define AT_userPassword           "msSFUPassword"
+#else
 #define OC_posixAccount           "posixAccount"
 #define AT_userPassword           "userPassword"
+#endif /* MSSFU_SCHEMA */
 #define AT_authPassword           "authPassword"
 #define AT_uidNumber              "uidNumber"
 #define AT_gidNumber              "gidNumber"
+#ifdef MSSFU_SCHEMA
+#define AT_homeDirectory          "msSFUHomeDirectory"
+#else
 #define AT_homeDirectory          "homeDirectory"
+#endif /* MSSFU_SCHEMA */
 #define AT_loginShell             "loginShell"
 #define AT_gecos                  "gecos"
 
@@ -98,9 +115,17 @@ extern const char **_nss_ldap_attrtab[];
  *   MUST ( cn $ gidNumber )
  *   MAY ( userPassword $ uidMember $ description ) )
  */
+#ifdef MSSFU_SCHEMA
+#define OC_posixGroup             "Group"
+#else
 #define OC_posixGroup             "posixGroup"
+#endif /* MSSFU_SCHEMA */
 #define AT_gidNumber              "gidNumber"
+#ifdef MSSFU_SCHEMA
+#define AT_memberUid              "posixMember"
+#else
 #define AT_memberUid              "memberUid"
+#endif /* MSSFU_SCHEMA */
 
 /*
  * ( nisSchema.2.3 NAME 'ipService' SUP top STRUCTURAL

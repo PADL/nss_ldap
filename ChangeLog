@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+151	Luke Howard <lukeh@padl.com>
+
+	* patch from Andrew Rechenberg for Active
+	  Directory schema support
+
 150	Luke Howard <lukeh@padl.com>
 
 	* patch from Anselm Kruis for URI support
