@@ -404,6 +404,9 @@ do_retry:
 		case LDAP_TIMELIMIT_EXCEEDED:
 			break;
 		case LDAP_SERVER_DOWN:
+		case LDAP_TIMEOUT:
+		case LDAP_UNAVAILABLE:
+		case LDAP_BUSY:
 			do_close();
 			if (retry || do_open() != NSS_SUCCESS)
 				{
@@ -493,6 +496,10 @@ do_retry:
 		case LDAP_TIMELIMIT_EXCEEDED:
 			break;
 		case LDAP_SERVER_DOWN:
+		case LDAP_TIMEOUT:
+		case LDAP_UNAVAILABLE:
+		case LDAP_BUSY:
+			do_close();
 			do_close();
 			if (retry || do_open() != NSS_SUCCESS)
 				{
