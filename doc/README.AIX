@@ -48,7 +48,7 @@ logs. That's ugly, but harmless.
 Now, the interesting part: users and groups. Have I said that IBM did it The
 Other Way(tm)? Ok, add the following to /usr/lib/security/methods.cfg:
 
-NSSLDAP:
+LDAP:
 	program = /usr/lib/security/NSS_LDAP
 
 After that, edit /etc/security/user. Change the "SYSTEM" attribute of the
@@ -56,7 +56,7 @@ After that, edit /etc/security/user. Change the "SYSTEM" attribute of the
 
 default:
 	[... lots of attributes...]
-	SYSTEM = "compat OR NSSLDAP"
+	SYSTEM = "compat OR LDAP"
 
 After that you should be able to use getpwnam() and friends to get the
 information from the LDAP server.
