@@ -5,7 +5,7 @@
 #undef GETHOSTBYNAME_R_ARGS
 
 /* define to set RFC2307BIS support */
-#define RFC2307BIS
+#undef RFC2307BIS
 
 /* define to disable keepalive */
 #undef DISABLE_SO_KEEPALIVE
