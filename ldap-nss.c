@@ -1150,6 +1150,9 @@ do_open (void)
       if (do_ssl_options (cfg) != LDAP_SUCCESS)
 	{
 	  debug ("Setting of SSL options failed");
+	  do_close ();
+	  debug ("<== do_open");
+	  return NSS_UNAVAIL;
 	}
 
       debug ("==> start_tls");
@@ -1185,7 +1188,12 @@ do_open (void)
 	}
 
       /* set up SSL context */
-      (void) do_ssl_options (cfg);
+      if (do_ssl_options (cfg) != LDAP_SUCCESS)
+	{
+	  do_close ();
+	  debug ("<== do_open");
+	  return NSS_UNAVAIL;
+	}
 
 #elif defined(HAVE_LDAPSSL_CLIENT_INIT)
       if (ldapssl_install_routines (__session.ls_conn) != LDAP_SUCCESS)

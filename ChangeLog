@@ -7,6 +7,7 @@ $Header$
 	  buffer space in dn2uid_cache_get()
 	* support automake 1.5 and friends
 	* out of box build on AIX 4.3.3
+	* fixed BUG#104: do_ssl_options() return code ignored
 
 195	Luke Howard <lukeh@padl.com>
 
