@@ -114,7 +114,7 @@ if test -z "$found_ldap_lib" -a \( $with_ldap_lib = auto -o $with_ldap_lib = umi
   AC_CHECK_LIB(ldap, main, [LIBS="-lldap $LIBS" found_ldap_lib=yes],,$LIBS)
 fi
 if test -z "$found_ldap_lib" -a \( $with_ldap_lib = auto -o $with_ldap_lib = netscape5 \); then
-AC_CHECK_LIB(ldap50, main, LIBS="-lldap50 -llber50 -lssldap50 -lssl3 -lnss3 -lnspr4 -lprldap50 -lplc4 -lplds4 $LIBS" found_ldap_lib=yes need_pthread=true,, -lpthread)
+AC_CHECK_LIB(ldap50, main, LIBS="-lldap50 -lssldap50 -llber50 -lssl3 -lnss3 -lnspr4 -lprldap50 -lplc4 -lplds4 $LIBS" found_ldap_lib=yes need_pthread=true,, -lpthread)
 fi
 if test -z "$found_ldap_lib" -a \( $with_ldap_lib = auto -o $with_ldap_lib = netscape4 \); then
   AC_CHECK_LIB(ldapssl41, main, LIBS="-lldapssl41 -lplc3 -lplds3 -lnspr3 $LIBS" found_ldap_lib=yes need_pthread=true,, -lpthread)
