@@ -733,7 +733,7 @@ do_innetgr_nested (const char *netgroup,
     }
   else
     {
-      stat = do_innetgr_nested (netgroup, nested, status);
+      stat = do_innetgr_nested (netgroup, values[0], status);
     }
 
   ldap_value_free (values);
