@@ -177,10 +177,8 @@ typedef struct ldap_service_search_descriptor
  */
 struct ldap_config
   {
-#ifdef HAVE_LDAP_INITIALIZE
     /* URI for a single server */
-    char *ldc_hosturi;
-#endif
+    char *ldc_uri;
     /* space delimited list of servers */
     char *ldc_host;
     /* port, expected to be common to all servers */

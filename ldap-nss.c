@@ -705,11 +705,11 @@ do_open (void)
 #endif /* SSL */
 #ifdef HAVE_LDAP_INITIALIZE
       __session.ls_conn = NULL;
-      if ( cfg->ldc_hosturi != NULL )
+      if ( cfg->ldc_uri != NULL )
         {
           int rc;
           debug ("==> ldap_initialize");
-          rc = ldap_initialize (&__session.ls_conn, cfg->ldc_hosturi);
+          rc = ldap_initialize (&__session.ls_conn, cfg->ldc_uri);
           debug ("<== ldap_initialize");
 
           if ( rc != LDAP_SUCCESS )
