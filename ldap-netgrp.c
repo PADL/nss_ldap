@@ -524,7 +524,7 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
   struct nss_getnetgrent_args *args = (struct nss_getnetgrent_args *) _args;
   nss_ldap_netgr_backend_t *be = (nss_ldap_netgr_backend_t *) _be;
   ent_context_t *ctx;
-  NSS_STATUS parseStat;
+  NSS_STATUS parseStat = NSS_NOTFOUND;
   char *buffer;
   size_t buflen;
 
@@ -586,16 +586,12 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 		{
 		  parseStat = nn_push (&be->namelist, *p);
 		  if (parseStat != NSS_SUCCESS)
-		    {
 		      break;
-		    }
 		}
 	      ldap_value_free (vals);
 
 	      if (parseStat != NSS_SUCCESS)
-		{
 		  break;	/* out of memory */
-		}
 	    }
 	}
       else
