@@ -5,6 +5,8 @@ $Header$
 
 	* notes on IRS in doc/README.IRS
 	* added irs.h for AIX compat
+	* patch from Bob Guo for stripping trailing
+	  spaces in ldap.conf.
 
 172	Luke Howard <lukeh@padl.com>
 
