@@ -5,7 +5,8 @@ $Id$
 
 	* AIX fix from <carlos.celso@embraer.com.br>
 	  Recall #169033
-	* support for nested groups
+	* support for expansion of nested RFC2307bis groups
+	* support for searching using range retrieval
 	* fix memory leak with private contexts
 
 220	Luke Howard <lukeh@padl.com>

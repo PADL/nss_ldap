@@ -101,6 +101,163 @@ ldap_initgroups_args_t;
 static NSS_STATUS
 ng_chase (LDAP * ld, const char *dn, ldap_initgroups_args_t * lia);
 
+/*
+ * Range retrieval logic was reimplemented from example in
+ * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/ldap/ldap/searching_using_range_retrieval.asp
+ */
+
+static NSS_STATUS
+do_parse_range (const char *attributeType,
+		char *attributeDescription,
+		int *start,
+		int *end)
+{
+  NSS_STATUS stat = NSS_NOTFOUND;
+  size_t attributeTypeLength;
+  size_t attributeDescriptionLength;
+  char *p;
+#ifdef HAVE_STRTOK_R
+  char *st = NULL;
+#endif
+
+  *start = 0;
+  *end = -1;
+
+  if (strcasecmp(attributeType, attributeDescription) == 0)
+    return NSS_SUCCESS;
+
+  attributeDescriptionLength = strlen(attributeDescription);
+  attributeTypeLength = strlen(attributeType);
+
+  if (attributeDescriptionLength < attributeTypeLength)
+    {
+      /* could not be a subtype */
+      return NSS_NOTFOUND;
+    }
+
+#ifndef HAVE_STRTOK_R
+  for (p = strtok(attributeDescription, ";");
+	p != NULL;
+        p = strtok (NULL, ";"))
+#else
+  for (p = strtok_r(attributeDescription, ";", &st);
+	p != NULL;
+        p = strtok_r (NULL, ";", &st))
+#endif /* !HAVE_STRTOK_R */
+    {
+      char *q;
+
+      if (p == attributeDescription)
+	{
+	  if (strcasecmp(p, attributeType) != 0)
+	    return NSS_NOTFOUND;
+	}
+      else if (strncasecmp(p, "range=", sizeof("range=") - 1) == 0)
+        {
+      p += sizeof("range=") - 1;
+
+      q = strchr(p, '-');
+      if (q == NULL)
+	return NSS_NOTFOUND;
+
+      *q++ = '\0';
+
+      *start = strtoul (p, (char **)NULL, 10);
+      if (strcmp(q, "*") == 0)
+	*end = -1;
+      else
+	*end = strtoul (q, (char **)NULL, 10);
+
+        stat = NSS_SUCCESS;
+        break;
+       }
+    }
+
+  return stat;
+}
+
+static NSS_STATUS
+do_get_range_values (LDAP *ld,
+		     LDAPMessage *e,
+		     const char *attributeType,
+		     int *start,
+		     int *end,
+		     char ***pGroupMembers)
+{
+  NSS_STATUS stat = NSS_NOTFOUND;
+  BerElement *ber = NULL;
+  char *attribute;
+
+  *pGroupMembers = NULL;
+
+  for (attribute = ldap_first_attribute(ld, e, &ber);
+       attribute != NULL;
+       attribute = ldap_next_attribute(ld, e, ber))
+    {
+      stat = do_parse_range(attributeType, attribute, start, end);
+      if (stat == NSS_SUCCESS)
+	{
+	  *pGroupMembers = ldap_get_values(ld, e, attribute);
+	  if (*pGroupMembers == NULL)
+	    {
+	      stat = NSS_NOTFOUND;
+	    }
+	  else if ((*pGroupMembers)[0] == NULL)
+	    {
+	      ldap_value_free (*pGroupMembers);
+	      *pGroupMembers = NULL;
+	      stat = NSS_NOTFOUND;
+	    }
+	}
+      if (stat == NSS_SUCCESS)
+	break;
+    }
+
+  if (ber != NULL)
+    ber_free(ber, 0);
+
+  return stat;
+}
+
+/*
+ * Format an attribute with description as:
+ *	attribute;range=START-END
+ */
+static NSS_STATUS
+do_construct_range_attribute (const char *attribute,
+			      int start,
+			      int end,
+			      char **buffer,
+			      size_t *buflen,
+			      const char **pAttributeWithRange)
+{
+  size_t len;
+  char startbuf[32], endbuf[32];
+
+  snprintf(startbuf, sizeof(startbuf), "%u", start);
+
+  if (end != -1)
+    snprintf(endbuf, sizeof(endbuf), "%u", end);
+  else
+    snprintf(endbuf, sizeof(endbuf), "*");
+
+  len = strlen(attribute) + sizeof(";range=") - 1;
+  len += strlen(startbuf) + 1 /* - */ + strlen(endbuf);
+  len++; /* \0 */
+
+  if (*buflen < len)
+    return NSS_TRYAGAIN;
+
+  *pAttributeWithRange = *buffer;
+
+  snprintf(*buffer, len, "%s;range=%s-%s", attribute, startbuf, endbuf);
+
+  *buffer += len;
+  *buflen -= len;
+
+  return NSS_SUCCESS;
+}
+
 /* 
  * Expand group members, including nested groups
  */
@@ -119,8 +276,19 @@ do_parse_group_members (LDAP * ld,
   char **groupMembers;
   size_t groupMembersCount, i;
   char **valiter;
+  /* support for range retrieval */
+  const char *uniquemember_attr;
+  const char *uniquemember_attrs[2];
+  LDAPMessage *res = NULL;
+  int start, end = 0;
+  char *groupdn = NULL;
 
-  if (*depth > LDAP_NSS_MAXGR_DEPTH || e == NULL)
+  uniquemember_attr = ATM (group, uniqueMember);
+
+  uniquemember_attrs[0] = uniquemember_attr;
+  uniquemember_attrs[1] = NULL;
+
+  if (*depth > LDAP_NSS_MAXGR_DEPTH)
     {
       return NSS_NOTFOUND;
     }
@@ -128,7 +296,14 @@ do_parse_group_members (LDAP * ld,
   groupMembersCount = 0;	/* number of members in this group */
   i = *pGroupMembersCount;	/* index of next member */
 
-  dnValues = ldap_get_values (ld, e, ATM (group, uniqueMember));
+next_range:
+  if (e == NULL)
+    {
+      stat = NSS_NOTFOUND;
+      goto out;
+    }
+
+  (void) do_get_range_values (ld, e, uniquemember_attrs[0], &start, &end, &dnValues);
   if (dnValues != NULL)
     {
       groupMembersCount += ldap_count_values (dnValues);
@@ -253,11 +428,61 @@ do_parse_group_members (LDAP * ld,
 	}
     }
 
+  /* Get next range for Active Directory compatability */
+  if (end > 0)
+    {
+      stat = do_construct_range_attribute (uniquemember_attr,
+					   end + 1,
+					   -1,
+					   buffer,
+					   buflen,
+					   &uniquemember_attrs[0]);
+      if (stat == NSS_SUCCESS)
+	{
+	  if (dnValues != NULL)
+	    {
+	      ldap_value_free (dnValues);
+	      dnValues = NULL;
+	    }
+	  if (uidValues != NULL)
+	    {
+	      ldap_value_free (uidValues);
+	      uidValues = NULL;
+	    }
+	  if (res != NULL)
+	    {
+	      ldap_msgfree (res);
+	      res = NULL;
+	    }
+
+	  if (groupdn == NULL)
+	    {
+	      groupdn = ldap_get_dn (ld, e);
+	      if (groupdn == NULL)
+		{
+		  stat = NSS_NOTFOUND;
+		  goto out;
+		}
+	    }
+
+	  stat = _nss_ldap_read (groupdn, uniquemember_attrs, &res);
+	  if (stat != NSS_SUCCESS)
+	    goto out;
+
+	  e = ldap_first_entry(ld, res);
+	  goto next_range;
+	}
+    }
+
 out:
   if (dnValues != NULL)
     ldap_value_free (dnValues);
   if (uidValues != NULL)
     ldap_value_free (uidValues);
+  if (res != NULL)
+    ldap_msgfree (res);
+  if (groupdn != NULL)
+    ldap_memfree (groupdn);
 
   *pGroupMembers = groupMembers;
   *pGroupMembersCount = i;
@@ -268,7 +493,7 @@ out:
 /*
  * "Fix" group membership list into caller provided buffer,
  * and NULL terminate.
- */
+*/
 static NSS_STATUS
 do_fix_group_members_buffer (char **mallocedGroupMembers,
 			     size_t groupMembersCount,
