@@ -363,11 +363,11 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #endif /* HAVE_NSS_H */
 #ifdef RFC2307BIS
   char *userdn = NULL;
-  const char *filter;
+  LDAPMessage *res, *e;
 #endif /* RFC2307BIS */
+  const char *filter;
   ldap_args_t a;
   NSS_STATUS stat;
-  LDAPMessage *res, *e;
   ent_context_t *ctx = NULL;
 
   LA_INIT (a);
@@ -430,6 +430,8 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
     {
       return NSS_UNAVAIL;
     }
+#else
+  filter = _nss_ldap_filt_getgroupsbymember;
 #endif /* RFC2307BIS */
 
   stat = _nss_ldap_getent_ex (&a, &ctx, (void *) liap, NULL, 0,
