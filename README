@@ -50,7 +50,8 @@ IRIX 6.5 has native LDAP support in nsd so you don't need this.
 
 You can build a position independent LDAP client library by compiling
 -fPIC and linking with -shared, or downloading the Mozilla or Netscape
-LDAP SDKs.
+LDAP SDKs. Note that OpenLDAP only appears to build shared libraries
+on some platforms (apparently not Solaris).
 
 NOTE: There seem to be problems linking against the libraries included
 with Netscape's Directory Server 4.1. You may wish to try Netscape's

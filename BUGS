@@ -77,5 +77,8 @@ BUGZILLA BUGS:
 [BUG#22]
 - support for bootparams map
 
+[BUG#34]
+- shells hang on Solaris for LDAP users
+
 $Id$
 
