@@ -1,9 +1,9 @@
 #!/bin/sh
+#ident $Id$
 #
 # certutil -- manage trusted X.509 certificates
 # inspired by Netscape PKCS #11 toolkit
-#
-# $Id$
+# contributed by Jarkko Turkulainen <jt@wapit.com>
 #
 #
 # INTRODUCTION
