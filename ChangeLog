@@ -4,6 +4,8 @@ $Header$
 199	Luke Howard <lukeh@padl.com>
 
 	* HP-UX port
+	* BUG#111: incorrect debugging statement in
+	  _nss_ldap_enter()
 
 198	 Luke Howard <lukeh@padl.com>
 

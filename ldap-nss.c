@@ -486,7 +486,7 @@ _nss_ldap_enter (void)
   __sigpipe_handler = signal (SIGPIPE, SIG_IGN);
 #endif /* HAVE_SIGSET */
 
-  debug ("<== _nss_ldap_leave");
+  debug ("<== _nss_ldap_enter");
 }
 
 /*
