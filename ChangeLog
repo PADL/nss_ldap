@@ -4,6 +4,8 @@ $Header$
 141	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#54 (AIX detection broken)
+	* use -rpath on all platforms except Solaris,
+	  not just Linux
 
 140	Luke Howard <lukeh@padl.com>
 
