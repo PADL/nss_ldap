@@ -29,6 +29,7 @@ static char rcsId[] = "$Id$";
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <syslog.h>
 #include <lber.h>
 #include <ldap.h>
 
@@ -72,6 +73,7 @@ static int __pid = -1;
 
 static void do_close (void);
 static NSS_STATUS do_open (void);
+static NSS_STATUS do_search_s (const char *base, int scope, const char *filter, const char **attrs, int sizelimit, LDAPMessage ** res);
 
 /*
  * Rebind functions.
@@ -297,6 +299,46 @@ do_open (void)
   return NSS_SUCCESS;
 }
 
+#if 0
+static INLINE void
+do_sleep (unsigned int seconds)
+{
+#ifdef SUN_NSS
+  /*
+   * Be careful to check whether we're linked with 
+   * libthread.so or not.
+   */
+  if (thr_main () == -1)
+    {
+      sleep (seconds);
+    }
+  else
+    {
+      timestruc_t sleepfor =
+      {seconds, 0};
+      cond_t cond = DEFAULTCV;
+      mutex_t mutex = DEFAULTMUTEX;
+
+      (void) mutex_lock (&mutex);
+      (void) cond_timedwait (&cond, &mutex, &sleepfor);
+      (void) mutex_unlock (&mutex);
+    }
+
+#elif defined(GNU_NSS)
+  struct timespec sleepfor;
+  pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+  pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+  (void) pthread_mutex_lock (&mutex);
+  (void) pthread_cond_timedwait (&cond, &mutex, &sleepfor);
+  (void) pthread_mutex_unlock (&mutex);
+#else
+  (void) sleep (seconds);
+#endif /* SUN_NSS */
+  return;
+}
+#endif
+
 /*
  * This function initializes an enumeration context.
  * It is called from setXXent() directly, and so can safely lock the
@@ -379,55 +421,114 @@ _nss_ldap_ent_context_free (context_handle_t * key)
   return;
 }
 
+static NSS_STATUS
+do_search_s (const char *base, int scope,
+	     const char *filter, const char **attrs, int sizelimit,
+	     LDAPMessage ** res)
+{
+  int lstatus = LDAP_UNAVAILABLE, tries = 0;
+  struct timeval tv;
+  NSS_STATUS nstatus = NSS_TRYAGAIN;
+
+  debug ("==> do_search_s");
+
+  tv.tv_sec = 0;
+  tv.tv_usec = 0;
+
+  while (nstatus == NSS_TRYAGAIN &&
+	 tries < LDAP_NSS_MAXCONNTRIES + LDAP_NSS_TRIES)
+    {
+      if (tries > LDAP_NSS_MAXCONNTRIES)
+	{
+	  if (tv.tv_sec == 0)
+	    tv.tv_sec = LDAP_NSS_SLEEPTIME;
+	  else if (tv.tv_sec < LDAP_NSS_MAXSLEEPTIME)
+	    tv.tv_sec *= 2;
+
+	  syslog (LOG_INFO, "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...", tv.tv_sec);
+	  (void) select (0, NULL, NULL, NULL, &tv);
+	}
+      else if (tries > 0)
+	{
+	  /* Don't sleep, reconnect immediately. */
+	  syslog (LOG_INFO, "nss_ldap: reconnecting to LDAP server...");
+	}
+
+      if (do_open () != NSS_SUCCESS)
+	{
+	  __session.ls_conn = NULL;
+	  ++tries;
+	  continue;
+	}
+
+#ifdef LDAP_VERSION3_API
+      ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT, (void *) &sizelimit);
+#else
+      __session.ls_conn->ld_sizelimit = sizelimit;
+#endif /* LDAP_VERSION3_API */
+
+      lstatus = ldap_search_s (__session.ls_conn, base, scope, filter,
+			       (char **) attrs, 0, res);
+
+      switch (lstatus)
+	{
+	case LDAP_SUCCESS:
+	case LDAP_SIZELIMIT_EXCEEDED:
+	case LDAP_TIMELIMIT_EXCEEDED:
+	  nstatus = NSS_SUCCESS;
+	  break;
+	case LDAP_SERVER_DOWN:
+	case LDAP_TIMEOUT:
+	case LDAP_UNAVAILABLE:
+	case LDAP_BUSY:
+	  do_close ();
+	  nstatus = NSS_TRYAGAIN;
+	  ++tries;
+	  continue;
+	  break;
+	default:
+	  nstatus = NSS_UNAVAIL;
+	  break;
+	}
+    }
+
+  switch (nstatus)
+    {
+    case NSS_UNAVAIL:
+      syslog (LOG_ERR, "nss_ldap: could not search LDAP server - %s", ldap_err2string (lstatus));
+      break;
+    case NSS_TRYAGAIN:
+      syslog (LOG_ERR, "nss_ldap: could not reconnect to LDAP server - %s", ldap_err2string (lstatus));
+      nstatus = NSS_UNAVAIL;
+      break;
+    case NSS_SUCCESS:
+      if (tries)
+	syslog (LOG_ERR, "nss_ldap: reconnected to LDAP server after %d attempt(s)", tries);
+      break;
+    default:
+      break;
+    }
+
+  debug ("<== do_search_s");
+
+  return nstatus;
+}
+
 LDAPMessage *
 _nss_ldap_read (
 		 const char *dn,
 		 const char **attributes)
 {
-  LDAPMessage *res = NULL;
-  int lstatus;
-  int retry = 0;
-  int sizelimit = 1;
+  LDAPMessage *res;
 
-  debug ("==> _nss_ldap_read");
-
-  if (do_open () != NSS_SUCCESS)
+  if (do_search_s (dn,
+		   LDAP_SCOPE_BASE,
+		   "(objectclass=*)",
+		   attributes,
+		   1,		/* sizelimit */
+		   &res) != NSS_SUCCESS)
     {
-      __session.ls_conn = NULL;
-      debug ("<== _nss_ldap_read");
-      return NULL;
-    }
-
-#ifdef LDAP_VERSION3_API
-  ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT, (void *) &sizelimit);
-#else
-  __session.ls_conn->ld_sizelimit = sizelimit;
-#endif /* LDAP_VERSION3_API */
-
-do_retry:
-  lstatus = ldap_search_s (__session.ls_conn, dn, LDAP_SCOPE_BASE,
-			   "(objectclass=*)", (char **) attributes, 0, &res);
-
-  switch (lstatus)
-    {
-    case LDAP_SUCCESS:
-    case LDAP_SIZELIMIT_EXCEEDED:
-    case LDAP_TIMELIMIT_EXCEEDED:
-      break;
-    case LDAP_SERVER_DOWN:
-    case LDAP_TIMEOUT:
-    case LDAP_UNAVAILABLE:
-    case LDAP_BUSY:
-      do_close ();
-      if (retry || do_open () != NSS_SUCCESS)
-	{
-	  res = NULL;
-	  break;
-	}
-      retry = 1;
-      goto do_retry;
-    default:
-      break;
+      res = NULL;
     }
 
   return res;
@@ -485,9 +586,7 @@ _nss_ldap_lookup (
 		   int sizelimit)
 {
   char filter[LDAP_FILT_MAXSIZ + 1];
-  LDAPMessage *res = NULL;
-  int lstatus;
-  int retry = 0;
+  LDAPMessage *res;
 
   debug ("==> _nss_ldap_lookup");
 
@@ -529,38 +628,15 @@ _nss_ldap_lookup (
 	}
     }
 
-#ifdef LDAP_VERSION3_API
-  ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT, (void *) &sizelimit);
-#else
-  __session.ls_conn->ld_sizelimit = sizelimit;
-#endif /* LDAP_VERSION3_API */
-
-do_retry:
-  lstatus = ldap_search_s (__session.ls_conn,
-			   (__session.ls_config->ldc_base == NULL) ? "" : __session.ls_config->ldc_base,
-			   __session.ls_config->ldc_scope,
-   (args == NULL) ? (char *) filterprot : filter, (char **) attrs, 0, &res);
-
-  switch (lstatus)
+  if (do_search_s (
+		    __session.ls_config->ldc_base,
+		    __session.ls_config->ldc_scope,
+		    (args == NULL) ? (char *) filterprot : filter,
+		    attrs,
+		    sizelimit,
+		    &res) != NSS_SUCCESS)
     {
-    case LDAP_SUCCESS:
-    case LDAP_SIZELIMIT_EXCEEDED:
-    case LDAP_TIMELIMIT_EXCEEDED:
-      break;
-    case LDAP_SERVER_DOWN:
-    case LDAP_TIMEOUT:
-    case LDAP_UNAVAILABLE:
-    case LDAP_BUSY:
-      do_close ();
-      if (retry || do_open () != NSS_SUCCESS)
-	{
-	  res = NULL;
-	  break;
-	}
-      retry = 1;
-      goto do_retry;
-    default:
-      break;
+      res = NULL;
     }
 
   debug ("<== _nss_ldap_lookup");

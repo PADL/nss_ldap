@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.79.1	Luke Howard <lukeh@padl.com>
+
+	* implemented exponential backoff reconnect logic
+
 2.78	Luke Howard <lukeh@padl.com>
 
 	* removed ldap.conf.ragenet from lineup

@@ -29,9 +29,18 @@
 #include <pthread.h>
 #endif /* GNU_NSS */
 
+/*
+ * Timeouts for reconnecting code. Similar to rebind
+ * logic in Darwin NetInfo.
+ */
+/* #define LDAP_NSS_TIMEOUT         5 */
+#define LDAP_NSS_TRIES           5
+#define LDAP_NSS_SLEEPTIME       4
+#define LDAP_NSS_MAXSLEEPTIME    64
+#define LDAP_NSS_MAXCONNTRIES    2
+
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
-#include <syslog.h>
 #define debug(str) syslog(LOG_DEBUG, "nss_ldap - thread %u  - %s", thr_self(), str)
 #else
 #define debug(str) fprintf(stderr, "%s\n", str)
