@@ -1,7 +1,4 @@
-# Makefile for Linux nss_ldap using Netscape's Mozilla LDAP
-# client library. We've used their thread wrappers in ltf.c
-# and define NETSCAPE_SDK, like we do with their C LDAP SDK.
-#
+# Makefile for Solaris nss_ldap
 
 # Copyright (C) 1997 Luke Howard.
 # This file is part of the nss_ldap Library.
@@ -70,59 +67,61 @@ SRCS=	ldap-nss.c \
 OBJS=${SRCS:.c=.o}
 LIB=${MODULE}.so.1
 
-# uncomment NSFLAGS if you are using the Netscape SDK (or Mozilla)
-NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK 
+# uncomment NSFLAGS if you are using the Netscape SDK
+NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
 
-# uncomment GNUFLAGS if you are building a GNU glibc-2.x module
-GNUFLAGS=-DGNU_NSS -DWEIRD_GETPWENT -DHAVE_SNPRINTF -D_REENTRANT
-LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
+# uncomment this SUNFLAGS if you're building under Solaris 2.5 
+#SUNFLAGS=-DSUN_NSS -D_REENTRANT
 
-LIBDIRS=-L.
-
-# uncomment this if you're linking against Sun or Netscape's libldap.so
-# or using UMich libldap/liblber compiled into one library
-LIBS=-L/usr/local/ldapsdk/lib -Wl,-rpath /usr/local/ldapsdk/lib -lldap -lnsl -llber -lpthread
+# uncomment this SUNFLAGS if you're building under Solaris 2.6
+SUNFLAGS=-DSUN_NSS -D_REENTRANT -DHAVE_SNPRINTF -D__EXTENSIONS__
+INCDIRS=
+LIBDIRS=-L/usr/ucblib -L/usr/local/ldapsdk/lib
+LIBS=-lldap -llber -lnsl
 
 # uncomment this if you're using gcc
-GCCFLAGS=-O -g -Wall -fPIC
+GCCFLAGS=-O -g -Wall -fPIC ${PDOFLAGS}
+# don't know about these CFLAGS?
+#SUNCFLAGS=-g -pic
+# these are the flags wcs@sun used
+SUNCFLAGS=-O -G -K pic
+SUNLDFLAGS=-G -z text
 DEBUGFLAGS=-DDEBUG
+
+# choose your C compiler
+#CC=/usr/local/opt/SUNWspro/bin/cc
+#CC=cc
+#COMPILERFLAGS=${SUNCFLAGS}
+#LD=${CC}
+#LDFLAGS=${SUNLDFLAGS}
 
 CC=gcc
 COMPILERFLAGS=${GCCFLAGS}
 
-LD=gcc
-GNULDFLAGS=-shared -Wl,-soname,libnss_ldap.so.1
+# These "GNU" flags seem to work OK, with Sun CC too ???
+LD=ld
+GNULDFLAGS=-G -dy -z text -R/usr/local/ldapsdk/lib -R/usr/ucblib
 LDFLAGS=${GNULDFLAGS}
 
-CFLAGS=-DLDAP_REFERRALS ${DEBUGFLAGS} ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
+CFLAGS=${DEBUGFLAGS} ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
 
-all: ${MODULE}
+all: ${MODULE} install
 
 ${MODULE}: ${OBJS}
-	${LD} ${LIBDIRS} ${LDFLAGS} -o ${LIB} ${OBJS} ${LIBS}
+	${LD} ${LIBDIRS} ${LDFLAGS} -o /tmp/${LIB} ${OBJS} ${LIBS}
 
 install:
-	cp ${LIB} /lib/libnss_ldap-${LIBCVERS}.so
-	ln -sf libnss_ldap-${LIBCVERS}.so /lib/libnss_ldap.so.1
-	ln -sf /lib/libnss_ldap.so.1 /usr/lib/libnss_ldap.so;true
-	cp nsswitch.ldap /etc/nsswitch.ldap
-	cp ldap.conf	/etc/ldap.conf
+	cp /tmp/${LIB} /usr/lib/
 
 clean:
-	rm -f ${OBJS} ${LIB} core
+	rm -f ${OBJS} ${LIB}
 
-TESTCC=gcc ${PDOFLAGS} -g -D_REENTRANT -DNSS_GNU -DWEIRD_GETPWENT /lib/libnss_ldap.so.1
+TESTCC=gcc ${PDOFLAGS} -g -D_REENTRANT /usr/lib/nss_ldap.so.1
 
 test:
-	-${TESTCC} ${CFLAGS} -o  testpw testpw.c
-	-${TESTCC} ${CFLAGS} -o testpw5 testpw5.c -lthread
+	-${TESTCC} -o testpw testpw.c
+	-${TESTCC} -o testpw5 testpw5.c -lthread
 	-${TESTCC} -o testpw2 testpw.c -lthread
 	-${TESTCC} -o testgr testgr.c
-#	-${TESTCC} -o testpw3 testpw3.c
-
-test.pl:
-	cp /etc/nsswitch.conf /etc/nsswitch.conf.ldaptest
-	cp nsswitch.test /etc/nsswitch.conf
-	perl ldaptest.pl
-	mv /etc/nsswitch.conf.ldaptest /etc/nsswitch.conf
+	-${TESTCC} -o testpw3 testpw3.c
 

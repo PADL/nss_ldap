@@ -234,6 +234,7 @@ NSS_STATUS _nss_ldap_readconfig(
 	result->ldc_port = LDAP_PORT;
 	result->ldc_binddn = NULL;
 	result->ldc_bindpw = NULL;
+	result->ldc_version = LDAP_VERSION2;
 	result->ldc_next = result;
 
 	fp = fopen(NSS_LDAP_PATH_CONF, "r");
@@ -244,9 +245,6 @@ NSS_STATUS _nss_ldap_readconfig(
 
 	while(fgets(b, sizeof(b), fp) != NULL)
 		{
-#ifdef HAVE_STRTOK_R
-		char *st = NULL;
-#endif
 		char *k, *v;
 		int len;
 		char **t = NULL;
@@ -254,21 +252,15 @@ NSS_STATUS _nss_ldap_readconfig(
 		if (*b == '\n' || *b == '#')
 			continue;
 
-#ifdef HAVE_STRTOK_R
-		k = strtok_r(b, " \t", &st);
-#else
-		k = strtok(b, " \t");
-#endif
-		if (k == NULL)
+		k = b;
+		v = strchr(k, ' ');
+		if (v == NULL)
+			v = strchr(k, '\t');
+
+		if (v == NULL)
 			continue;
 
-#ifdef HAVE_STRTOK_R
-		v = strtok_r(NULL, "", &st);
-#else
-		v = strtok(NULL, "");
-#endif
-		if (v == NULL || *v == '\0')
-			continue;
+		*(v++) = '\0';
 
 		len = strlen(v);
 
@@ -331,6 +323,10 @@ NSS_STATUS _nss_ldap_readconfig(
 		else if (!strcmp(k, NSS_LDAP_KEY_PORT))
 			{
 			result->ldc_port = atoi(v);
+			}
+		else if (!strcmp(k, NSS_LDAP_KEY_LDAP_VERSION))
+			{
+			result->ldc_version = atoi(v);
 			}
 
 		if (t != NULL)

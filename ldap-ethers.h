@@ -19,7 +19,12 @@
 
    $Id$
  */
+
+#ifdef SUN_NSS
+#include <netinet/if_ether.h>
+#else
 #include <netinet/ether.h>
+#endif
 
 #ifndef _LDAP_NSS_LDAP_LDAP_ETHERS_H
 #define _LDAP_NSS_LDAP_LDAP_ETHERS_H

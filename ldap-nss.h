@@ -118,6 +118,8 @@ struct ldap_config
 	int ldc_scope;
 	char *ldc_binddn;
 	char *ldc_bindpw;
+	/* protocol version */
+	int ldc_version;
 	/* next configuration. loops back onto itself for last
 	   entry
 	 */

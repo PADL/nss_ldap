@@ -178,11 +178,6 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 		return NSS_UNAVAIL;
 		}
 
-#ifdef DEBUG_LUKEH
-	/* Don't try this at home, kiddies. */
-	strcpy(_res.defdname,"toorak.xedoc.com.au");
-#endif
-
 	snprintf(domain, sizeof(domain), "ldap.tcp.%s.", _res.defdname);
 
 	r = dns_lookup(domain, "srv");

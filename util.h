@@ -70,6 +70,7 @@ NSS_STATUS _nss_ldap_getdomainname(
 #define NSS_LDAP_KEY_CRYPT	"crypt"
 #define NSS_LDAP_KEY_BINDDN	"binddn"
 #define NSS_LDAP_KEY_BINDPW	"bindpw"
+#define NSS_LDAP_KEY_LDAP_VERSION	"ldap_version"
 #define NSS_LDAP_PATH_CONF	"/etc/ldap.conf"
 
 /*

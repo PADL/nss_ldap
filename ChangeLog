@@ -5,6 +5,8 @@ $Id$
 
 	* fixed warning in ldap-ethers.c (removed const from 
 	  struct ether)
+	* added ldap_version keyword to ldap.conf for parity with
+	  pam_ldap
 
 2.38	Luke Howard <lukeh@xedoc.com>
 

@@ -181,6 +181,12 @@ static NSS_STATUS do_open(ldap_session_t *sess)
 		}
 #endif
 
+#ifdef NETSCAPE_SDK
+	ldap_set_option(sess->ls_conn, LDAP_OPT_PROTOCOL_VERSION, &cfg->ldc_version);
+#else
+	sess->ls_conn->ld_version = cfg->ldc_version;
+#endif
+
 	if (ldap_simple_bind_s(sess->ls_conn, cfg->ldc_binddn, cfg->ldc_bindpw) != LDAP_SUCCESS)
 		{
 		do_close(sess);
