@@ -154,7 +154,7 @@ static void do_disable_keepalive (LDAP * ld);
  * TLS routines: set global SSL session options.
  */
 #if defined HAVE_LDAP_START_TLS_S || (defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS))
-static int do_ssl_options (ldap_config_t *cfg);
+static int do_ssl_options (ldap_config_t * cfg);
 #endif
 
 /*
@@ -289,7 +289,8 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -311,7 +312,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -975,30 +977,36 @@ do_open (void)
 
 #if defined HAVE_LDAP_START_TLS_S || (defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS))
 static int
-do_ssl_options (ldap_config_t *cfg)
+do_ssl_options (ldap_config_t * cfg)
 {
   int rc;
 
   debug ("==> do_ssl_options");
 
-  /* ca cert file */
-  rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CACERTFILE,
-			cfg->ldc_tls_cacertfile);
-  if (rc != LDAP_SUCCESS)
+  if (cfg->ldc_tls_cacertfile != NULL)
     {
-      debug
-	("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CACERTFILE failed");
-      return LDAP_OPERATIONS_ERROR;
+      /* ca cert file */
+      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CACERTFILE,
+			    cfg->ldc_tls_cacertfile);
+      if (rc != LDAP_SUCCESS)
+	{
+	  debug
+	    ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CACERTFILE failed");
+	  return LDAP_OPERATIONS_ERROR;
+	}
     }
 
-  /* ca cert directory */
-  rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CACERTDIR,
-			cfg->ldc_tls_cacertdir);
-  if (rc != LDAP_SUCCESS)
+  if (cfg->ldc_tls_cacertdir != NULL)
     {
-      debug
-	("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CACERTDIR failed");
-      return LDAP_OPERATIONS_ERROR;
+      /* ca cert directory */
+      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CACERTDIR,
+			    cfg->ldc_tls_cacertdir);
+      if (rc != LDAP_SUCCESS)
+	{
+	  debug
+	    ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CACERTDIR failed");
+	  return LDAP_OPERATIONS_ERROR;
+	}
     }
 
   /* require cert? */
@@ -1011,30 +1019,41 @@ do_ssl_options (ldap_config_t *cfg)
       return LDAP_OPERATIONS_ERROR;
     }
 
-  /* set cipher suite, certificate and private key: */
-  rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CIPHER_SUITE,
-			cfg->ldc_tls_ciphers);
-  if (rc != LDAP_SUCCESS)
+  if (cfg->ldc_tls_ciphers != NULL)
     {
-      debug
-	("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CIPHER_SUITE failed");
-      return LDAP_OPERATIONS_ERROR;
+      /* set cipher suite, certificate and private key: */
+      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CIPHER_SUITE,
+			    cfg->ldc_tls_ciphers);
+      if (rc != LDAP_SUCCESS)
+	{
+	  debug
+	    ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CIPHER_SUITE failed");
+	  return LDAP_OPERATIONS_ERROR;
+	}
     }
 
-  rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CERTFILE,
-			cfg->ldc_tls_cert);
-  if (rc != LDAP_SUCCESS)
+  if (cfg->ldc_tls_cert != NULL)
     {
-      debug ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CERTFILE failed");
-      return LDAP_OPERATIONS_ERROR;
+      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_CERTFILE,
+			    cfg->ldc_tls_cert);
+      if (rc != LDAP_SUCCESS)
+	{
+	  debug
+	    ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CERTFILE failed");
+	  return LDAP_OPERATIONS_ERROR;
+	}
     }
 
-  rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_KEYFILE,
-			cfg->ldc_tls_key);
-  if (rc != LDAP_SUCCESS)
+  if (cfg->ldc_tls_key != NULL)
     {
-      debug ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_KEYFILE failed");
-      return LDAP_OPERATIONS_ERROR;
+      rc = ldap_set_option (__session.ls_conn, LDAP_OPT_X_TLS_KEYFILE,
+			    cfg->ldc_tls_key);
+      if (rc != LDAP_SUCCESS)
+	{
+	  debug
+	    ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_KEYFILE failed");
+	  return LDAP_OPERATIONS_ERROR;
+	}
     }
 
   debug ("<== do_ssl_options");
@@ -1733,7 +1752,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -1971,7 +1991,9 @@ _nss_ldap_getbyname (ldap_args_t * args,
 
   debug ("==> _nss_ldap_getbyname");
 
-  stat = _nss_ldap_search (args, filterprot, sel, 1, &ctx.ec_msgid);
+  ctx.ec_msgid = -1;
+
+  stat = _nss_ldap_search_s (args, filterprot, sel, 1, &ctx.ec_res);
   if (stat != NSS_SUCCESS)
     {
       nss_unlock ();
@@ -1988,6 +2010,8 @@ _nss_ldap_getbyname (ldap_args_t * args,
   LS_INIT (ctx.ec_state);
   ctx.ec_state.ls_type = LS_TYPE_KEY;
   ctx.ec_state.ls_info.ls_key = args->la_arg2.la_string;
+  /* fool do_parse() into not calling do_result () */
+  ctx.ec_state.ls_retry = 1;
 
   stat = do_parse (&ctx, result, buffer, buflen, errnop, parser);
 
@@ -2262,7 +2286,8 @@ _nss_ldap_assign_authpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;

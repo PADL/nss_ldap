@@ -5,6 +5,9 @@ $Header$
 
 	* patch from RedHat to check for DB3, override
 	  install user/group optionally
+	* use synchoronous searches for _nss_ldap_getbyname()
+	* only set SSL options if we have values for those
+	  options
 
 159	Luke Howard <lukeh@padl.com>
 
