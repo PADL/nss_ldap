@@ -49,6 +49,7 @@
 
 #include <netdb.h>
 #include <netinet/in.h>
+#include <syslog.h>
 
 #ifdef HAVE_NSSWITCH_H
 #include <nss_common.h>
@@ -79,13 +80,17 @@
  * linked against NSS doesn't know about.  syslog() transparently opens
  * a file descriptor unless it is wrapped in openlog() and closelog().
  */
-#include <syslog.h>
 
 #define do_syslog(kind, fmt, args...) \
 { \
     openlog ("", LOG_NOWAIT, LOG_USER); \
     syslog (kind, fmt, ##args); \
     closelog (); \
+}
+#else
+#define do_syslog(kind, fmt, args...) \
+{ \
+    syslog (kind, fmt, ##args); \
 }
 #endif
 

@@ -561,7 +561,7 @@ do_close (void)
   if (__session.ls_conn != NULL)
     {
 #ifdef DEBUG
-      syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
+      do_syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
 		 __session.ls_conn);
 #endif /* DEBUG */
       ldap_unbind (__session.ls_conn);
@@ -587,9 +587,6 @@ do_close_no_unbind (void)
 {
   int sd;
   int bogusSd = -1;
-#ifndef HAVE_LDAP_LD_FREE
-  int closeSocket = 1;
-#endif /* HAVE_LDAP_LD_FREE */
 
   debug ("==> do_close_no_unbind");
 
@@ -600,7 +597,7 @@ do_close_no_unbind (void)
     }
 
 #ifdef DEBUG
-  syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
+  do_syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
 	     __session.ls_conn);
 #endif /* DEBUG */
 
@@ -627,17 +624,9 @@ do_close_no_unbind (void)
 	  || (getpeername (sd, &peername, &peernamelen) != 0)
 	  || (memcmp (&peername, &__session.ls_peername, peernamelen) != 0))
 	{
-	  debug ("invalidated socket descriptor");
-
-#ifdef HAVE_LDAP_LD_FREE
-#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
-	  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
-#else
-	  __session.ls_conn->ld_sb.sb_sd = bogusSd;
-#endif /* LDAP_OPT_DESC */
-#else
-	  closeSocket = 0;
-#endif /* HAVE_LDAP_LD_FREE */
+	  __session.ls_conn = NULL; /* leaky */
+	  debug ("<== do_close_no_unbind (invalid socket descriptor)");
+	  return;
 	}
     }
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
@@ -651,8 +640,7 @@ do_close_no_unbind (void)
 #endif /* OPENLDAP 2.x */
 
 #else
-  if (closeSocket)
-    close (sd);
+  close (sd);
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
   (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
 #else
@@ -739,18 +727,18 @@ do_open (void)
 
 #ifdef DEBUG
 #ifdef HAVE_PTHREAD_ATFORK
-  syslog (LOG_DEBUG,
+  do_syslog (LOG_DEBUG,
 	     "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
 	     __session.ls_conn, __euid, euid);
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  syslog (LOG_DEBUG,
+  do_syslog (LOG_DEBUG,
 	     "nss_ldap: libpthreads=%s, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	     (__pthread_atfork == NULL ? "FALSE" : "TRUE"),
 	     __session.ls_conn,
 	     (__pthread_atfork == NULL ? __pid : -1),
 	     (__pthread_atfork == NULL ? pid : -1), __euid, euid);
 #else
-  syslog (LOG_DEBUG,
+  do_syslog (LOG_DEBUG,
 	     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	     __session.ls_conn, __pid, pid, __euid, euid);
 #endif
