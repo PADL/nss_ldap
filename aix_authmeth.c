@@ -669,6 +669,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
   const char *filter;
   int erange = 0;
   ldap_uess_args_t lua;
+  const char *namingAttributes[2];
 
   debug ("==> _nss_ldap_getentry");
 
@@ -710,6 +711,10 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
 	  return -1;
 	}
       results[0].attr_flag = -1;
+
+      /* just request the naming attributes */
+      namingAttributes[0] = uess2ldapattr (lua.lua_map, lua.lua_attributes[0]);
+      namingAttributes[1] = NULL;
     }
 
   _nss_ldap_enter ();
@@ -725,7 +730,8 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
 
   stat = _nss_ldap_getent_ex (ap, &ctx, (void *) &lua, NULL, 0,
 			      &erange, filter, lua.lua_map,
-			      NULL, do_parse_uess_getentry);
+			      (ap == NULL) ? namingAttributes : NULL,
+			      do_parse_uess_getentry);
 
   _nss_ldap_ent_context_release (ctx);
   free (ctx);
