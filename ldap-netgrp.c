@@ -138,11 +138,11 @@ strip_whitespace (char *str)
   char *cp = str;
 
   /* Skip leading spaces.  */
-  while (isspace (*cp))
+  while (isspace ((int)*cp))
     cp++;
 
   str = cp;
-  while (*cp != '\0' && !isspace (*cp))
+  while (*cp != '\0' && !isspace ((int)*cp))
     cp++;
 
   /* Null-terminate, stripping off any trailing spaces.  */
@@ -163,7 +163,7 @@ _nss_ldap_parse_netgr (void *vresultp, char *buffer, size_t buflen)
     return NSS_RETURN;
 
   /* First skip leading spaces. */
-  while (isspace (*cp))
+  while (isspace ((int)*cp))
     ++cp;
 
   if (*cp != '(')
@@ -171,7 +171,7 @@ _nss_ldap_parse_netgr (void *vresultp, char *buffer, size_t buflen)
       /* We have a list of other netgroups. */
       char *name = cp;
 
-      while (*cp != '\0' && !isspace (*cp))
+      while (*cp != '\0' && !isspace ((int)*cp))
 	++cp;
 
       if (name != cp)
@@ -318,20 +318,6 @@ _nss_ldap_endnetgrent (struct __netgrent * result)
 
   LOOKUP_ENDENT (netgroup_context);
 }
-#elif defined(HAVE_NSSWITCH_H)
-static NSS_STATUS
-_nss_ldap_endnetgrent_r (nss_backend_t * be, struct __netgrent *result)
-{
-  if (result->data != NULL)
-    {
-      free (result->data);
-      result->data = NULL;
-      result->data_size = 0;
-      result->cursor = NULL;
-    }
-
-  LOOKUP_ENDENT (be);
-}
 #endif
 
 #if defined(HAVE_NSS_H)
@@ -362,34 +348,6 @@ _nss_ldap_setnetgrent (char *group, struct __netgrent *result)
 
   LOOKUP_SETENT (netgroup_context);
 }
-#elif defined(HAVE_NSSWITCH_H)
-static NSS_STATUS
-_nss_ldap_setnetgrent_r (nss_backend_t * be, void *result)
-{
-  int errnop = 0, buflen = 0;
-  char *buffer = (char *) NULL;
-  ldap_args_t a;
-  NSS_STATUS stat = NSS_SUCCESS;
-
-  if (group[0] == '\0')
-    return NSS_UNAVAIL;
-
-  if (result->data != NULL)
-    free (result->data);
-  result->data = result->cursor = NULL;
-  result->data_size = 0;
-
-  LA_INIT (a);
-  LA_STRING (a) = group;
-  LA_TYPE (a) = LA_TYPE_STRING;
-
-  stat =
-    _nss_ldap_getbyname (&a, result, buffer, buflen, &errnop,
-			 _nss_ldap_filt_getnetgrent, LM_NETGROUP,
-			 _nss_ldap_load_netgr);
-
-  LOOKUP_SETENT (be);
-}
 #endif
 
 #if defined(HAVE_NSS_H)
@@ -399,22 +357,9 @@ _nss_ldap_getnetgrent_r (struct __netgrent *result,
 {
   return _nss_ldap_parse_netgr (result, buffer, buflen);
 }
-#elif defined(HAVE_NSSWITCH_H)
-static NSS_STATUS
-_nss_ldap_getnetgrent_r (nss_backend_t * be, struct __netgrent *result)
-{
-  ldap_args_t a;
-
-  LA_INIT (a);
-  LA_STRING (a) = result->data;
-  LA_TYPE (a) = LA_TYPE_STRING;
-
-  return _nss_ldap_getbyname (&a, result, buffer, buflen, errnop,
-			      _nss_ldap_filt_getnetgrent, LM_NETGROUP,
-			      _nss_ldap_parse_netgr);
-}
 #endif
 
+#ifdef notdef
 #ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_netgroup_destr (nss_backend_t * netgroup_context, void *args)
@@ -422,12 +367,11 @@ _nss_ldap_netgroup_destr (nss_backend_t * netgroup_context, void *args)
   return _nss_ldap_default_destr (netgroup_context, args);
 }
 
-
 static nss_backend_op_t netgroup_ops[] = {
   _nss_ldap_netgroup_destr,
-  _nss_ldap_setnetgrent_r,	/* NSS_DBOP_SETENT */
-  _nss_ldap_endnetgrent_r,	/* NSS_DBOP_ENDENT */
-  _nss_ldap_getnetgrent_r	/* NSS_DBOP_GETENT */
+  NULL,	/* NSS_DBOP_SETENT */
+  NULL,	/* NSS_DBOP_ENDENT */
+  NULL	/* NSS_DBOP_GETENT */
 };
 
 nss_backend_t *
@@ -447,4 +391,6 @@ _nss_ldap_netgroup_constr (const char *db_name,
 
   return (nss_backend_t *) be;
 }
+#endif /* notdef */
+
 #endif /* !HAVE_NSS_H */
