@@ -366,7 +366,7 @@ enum ldap_args_types
   LA_TYPE_NUMBER,
   LA_TYPE_STRING_AND_STRING,
   LA_TYPE_NUMBER_AND_STRING,
-  LA_TYPE_STRING_UNESCAPED
+  LA_TYPE_TRIPLE
 };
 
 typedef enum ldap_args_types ldap_args_types_t;
@@ -389,6 +389,12 @@ struct ldap_args
   {
     const char *la_string;
     long la_number;
+    struct {
+      /* for Solaris netgroup support */
+      const char *host;
+      const char *user;
+      const char *domain;
+    } la_triple;
   }
   la_arg1;
   union
@@ -408,6 +414,7 @@ typedef struct ldap_args ldap_args_t;
 #define LA_TYPE(q)				(q.la_type)
 #define LA_STRING(q)				(q.la_arg1.la_string)
 #define LA_NUMBER(q)				(q.la_arg1.la_number)
+#define LA_TRIPLE(q)				(q.la_arg1.la_triple)
 #define LA_STRING2(q)				(q.la_arg2.la_string)
 
 #include "ldap-parse.h"

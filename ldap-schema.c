@@ -124,7 +124,6 @@ char _nss_ldap_filt_getspent[LDAP_FILT_MAXSIZ];
 /* netgroups */
 char _nss_ldap_filt_getnetgrent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_innetgr[LDAP_FILT_MAXSIZ];
-char _nss_ldap_filt_innetgr_nested[LDAP_FILT_MAXSIZ];
 
 /**
  * lookup filter initialization
@@ -238,8 +237,6 @@ _nss_ldap_init_filters ()
   snprintf (_nss_ldap_filt_getnetgrent, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (cn), "%s");
   snprintf (_nss_ldap_filt_innetgr, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (nisNetgroupTriple), "%s");
-  snprintf (_nss_ldap_filt_innetgr_nested, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (memberNisNetgroup), "%s");
 }
 

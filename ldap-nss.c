@@ -1646,6 +1646,105 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
 }
 
 /*
+ * Make all triple permutations
+ */
+static NSS_STATUS
+do_triple_permutations (const char *machine, const char *user,
+		        const char *domain, char *bufptr, size_t buflen)
+{
+	/*
+	 * Map a triple
+	 *
+	 *	(M,U,D)
+	 *
+	 * to the filter
+	 *
+	 *	(|(nisNetgroupTriple=P1)...(nisNetgroupTriple=PN))
+	 *
+	 * where P1..PN are all permutations of triples that may match
+	 * ie. including wildcards. Certainly this would be preferable
+	 * to do server-side with an appropriate matching rule.
+	 */
+	char escaped_machine[3 * (MAXHOSTNAMELEN + 1)];
+	char escaped_user[3 * (LOGNAME_MAX + 1)];
+	char escaped_domain[3 * (MAXHOSTNAMELEN + 1)];
+	const char *AT_NISNETGROUPTRIPLE = AT(nisNetgroupTriple);
+	NSS_STATUS stat;
+
+#define ESCAPE_TRIPLE_COMPONENT(component) do { \
+		if ((component) == NULL) \
+		{ \
+			(escaped_##component)[0] = '*'; \
+			(escaped_##component)[1] = '\0'; \
+		} \
+		else \
+		{ \
+			stat = _nss_ldap_escape_string((component), (escaped_##component), \
+				(sizeof((escaped_##component)))); \
+			if (stat != NSS_SUCCESS) \
+				return stat; \
+		} \
+	} while (0)
+
+	ESCAPE_TRIPLE_COMPONENT(machine);
+	ESCAPE_TRIPLE_COMPONENT(user);
+	ESCAPE_TRIPLE_COMPONENT(domain);
+
+#define _APPEND_STRING(_buffer, _buflen, _s, _len) do { \
+		if ((_buflen) < (size_t)((_len) + 1)) \
+		{ \
+			fprintf(stderr, "_buflen->%d _len->%d\n", (_buflen), (_len)); \
+			return NSS_TRYAGAIN; \
+		} \
+		memcpy((_buffer), (_s), (_len)); \
+		(_buffer)[(_len)] = '\0'; \
+		(_buffer) += (_len); \
+		(_buflen) -= (_len); \
+	} while (0)
+
+#define APPEND_STRING(_buffer, _buflen, _s) _APPEND_STRING(_buffer, _buflen, _s, strlen((_s)))
+#define APPEND_CONSTANT_STRING(_buffer, _buflen, _s) _APPEND_STRING(_buffer, _buflen, _s, (sizeof((_s)) - 1))
+
+#define APPEND_TRIPLE(_buffer, _buflen, _machine, _user, _domain) do { \
+		APPEND_CONSTANT_STRING((_buffer), (_buflen), "("); \
+		APPEND_STRING((_buffer), (_buflen), AT_NISNETGROUPTRIPLE); \
+		APPEND_CONSTANT_STRING((_buffer), (_buflen), "=("); \
+		if ((_machine) != NULL) \
+		{ \
+			APPEND_STRING((_buffer), (_buflen), (_machine)); \
+		} \
+		APPEND_CONSTANT_STRING((_buffer), (_buflen), ","); \
+		if ((_user) != NULL) \
+		{ \
+			APPEND_STRING((_buffer), (_buflen), (_user)); \
+		} \
+		APPEND_CONSTANT_STRING((_buffer), (_buflen), ","); \
+		if ((_domain) != NULL) \
+		{ \
+			APPEND_STRING((_buffer), (_buflen), (_domain)); \
+		} \
+		APPEND_CONSTANT_STRING((_buffer), (_buflen), "))"); \
+	} while (0)
+ 
+	APPEND_CONSTANT_STRING(bufptr, buflen, "(&(objectclass=");
+	APPEND_STRING(bufptr, buflen, OC(nisNetgroup));
+	APPEND_CONSTANT_STRING(bufptr, buflen, ")(|");
+
+	APPEND_TRIPLE(bufptr, buflen, escaped_machine, escaped_user, escaped_domain);
+	APPEND_TRIPLE(bufptr, buflen, escaped_machine, escaped_user, NULL);
+	APPEND_TRIPLE(bufptr, buflen, escaped_machine, NULL,         NULL);
+	APPEND_TRIPLE(bufptr, buflen, NULL,            escaped_user, escaped_domain);
+	APPEND_TRIPLE(bufptr, buflen, NULL,            escaped_user, NULL);
+	APPEND_TRIPLE(bufptr, buflen, escaped_machine, NULL,         escaped_domain);
+	APPEND_TRIPLE(bufptr, buflen, NULL,            NULL,         escaped_domain);
+	APPEND_TRIPLE(bufptr, buflen, NULL,            NULL,         NULL);
+
+	APPEND_CONSTANT_STRING(bufptr, buflen, "))");
+
+	return NSS_SUCCESS;
+}
+
+/*
  * Do the necessary formatting to create a string filter.
  */
 static NSS_STATUS
@@ -1706,10 +1805,17 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  snprintf (filterBufP, filterSiz, filterprot,
 		    args->la_arg1.la_number, buf1);
 	  break;
-	case LA_TYPE_STRING_UNESCAPED:
-	  /* literal string */
-	  snprintf (filterBufP, filterSiz, filterprot,
-		    args->la_arg1.la_string);
+	case LA_TYPE_TRIPLE:
+	  stat = do_triple_permutations (args->la_arg1.la_triple.host,
+					 args->la_arg1.la_triple.user,
+					 args->la_arg1.la_triple.domain,
+					 filterBufP,
+					 filterSiz);
+	  if (stat != NSS_SUCCESS)
+	    return stat;
+	  break;
+	default:
+	  return NSS_UNAVAIL;
 	  break;
 	}
 

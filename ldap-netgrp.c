@@ -746,7 +746,7 @@ do_innetgr_nested (const char *netgroup,
   LA_TYPE (a) = LA_TYPE_STRING;
   LA_STRING (a) = nested;	/* memberNisNetgroup */
 
-  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr_nested,
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr,
 			     LM_NETGROUP, 1, &res);
   if (stat != NSS_SUCCESS)
     {
@@ -803,12 +803,8 @@ do_innetgr (const char *netgroup,
 {
   NSS_STATUS stat;
   ldap_args_t a;
-  char triple[LDAP_FILT_MAXSIZ];
   LDAPMessage *e, *res;
   char **values;
-  char escaped_machine[3 * (MAXHOSTNAMELEN + 1)];
-  char escaped_user[3 * (LOGNAME_MAX + 1)];
-  char escaped_domain[3 * (MAXHOSTNAMELEN + 1)];
   int depth = 0;
 
   *status = NSS_NETGR_NO;
@@ -818,63 +814,13 @@ do_innetgr (const char *netgroup,
   /*
    * First, find which netgroup the 3-tuple belongs to.
    */
-  if (machine != NULL)
-    {
-      stat =
-	_nss_ldap_escape_string (machine, escaped_machine,
-				 sizeof (escaped_machine));
-      if (stat != NSS_SUCCESS) {
-	debug ("<== do_innetgr: failed to escape machine %s", machine);
-	return stat;
-      }
-    }
-  else
-    {
-      escaped_machine[0] = '*';
-      escaped_machine[1] = '\0';
-    }
-
-  if (user != NULL)
-    {
-      stat =
-	_nss_ldap_escape_string (user, escaped_user, sizeof (escaped_user));
-      if (stat != NSS_SUCCESS) {
-	debug ("<== do_innetgr: failed to escape user %s", user);
-	return stat;
-      }
-    }
-  else
-    {
-      escaped_user[0] = '*';
-      escaped_user[1] = '\0';
-    }
-
-  if (domain != NULL)
-    {
-      stat =
-	_nss_ldap_escape_string (domain, escaped_domain,
-				 sizeof (escaped_domain));
-      if (stat != NSS_SUCCESS) {
-	debug ("<== do_innetgr: failed to escape domain %s", domain);
-	return stat;
-      }
-    }
-  else
-    {
-      escaped_domain[0] = '*';
-      escaped_domain[1] = '\0';
-    }
-
-  snprintf (triple, sizeof (triple), "(%s,%s,%s)",
-	    escaped_machine, escaped_user, escaped_domain);
-
-  debug (":== do_innetgr triple=%s", triple);
-
   LA_INIT (a);
-  LA_TYPE (a) = LA_TYPE_STRING_UNESCAPED;
-  LA_STRING (a) = triple;	/* nisNetgroupTriple */
+  LA_TYPE (a) = LA_TYPE_TRIPLE;
+  LA_TRIPLE (a).user = user;
+  LA_TRIPLE (a).host = machine;
+  LA_TRIPLE (a).domain = domain;
 
-  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_innetgr,
+  stat = _nss_ldap_search_s (&a, NULL,
 			     LM_NETGROUP, 1, &res);
   if (stat != NSS_SUCCESS)
     {
