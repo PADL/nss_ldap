@@ -25,6 +25,10 @@ Platforms this has been built under:
 	o FreeBSD BIND 8.x
 	o AIX 4.?? with IRS
 
+If you are willing to use an older, and possibly buggy, version
+of nss_ldap, you can find patches to get it to work with the
+"real" FreeBSD nsswitch at http://www.nectar.com/freebsd/nsswitch.
+
 To install:
 
 % ./configure
