@@ -28,7 +28,8 @@
  */
 
 
-static char rcsId[] = "$Id$";
+static char rcsId[] =
+  "$Id$";
 
 #ifdef IRS_NSS
 #include <port_before.h>
@@ -67,31 +68,32 @@ static context_handle_t proto_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_proto (
-			LDAP * ld,
-			LDAPMessage * e,
-			ldap_state_t * pvt,
-			void *result,
-			char *buffer,
-			size_t buflen)
+_nss_ldap_parse_proto (LDAP * ld,
+		       LDAPMessage * e,
+		       ldap_state_t * pvt,
+		       void *result, char *buffer, size_t buflen)
 {
 
   struct protoent *proto = (struct protoent *) result;
   char *number;
   NSS_STATUS stat;
 
-  stat = _nss_ldap_getrdnvalue (ld, e, AT (cn), &proto->p_name, &buffer, &buflen);
+  stat =
+    _nss_ldap_getrdnvalue (ld, e, AT (cn), &proto->p_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (ipProtocolNumber), &number, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (ipProtocolNumber), &number, &buffer,
+			      &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   proto->p_proto = atoi (number);
 
-  stat = _nss_ldap_assign_attrvals (ld, e, AT (cn), proto->p_name, &proto->p_aliases,
-				    &buffer, &buflen, NULL);
+  stat =
+    _nss_ldap_assign_attrvals (ld, e, AT (cn), proto->p_name,
+			       &proto->p_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -102,14 +104,16 @@ _nss_ldap_parse_proto (
 static NSS_STATUS
 _nss_ldap_getprotobyname_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, filt_getprotobyname, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_NAME (args, filt_getprotobyname, proto_attributes,
+	       _nss_ldap_parse_proto);
 }
 #elif defined(GNU_NSS)
 NSS_STATUS
 _nss_ldap_getprotobyname_r (const char *name, struct protoent *result,
 			    char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getprotobyname, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getprotobyname,
+	       proto_attributes, _nss_ldap_parse_proto);
 }
 #endif
 
@@ -117,14 +121,17 @@ _nss_ldap_getprotobyname_r (const char *name, struct protoent *result,
 static NSS_STATUS
 _nss_ldap_getprotobynumber_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NUMBER (args, key.number, filt_getprotobynumber, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_NUMBER (args, key.number, filt_getprotobynumber, proto_attributes,
+		 _nss_ldap_parse_proto);
 }
 #elif defined(GNU_NSS)
 NSS_STATUS
 _nss_ldap_getprotobynumber_r (int number, struct protoent *result,
 			      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NUMBER (number, result, buffer, buflen, errnop, filt_getprotobynumber, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_NUMBER (number, result, buffer, buflen, errnop,
+		 filt_getprotobynumber, proto_attributes,
+		 _nss_ldap_parse_proto);
 }
 #endif
 
@@ -156,13 +163,16 @@ _nss_ldap_endprotoent_r (nss_backend_t * proto_context, void *fakeargs)
 static NSS_STATUS
 _nss_ldap_getprotoent_r (nss_backend_t * proto_context, void *args)
 {
-  LOOKUP_GETENT (args, proto_context, filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_GETENT (args, proto_context, filt_getprotoent, proto_attributes,
+		 _nss_ldap_parse_proto);
 }
 #elif defined(GNU_NSS)
 NSS_STATUS
-_nss_ldap_getprotoent_r (struct protoent *result, char *buffer, size_t buflen, int *errnop)
+_nss_ldap_getprotoent_r (struct protoent *result, char *buffer, size_t buflen,
+			 int *errnop)
 {
-  LOOKUP_GETENT (proto_context, result, buffer, buflen, errnop, filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_GETENT (proto_context, result, buffer, buflen, errnop,
+		 filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
 }
 #endif
 
@@ -173,8 +183,7 @@ _nss_ldap_protocols_destr (nss_backend_t * proto_context, void *args)
   return _nss_ldap_default_destr (proto_context, args);
 }
 
-static nss_backend_op_t proto_ops[] =
-{
+static nss_backend_op_t proto_ops[] = {
   _nss_ldap_protocols_destr,
   _nss_ldap_endprotoent_r,
   _nss_ldap_setprotoent_r,
@@ -185,8 +194,7 @@ static nss_backend_op_t proto_ops[] =
 
 nss_backend_t *
 _nss_ldap_protocols_constr (const char *db_name,
-			    const char *src_name,
-			    const char *cfg_args)
+			    const char *src_name, const char *cfg_args)
 {
   nss_ldap_backend_t *be;
 

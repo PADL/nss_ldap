@@ -53,15 +53,14 @@ pthread_mutex_t _nss_ldap_lock = PTHREAD_MUTEX_INITIALIZER;
 void *_nss_ldap_libc_handle = NULL;
 #endif
 
-int _nss_ldap_herrno2nssstat_tab[] =
-{
+int _nss_ldap_herrno2nssstat_tab[] = {
 #ifdef GNU_NSS
   [NSS_SUCCESS - _NSS_LOOKUP_OFFSET] = 0,
   [NSS_TRYAGAIN - _NSS_LOOKUP_OFFSET] = TRY_AGAIN,
   [NSS_NOTFOUND - _NSS_LOOKUP_OFFSET] = HOST_NOT_FOUND,
   [NSS_UNAVAIL - _NSS_LOOKUP_OFFSET] = NO_RECOVERY
 #elif !defined(__GNUC__) || defined(NeXT)
-  0,
+    0,
   HOST_NOT_FOUND,
   NO_RECOVERY,
   TRY_AGAIN
@@ -73,10 +72,11 @@ int _nss_ldap_herrno2nssstat_tab[] =
 #endif
 };
 
-size_t _nss_ldap_herrno2nssstat_tab_count = (sizeof (_nss_ldap_herrno2nssstat_tab) / sizeof (_nss_ldap_herrno2nssstat_tab[0]));
+size_t _nss_ldap_herrno2nssstat_tab_count =
+  (sizeof (_nss_ldap_herrno2nssstat_tab) /
+   sizeof (_nss_ldap_herrno2nssstat_tab[0]));
 
-const char *_nss_ldap_crypt_prefixes_tab[] =
-{
+const char *_nss_ldap_crypt_prefixes_tab[] = {
 #if !defined(__GNUC__) || defined(NeXT)
   "{CRYPT}",
   "{MD5}",
@@ -88,8 +88,7 @@ const char *_nss_ldap_crypt_prefixes_tab[] =
 #endif
 };
 
-size_t _nss_ldap_crypt_prefixes_size_tab[] =
-{
+size_t _nss_ldap_crypt_prefixes_size_tab[] = {
 #if !defined(__GNUC__) || defined(NeXT)
   sizeof ("{CRYPT}") - 1,
   sizeof ("{MD5}") - 1,
@@ -103,4 +102,6 @@ size_t _nss_ldap_crypt_prefixes_size_tab[] =
 
 crypt_prefix_t _nss_ldap_crypt_prefix = UNIX_CRYPT;
 
-size_t _nss_ldap_crypt_prefixes_tab_count = (sizeof (_nss_ldap_crypt_prefixes_tab) / sizeof (_nss_ldap_crypt_prefixes_tab[0]));
+size_t _nss_ldap_crypt_prefixes_tab_count =
+  (sizeof (_nss_ldap_crypt_prefixes_tab) /
+   sizeof (_nss_ldap_crypt_prefixes_tab[0]));

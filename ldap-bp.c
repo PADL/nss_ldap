@@ -68,13 +68,10 @@ static context_handle_t bp_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_bp (
-		     LDAP * ld,
-		     LDAPMessage * e,
-		     ldap_state_t * pvt,
-		     void *result,
-		     char *buffer,
-		     size_t buflen)
+_nss_ldap_parse_bp (LDAP * ld,
+		    LDAPMessage * e,
+		    ldap_state_t * pvt,
+		    void *result, char *buffer, size_t buflen)
 {
   struct bootparams *bp = (struct bootparams *) result;
   NSS_STATUS stat;
@@ -84,12 +81,15 @@ _nss_ldap_parse_bp (
   if (stat != NSS_SUCCESS)
     return stat;
 #else
-  stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &bp->bp_name, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (cn), &bp->bp_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 #endif
 
-  stat = _nss_ldap_assign_attrvals (ld, e, AT (bootParameter), NULL, &bp->bp_params, &buffer, &buflen, NULL);
+  stat =
+    _nss_ldap_assign_attrvals (ld, e, AT (bootParameter), NULL,
+			       &bp->bp_params, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -100,7 +100,8 @@ _nss_ldap_parse_bp (
 static NSS_STATUS
 _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, filt_getbootparamsbyname, bp_attributes, _nss_ldap_parse_bp);
+  LOOKUP_NAME (args, filt_getbootparamsbyname, bp_attributes,
+	       _nss_ldap_parse_bp);
 }
 #endif
 
@@ -111,16 +112,14 @@ _nss_ldap_bootparams_destr (nss_backend_t * bp_context, void *args)
   return _nss_ldap_default_destr (bp_context, args);
 }
 
-static nss_backend_op_t bp_ops[] =
-{
+static nss_backend_op_t bp_ops[] = {
   _nss_ldap_bootparams_destr,
   _nss_ldap_getbootparamsbyname_r
 };
 
 nss_backend_t *
 _nss_ldap_bootparams_constr (const char *db_name,
-			     const char *src_name,
-			     const char *cfg_args)
+			     const char *src_name, const char *cfg_args)
 {
   nss_ldap_backend_t *be;
 

@@ -19,7 +19,8 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] = "$Id$";
+static char rcsId[] =
+  "$Id$";
 
 #ifdef IRS_NSS
 #include <port_before.h>
@@ -59,13 +60,10 @@ static context_handle_t gr_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_gr (
-		     LDAP * ld,
-		     LDAPMessage * e,
-		     ldap_state_t * pvt,
-		     void *result,
-		     char *buffer,
-		     size_t buflen)
+_nss_ldap_parse_gr (LDAP * ld,
+		    LDAPMessage * e,
+		    ldap_state_t * pvt,
+		    void *result, char *buffer, size_t buflen)
 {
   struct group *gr = (struct group *) result;
   char *gid;
@@ -75,22 +73,28 @@ _nss_ldap_parse_gr (
   int uid_mems_c = 0, dn_mems_c = 0;
 #endif /* RFC2307BIS */
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (gidNumber), &gid, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (gidNumber), &gid, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   gr->gr_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol (gid);
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (cn), &gr->gr_name, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (cn), &gr->gr_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_passwd (ld, e, AT (userPassword), &gr->gr_passwd, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_passwd (ld, e, AT (userPassword), &gr->gr_passwd,
+			     &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
 #ifndef RFC2307BIS
-  stat = _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &gr->gr_mem, &buffer, &buflen, NULL);
+  stat =
+    _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &gr->gr_mem,
+			       &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
 #else
@@ -118,6 +122,13 @@ _nss_ldap_parse_gr (
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
 	  char *uid;
+	  /*
+	   * Remove optional UID (as in unique identifier)
+	   */
+	  if ((uid = strrchr (*valiter, '#')) != NULL)
+	    {
+	      *uid = '\0';
+	    }
 	  stat = _nss_ldap_dn2uid (ld, *valiter, &uid, &buffer, &buflen);
 	  if (stat == NSS_SUCCESS)
 	    {
@@ -130,7 +141,9 @@ _nss_ldap_parse_gr (
       ldap_value_free (vals);
     }
 
-  stat = _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &uid_mems, &buffer, &buflen, &uid_mems_c);
+  stat =
+    _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &uid_mems,
+			       &buffer, &buflen, &uid_mems_c);
   if (stat != NSS_SUCCESS)
     uid_mems = NULL;
 
@@ -147,14 +160,16 @@ _nss_ldap_parse_gr (
 	gr->gr_mem = dn_mems;
       else
 	{
-	  if (bytesleft (buffer, buflen) < (dn_mems_c + uid_mems_c + 1) * sizeof (char *))
-	      return NSS_TRYAGAIN;
+	  if (bytesleft (buffer, buflen) <
+	      (dn_mems_c + uid_mems_c + 1) * sizeof (char *))
+	    return NSS_TRYAGAIN;
 	  align (buffer, buflen);
 	  gr->gr_mem = (char **) buffer;
 	  buffer += (dn_mems_c + uid_mems_c + 1) * sizeof (char *);
 	  buflen -= (dn_mems_c + uid_mems_c + 1) * sizeof (char *);
 	  memcpy (gr->gr_mem, dn_mems, (dn_mems_c * sizeof (char *)));
-	  memcpy (&gr->gr_mem[dn_mems_c], uid_mems, (uid_mems_c * sizeof (char *)));
+	  memcpy (&gr->gr_mem[dn_mems_c], uid_mems,
+		  (uid_mems_c * sizeof (char *)));
 	  gr->gr_mem[dn_mems_c + uid_mems_c] = NULL;
 	}
     }
@@ -179,8 +194,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 #endif /* SUN_NSS */
 #ifdef RFC2307BIS
   char *userdn = NULL;
-  const char **attrs =
-  {NULL};
+  const char **attrs = { NULL };
   const char *filter;
 #endif /* RFC2307BIS */
   ldap_args_t a;
@@ -226,7 +240,9 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 #endif /* LDAP_VERSION3_API */
     }
 #else
-  res = _nss_ldap_lookup (&a, filt_getgroupsbymember, gr_attributes, LDAP_NO_LIMIT);
+  res =
+    _nss_ldap_lookup (&a, filt_getgroupsbymember, gr_attributes,
+		      LDAP_NO_LIMIT);
 #endif /* RFC2307BIS */
 
   if (res == NULL)
@@ -234,8 +250,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
       return NSS_NOTFOUND;
     }
   for (e = _nss_ldap_first_entry (res);
-       e != NULL;
-       e = _nss_ldap_next_entry (e))
+       e != NULL; e = _nss_ldap_next_entry (e))
     {
       char **values = _nss_ldap_get_values (e, AT (gidNumber));
       if (values != NULL)
@@ -313,14 +328,12 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 
 #ifdef GNU_NSS
 NSS_STATUS
-_nss_ldap_getgrnam_r (
-		       const char *name,
-		       struct group * result,
-		       char *buffer,
-		       size_t buflen,
-		       int *errnop)
+_nss_ldap_getgrnam_r (const char *name,
+		      struct group * result,
+		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getgrnam, gr_attributes, _nss_ldap_parse_gr);
+  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getgrnam,
+	       gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
@@ -332,26 +345,24 @@ _nss_ldap_getgrnam_r (nss_backend_t * be, void *args)
 
 #ifdef GNU_NSS
 NSS_STATUS
-_nss_ldap_getgrgid_r (
-		       gid_t gid,
-		       struct group *result,
-		       char *buffer,
-		       size_t buflen,
-		       int *errnop)
+_nss_ldap_getgrgid_r (gid_t gid,
+		      struct group *result,
+		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NUMBER (gid, result, buffer, buflen, errnop, filt_getgrgid, gr_attributes, _nss_ldap_parse_gr);
+  LOOKUP_NUMBER (gid, result, buffer, buflen, errnop, filt_getgrgid,
+		 gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NUMBER (args, key.gid, filt_getgrgid, gr_attributes, _nss_ldap_parse_gr);
+  LOOKUP_NUMBER (args, key.gid, filt_getgrgid, gr_attributes,
+		 _nss_ldap_parse_gr);
 }
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS
-_nss_ldap_setgrent (void)
+NSS_STATUS _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -364,8 +375,7 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS
-_nss_ldap_endgrent (void)
+NSS_STATUS _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
@@ -379,20 +389,18 @@ _nss_ldap_endgrent_r (nss_backend_t * gr_context, void *args)
 
 #ifdef GNU_NSS
 NSS_STATUS
-_nss_ldap_getgrent_r (
-		       struct group *result,
-		       char *buffer,
-		       size_t buflen,
-		       int *errnop)
+_nss_ldap_getgrent_r (struct group *result,
+		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop, filt_getgrent, gr_attributes, _nss_ldap_parse_gr);
+  LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop, filt_getgrent,
+		 gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
-_nss_ldap_getgrent_r (nss_backend_t * gr_context,
-		      void *args)
+_nss_ldap_getgrent_r (nss_backend_t * gr_context, void *args)
 {
-  LOOKUP_GETENT (args, gr_context, filt_getgrent, gr_attributes, _nss_ldap_parse_gr);
+  LOOKUP_GETENT (args, gr_context, filt_getgrent, gr_attributes,
+		 _nss_ldap_parse_gr);
 }
 #endif
 
@@ -403,8 +411,7 @@ _nss_ldap_group_destr (nss_backend_t * gr_context, void *args)
   return _nss_ldap_default_destr (gr_context, args);
 }
 
-static nss_backend_op_t group_ops[] =
-{
+static nss_backend_op_t group_ops[] = {
   _nss_ldap_group_destr,
   _nss_ldap_endgrent_r,
   _nss_ldap_setgrent_r,
@@ -416,8 +423,7 @@ static nss_backend_op_t group_ops[] =
 
 nss_backend_t *
 _nss_ldap_group_constr (const char *db_name,
-			const char *src_name,
-			const char *cfg_args)
+			const char *src_name, const char *cfg_args)
 {
   nss_ldap_backend_t *be;
 

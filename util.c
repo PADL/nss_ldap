@@ -50,7 +50,10 @@
 
 static char rcsId[] = "$Id$";
 
-static NSS_STATUS _nss_ldap_getrdnvalue_impl (const char *dn, const char *rdntype, char **rval, char **buffer, size_t * buflen);
+static NSS_STATUS _nss_ldap_getrdnvalue_impl (const char *dn,
+					      const char *rdntype,
+					      char **rval, char **buffer,
+					      size_t * buflen);
 
 #ifdef RFC2307BIS
 #ifdef GNU_NSS
@@ -137,12 +140,8 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
 #endif /* DN2UID_CACHE */
 
 NSS_STATUS
-_nss_ldap_dn2uid (
-		   LDAP * ld,
-		   const char *dn,
-		   char **uid,
-		   char **buffer,
-		   size_t * buflen)
+_nss_ldap_dn2uid (LDAP * ld,
+		  const char *dn, char **uid, char **buffer, size_t * buflen)
 {
   NSS_STATUS status;
 
@@ -156,8 +155,7 @@ _nss_ldap_dn2uid (
       if (status != NSS_SUCCESS)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[] =
-	  {"uid", NULL};
+	  const char *attrs[] = { "uid", NULL };
 	  LDAPMessage *res = _nss_ldap_read (dn, attrs);
 	  status = NSS_NOTFOUND;
 	  if (res != NULL)
@@ -165,7 +163,9 @@ _nss_ldap_dn2uid (
 	      LDAPMessage *e = ldap_first_entry (ld, res);
 	      if (e != NULL)
 		{
-		  status = _nss_ldap_assign_attrval (ld, e, "uid", uid, buffer, buflen);
+		  status =
+		    _nss_ldap_assign_attrval (ld, e, "uid", uid, buffer,
+					      buflen);
 #ifdef DN2UID_CACHE
 		  if (status == NSS_SUCCESS)
 		    dn2uid_cache_put (dn, *uid);
@@ -183,13 +183,10 @@ _nss_ldap_dn2uid (
 #endif /* RFC2307BIS */
 
 NSS_STATUS
-_nss_ldap_getrdnvalue (
-			LDAP * ld,
-			LDAPMessage * entry,
-			const char *rdntype,
-			char **rval,
-			char **buffer,
-			size_t * buflen)
+_nss_ldap_getrdnvalue (LDAP * ld,
+		       LDAPMessage * entry,
+		       const char *rdntype,
+		       char **rval, char **buffer, size_t * buflen)
 {
   char *dn;
   NSS_STATUS status;
@@ -243,12 +240,9 @@ _nss_ldap_getrdnvalue (
 }
 
 NSS_STATUS
-_nss_ldap_getrdnvalue_impl (
-			     const char *dn,
-			     const char *rdntype,
-			     char **rval,
-			     char **buffer,
-			     size_t * buflen)
+_nss_ldap_getrdnvalue_impl (const char *dn,
+			    const char *rdntype,
+			    char **rval, char **buffer, size_t * buflen)
 {
   char **exploded_dn;
   char *rdnvalue = NULL;
@@ -358,11 +352,7 @@ _nss_ldap_getrdnvalue_impl (
 }
 
 NSS_STATUS
-_nss_ldap_readconfig (
-		       ldap_config_t ** presult,
-		       char *buf,
-		       size_t buflen
-)
+_nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 {
   FILE *fp;
   char b[NSS_LDAP_CONFIG_BUFSIZ], *p;

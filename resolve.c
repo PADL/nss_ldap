@@ -63,23 +63,17 @@ static char rcsid[] = "$Id$";
 #define DECL(X) {#X, T_##X}
 
 static struct stot
-  {
-    char *name;
-    int type;
-  }
+{
+  char *name;
+  int type;
+}
 stot[] =
 {
   DECL (A),
     DECL (NS),
-    DECL (CNAME),
-    DECL (PTR),
-    DECL (MX),
-    DECL (TXT),
-    DECL (AFSDB),
-    DECL (SRV),
+    DECL (CNAME), DECL (PTR), DECL (MX), DECL (TXT), DECL (AFSDB), DECL (SRV),
   {
-    NULL, 0
-  }
+  NULL, 0}
 };
 
 static int
@@ -179,7 +173,8 @@ parse_reply (unsigned char *data, int len)
       size = (p[0] << 8) | p[1];
       p += 2;
       *rr = (struct resource_record *) calloc (1,
-					   sizeof (struct resource_record));
+					       sizeof (struct
+						       resource_record));
       (*rr)->domain = strdup (host);
       (*rr)->type = type;
       (*rr)->class = class;
@@ -207,8 +202,10 @@ parse_reply (unsigned char *data, int len)
 		dns_free_data (r);
 		return NULL;
 	      }
-	    (*rr)->u.mx = (struct mx_record *) malloc (sizeof (struct mx_record) +
-						       strlen (host));
+	    
+	      (*rr)->u.mx =
+	      (struct mx_record *) malloc (sizeof (struct mx_record) +
+					   strlen (host));
 	    (*rr)->u.mx->preference = (p[0] << 8) | p[1];
 	    strcpy ((*rr)->u.mx->domain, host);
 	    break;

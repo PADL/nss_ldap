@@ -36,8 +36,7 @@ static char rcsId[] = "$Id$";
 #include "globals.h"
 #include "util.h"
 
-static void
-  ldap_close (struct irs_acc *this);
+static void ldap_close (struct irs_acc *this);
 
 /* Dispatch table for IRS LDAP module */
 

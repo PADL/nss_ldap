@@ -101,18 +101,13 @@ scan_passwd ()
       printf ("%s:%s:%d:%d:%s:%s:%s\n",
 	      p->pw_name,
 	      p->pw_passwd,
-	      p->pw_uid,
-	      p->pw_gid,
-	      p->pw_gecos,
-	      p->pw_dir,
-	      p->pw_shell);
+	      p->pw_uid, p->pw_gid, p->pw_gecos, p->pw_dir, p->pw_shell);
 
       if (p == NULL)
 	ret (1);
 
 #ifdef _REENTRANT
-      p = getpwnam_r (p->pw_name,
-		      &pbuf, buf, sizeof (buf));
+      p = getpwnam_r (p->pw_name, &pbuf, buf, sizeof (buf));
 #else
       p = getpwnam (p->pw_name);
 #endif
@@ -123,11 +118,7 @@ scan_passwd ()
       printf ("%s:%s:%d:%d:%s:%s:%s\n",
 	      p->pw_name,
 	      p->pw_passwd,
-	      p->pw_uid,
-	      p->pw_gid,
-	      p->pw_gecos,
-	      p->pw_dir,
-	      p->pw_shell);
+	      p->pw_uid, p->pw_gid, p->pw_gecos, p->pw_dir, p->pw_shell);
 
       i++;
     }

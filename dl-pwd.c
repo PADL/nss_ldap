@@ -44,8 +44,10 @@ static char rcsId[] = "$Id$";
 #include "globals.h"
 
 #ifdef OSF1
-typedef int (*libc_getpwnam_r_t) (const char *, struct passwd *, char *, size_t, struct passwd **);
-typedef int (*libc_getpwuid_r_t) (uid_t, struct passwd *, char *, size_t, struct passwd **);
+typedef int (*libc_getpwnam_r_t) (const char *, struct passwd *, char *,
+				  size_t, struct passwd **);
+typedef int (*libc_getpwuid_r_t) (uid_t, struct passwd *, char *, size_t,
+				  struct passwd **);
 typedef int (*libc_getpwent_r_t) (struct passwd *, char *, int, FILE **);
 typedef int (*libc_setpwent_r_t) (FILE **);
 typedef int (*libc_endpwent_r_t) (FILE **);
@@ -74,11 +76,9 @@ static libc_endpwent_t libc_endpwent = NULL;
 static libc_getpwent_t libc_getpwent = NULL;
 
 #ifdef OSF1
-static char nss_buf[SIABUFSIZ] =
-{'\0'};
+static char nss_buf[SIABUFSIZ] = { '\0' };
 #else
-static char nss_buf[NSS_BUFLEN_PASSWD] =
-{'\0'};
+static char nss_buf[NSS_BUFLEN_PASSWD] = { '\0' };
 #endif
 
 static int do_ldap_getpwent = 0;
@@ -98,7 +98,8 @@ getpwent_r (struct passwd *pw, char *buffer, int len, FILE ** pw_fp)
       INIT_HANDLE ();
       if (libc_getpwent_r == NULL)
 	{
-	  libc_getpwent_r = (libc_getpwent_r_t) dlsym (_nss_ldap_libc_handle, "getpwent_r");
+	  libc_getpwent_r =
+	    (libc_getpwent_r_t) dlsym (_nss_ldap_libc_handle, "getpwent_r");
 	}
       if (libc_getpwent_r == NULL)
 	{
@@ -111,7 +112,8 @@ getpwent_r (struct passwd *pw, char *buffer, int len, FILE ** pw_fp)
 	}
       if (libc_endpwent_r == NULL)
 	{
-	  libc_endpwent_r = (libc_endpwent_r_t) dlsym (_nss_ldap_libc_handle, "endpwent_r");
+	  libc_endpwent_r =
+	    (libc_endpwent_r_t) dlsym (_nss_ldap_libc_handle, "endpwent_r");
 	}
       if (libc_endpwent_r == NULL)
 	{
@@ -157,7 +159,8 @@ getpwent (void)
 
       if (libc_getpwent == NULL)
 	{
-	  libc_getpwent = (libc_getpwent_t) dlsym (_nss_ldap_libc_handle, "getpwent");
+	  libc_getpwent =
+	    (libc_getpwent_t) dlsym (_nss_ldap_libc_handle, "getpwent");
 	}
       if (libc_getpwent == NULL)
 	{
@@ -169,7 +172,8 @@ getpwent (void)
 	{
 	  if (libc_endpwent == NULL)
 	    {
-	      libc_endpwent = (libc_endpwent_t) dlsym (_nss_ldap_libc_handle, "endpwent");
+	      libc_endpwent =
+		(libc_endpwent_t) dlsym (_nss_ldap_libc_handle, "endpwent");
 	    }
 	  if (libc_endpwent == NULL)
 	    {
@@ -200,14 +204,16 @@ getpwent (void)
  * of Pgetpwuid_r. Ditto for getpwnam.
  */
 int
-getpwuid_r (uid_t uid, struct passwd *pwd, char *buffer, size_t len, struct passwd **result)
+getpwuid_r (uid_t uid, struct passwd *pwd, char *buffer, size_t len,
+	    struct passwd **result)
 {
   NSS_STATUS status;
   INIT_HANDLE ();
 
   if (libc_getpwuid_r == NULL)
     {
-      libc_getpwuid_r = (libc_getpwuid_r_t) dlsym (_nss_ldap_libc_handle, "getpwuid_r");
+      libc_getpwuid_r =
+	(libc_getpwuid_r_t) dlsym (_nss_ldap_libc_handle, "getpwuid_r");
     }
   if (libc_getpwuid_r == NULL)
     {
@@ -245,7 +251,8 @@ getpwuid (uid_t uid)
 
   if (libc_getpwuid == NULL)
     {
-      libc_getpwuid = (libc_getpwuid_t) dlsym (_nss_ldap_libc_handle, "getpwuid");
+      libc_getpwuid =
+	(libc_getpwuid_t) dlsym (_nss_ldap_libc_handle, "getpwuid");
     }
   if (libc_getpwuid == NULL)
     {
@@ -258,7 +265,8 @@ getpwuid (uid_t uid)
     {
       return p;
     }
-  if (_nss_ldap_getpwuid_r (uid, &pw, nss_buf, sizeof (nss_buf)) == NSS_SUCCESS)
+  if (_nss_ldap_getpwuid_r (uid, &pw, nss_buf, sizeof (nss_buf)) ==
+      NSS_SUCCESS)
     {
       return &pw;
     }
@@ -267,14 +275,16 @@ getpwuid (uid_t uid)
 
 #ifdef OSF1
 int
-getpwnam_r (const char *name, struct passwd *pwd, char *buffer, size_t len, struct passwd **result)
+getpwnam_r (const char *name, struct passwd *pwd, char *buffer, size_t len,
+	    struct passwd **result)
 {
   NSS_STATUS status;
   INIT_HANDLE ();
 
   if (libc_getpwnam_r == NULL)
     {
-      libc_getpwnam_r = (libc_getpwnam_r_t) dlsym (_nss_ldap_libc_handle, "getpwnam_r");
+      libc_getpwnam_r =
+	(libc_getpwnam_r_t) dlsym (_nss_ldap_libc_handle, "getpwnam_r");
     }
   if (libc_getpwnam_r == NULL)
     {
@@ -312,7 +322,8 @@ getpwnam (const char *name)
 
   if (libc_getpwnam == NULL)
     {
-      libc_getpwnam = (libc_getpwnam_t) dlsym (_nss_ldap_libc_handle, "getpwnam");
+      libc_getpwnam =
+	(libc_getpwnam_t) dlsym (_nss_ldap_libc_handle, "getpwnam");
     }
   if (libc_getpwnam == NULL)
     {
@@ -326,7 +337,8 @@ getpwnam (const char *name)
       return p;
     }
 
-  if (_nss_ldap_getpwnam_r (name, &pw, nss_buf, sizeof (nss_buf)) == NSS_SUCCESS)
+  if (_nss_ldap_getpwnam_r (name, &pw, nss_buf, sizeof (nss_buf)) ==
+      NSS_SUCCESS)
     {
       return &pw;
     }
@@ -342,7 +354,8 @@ setpwent_r (FILE ** fp)
   INIT_HANDLE ();
   if (libc_setpwent_r == NULL)
     {
-      libc_setpwent_r = (libc_setpwent_r_t) dlsym (_nss_ldap_libc_handle, "setpwent_r");
+      libc_setpwent_r =
+	(libc_setpwent_r_t) dlsym (_nss_ldap_libc_handle, "setpwent_r");
     }
   if (libc_setpwent_r != NULL)
     {
@@ -364,7 +377,8 @@ setpwent (void)
   INIT_HANDLE ();
   if (libc_setpwent == NULL)
     {
-      libc_setpwent = (libc_setpwent_t) dlsym (_nss_ldap_libc_handle, "setpwent");
+      libc_setpwent =
+	(libc_setpwent_t) dlsym (_nss_ldap_libc_handle, "setpwent");
     }
   if (libc_setpwent != NULL)
     {
@@ -385,7 +399,8 @@ endpwent_r (FILE ** fp)
       INIT_HANDLE ();
       if (libc_endpwent_r == NULL)
 	{
-	  libc_endpwent_r = (libc_endpwent_r_t) dlsym (_nss_ldap_libc_handle, "endpwent_r");
+	  libc_endpwent_r =
+	    (libc_endpwent_r_t) dlsym (_nss_ldap_libc_handle, "endpwent_r");
 	}
       if (libc_endpwent_r != NULL)
 	{
@@ -407,7 +422,8 @@ endpwent (void)
       INIT_HANDLE ();
       if (libc_endpwent == NULL)
 	{
-	  libc_endpwent = (libc_endpwent_t) dlsym (_nss_ldap_libc_handle, "endpwent");
+	  libc_endpwent =
+	    (libc_endpwent_t) dlsym (_nss_ldap_libc_handle, "endpwent");
 	}
       if (libc_endpwent != NULL)
 	{

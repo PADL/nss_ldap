@@ -70,11 +70,8 @@
 
 /* map gnu.org into DC=gnu,DC=org */
 NSS_STATUS
-_nss_ldap_getdnsdn (
-		     char *src_domain,
-		     char **rval,
-		     char **buffer,
-		     size_t * buflen)
+_nss_ldap_getdnsdn (char *src_domain,
+		    char **rval, char **buffer, size_t * buflen)
 {
   char *p;
   int len = 0;
@@ -143,11 +140,8 @@ _nss_ldap_getdnsdn (
 
 
 NSS_STATUS
-_nss_ldap_readconfigfromdns (
-			      ldap_config_t ** presult,
-			      char *buf,
-			      size_t buflen
-)
+_nss_ldap_readconfigfromdns (ldap_config_t ** presult,
+			     char *buf, size_t buflen)
 {
   NSS_STATUS stat = NSS_SUCCESS;
   struct dns_reply *r;
@@ -233,9 +227,7 @@ _nss_ldap_readconfigfromdns (
 
 	  /* DN */
 	  stat = _nss_ldap_getdnsdn (_res.defdname,
-				     &result->ldc_base,
-				     &bptr,
-				     &buflen);
+				     &result->ldc_base, &bptr, &buflen);
 	  if (stat != NSS_SUCCESS)
 	    {
 	      __nss_dns_unlock ();

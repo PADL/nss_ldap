@@ -6,12 +6,12 @@ main (int argc, char **argv)
 {
 #if 0
   struct group
-    {				/* see getgrent(3) */
-      char *gr_name;
-      char *gr_passwd;
-      gid_t gr_gid;
-      char **gr_mem;
-    };
+  {				/* see getgrent(3) */
+    char *gr_name;
+    char *gr_passwd;
+    gid_t gr_gid;
+    char **gr_mem;
+  };
 #endif
 
   scan_group ();
@@ -35,8 +35,7 @@ dump (struct group *g)
       if (*(++p) == NULL)
 	break;
     }
-  printf ("%s:%s:%d:%s\n",
-	  g->gr_name, g->gr_passwd, g->gr_gid, mem);
+  printf ("%s:%s:%d:%s\n", g->gr_name, g->gr_passwd, g->gr_gid, mem);
 
 }
 

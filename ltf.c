@@ -47,7 +47,8 @@ static char rcsId[] = "$Id$";
 static void *ltf_mutex_alloc (void);
 static void ltf_mutex_free (void *m);
 static NSS_STATUS ltf_tsd_setup (void);
-static void ltf_set_ld_error (int err, char *matched, char *errmsg, void *dummy);
+static void ltf_set_ld_error (int err, char *matched, char *errmsg,
+			      void *dummy);
 static int ltf_get_ld_error (char **matched, char **errmsg, void *dummy);
 static void ltf_set_errno (int err);
 static int ltf_get_errno (void);
@@ -79,8 +80,7 @@ static int ltf_get_errno ();
 
 static pthread_key_t key;
 
-NSS_STATUS
-_nss_ldap_ltf_thread_init (LDAP * ld)
+NSS_STATUS _nss_ldap_ltf_thread_init (LDAP * ld)
 {
   struct ldap_thread_fns tfns;
 
@@ -96,8 +96,7 @@ _nss_ldap_ltf_thread_init (LDAP * ld)
   tfns.ltf_set_lderrno = ltf_set_ld_error;
   tfns.ltf_lderrno_arg = NULL;
   /* set ld_errno pointers */
-  if (ldap_set_option (ld, LDAP_OPT_THREAD_FN_PTRS, (void *) &tfns)
-      != 0)
+  if (ldap_set_option (ld, LDAP_OPT_THREAD_FN_PTRS, (void *) &tfns) != 0)
     {
       return NSS_UNAVAIL;
     }
@@ -290,8 +289,7 @@ ltf_get_errno (void)
   return errno;
 }
 
-NSS_STATUS
-_nss_ldap_ltf_thread_init (LDAP * ld)
+NSS_STATUS _nss_ldap_ltf_thread_init (LDAP * ld)
 {
   struct ldap_thread_fns tfns;
 

@@ -35,11 +35,11 @@ static void gr_rewind (struct irs_gr *);
 static void gr_minimize (struct irs_gr *);
 
 struct pvt
-  {
-    struct group result;
-    char buffer[NSS_BUFLEN_GROUP];
-    context_handle_t state;
-  };
+{
+  struct group result;
+  char buffer[NSS_BUFLEN_GROUP];
+  context_handle_t state;
+};
 
 static struct group *
 gr_byname (struct irs_gr *this, const char *name)

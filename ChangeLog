@@ -1,6 +1,16 @@
 $Id$
 ===============================================================
 
+88	Luke Howard <lukeh@padl.com>
+
+	* added breaks to switch in _nss_ldap_lookup
+	  (thanks to Mike.Shelton@FMR.COM for pointing
+	   this out)
+	* incorporated patch from rpatel@globix.com:
+	  save signal handler and ignore SIGPIPE for
+	  appropriate sections of do_open() and confirm
+	  connection is still active.
+
 87	Luke Howard <lukeh@padl.com>
 
 	* fixed looking up DN-membered groups by member. Thanks

@@ -34,11 +34,11 @@ static void sv_rewind (struct irs_sv *);
 static void sv_minimize (struct irs_sv *);
 
 struct pvt
-  {
-    struct servent result;
-    char buffer[NSS_BUFLEN_PROTOCOLS];
-    context_handle_t state;
-  };
+{
+  struct servent result;
+  char buffer[NSS_BUFLEN_PROTOCOLS];
+  context_handle_t state;
+};
 
 static struct servent *
 sv_byname (struct irs_sv *this, const char *name, const char *proto)
@@ -51,9 +51,13 @@ sv_byname (struct irs_sv *this, const char *name, const char *proto)
   LA_STRING (a) = name;
   LA_TYPE (a) = (proto == NULL) ? LA_TYPE_STRING : LA_TYPE_STRING_AND_STRING;
   LA_STRING2 (a) = proto;
-  s = _nss_ldap_getbyname (&a, &pvt->result, pvt->buffer, sizeof (pvt->buffer),
-	     (proto == NULL) ? filt_getservbyname : filt_getservbynameproto,
-		     (const char **) serv_attributes, _nss_ldap_parse_serv);
+  s =
+    _nss_ldap_getbyname (&a, &pvt->result, pvt->buffer, sizeof (pvt->buffer),
+			 (proto ==
+			  NULL) ? filt_getservbyname :
+			 filt_getservbynameproto,
+			 (const char **) serv_attributes,
+			 _nss_ldap_parse_serv);
 
   if (s != NSS_SUCCESS)
     {
@@ -74,9 +78,13 @@ sv_byport (struct irs_sv *this, int port, const char *proto)
   LA_NUMBER (a) = port;
   LA_TYPE (a) = (proto == NULL) ? LA_TYPE_NUMBER : LA_TYPE_NUMBER_AND_STRING;
   LA_STRING2 (a) = proto;
-  s = _nss_ldap_getbyname (&a, &pvt->result, pvt->buffer, sizeof (pvt->buffer),
-	     (proto == NULL) ? filt_getservbyport : filt_getservbyportproto,
-		     (const char **) serv_attributes, _nss_ldap_parse_serv);
+  s =
+    _nss_ldap_getbyname (&a, &pvt->result, pvt->buffer, sizeof (pvt->buffer),
+			 (proto ==
+			  NULL) ? filt_getservbyport :
+			 filt_getservbyportproto,
+			 (const char **) serv_attributes,
+			 _nss_ldap_parse_serv);
 
   if (s != NSS_SUCCESS)
     {
@@ -95,7 +103,8 @@ sv_close (struct irs_sv *this)
 static struct servent *
 sv_next (struct irs_sv *this)
 {
-  LOOKUP_GETENT (this, filt_getservent, serv_attributes, _nss_ldap_parse_serv);
+  LOOKUP_GETENT (this, filt_getservent, serv_attributes,
+		 _nss_ldap_parse_serv);
 }
 
 static void

@@ -2,6 +2,8 @@
 Please contact PADL Software Development Support <dev@padl.com>
 if you wish to contribute.
 
+Please see http://bugzilla.padl.com for more information!
+
 BUGZILLA BUGS:
 ==============
 
@@ -29,9 +31,6 @@ BUGZILLA BUGS:
   we should link with a custom gethostbyname() which uses DNS only??? (This
   is nominally the LDAP client library's problem but we could short-circuit
   by resolving the IP addresses ourselves).
-
-[BUG#15]
-- check rfc2307bis support in getgroupsbymember()
 
 [BUG#16]
 - finish implementing dl-*.c  (LOW priority). In fact I'm tempted to remove

@@ -19,7 +19,8 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] = "$Id$";
+static char rcsId[] =
+  "$Id$";
 
 #if !defined(IRS_NSS)		/* no shadow support */
 
@@ -58,45 +59,57 @@ static context_handle_t sp_context = NULL;
 #endif
 
 static NSS_STATUS
-_nss_ldap_parse_sp (
-		     LDAP * ld,
-		     LDAPMessage * e,
-		     ldap_state_t * pvt,
-		     void *result,
-		     char *buffer,
-		     size_t buflen)
+_nss_ldap_parse_sp (LDAP * ld,
+		    LDAPMessage * e,
+		    ldap_state_t * pvt,
+		    void *result, char *buffer, size_t buflen)
 {
   struct spwd *sp = (struct spwd *) result;
   NSS_STATUS stat;
   char *tmp = NULL;
 
-  stat = _nss_ldap_assign_passwd (ld, e, AT (userPassword), &sp->sp_pwdp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_passwd (ld, e, AT (userPassword), &sp->sp_pwdp, &buffer,
+			     &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (uid), &sp->sp_namp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (uid), &sp->sp_namp, &buffer,
+			      &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (shadowLastChange), &tmp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (shadowLastChange), &tmp, &buffer,
+			      &buflen);
   sp->sp_lstchg = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (shadowMax), &tmp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (shadowMax), &tmp, &buffer, &buflen);
   sp->sp_max = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (shadowMin), &tmp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (shadowMin), &tmp, &buffer, &buflen);
   sp->sp_min = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (shadowWarning), &tmp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (shadowWarning), &tmp, &buffer,
+			      &buflen);
   sp->sp_warn = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (shadowInactive), &tmp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (shadowInactive), &tmp, &buffer,
+			      &buflen);
   sp->sp_inact = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (shadowExpire), &tmp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (shadowExpire), &tmp, &buffer,
+			      &buflen);
   sp->sp_expire = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
 
-  stat = _nss_ldap_assign_attrval (ld, e, AT (shadowFlag), &tmp, &buffer, &buflen);
+  stat =
+    _nss_ldap_assign_attrval (ld, e, AT (shadowFlag), &tmp, &buffer, &buflen);
   sp->sp_flag = (stat == NSS_SUCCESS) ? atol (tmp) : 0;
 
   return NSS_SUCCESS;
@@ -104,14 +117,12 @@ _nss_ldap_parse_sp (
 
 #ifdef GNU_NSS
 NSS_STATUS
-_nss_ldap_getspnam_r (
-		       const char *name,
-		       struct spwd * result,
-		       char *buffer,
-		       size_t buflen,
-		       int *errnop)
+_nss_ldap_getspnam_r (const char *name,
+		      struct spwd * result,
+		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getspnam, sp_attributes, _nss_ldap_parse_sp);
+  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getspnam,
+	       sp_attributes, _nss_ldap_parse_sp);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
@@ -122,8 +133,7 @@ _nss_ldap_getspnam_r (nss_backend_t * be, void *args)
 #endif /* GNU_NSS */
 
 #if defined(GNU_NSS)
-NSS_STATUS
-_nss_ldap_setspent (void)
+NSS_STATUS _nss_ldap_setspent (void)
 #else
 static NSS_STATUS
 _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
@@ -135,8 +145,7 @@ _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS
-_nss_ldap_endspent (void)
+NSS_STATUS _nss_ldap_endspent (void)
 #else
 static NSS_STATUS
 _nss_ldap_endspent_r (nss_backend_t * sp_context, void *args)
@@ -149,19 +158,18 @@ _nss_ldap_endspent_r (nss_backend_t * sp_context, void *args)
 
 #ifdef GNU_NSS
 NSS_STATUS
-_nss_ldap_getspent_r (
-		       struct spwd *result,
-		       char *buffer,
-		       size_t buflen,
-		       int *errnop)
+_nss_ldap_getspent_r (struct spwd *result,
+		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_GETENT (sp_context, result, buffer, buflen, errnop, filt_getspent, sp_attributes, _nss_ldap_parse_sp);
+  LOOKUP_GETENT (sp_context, result, buffer, buflen, errnop, filt_getspent,
+		 sp_attributes, _nss_ldap_parse_sp);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS
 _nss_ldap_getspent_r (nss_backend_t * sp_context, void *args)
 {
-  LOOKUP_GETENT (args, sp_context, filt_getspent, sp_attributes, _nss_ldap_parse_sp);
+  LOOKUP_GETENT (args, sp_context, filt_getspent, sp_attributes,
+		 _nss_ldap_parse_sp);
 }
 #endif
 
@@ -172,8 +180,7 @@ _nss_ldap_shadow_destr (nss_backend_t * sp_context, void *args)
   return _nss_ldap_default_destr (sp_context, args);
 }
 
-static nss_backend_op_t shadow_ops[] =
-{
+static nss_backend_op_t shadow_ops[] = {
   _nss_ldap_shadow_destr,
   _nss_ldap_endspent_r,		/* NSS_DBOP_ENDENT */
   _nss_ldap_setspent_r,		/* NSS_DBOP_SETENT */
@@ -184,8 +191,7 @@ static nss_backend_op_t shadow_ops[] =
 
 nss_backend_t *
 _nss_ldap_shadow_constr (const char *db_name,
-			 const char *src_name,
-			 const char *cfg_args)
+			 const char *src_name, const char *cfg_args)
 {
   nss_ldap_backend_t *be;
 

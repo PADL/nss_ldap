@@ -35,22 +35,24 @@ static void pr_rewind (struct irs_pr *);
 static void pr_minimize (struct irs_pr *);
 
 struct pvt
-  {
-    struct protoent result;
-    char buffer[NSS_BUFLEN_PROTOCOLS];
-    context_handle_t state;
-  };
+{
+  struct protoent result;
+  char buffer[NSS_BUFLEN_PROTOCOLS];
+  context_handle_t state;
+};
 
 static struct protoent *
 pr_byname (struct irs_pr *this, const char *name)
 {
-  LOOKUP_NAME (name, this, filt_getprotobyname, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_NAME (name, this, filt_getprotobyname, proto_attributes,
+	       _nss_ldap_parse_proto);
 }
 
 static struct protoent *
 pr_bynumber (struct irs_pr *this, int num)
 {
-  LOOKUP_NUMBER (num, this, filt_getprotobynumber, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_NUMBER (num, this, filt_getprotobynumber, proto_attributes,
+		 _nss_ldap_parse_proto);
 }
 
 static void
@@ -62,7 +64,8 @@ pr_close (struct irs_pr *this)
 static struct protoent *
 pr_next (struct irs_pr *this)
 {
-  LOOKUP_GETENT (this, filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_GETENT (this, filt_getprotoent, proto_attributes,
+		 _nss_ldap_parse_proto);
 }
 
 static void

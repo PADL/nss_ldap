@@ -82,8 +82,7 @@ test_passwd (void)
 
   printf (">>>>>> getpwnam(\"%s\")\n", ARGC > 1 ? ARGV[1] : "root");
 #ifdef _REENTRANT
-  pw = getpwnam_r (ARGC > 1 ? ARGV[1] : "root",
-		   &pbuf, buf, sizeof (buf));
+  pw = getpwnam_r (ARGC > 1 ? ARGV[1] : "root", &pbuf, buf, sizeof (buf));
 #else
   pw = getpwnam (ARGC > 1 ? ARGV[1] : "root");
 #endif
@@ -91,7 +90,8 @@ test_passwd (void)
   if (!pw)
     ret (1);
 
-  printf ("%s:%s:%d:%d:%s:%s:%s\n", pw->pw_name, pw->pw_passwd, pw->pw_uid, pw->pw_gid, pw->pw_gecos, pw->pw_dir, pw->pw_shell);
+  printf ("%s:%s:%d:%d:%s:%s:%s\n", pw->pw_name, pw->pw_passwd, pw->pw_uid,
+	  pw->pw_gid, pw->pw_gecos, pw->pw_dir, pw->pw_shell);
   uid = pw->pw_uid;
 
   printf (">>>>>> getpwuid(%d)\n", uid);
@@ -105,7 +105,8 @@ test_passwd (void)
   if (!pw)
     ret (1);
 
-  printf ("%s:%s:%d:%d:%s:%s:%s\n", pw->pw_name, pw->pw_passwd, pw->pw_uid, pw->pw_gid, pw->pw_gecos, pw->pw_dir, pw->pw_shell);
+  printf ("%s:%s:%d:%d:%s:%s:%s\n", pw->pw_name, pw->pw_passwd, pw->pw_uid,
+	  pw->pw_gid, pw->pw_gecos, pw->pw_dir, pw->pw_shell);
 
   if (ARGC > 2 && !strcmp (ARGV[2], "no"))
     {
@@ -142,11 +143,7 @@ scan_passwd (void)
       printf ("%s:%s:%d:%d:%s:%s:%s\n",
 	      p->pw_name,
 	      p->pw_passwd,
-	      p->pw_uid,
-	      p->pw_gid,
-	      p->pw_gecos,
-	      p->pw_dir,
-	      p->pw_shell);
+	      p->pw_uid, p->pw_gid, p->pw_gecos, p->pw_dir, p->pw_shell);
       i++;
     }
 }
