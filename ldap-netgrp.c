@@ -84,7 +84,7 @@ static ent_context_t *netgroup_context = NULL;
       if (result->data == NULL)                                               \
         {                                                                     \
           stat = NSS_UNAVAIL;                                                 \
-          goto the_end;                                                       \
+          goto out;                                                           \
         }                                                                     \
                                                                               \
       result->cursor = result->data + old_cursor;                             \
@@ -293,13 +293,13 @@ _nss_ldap_load_netgr (LDAP * ld,
 	  if (*valiter != NULL)
 	    *result->cursor++ = ' ';
 	}
-      ldap_value_free (values);
+      ldap_value_free (vals);
     }
 
   result->first = 1;
   result->cursor = result->data;
 
-the_end:
+out:
 
   return stat;
 }
@@ -359,9 +359,6 @@ _nss_ldap_setnetgrent (char *group, struct __netgrent *result)
     _nss_ldap_getbyname (&a, result, buffer, buflen, &errnop,
 			 _nss_ldap_filt_getnetgrent, LM_NETGROUP,
 			 _nss_ldap_load_netgr);
-
-  if (errnop != 0)
-    debug ("***errnop == %d", errnop);
 
   LOOKUP_SETENT (netgroup_context);
 }
