@@ -226,7 +226,7 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
 #ifdef RFC2307BIS
 
 #ifdef HPUX
-static int lock_inited;
+static int lock_inited = 0;
 #endif
 
 NSS_STATUS
@@ -238,6 +238,7 @@ _nss_ldap_dn2uid (LDAP * ld,
   debug ("==> _nss_ldap_dn2uid");
 
 #ifdef HPUX
+  /* XXX this is not thread-safe */
   if (!lock_inited)
     {
       __thread_mutex_init(&__cache_lock, NULL);
