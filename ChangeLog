@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+132	Luke Howard <lukeh@padl.com>
+
+	* fixed rebind preprocessor logic
+
 131	Luke Howard <lukeh@padl.com>
 
 	* created files for automake happiness

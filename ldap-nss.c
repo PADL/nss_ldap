@@ -199,11 +199,11 @@ _nss_ldap_rebind (LDAP * ld, LDAP_CONST char *url, int request,
   return ldap_simple_bind_s (ld, who, cred);
 }
 #else
-# if LDAP_SET_REBIND_PROC_ARGS < 3
+# if LDAP_SET_REBIND_PROC_ARGS == 3
 static int
 _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		  int freeit, void *arg)
-# else
+# elif LDAP_SET_REBIND_PROC_ARGS == 2
      static int
        _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 			 int freeit)
@@ -586,10 +586,10 @@ do_open (void)
     }
 #endif /* LDAP_OPT_THREAD_FN_PTRS */
 
-#if LDAP_SET_REBIND_PROC_ARGS < 3
-  ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind);
-#else
+#if LDAP_SET_REBIND_PROC_ARGS == 3
   ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind, NULL);
+#elif LDAP_SET_REBIND_PROC_ARGS == 2
+  ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind);
 #endif
 
 #ifdef LDAP_OPT_PROTOCOL_VERSION
