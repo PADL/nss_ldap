@@ -7,7 +7,8 @@ $Id$
 	  enabled
 	* support GSS-API for setting ccache name
 	* initgroups() should require user to be a POSIX
-	  account
+	  account	
+	* define LOGNAME_MAX for HP-UX
 
 212	Luke Howard <lukeh@padl.com>
 

@@ -89,6 +89,10 @@
 #define LDAP_FILT_MAXSIZ 1024
 #endif /* !LDAP_FILT_MAXSIZE */
 
+#ifndef LOGNAME_MAX
+#define LOGNAME_MAX 8
+#endif /* LOGNAME_MAX */
+
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
 #ifdef HAVE_NSSWITCH_H
