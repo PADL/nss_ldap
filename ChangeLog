@@ -4,6 +4,8 @@ $Header$
 203	Luke Howard <lukeh@padl.com>
 
 	* fix for bug #115
+	* patch from Michael Brown to fix off-by-one errors in
+	  util.c
 
 202	Luke Howard <lukeh@padl.com>
 

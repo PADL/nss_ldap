@@ -284,7 +284,7 @@ _nss_ldap_getrdnvalue (LDAP * ld,
       if (vals != NULL)
 	{
 	  int rdnlen = strlen (*vals);
-	  if (*buflen >= rdnlen)
+	  if (*buflen > rdnlen)
 	    {
 	      char *rdnvalue = *buffer;
 	      strncpy (rdnvalue, *vals, rdnlen);
@@ -345,7 +345,7 @@ do_getrdnvalue (const char *dn,
 		  char *r = *p + rdnavalen;
 
 		  rdnlen = strlen (r);
-		  if (*buflen < rdnlen)
+		  if (*buflen <= rdnlen)
 		    {
 		      ldap_value_free (exploded_rdn);
 		      ldap_value_free (exploded_dn);
@@ -385,7 +385,7 @@ do_getrdnvalue (const char *dn,
 	  {
 	    p += rdnavalen;
 	    rdnlen = strlen (p);
-	    if (*buflen < rdnlen)
+	    if (*buflen <= rdnlen)
 	      {
 		ldap_value_free (exploded_dn);
 		return NSS_TRYAGAIN;
