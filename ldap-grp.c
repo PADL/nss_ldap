@@ -465,7 +465,6 @@ do_parse_group_members (LDAP * ld,
 		goto out;
 
 	      e = ldap_first_entry (ld, res);
-	      goto next_range;
 	    }
 	}
     }
