@@ -256,7 +256,7 @@ _nss_ldap_gethostbyname_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
 				_nss_ldap_filt_gethostbyname,
-				LM_HOSTS, _nss_ldap_parse_host);
+				LM_HOSTS, _nss_ldap_parse_hostv4);
 
   if (status == NSS_SUCCESS)
     NSS_ARGS (args)->returnval = NSS_ARGS (args)->buf.result;
@@ -331,7 +331,7 @@ _nss_ldap_gethostbyaddr_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
 				_nss_ldap_filt_gethostbyaddr,
-				LM_HOSTS, _nss_ldap_parse_host);
+				LM_HOSTS, _nss_ldap_parse_hostv4);
 
   if (status == NSS_SUCCESS)
     NSS_ARGS (args)->returnval = NSS_ARGS (args)->buf.result;
@@ -413,7 +413,7 @@ _nss_ldap_gethostent_r (nss_backend_t * hosts_context, void *args)
 					&NSS_ARGS (args)->erange,
 					_nss_ldap_filt_gethostent,
 					LM_HOSTS,
-					_nss_ldap_parse_host);
+					_nss_ldap_parse_hostv4);
 
   if (status == NSS_SUCCESS)
     NSS_ARGS (args)->returnval = NSS_ARGS (args)->buf.result;
