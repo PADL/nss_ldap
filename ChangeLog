@@ -3,6 +3,8 @@ $Header$
 
 138	Luke Howard <lukeh@padl.com>
 
+	* patch from nalin@redhat.com; return { NULL } not
+	  NULL for no group members
 	* cleaned up usage of libc-lock.h weak aliases
 	  to pthreads API; use in ltf.c also
 	* use __libc_atfork() or pthread_atfork() to

@@ -59,6 +59,8 @@ static char rcsId[] =
 static ent_context_t * gr_context = NULL;
 #endif
 
+static char *_nss_ldap_no_members[] = { NULL };
+
 static NSS_STATUS
 _nss_ldap_parse_gr (LDAP * ld,
 		    LDAPMessage * e,
@@ -150,7 +152,7 @@ _nss_ldap_parse_gr (LDAP * ld,
   if (dn_mems == NULL)
     {
       if (uid_mems == NULL)
-	gr->gr_mem = NULL;
+	gr->gr_mem = _nss_ldap_no_members;
       else
 	gr->gr_mem = uid_mems;
     }
