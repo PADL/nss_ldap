@@ -1,6 +1,14 @@
 $Id$
 ===============================================================
 
+93	Luke Howard <lukeh@padl.com>
+
+	* important fix: make sure return status is reset
+	  after do_open() == NSS_SUCCESS, just in case
+	  no entries are returned. This bug was introduced
+	  in nss_ldap-88 and could potentially cause a
+	  security hole.
+
 92	Luke Howard <lukeh@padl.com>
 
 	* signal handling fix: don't restore handler
