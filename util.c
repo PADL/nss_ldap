@@ -39,6 +39,7 @@
 #include <netdb.h>
 #include <syslog.h>
 #include <string.h>
+#include <fcntl.h>
 
 #ifdef HAVE_LBER_H
 #include <lber.h>
@@ -111,19 +112,10 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 void *
 _nss_hash_open()
 {
-  int rc;
   DB *db = NULL;
 
-  rc = db_create( &db, NULL, 0 );
-  if ( rc == 0 )
-    {
-      rc = db->open( db, NULL, NULL, NULL, DB_HASH, DB_CREATE | DB_THREAD, 0600 );
-      if ( rc )
-	{
-	  db->close( db, 0 );
-	  db = NULL;
-	}
-    }
+  db = dbopen(NULL, O_RDWR, 0600, DB_HASH, NULL);
+
   return db;
 }
 #endif

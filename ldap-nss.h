@@ -296,6 +296,9 @@ struct ldap_config
    */
   const char **ldc_attrtab[LM_NONE];
 
+  char *ldc_template_homedir;
+  char *ldc_template_loginshell;
+
   /* next configuration. loops back onto itself for last entry */
   struct ldap_config *ldc_next;
 };
