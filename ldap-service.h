@@ -39,7 +39,7 @@ static const char *serv_attributes[] =
  AT (ipServiceProtocol), NULL};
 
 static const char filt_getservbyname[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (ipService) ")(" AT (cn) "=%s))";
      static const char filt_getservbynameproto[] =
      "(&(objectclass=" OC (ipService) ")(" AT (cn) "=%s)(" AT (ipServiceProtocol) "=%s))";

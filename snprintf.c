@@ -49,7 +49,7 @@ XX **NO VARARGS ** XX
 #endif
 #endif
 #ifdef HAVE_STDARGS
-int snprintf (char *str, size_t count, const char *fmt, ...);
+int snprintf (char *str, size_t count, const char *fmt,...);
 int vsnprintf (char *str, size_t count, const char *fmt, va_list arg);
 #else
 int snprintf ();
@@ -76,7 +76,7 @@ vsnprintf (str, count, fmt, args)
 /* VARARGS3 */
 #ifdef HAVE_STDARGS
 int
-snprintf (char *str, size_t count, const char *fmt, ...)
+snprintf (char *str, size_t count, const char *fmt,...)
 #else
 int
 snprintf (va_alist)

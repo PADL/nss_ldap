@@ -20,7 +20,7 @@
  */
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifdef SUN_NSS
 #include <thread.h>
@@ -68,7 +68,8 @@ static ldap_config_t *__config = NULL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session = { NULL, NULL };
+static ldap_session_t __session =
+{NULL, NULL};
 
 /* 
  * Process ID that opened the session.
@@ -216,7 +217,7 @@ do_open (void)
   pid = getpid ();
 #ifdef DEBUG
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif /* DEBUG */
   if (__pid != pid)
@@ -507,7 +508,7 @@ do_search_s (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+	   "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
 		  backoff);
 	  (void) sleep (backoff);
 	}
@@ -643,11 +644,12 @@ _nss_ldap_lookup (const ldap_args_t * args,
 
   debug ("==> _nss_ldap_lookup");
 
-  if (do_open () != NSS_SUCCESS)
+  stat = do_open ();
+  if (stat != NSS_SUCCESS)
     {
       __session.ls_conn = NULL;
       debug ("<== _nss_ldap_lookup");
-      return NSS_UNAVAIL;
+      return stat;
     }
 
   if (args != NULL)
@@ -714,7 +716,7 @@ _nss_ldap_getent (ent_context_t * ctx,
 		  char *buffer,
 		  size_t buflen,
 		  int *errnop,
-		  const char *filterprot, const char **attrs, parser_t parser)
+		const char *filterprot, const char **attrs, parser_t parser)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
 

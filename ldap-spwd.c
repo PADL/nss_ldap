@@ -20,7 +20,7 @@
  */
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #if !defined(IRS_NSS)		/* no shadow support */
 
@@ -133,7 +133,8 @@ _nss_ldap_getspnam_r (nss_backend_t * be, void *args)
 #endif /* GNU_NSS */
 
 #if defined(GNU_NSS)
-NSS_STATUS _nss_ldap_setspent (void)
+NSS_STATUS 
+_nss_ldap_setspent (void)
 #else
 static NSS_STATUS
 _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
@@ -145,7 +146,8 @@ _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS _nss_ldap_endspent (void)
+NSS_STATUS 
+_nss_ldap_endspent (void)
 #else
 static NSS_STATUS
 _nss_ldap_endspent_r (nss_backend_t * sp_context, void *args)
@@ -180,7 +182,8 @@ _nss_ldap_shadow_destr (nss_backend_t * sp_context, void *args)
   return _nss_ldap_default_destr (sp_context, args);
 }
 
-static nss_backend_op_t shadow_ops[] = {
+static nss_backend_op_t shadow_ops[] =
+{
   _nss_ldap_shadow_destr,
   _nss_ldap_endspent_r,		/* NSS_DBOP_ENDENT */
   _nss_ldap_setspent_r,		/* NSS_DBOP_SETENT */

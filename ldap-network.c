@@ -24,7 +24,7 @@
 /* parts based on nss_nis */
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifdef IRS_NSS
 #include <port_before.h>
@@ -201,7 +201,7 @@ _nss_ldap_getnetbyaddr_r (nss_backend_t * be, void *args)
 #else
 NSS_STATUS
 _nss_ldap_getnetbyaddr_r (unsigned long addr, int type,
-			  struct netent * result, char *buffer, size_t buflen,
+			struct netent * result, char *buffer, size_t buflen,
 			  int *errnop, int *herrnop)
 #endif
 {
@@ -317,15 +317,15 @@ static NSS_STATUS
 _nss_ldap_getnetent_r (nss_backend_t * net_context, void *args)
 {
   NSS_STATUS status = _nss_ldap_getent (
-					((nss_ldap_backend_t *) net_context)->
-					state,
-					NSS_ARGS (args)->buf.result,
-					NSS_ARGS (args)->buf.buffer,
-					NSS_ARGS (args)->buf.buflen,
-					&NSS_ARGS (args)->erange,
-					filt_getnetent,
-					(const char **) net_attributes,
-					_nss_ldap_parse_net);
+				      ((nss_ldap_backend_t *) net_context)->
+					 state,
+					 NSS_ARGS (args)->buf.result,
+					 NSS_ARGS (args)->buf.buffer,
+					 NSS_ARGS (args)->buf.buflen,
+					 &NSS_ARGS (args)->erange,
+					 filt_getnetent,
+					 (const char **) net_attributes,
+					 _nss_ldap_parse_net);
 
   if (status == NSS_SUCCESS)
     NSS_ARGS (args)->returnval = NSS_ARGS (args)->buf.result;
@@ -361,7 +361,8 @@ _nss_ldap_networks_destr (nss_backend_t * net_context, void *args)
   return _nss_ldap_default_destr (net_context, args);
 }
 
-static nss_backend_op_t net_ops[] = {
+static nss_backend_op_t net_ops[] =
+{
   _nss_ldap_networks_destr,
   _nss_ldap_endnetent_r,
   _nss_ldap_setnetent_r,

@@ -37,15 +37,17 @@ static void ho_rewind (struct irs_ho *this);
 static void ho_minimize (struct irs_ho *this);
 
 
-static const u_char mapped[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff };
-static const u_char tunnelled[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+static const u_char mapped[] =
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
+static const u_char tunnelled[] =
+{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 struct pvt
-{
-  struct hostent result;
-  char buffer[NSS_BUFLEN_HOSTS];
-  context_handle_t state;
-};
+  {
+    struct hostent result;
+    char buffer[NSS_BUFLEN_HOSTS];
+    context_handle_t state;
+  };
 
 static struct hostent *
 ho_byname (struct irs_ho *this, const char *name)

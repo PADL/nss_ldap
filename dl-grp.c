@@ -76,9 +76,11 @@ static libc_endgrent_t libc_endgrent = NULL;
 static libc_getgrent_t libc_getgrent = NULL;
 
 #ifdef OSF1
-static char nss_buf[SIABUFSIZ] = { '\0' };
+static char nss_buf[SIABUFSIZ] =
+{'\0'};
 #else
-static char nss_buf[NSS_BUFLEN_GROUP] = { '\0' };
+static char nss_buf[NSS_BUFLEN_GROUP] =
+{'\0'};
 #endif
 
 static int do_ldap_getgrent = 0;

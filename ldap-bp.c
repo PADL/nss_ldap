@@ -112,7 +112,8 @@ _nss_ldap_bootparams_destr (nss_backend_t * bp_context, void *args)
   return _nss_ldap_default_destr (bp_context, args);
 }
 
-static nss_backend_op_t bp_ops[] = {
+static nss_backend_op_t bp_ops[] =
+{
   _nss_ldap_bootparams_destr,
   _nss_ldap_getbootparamsbyname_r
 };

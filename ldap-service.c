@@ -30,7 +30,7 @@
 
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifdef IRS_NSS
 #include <port_before.h>
@@ -335,7 +335,8 @@ _nss_ldap_services_destr (nss_backend_t * serv_context, void *args)
   return _nss_ldap_default_destr (serv_context, args);
 }
 
-static nss_backend_op_t services_ops[] = {
+static nss_backend_op_t services_ops[] =
+{
   _nss_ldap_services_destr,
   _nss_ldap_endservent_r,
   _nss_ldap_setservent_r,

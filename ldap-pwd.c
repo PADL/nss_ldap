@@ -20,7 +20,7 @@
  */
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifdef IRS_NSS
 #include <port_before.h>
@@ -210,7 +210,8 @@ _nss_ldap_getpwuid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS _nss_ldap_setpwent (void)
+NSS_STATUS 
+_nss_ldap_setpwent (void)
 {
   LOOKUP_SETENT (pw_context);
 }
@@ -223,7 +224,8 @@ _nss_ldap_setpwent_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS _nss_ldap_endpwent (void)
+NSS_STATUS 
+_nss_ldap_endpwent (void)
 {
   LOOKUP_ENDENT (pw_context);
 }
@@ -258,7 +260,8 @@ _nss_ldap_passwd_destr (nss_backend_t * pw_context, void *args)
   return _nss_ldap_default_destr (pw_context, args);
 }
 
-static nss_backend_op_t passwd_ops[] = {
+static nss_backend_op_t passwd_ops[] =
+{
   _nss_ldap_passwd_destr,
   _nss_ldap_endpwent_r,		/* NSS_DBOP_ENDENT */
   _nss_ldap_setpwent_r,		/* NSS_DBOP_SETENT */

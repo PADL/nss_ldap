@@ -20,7 +20,7 @@
  */
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifdef IRS_NSS
 #include <port_before.h>
@@ -162,7 +162,7 @@ _nss_ldap_parse_gr (LDAP * ld,
 	{
 	  if (bytesleft (buffer, buflen) <
 	      (dn_mems_c + uid_mems_c + 1) * sizeof (char *))
-	    return NSS_TRYAGAIN;
+	      return NSS_TRYAGAIN;
 	  align (buffer, buflen);
 	  gr->gr_mem = (char **) buffer;
 	  buffer += (dn_mems_c + uid_mems_c + 1) * sizeof (char *);
@@ -194,7 +194,8 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 #endif /* SUN_NSS */
 #ifdef RFC2307BIS
   char *userdn = NULL;
-  const char **attrs = { NULL };
+  const char **attrs =
+  {NULL};
   const char *filter;
 #endif /* RFC2307BIS */
   ldap_args_t a;
@@ -363,7 +364,8 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS _nss_ldap_setgrent (void)
+NSS_STATUS 
+_nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -376,7 +378,8 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS _nss_ldap_endgrent (void)
+NSS_STATUS 
+_nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
@@ -412,7 +415,8 @@ _nss_ldap_group_destr (nss_backend_t * gr_context, void *args)
   return _nss_ldap_default_destr (gr_context, args);
 }
 
-static nss_backend_op_t group_ops[] = {
+static nss_backend_op_t group_ops[] =
+{
   _nss_ldap_group_destr,
   _nss_ldap_endgrent_r,
   _nss_ldap_setgrent_r,

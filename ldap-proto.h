@@ -35,7 +35,7 @@ static const char *proto_attributes[] =
  NULL};
 
 static const char filt_getprotobyname[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (ipProtocol) ")(" AT (cn) "=%s))";
      static const char filt_getprotobynumber[] =
      "(&(objectclass=" OC (ipProtocol) ")(" AT (ipProtocolNumber) "=%d))";

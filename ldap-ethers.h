@@ -34,7 +34,7 @@ static const char *ether_attributes[] =
 {AT (cn), AT (macAddress), NULL};
 
 static const char filt_gethostton[] =	/* opt filter on null macaddress? */
-"(&(objectclass=" 
+"(&(objectclass="
 OC (ieee802Device) ")(" AT (cn) "=%s))";
      static const char filt_getntohost[] =
      "(&(objectclass=" OC (ieee802Device) ")(" AT (macAddress) "=%s))";

@@ -35,11 +35,11 @@ static void pr_rewind (struct irs_pr *);
 static void pr_minimize (struct irs_pr *);
 
 struct pvt
-{
-  struct protoent result;
-  char buffer[NSS_BUFLEN_PROTOCOLS];
-  context_handle_t state;
-};
+  {
+    struct protoent result;
+    char buffer[NSS_BUFLEN_PROTOCOLS];
+    context_handle_t state;
+  };
 
 static struct protoent *
 pr_byname (struct irs_pr *this, const char *name)

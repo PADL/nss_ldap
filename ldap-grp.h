@@ -32,12 +32,12 @@ static const char *gr_attributes[] =
  AT (member),
 #else
  AT (uniqueMember),
-#endif /* NDS */
+#endif				/* NDS */
 #endif				/* RFC2307BIS */
  AT (gidNumber), NULL};
 
 static const char filt_getgrnam[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (posixGroup) ")(" AT (cn) "=%s))";
      static const char filt_getgrgid[] =
      "(&(objectclass=" OC (posixGroup) ")(" AT (gidNumber) "=%d))";

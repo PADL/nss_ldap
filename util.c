@@ -155,7 +155,8 @@ _nss_ldap_dn2uid (LDAP * ld,
       if (status != NSS_SUCCESS)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[] = { "uid", NULL };
+	  const char *attrs[] =
+	  {"uid", NULL};
 	  LDAPMessage *res = _nss_ldap_read (dn, attrs);
 	  status = NSS_NOTFOUND;
 	  if (res != NULL)
@@ -435,9 +436,9 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	  t = &result->ldc_bindpw;
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_ROOTBINDDN))
-        {
-          t = &result->ldc_rootbinddn;
-        }
+	{
+	  t = &result->ldc_rootbinddn;
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_CRYPT))
 	{
 	  if (!strcasecmp (v, "md5"))
@@ -488,29 +489,29 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 
   fclose (fp);
 
-  fp = fopen(NSS_LDAP_PATH_ROOTPASSWD, "r");
+  fp = fopen (NSS_LDAP_PATH_ROOTPASSWD, "r");
   if (fp)
     {
-      if (fgets(b, sizeof(b), fp) != NULL)
+      if (fgets (b, sizeof (b), fp) != NULL)
 	{
 	  int len;
 	   
 	  len = strlen(b);
-	  if (*b != '\0')
+	  if (len > 0)
 	    len--;
-	  
-	  strncpy(p, b, len);
+
+	  strncpy (p, b, len);
 	  p[len] = '\0';
 	  result->ldc_rootbindpw = p;
 	  p += len + 1;
 	}
-      fclose(fp);
+      fclose (fp);
     }
   else
     {
-       result->ldc_rootbinddn = NULL;
+      result->ldc_rootbinddn = NULL;
     }
-    
+
   if (result->ldc_host == NULL)
     {
       return NSS_NOTFOUND;

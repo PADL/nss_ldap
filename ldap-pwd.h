@@ -33,7 +33,7 @@ static const char *pw_attributes[] =
 
 static const char filt_getpwnam[] =
 #ifdef IDS_UID
-"(&(objectclass=" 
+"(&(objectclass="
 OC (posixAccount) ")(|(" AT (uid) "=%s)(" AT (uid) "=%s@*)))";
 #else
 "(&(objectclass=" OC (posixAccount) ")(" AT (uid) "=%s))";

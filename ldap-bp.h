@@ -34,7 +34,7 @@ static const char *bp_attributes[] =
 {AT (cn), AT (bootParameter), NULL};
 
 static const char filt_getbootparamsbyname[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (bootableDevice) ")(" AT (cn) "=%s))";
 
      static NSS_STATUS _nss_ldap_parse_bp (

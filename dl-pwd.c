@@ -76,9 +76,11 @@ static libc_endpwent_t libc_endpwent = NULL;
 static libc_getpwent_t libc_getpwent = NULL;
 
 #ifdef OSF1
-static char nss_buf[SIABUFSIZ] = { '\0' };
+static char nss_buf[SIABUFSIZ] =
+{'\0'};
 #else
-static char nss_buf[NSS_BUFLEN_PASSWD] = { '\0' };
+static char nss_buf[NSS_BUFLEN_PASSWD] =
+{'\0'};
 #endif
 
 static int do_ldap_getpwent = 0;

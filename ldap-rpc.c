@@ -29,7 +29,7 @@
 
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifndef IRS_NSS			/* not supported at the moment */
 
@@ -189,7 +189,8 @@ _nss_ldap_rpc_destr (nss_backend_t * rpc_context, void *args)
   return _nss_ldap_default_destr (rpc_context, args);
 }
 
-static nss_backend_op_t rpc_ops[] = {
+static nss_backend_op_t rpc_ops[] =
+{
   _nss_ldap_rpc_destr,
   _nss_ldap_endrpcent_r,
   _nss_ldap_setrpcent_r,

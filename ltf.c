@@ -80,7 +80,8 @@ static int ltf_get_errno ();
 
 static pthread_key_t key;
 
-NSS_STATUS _nss_ldap_ltf_thread_init (LDAP * ld)
+NSS_STATUS 
+_nss_ldap_ltf_thread_init (LDAP * ld)
 {
   struct ldap_thread_fns tfns;
 
@@ -289,7 +290,8 @@ ltf_get_errno (void)
   return errno;
 }
 
-NSS_STATUS _nss_ldap_ltf_thread_init (LDAP * ld)
+NSS_STATUS 
+_nss_ldap_ltf_thread_init (LDAP * ld)
 {
   struct ldap_thread_fns tfns;
 

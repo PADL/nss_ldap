@@ -28,7 +28,7 @@ static const char *netgr_attributes[] =
 {AT (cn), AT (nisNetgroupTriple), AT (memberNisNetgroup), NULL};
 
 static const char *filt_setnetgrent[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (nisNetgroup) ")(" AT (cn) "=%s))";
 
      static NSS_STATUS _nss_ldap_parse_netgr (

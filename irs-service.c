@@ -34,11 +34,11 @@ static void sv_rewind (struct irs_sv *);
 static void sv_minimize (struct irs_sv *);
 
 struct pvt
-{
-  struct servent result;
-  char buffer[NSS_BUFLEN_PROTOCOLS];
-  context_handle_t state;
-};
+  {
+    struct servent result;
+    char buffer[NSS_BUFLEN_PROTOCOLS];
+    context_handle_t state;
+  };
 
 static struct servent *
 sv_byname (struct irs_sv *this, const char *name, const char *proto)

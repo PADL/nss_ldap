@@ -34,11 +34,11 @@ static void nw_rewind (struct irs_nw *);
 static void nw_minimize (struct irs_nw *);
 
 struct pvt
-{
-  struct nwent result;
-  char buffer[NSS_BUFLEN_NETWORKS];
-  context_handle_t state;
-};
+  {
+    struct nwent result;
+    char buffer[NSS_BUFLEN_NETWORKS];
+    context_handle_t state;
+  };
 
 static struct nwent *
 nw_byname (struct irs_nw *this, const char *name, int af)

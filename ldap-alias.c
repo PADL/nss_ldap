@@ -22,7 +22,7 @@
 
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifdef GNU_NSS			/* for the moment */
 
@@ -97,12 +97,14 @@ _nss_ldap_getaliasbyname_r (const char *name, struct aliasent * result,
 	       alias_attributes, _nss_ldap_parse_alias);
 }
 
-NSS_STATUS _nss_ldap_setaliasent_r (void)
+NSS_STATUS 
+_nss_ldap_setaliasent_r (void)
 {
   LOOKUP_SETENT (alias_context);
 }
 
-NSS_STATUS _nss_ldap_endaliasent_r (void)
+NSS_STATUS 
+_nss_ldap_endaliasent_r (void)
 {
   LOOKUP_ENDENT (alias_context);
 }

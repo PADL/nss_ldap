@@ -23,7 +23,7 @@
 
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #if !defined(IRS_NSS)
 
@@ -228,14 +228,14 @@ _nss_ldap_getetherent_r (nss_backend_t * ether_context, void *args)
   NSS_STATUS status;
 
   status = _nss_ldap_getent (
-			     ((nss_ldap_backend_t *) ether_context)->state,
-			     &result,
-			     NSS_ARGS (args)->buf.buffer,
-			     NSS_ARGS (args)->buf.buflen,
-			     &NSS_ARGS (args)->erange,
-			     filt_getetherent,
-			     (const char **) ether_attributes,
-			     _nss_ldap_parse_ether);
+			      ((nss_ldap_backend_t *) ether_context)->state,
+			      &result,
+			      NSS_ARGS (args)->buf.buffer,
+			      NSS_ARGS (args)->buf.buflen,
+			      &NSS_ARGS (args)->erange,
+			      filt_getetherent,
+			      (const char **) ether_attributes,
+			      _nss_ldap_parse_ether);
 
   if (status == NSS_SUCCESS)
     {
@@ -267,7 +267,8 @@ _nss_ldap_ethers_destr (nss_backend_t * ether_context, void *args)
   return _nss_ldap_default_destr (ether_context, args);
 }
 
-static nss_backend_op_t ethers_ops[] = {
+static nss_backend_op_t ethers_ops[] =
+{
   _nss_ldap_ethers_destr,
   _nss_ldap_gethostton_r,
   _nss_ldap_getntohost_r

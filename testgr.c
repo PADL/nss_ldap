@@ -6,12 +6,12 @@ main (int argc, char **argv)
 {
 #if 0
   struct group
-  {				/* see getgrent(3) */
-    char *gr_name;
-    char *gr_passwd;
-    gid_t gr_gid;
-    char **gr_mem;
-  };
+    {				/* see getgrent(3) */
+      char *gr_name;
+      char *gr_passwd;
+      gid_t gr_gid;
+      char **gr_mem;
+    };
 #endif
 
   scan_group ();

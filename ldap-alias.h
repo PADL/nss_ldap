@@ -28,7 +28,7 @@ static const char *alias_attributes[] =
 {AT (cn), AT (rfc822MailMember), NULL};
 
 static const char filt_getaliasbyname[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (nisMailAlias) ")(" AT (cn) "=%s))";
      static const char filt_getaliasent[] =
      "(objectclass=" OC (nisMailAlias) ")";

@@ -34,7 +34,7 @@ static const char *rpc_attributes[] =
 {AT (cn), AT (oncRpcNumber), NULL};
 
 static const char filt_getrpcbyname[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (oncRpc) ")(" AT (cn) "=%s))";
      static const char filt_getrpcbynumber[] =
      "(&(objectclass=" OC (oncRpc) ")(" AT (oncRpcNumber) "=%d))";

@@ -33,11 +33,11 @@ static void pw_rewind (struct irs_pw *);
 static void pw_minimize (struct irs_pw *);
 
 struct pvt
-{
-  struct passwd result;
-  char buffer[NSS_BUFLEN_PASSWD];
-  context_handle_t state;
-};
+  {
+    struct passwd result;
+    char buffer[NSS_BUFLEN_PASSWD];
+    context_handle_t state;
+  };
 
 static struct passwd *
 pw_byname (struct irs_pw *this, const char *name)

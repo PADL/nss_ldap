@@ -31,7 +31,7 @@ static const char *sp_attributes[] =
  NULL};
 
 static const char filt_getspnam[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (shadowAccount) ")(" AT (uid) "=%s))";
 
      static const char filt_getspent[] =

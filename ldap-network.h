@@ -37,7 +37,7 @@ static const char *net_attributes[] =
  NULL};
 
 static const char filt_getnetbyname[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (ipNetwork) ")(" AT (cn) "=%s))";
      static const char filt_getnetbyaddr[] =
      "(&(objectclass=" OC (ipNetwork) ")(" AT (ipNetworkNumber) "=%s))";

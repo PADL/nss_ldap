@@ -42,7 +42,7 @@ static const char *host_attributes[] =
 {AT (cn), AT (ipHostNumber), NULL};
 
 static const char filt_gethostbyname[] =
-"(&(objectclass=" 
+"(&(objectclass="
 OC (ipHost) ")(" AT (cn) "=%s))";
      static const char filt_gethostbyaddr[] =
      "(&(objectclass=" OC (ipHost) ")(" AT (ipHostNumber) "=%s))";
