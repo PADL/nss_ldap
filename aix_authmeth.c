@@ -152,10 +152,13 @@ _nss_ldap_getpwnam (const char *name)
 static struct group *
 _nss_ldap_getgracct (void *id, int type)
 {
+  if (grp_conn == NULL)
+    return NULL;
+
   if (type == SEC_INT)
-    return _nss_ldap_getgrgid (*(gid_t *) id);
+    return (grp_conn->bygid) (grp_conn, *(gid_t *) id);
   else
-    return _nss_ldap_getgrnam ((char *) id);
+    return (grp_conn->byname) (grp_conn, (char *) id);
 }
 
 static int
@@ -337,6 +340,60 @@ do_getgroupsids(const char *user)
   return q;
 }
 
+/*
+ * Map a GID to a name
+ */
+static char *
+do_getpgrp(LDAP *ld, LDAPMessage *e)
+{
+  char **vals;
+  char *pgrp;
+  LDAPMessage *res;
+  const char *attrs[2];
+  NSS_STATUS stat;
+  ldap_args_t a;
+
+  vals = ldap_get_values (ld, e, ATM(passwd, gidNumber));
+  if (vals == NULL)
+    return NULL;
+
+  LA_INIT (a);
+  LA_TYPE (a) = LA_TYPE_STRING;
+  LA_STRING (a) = vals[0];
+
+  attrs[0] = ATM(group, cn);
+  attrs[1] = NULL;
+
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getgrgid, LM_GROUP,
+			     attrs, 1, &res);
+  if (stat != NSS_SUCCESS)
+    {
+      ldap_value_free (vals);
+      return NULL;
+    }
+
+  ldap_value_free (vals);
+
+  e = ldap_first_entry (ld, res);
+  if (e == NULL)
+    {
+      ldap_msgfree (res);
+      return NULL;
+    }
+
+  pgrp = NULL;
+
+  vals = ldap_get_values (ld, e, ATM(group, cn));
+  if (vals != NULL)
+    {
+      if (vals[0] != NULL)
+	pgrp = strdup(vals[0]);
+      ldap_value_free (vals);
+    }
+
+  return pgrp;
+}
+
 static NSS_STATUS
 do_parse_uess_getentry (LDAP *ld, LDAPMessage * e,
 			ldap_state_t * pvt, void *result,
@@ -409,6 +466,8 @@ do_parse_uess_getentry (LDAP *ld, LDAPMessage * e,
 	    av->attr_un.au_char = do_getgroupsids(lua->lua_key);
 	  else if (strcmp(lua->lua_attributes[i], S_REGISTRY) == 0)
 	    av->attr_un.au_char = strdup("NSS_LDAP");
+	  else if (strcmp(lua->lua_attributes[i], S_PGRP) == 0)
+	    av->attr_un.au_char = do_getpgrp(ld, e);
 	  else
 	    {
 	      attribute = uess2ldapattr(lua->lua_map, lua->lua_attributes[0]);
@@ -417,7 +476,12 @@ do_parse_uess_getentry (LDAP *ld, LDAPMessage * e,
 		  av->attr_flag = 1;
 		  continue;
 		}
+
 	      vals = ldap_get_values (ld, e, attribute);
+	      /* special hack for posixAccount gecos property */
+	      if (vals == NULL && strcmp(lua->lua_attributes[i], S_GECOS) == 0)
+		  vals = ldap_get_values (ld, e, ATM (passwd, cn));
+
 	      if (vals == NULL)
 		{
 		  av->attr_flag = 1;
@@ -453,6 +517,8 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
   int erange = 0;
   ldap_uess_args_t lua;
 
+  debug ("==> _nss_ldap_getentry");
+
   lua.lua_key = key;
   lua.lua_table = table;
   lua.lua_attributes = attributes;
@@ -463,6 +529,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
   if (lua.lua_map == LM_NONE)
     {
       errno = EINVAL;
+      debug ("<== _nss_ldap_getentry");
       return -1;
     }
 
@@ -476,6 +543,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
       if (size != 1)
 	{
 	  errno = EINVAL;
+	  debug ("<== _nss_ldap_getentry");
 	  return -1;
 	}
 
@@ -485,6 +553,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
       if (lua.lua__buffer == NULL)
 	{
 	  errno = ENOMEM;
+	  debug ("<== _nss_ldap_getentry");
 	  return -1;
 	}
       results[0].attr_flag = 0;
@@ -497,6 +566,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
       if (results[0].attr_un.au_char != NULL)
 	free (results[0].attr_un.au_char);
       errno = ENOMEM;
+      debug ("<== _nss_ldap_getentry");
       return -1;
     }
 
@@ -514,9 +584,11 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
       else
 	errno = ENOENT;
 
+      debug ("<== _nss_ldap_getentry");
       return -1;
     }
 
+  debug ("<== _nss_ldap_getentry");
   return AUTH_SUCCESS;
 }
 
