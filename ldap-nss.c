@@ -426,27 +426,23 @@ do_search_s (const char *base, int scope,
 	     const char *filter, const char **attrs, int sizelimit,
 	     LDAPMessage ** res)
 {
-  int lstatus = LDAP_UNAVAILABLE, tries = 0;
-  struct timeval tv;
+  int lstatus = LDAP_UNAVAILABLE, tries = 0, backoff = 0;
   NSS_STATUS nstatus = NSS_TRYAGAIN;
 
   debug ("==> do_search_s");
-
-  tv.tv_sec = 0;
-  tv.tv_usec = 0;
 
   while (nstatus == NSS_TRYAGAIN &&
 	 tries < LDAP_NSS_MAXCONNTRIES + LDAP_NSS_TRIES)
     {
       if (tries > LDAP_NSS_MAXCONNTRIES)
 	{
-	  if (tv.tv_sec == 0)
-	    tv.tv_sec = LDAP_NSS_SLEEPTIME;
-	  else if (tv.tv_sec < LDAP_NSS_MAXSLEEPTIME)
-	    tv.tv_sec *= 2;
+	  if (backoff == 0)
+	    backoff = LDAP_NSS_SLEEPTIME;
+	  else if (backoff < LDAP_NSS_MAXSLEEPTIME)
+	    backoff *= 2;
 
-	  syslog (LOG_INFO, "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...", tv.tv_sec);
-	  (void) select (0, NULL, NULL, NULL, &tv);
+	  syslog (LOG_INFO, "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...", backoff);
+	  (void) sleep (backoff);
 	}
       else if (tries > 0)
 	{
