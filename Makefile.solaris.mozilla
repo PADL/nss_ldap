@@ -95,7 +95,7 @@ COMPILERFLAGS=$(GCCFLAGS)
 
 # These "GNU" flags seem to work OK, with Sun CC too ???
 LD=ld
-GNULDFLAGS=-M mapfile -G -dy -z text -R/usr/local/ldapsdk/lib
+GNULDFLAGS=-M mapfile -G -dy -z text -R/usr/local/ldapsdk/lib -R/usr/ucblib
 LDFLAGS=$(GNULDFLAGS)
 
 CFLAGS=$(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFLAGS) $(INCDIRS)

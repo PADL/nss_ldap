@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+2.70	Luke Howard <lukeh@padl.com>
+
+	* put /usr/ucblib back into linker search path for
+	  Solaris. Stupid me for listening to who told me
+	  to remove it.
+
 2.69	Luke Howard <lukeh@padl.com>
 
 	* added timeout, unavailable, and server busy 
