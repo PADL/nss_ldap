@@ -96,9 +96,6 @@ case "$target_os" in
      AC_CHECK_HEADERS(nsswitch.h)
      AC_CHECK_HEADERS(irs.h) ;;
 esac
-dnl AC_CHECK_HEADERS(nss.h)
-dnl AC_CHECK_HEADERS(nsswitch.h)
-dnl AC_CHECK_HEADERS(irs.h)
 AC_CHECK_HEADERS(thread.h)
 AC_CHECK_HEADERS(pthread.h)
 AC_CHECK_HEADERS(synch.h)
