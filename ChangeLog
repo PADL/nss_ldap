@@ -3,7 +3,9 @@ $Id$
 
 222	Luke Howard <lukeh@padl.com>
 
-	* AIX porting fixes for 5.2
+	* fix deadlock in _nss_ldap_getentry()
+	* support more AIX usersec attributes
+	* more AIX porting fixes
 
 221	Luke Howard <lukeh@padl.com>
 

@@ -582,6 +582,10 @@ extern int __thread_mutex_lock(pthread_mutex_t *);
 extern int __thread_mutex_unlock(pthread_mutex_t *);
 #endif /* HPUX */
 
+#ifdef _AIX
+extern int __multi_threaded;
+#endif /* _AIX */
+
 /*
  * Portable locking macro.
  */
@@ -598,11 +602,21 @@ extern int __thread_mutex_unlock(pthread_mutex_t *);
 # define NSS_LDAP_LOCK(m)		__thread_mutex_lock(&m)
 # define NSS_LDAP_UNLOCK(m)		__thread_mutex_unlock(&m)
 # define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
+#elif defined(_AIX)
+# define NSS_LDAP_LOCK(m)		do { \
+						if (__multi_threaded) \
+							pthread_mutex_lock(&m); \
+					} while (0)
+# define NSS_LDAP_UNLOCK(m)		do { \
+						if (__multi_threaded) \
+							pthread_mutex_unlock(&m); \
+					} while (0)
+# define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
 #else
 # define NSS_LDAP_LOCK(m)		pthread_mutex_lock(&m)
 # define NSS_LDAP_UNLOCK(m)		pthread_mutex_unlock(&m)
 # define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
-#endif /* HPUX */
+#endif /* HPUX || _AIX */
 #else
 #define NSS_LDAP_LOCK(m)
 #define NSS_LDAP_UNLOCK(m)

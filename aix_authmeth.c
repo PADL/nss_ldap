@@ -29,8 +29,6 @@ static char rcsId[] =
 
 #ifdef HAVE_USERSEC_H
 
-/* #define UESS_EXPERIMENTAL 1 */
-
 #include <stdlib.h>
 #include <string.h>
 #include <usersec.h>
@@ -49,9 +47,7 @@ static char rcsId[] =
 #define TABLE_USER	"user"
 #define TABLE_GROUP	"group"
 
-#ifndef S_DN
-#define S_DN		"DN"
-#endif /* S_DN */
+#define S_LDAPDN	"ldapdn"
 
 static struct irs_gr *uess_gr_be = NULL;
 static struct irs_pw *uess_pw_be = NULL;
@@ -85,7 +81,6 @@ static NSS_STATUS uess_get_char_ex (LDAP * ld, LDAPMessage * e, ldap_uess_args_t
 static NSS_STATUS uess_get_int (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 static NSS_STATUS uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 static NSS_STATUS uess_get_groupsids (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
-static NSS_STATUS uess_get_registry (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 static NSS_STATUS uess_get_gecos (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 static NSS_STATUS uess_get_pwd (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
 static NSS_STATUS uess_get_dn (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * arg, int index);
@@ -105,11 +100,16 @@ static struct ldap_uess_fn __uess_fns[] = {
   {S_HOME, uess_get_char},
   {S_ID, uess_get_int},
   {S_PWD, uess_get_pwd},
-  {S_REGISTRY, uess_get_registry},
   {S_SHELL, uess_get_char},
   {S_PGRP, uess_get_pgrp},
+  {SEC_PASSWD, uess_get_char},
+  {SEC_LASTUP, uess_get_int},
+  {S_MAXAGE, uess_get_int},
+  {S_MINAGE, uess_get_int},
+  {S_MAXEXPIRED, uess_get_int},
+  {S_PWDWARNTIME, uess_get_int},
   /* add additional attributes we know about here */
-  {S_DN, uess_get_dn},
+  {S_LDAPDN, uess_get_dn},
   {NULL, NULL}
 };
 
@@ -323,9 +323,9 @@ key2filter (char *key, ldap_map_selector_t map,
 static const char *
 uess2ldapattr (ldap_map_selector_t map, const char *attribute)
 {
-  if (strcmp (attribute, S_USERS) == 0)
+  if (strcmp (attribute, "username") == 0)
     return ATM (passwd, uid);
-  else if (strcmp (attribute, S_GROUPS) == 0)
+  else if (strcmp (attribute, "groupname") == 0)
     return ATM (group, cn);
   else if (strcmp (attribute, S_ID) == 0)
     {
@@ -335,15 +335,29 @@ uess2ldapattr (ldap_map_selector_t map, const char *attribute)
 	return ATM (group, gidNumber);
     }
   else if (strcmp (attribute, S_PWD) == 0)
-    return AT (userPassword);
+    return ATM (passwd, userPassword);
   else if (strcmp (attribute, S_HOME) == 0)
     return ATM (passwd, homeDirectory);
   else if (strcmp (attribute, S_SHELL) == 0)
     return ATM (passwd, loginShell);
   else if (strcmp (attribute, S_GECOS) == 0)
     return ATM (passwd, gecos);
+  else if (strcmp (attribute, SEC_PASSWD) == 0)
+    return ATM (shadow, userPassword);
+  else if (strcmp (attribute, SEC_LASTUP) == 0)
+    return ATM (shadow, shadowLastChange);
+  else if (strcmp (attribute, S_MAXAGE) == 0)
+    return ATM (shadow, shadowMax);
+  else if (strcmp (attribute, S_MINAGE) == 0)
+    return ATM (shadow, shadowMin);
+  else if (strcmp (attribute, S_MAXEXPIRED) == 0)
+    return ATM (shadow, shadowExpire);
+  else if (strcmp (attribute, S_PWDWARNTIME) == 0)
+    return ATM (shadow, shadowWarning);
   else if (strcmp (attribute, S_PGRP) == 0)
     return ATM (group, cn);
+  else if (strcmp (attribute, S_USERS) == 0)
+    return ATM (group, memberUid);
 
   return NULL;
 }
@@ -365,8 +379,8 @@ uess_get_pgrp (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
     return NSS_NOTFOUND;
 
   LA_INIT (a);
-  LA_TYPE (a) = LA_TYPE_STRING;
-  LA_STRING (a) = vals[0];
+  LA_TYPE (a) = LA_TYPE_NUMBER;
+  LA_NUMBER (a) = atol(vals[0]);
 
   attrs[0] = ATM (group, cn);
   attrs[1] = NULL;
@@ -404,7 +418,6 @@ uess_get_groupsids (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
   char *p, *q;
   size_t len;
 
-  /* XXX deadlock? */
   p = _nss_ldap_getgrset ((char *) lua->lua_key);
   if (p == NULL)
     return NSS_NOTFOUND;
@@ -531,19 +544,6 @@ uess_get_int (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
 
   av->attr_un.au_int = atoi (vals[0]);
   ldap_value_free (vals);
-  return NSS_SUCCESS;
-}
-
-/*
- * Get the name of this registry
- */
-static NSS_STATUS
-uess_get_registry (LDAP * ld, LDAPMessage * e, ldap_uess_args_t * lua, int i)
-{
-  lua->lua_results[i].attr_un.au_char = strdup ("NSS_LDAP");
-  if (lua->lua_results[i].attr_un.au_char == NULL)
-    return NSS_TRYAGAIN;
-
   return NSS_SUCCESS;
 }
 
@@ -737,7 +737,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
     }
 
   _nss_ldap_enter ();
-  if (_nss_ldap_ent_context_init (&ctx) == NULL)
+  if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
     {
       _nss_ldap_leave ();
       if (results[0].attr_un.au_char != NULL)
@@ -842,7 +842,7 @@ uess_get_pwuid(const char *user, uid_t *uid)
 }
 
 /*
- *
+ * Get membership for a group
  */
 static int
 _nss_ldap_getgrusers (char *group, void *result, int type, int *size)
@@ -934,7 +934,7 @@ _nss_ldap_attrlist(void)
 
   a[0] = (attrlist_t *)(a + 2);
 
-  a[0]->al_name = strdup(S_DN);
+  a[0]->al_name = strdup(S_LDAPDN);
   a[0]->al_flags = AL_USERATTR;
   a[0]->al_type = SEC_CHAR;
 
@@ -956,6 +956,9 @@ nss_ldap_initialize (struct secmethod_table *meths)
 {
   memset (meths, 0, sizeof (*meths));
 
+  /* Initialize schema */
+  (void) _nss_ldap_init();
+
   /* Identification methods */
   meths->method_getpwnam = _nss_ldap_getpwnam;
   meths->method_getpwuid = _nss_ldap_getpwuid;
@@ -963,10 +966,8 @@ nss_ldap_initialize (struct secmethod_table *meths)
   meths->method_getgrgid = _nss_ldap_getgrgid;
   meths->method_getgrset = _nss_ldap_getgrset;
   meths->method_getentry = _nss_ldap_getentry;
-#if UESS_EXPERIMENTAL
-  meths->method_attrlist = _nss_ldap_attrlist;
+/*  meths->method_attrlist = _nss_ldap_attrlist; */
   meths->method_getgrusers = _nss_ldap_getgrusers;
-#endif /* UESS_EXPERIMENTAL */
 /*  meths->method_normalize = _nss_ldap_normalize; */
   meths->method_getgracct = _nss_ldap_getgracct;
   meths->method_getpasswd = _nss_ldap_getpasswd;

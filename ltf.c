@@ -131,6 +131,10 @@ ltf_mutex_lock (void *mutexp)
 #elif defined(HPUX)
   return __thread_mutex_lock ((pthread_mutex_t *) mutexp);
 #else
+# ifdef _AIX
+  if (__multi_threaded == 0)
+    return 0;
+# endif
   return pthread_mutex_lock ((pthread_mutex_t *) mutexp);
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
 }
@@ -143,6 +147,10 @@ ltf_mutex_unlock (void *mutexp)
 #elif defined(HPUX)
   return __thread_mutex_unlock ((pthread_mutex_t *) mutexp);
 #else
+# ifdef _AIX
+  if (__multi_threaded == 0)
+    return 0;
+# endif
   return pthread_mutex_unlock ((pthread_mutex_t *) mutexp);
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
 }
