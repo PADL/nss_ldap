@@ -586,7 +586,7 @@ do_open (void)
     }
 #endif /* LDAP_OPT_THREAD_FN_PTRS */
 
-#if HAVE_LDAP_SET_REBIND_PROC_ARGS < 3
+#if LDAP_SET_REBIND_PROC_ARGS < 3
   ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind);
 #else
   ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind, NULL);

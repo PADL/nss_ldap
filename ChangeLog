@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+130	Luke Howard <lukeh@padl.com>
+
+	* fixed typo preventing build with Netscape
+	  client library
+
 129	Luke Howard <lukeh@padl.com>
 
 	* updated version number
