@@ -79,7 +79,7 @@ static int ltf_get_errno ();
 
 static pthread_key_t key;
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_ltf_thread_init (LDAP * ld)
 {
   struct ldap_thread_fns tfns;
@@ -216,20 +216,20 @@ ltf_mutex_alloc (void)
   return m;
 }
 
-static void 
+static void
 ltf_mutex_free (void *m)
 {
   mutex_destroy ((mutex_t *) m);
 /*      free(m); */
 }
 
-void 
+void
 ltf_destr (void *tsd)
 {
   free (tsd);
 }
 
-static NSS_STATUS 
+static NSS_STATUS
 ltf_tsd_setup (void)
 {
   void *tsd;
@@ -240,7 +240,7 @@ ltf_tsd_setup (void)
   return NSS_SUCCESS;
 }
 
-static void 
+static void
 ltf_set_ld_error (int err, char *matched, char *errmsg, void *dummy)
 {
   ldap_error_t *le;
@@ -260,7 +260,7 @@ ltf_set_ld_error (int err, char *matched, char *errmsg, void *dummy)
   le->le_errmsg = errmsg;
 }
 
-static int 
+static int
 ltf_get_ld_error (char **matched, char **errmsg, void *dummy)
 {
   ldap_error_t *le = NULL;
@@ -278,19 +278,19 @@ ltf_get_ld_error (char **matched, char **errmsg, void *dummy)
   return le->le_errno;
 }
 
-static void 
+static void
 ltf_set_errno (int err)
 {
   errno = err;
 }
 
-static int 
+static int
 ltf_get_errno (void)
 {
   return errno;
 }
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_ltf_thread_init (LDAP * ld)
 {
   struct ldap_thread_fns tfns;

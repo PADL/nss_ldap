@@ -58,7 +58,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t gr_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_gr (
 		     LDAP * ld,
 		     LDAPMessage * e,
@@ -160,7 +160,7 @@ _nss_ldap_parse_gr (
 }
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 {
   /* filt_getgroupsbymember */
@@ -170,7 +170,7 @@ _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 #endif /* SUN_NSS */
 
 #ifdef GNU_NSS
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getgrnam_r (
 		       const char *name,
 		       struct group * result,
@@ -181,7 +181,7 @@ _nss_ldap_getgrnam_r (
   LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getgrnam, gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getgrnam_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, filt_getgrnam, gr_attributes, _nss_ldap_parse_gr);
@@ -189,7 +189,7 @@ _nss_ldap_getgrnam_r (nss_backend_t * be, void *args)
 #endif
 
 #ifdef GNU_NSS
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getgrgid_r (
 		       gid_t gid,
 		       struct group *result,
@@ -200,7 +200,7 @@ _nss_ldap_getgrgid_r (
   LOOKUP_NUMBER (gid, result, buffer, buflen, errnop, filt_getgrgid, gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NUMBER (args, key.gid, filt_getgrgid, gr_attributes, _nss_ldap_parse_gr);
@@ -208,13 +208,13 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
 #elif defined(SUN_NSS)
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 {
   LOOKUP_SETENT (gr_context);
@@ -222,13 +222,13 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
 #elif defined(SUN_NSS)
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_endgrent_r (nss_backend_t * gr_context, void *args)
 {
   LOOKUP_ENDENT (gr_context);
@@ -236,7 +236,7 @@ _nss_ldap_endgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #ifdef GNU_NSS
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getgrent_r (
 		       struct group *result,
 		       char *buffer,
@@ -246,7 +246,7 @@ _nss_ldap_getgrent_r (
   LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop, filt_getgrent, gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getgrent_r (nss_backend_t * gr_context,
 		      void *args)
 {
@@ -255,7 +255,7 @@ _nss_ldap_getgrent_r (nss_backend_t * gr_context,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_group_destr (nss_backend_t * gr_context, void *args)
 {
   return _nss_ldap_default_destr (gr_context, args);

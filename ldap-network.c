@@ -72,7 +72,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t net_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_net (
 		      LDAP * ld,
 		      LDAPMessage * e,
@@ -138,7 +138,7 @@ _nss_ldap_parse_net (
 }
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getnetbyname_r (nss_backend_t * be, void *args)
 {
   ldap_args_t a;
@@ -165,7 +165,7 @@ _nss_ldap_getnetbyname_r (nss_backend_t * be, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getnetbyname_r (const char *name, struct netent * result,
 		     char *buffer, size_t buflen, int *errnop, int *herrnop)
 {
@@ -193,10 +193,10 @@ _nss_ldap_getnetbyname_r (const char *name, struct netent * result,
 
 #if defined(GNU_NSS) || defined(SUN_NSS)
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getnetbyaddr_r (nss_backend_t * be, void *args)
 #else
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getnetbyaddr_r (unsigned long addr, int type, struct netent * result,
 		     char *buffer, size_t buflen, int *errnop, int *herrnop)
 #endif
@@ -280,7 +280,7 @@ _nss_ldap_getnetbyaddr_r (unsigned long addr, int type, struct netent * result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_setnetent_r (nss_backend_t * net_context, void *fakeargs)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_setnetent (void)
@@ -292,7 +292,7 @@ _nss_ldap_setnetent_r (nss_backend_t * net_context, void *fakeargs)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_endnetent_r (nss_backend_t * net_context, void *fakeargs)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_endnetent (void)
@@ -304,7 +304,7 @@ _nss_ldap_endnetent_r (nss_backend_t * net_context, void *fakeargs)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getnetent_r (nss_backend_t * net_context, void *args)
 {
   NSS_STATUS status = _nss_ldap_getent (
@@ -323,7 +323,7 @@ _nss_ldap_getnetent_r (nss_backend_t * net_context, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getnetent_r (struct netent * result, char *buffer, size_t buflen, int *errnop, int *herrnop)
 {
   NSS_STATUS status;
@@ -345,7 +345,7 @@ _nss_ldap_getnetent_r (struct netent * result, char *buffer, size_t buflen, int 
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_networks_destr (nss_backend_t * net_context, void *args)
 {
   return _nss_ldap_default_destr (net_context, args);

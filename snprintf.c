@@ -57,7 +57,7 @@ int snprintf ();
 int vsnprintf ();
 #endif
 
-int 
+int
 vsnprintf (str, count, fmt, args)
      char *str;
      size_t count;
@@ -76,10 +76,10 @@ vsnprintf (str, count, fmt, args)
 
 /* VARARGS3 */
 #ifdef HAVE_STDARGS
-int 
+int
 snprintf (char *str, size_t count, const char *fmt,...)
 #else
-int 
+int
 snprintf (va_alist)
      va_dcl
 #endif
@@ -111,7 +111,7 @@ static void dostr (char *);
 static char *output;
 static void dopr_outch (int c);
 
-static void 
+static void
 dopr (buffer, format, args)
      char *buffer;
      char *format;
@@ -347,7 +347,7 @@ fmtnum (value, base, dosign, ljust, len, zpad)
     }
 }
 
-static void 
+static void
 dostr (str)
      char *str;
 {
@@ -355,7 +355,7 @@ dostr (str)
     dopr_outch (*str++);
 }
 
-static void 
+static void
 dopr_outch (c)
      int c;
 {

@@ -74,7 +74,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t rpc_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_rpc (
 		      LDAP * ld,
 		      LDAPMessage * e,
@@ -107,13 +107,13 @@ _nss_ldap_parse_rpc (
 }
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getrpcbyname_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, filt_getrpcbyname, rpc_attributes, _nss_ldap_parse_rpc);
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getrpcbyname_r (const char *name, struct rpcent *result,
 			  char *buffer, size_t buflen, int *errnop)
 {
@@ -122,13 +122,13 @@ _nss_ldap_getrpcbyname_r (const char *name, struct rpcent *result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getrpcbynumber_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NUMBER (args, key.number, filt_getrpcbynumber, rpc_attributes, _nss_ldap_parse_rpc);
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getrpcbynumber_r (int number, struct rpcent *result,
 			    char *buffer, size_t buflen, int *errnop)
 {
@@ -137,7 +137,7 @@ _nss_ldap_getrpcbynumber_r (int number, struct rpcent *result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_setrpcent_r (nss_backend_t * rpc_context, void *args)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_setrpcent (void)
@@ -149,7 +149,7 @@ _nss_ldap_setrpcent_r (nss_backend_t * rpc_context, void *args)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_endrpcent_r (nss_backend_t * rpc_context, void *args)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_endrpcent (void)
@@ -161,13 +161,13 @@ _nss_ldap_endrpcent_r (nss_backend_t * rpc_context, void *args)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getrpcent_r (nss_backend_t * rpc_context, void *args)
 {
   LOOKUP_GETENT (args, rpc_context, filt_getrpcent, rpc_attributes, _nss_ldap_parse_rpc);
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getrpcent_r (struct rpcent *result, char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (rpc_context, result, buffer, buflen, errnop, filt_getrpcent, rpc_attributes, _nss_ldap_parse_rpc);
@@ -175,7 +175,7 @@ _nss_ldap_getrpcent_r (struct rpcent *result, char *buffer, size_t buflen, int *
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_rpc_destr (nss_backend_t * rpc_context, void *args)
 {
   return _nss_ldap_default_destr (rpc_context, args);

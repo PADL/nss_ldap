@@ -69,7 +69,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t serv_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_serv (
 		       LDAP * ld,
 		       LDAPMessage * e,
@@ -182,7 +182,7 @@ _nss_ldap_parse_serv (
 }
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getservbyname_r (nss_backend_t * be, void *args)
 {
   ldap_args_t a;
@@ -210,7 +210,7 @@ _nss_ldap_getservbyname_r (nss_backend_t * be, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getservbyname_r (
 			    const char *name,
 			    const char *proto,
@@ -234,7 +234,7 @@ _nss_ldap_getservbyname_r (
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getservbyport_r (nss_backend_t * be, void *args)
 {
   ldap_args_t a;
@@ -262,7 +262,7 @@ _nss_ldap_getservbyport_r (nss_backend_t * be, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getservbyport_r (
 			    int port,
 			    const char *proto,
@@ -285,7 +285,7 @@ _nss_ldap_getservbyport_r (
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_setservent_r (nss_backend_t * serv_context, void *args)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_setservent (void)
@@ -297,7 +297,7 @@ _nss_ldap_setservent_r (nss_backend_t * serv_context, void *args)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_endservent_r (nss_backend_t * serv_context, void *args)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_endservent (void)
@@ -309,13 +309,13 @@ _nss_ldap_endservent_r (nss_backend_t * serv_context, void *args)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getservent_r (nss_backend_t * serv_context, void *args)
 {
   LOOKUP_GETENT (args, serv_context, filt_getservent, serv_attributes, _nss_ldap_parse_serv);
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getservent_r (struct servent *result, char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (serv_context, result, buffer, buflen, errnop, filt_getservent, serv_attributes, _nss_ldap_parse_serv);
@@ -323,7 +323,7 @@ _nss_ldap_getservent_r (struct servent *result, char *buffer, size_t buflen, int
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_services_destr (nss_backend_t * serv_context, void *args)
 {
   return _nss_ldap_default_destr (serv_context, args);

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <grp.h>
 
-void 
+void
 main (int argc, char **argv)
 {
 #if 0
@@ -18,7 +18,7 @@ main (int argc, char **argv)
   exit (0);
 }
 
-void 
+void
 dump (struct group *g)
 {
   char mem[2048];

@@ -77,10 +77,10 @@ static NSS_STATUS do_open (void);
  * Rebind functions.
  */
 #if NETSCAPE_API_EXTENSIONS
-static int 
+static int
 _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit, void *arg)
 #else
-static int 
+static int
 _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
 #endif				/* NETSCAPE_API_EXTENSIONS */
 {
@@ -114,7 +114,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   ent_context_t *ctx = ((nss_ldap_backend_t *) be)->state;
@@ -149,7 +149,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
@@ -168,7 +168,7 @@ _nss_ldap_default_constr (nss_ldap_backend_t * be)
  * either by some other function having acquired a lock, or by
  * using a thread safe libldap.
  */
-static void 
+static void
 do_close (void)
 {
   debug ("==> do_close");
@@ -187,7 +187,7 @@ do_close (void)
  * As with do_close(), this assumes ownership of sess.
  * It also wants to own __config: is there a potential deadlock here? XXX
  */
-static NSS_STATUS 
+static NSS_STATUS
 do_open (void)
 {
   ldap_config_t *cfg = NULL;
@@ -347,7 +347,7 @@ _nss_ldap_ent_context_init (context_handle_t * key)
  * Frees a given context; this is called from endXXent() and so we
  * can grab the lock.
  */
-void 
+void
 _nss_ldap_ent_context_free (context_handle_t * key)
 {
   ent_context_t *ctx = *key;
@@ -536,7 +536,7 @@ do_retry:
  * enumeration is not completed.
  * Locks mutex.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getent (
 		   ent_context_t * ctx,
 		   void *result,
@@ -628,7 +628,7 @@ _nss_ldap_getent (
  * General match function.
  * Locks mutex.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getbyname (
 		      ldap_args_t * args,
 		      void *result,
@@ -696,7 +696,7 @@ _nss_ldap_getbyname (
 /*
  * Assign all values, bar omitvalue (if not NULL), to *valptr.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_assign_attrvals (
 			    LDAP * ld,
 			    LDAPMessage * e,
@@ -790,7 +790,7 @@ _nss_ldap_assign_attrvals (
 }
 
 /* Assign a single value to *valptr. */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_assign_attrval (
 			   LDAP * ld,
 			   LDAPMessage * e,
@@ -834,7 +834,7 @@ _nss_ldap_assign_attrval (
  * a syntactically suitable value. The behaviour here is determinable at
  * runtime from ldap.conf.
  */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_assign_passwd (
 			  LDAP * ld,
 			  LDAPMessage * e,

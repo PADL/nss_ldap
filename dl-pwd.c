@@ -87,7 +87,7 @@ static int do_ldap_getpwent = 0;
 /* this is the OSF/1 interface, anyway. Disgusting. The "right" way is
  * to use SIA. Oh well. Don't think this is threadsafe.
  */
-int 
+int
 getpwent_r (struct passwd *pw, char *buffer, int len, FILE ** pw_fp)
 {
   /* returns 0 or errno */
@@ -199,7 +199,7 @@ getpwent (void)
  * That doesn't take the last argument, and has a symbol name of getpwuid_r instead
  * of Pgetpwuid_r. Ditto for getpwnam.
  */
-int 
+int
 getpwuid_r (uid_t uid, struct passwd *pwd, char *buffer, size_t len, struct passwd **result)
 {
   NSS_STATUS status;
@@ -266,7 +266,7 @@ getpwuid (uid_t uid)
 }
 
 #ifdef OSF1
-int 
+int
 getpwnam_r (const char *name, struct passwd *pwd, char *buffer, size_t len, struct passwd **result)
 {
   NSS_STATUS status;
@@ -335,7 +335,7 @@ getpwnam (const char *name)
 }
 
 #ifdef OSF1
-int 
+int
 setpwent_r (FILE ** fp)
 {
   do_ldap_getpwent = 0;
@@ -353,10 +353,10 @@ setpwent_r (FILE ** fp)
 #endif
 
 #ifdef OSF1
-int 
+int
 setpwent (void)
 #else
-void 
+void
 setpwent (void)
 #endif
 {
@@ -377,7 +377,7 @@ setpwent (void)
 }
 
 #ifdef OSF1
-void 
+void
 endpwent_r (FILE ** fp)
 {
   if (do_ldap_getpwent == 0)
@@ -399,7 +399,7 @@ endpwent_r (FILE ** fp)
 }
 #endif
 
-void 
+void
 endpwent (void)
 {
   if (do_ldap_getpwent == 0)

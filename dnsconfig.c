@@ -69,7 +69,7 @@
 #include "dnsconfig.h"
 
 /* map gnu.org into DC=gnu,DC=org */
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getdnsdn (
 		     char *src_domain,
 		     char **rval,
@@ -142,7 +142,7 @@ _nss_ldap_getdnsdn (
 }
 
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_readconfigfromdns (
 			      ldap_config_t ** presult,
 			      char *buf,

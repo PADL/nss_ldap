@@ -57,7 +57,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t sp_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_sp (
 		     LDAP * ld,
 		     LDAPMessage * e,
@@ -103,7 +103,7 @@ _nss_ldap_parse_sp (
 }
 
 #ifdef GNU_NSS
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getspnam_r (
 		       const char *name,
 		       struct spwd * result,
@@ -114,7 +114,7 @@ _nss_ldap_getspnam_r (
   LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getspnam, sp_attributes, _nss_ldap_parse_sp);
 }
 #elif defined(SUN_NSS)
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getspnam_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, filt_getspnam, sp_attributes, _nss_ldap_parse_sp);
@@ -122,10 +122,10 @@ _nss_ldap_getspnam_r (nss_backend_t * be, void *args)
 #endif /* GNU_NSS */
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_setspent (void)
 #else
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
@@ -135,10 +135,10 @@ _nss_ldap_setspent_r (nss_backend_t * sp_context, void *args)
 #endif
 
 #if defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_endspent (void)
 #else
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_endspent_r (nss_backend_t * sp_context, void *args)
 #endif
 #if defined(GNU_NSS) || defined(SUN_NSS)
@@ -148,7 +148,7 @@ _nss_ldap_endspent_r (nss_backend_t * sp_context, void *args)
 #endif
 
 #ifdef GNU_NSS
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getspent_r (
 		       struct spwd *result,
 		       char *buffer,
@@ -158,7 +158,7 @@ _nss_ldap_getspent_r (
   LOOKUP_GETENT (sp_context, result, buffer, buflen, errnop, filt_getspent, sp_attributes, _nss_ldap_parse_sp);
 }
 #elif defined(SUN_NSS)
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getspent_r (nss_backend_t * sp_context, void *args)
 {
   LOOKUP_GETENT (args, sp_context, filt_getspent, sp_attributes, _nss_ldap_parse_sp);
@@ -166,7 +166,7 @@ _nss_ldap_getspent_r (nss_backend_t * sp_context, void *args)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_shadow_destr (nss_backend_t * sp_context, void *args)
 {
   return _nss_ldap_default_destr (sp_context, args);

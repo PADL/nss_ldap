@@ -62,7 +62,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t alias_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_alias (
 			LDAP * ld,
 			LDAPMessage * e,
@@ -87,26 +87,26 @@ _nss_ldap_parse_alias (
   return stat;
 }
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getaliasbyname_r (const char *name, struct aliasent * result,
 			    char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getaliasbyname, alias_attributes, _nss_ldap_parse_alias);
 }
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_setaliasent_r (void)
 {
   LOOKUP_SETENT (alias_context);
 }
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_endaliasent_r (void)
 {
   LOOKUP_ENDENT (alias_context);
 }
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getaliasent_r (struct aliasent *result, char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (alias_context, result, buffer, buflen, errnop, filt_getaliasent, alias_attributes, _nss_ldap_parse_alias);

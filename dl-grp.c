@@ -85,7 +85,7 @@ static int do_ldap_getgrent = 0;
 
 #ifdef OSF1
 /* this is the OSF/1 interface, anyway. Disgusting. */
-int 
+int
 getgrent_r (struct group *gr, char *buffer, int len, FILE ** gr_fp)
 {
   /* returns 0 or errno */
@@ -198,7 +198,7 @@ getgrent (void)
  * That doesn't take the last argument, and has a symbol name of getgrgid_r
  * instead of Pgetgrgid_r. Ditto for getgrnam.
  */
-int 
+int
 getgrgid_r (gid_t gid, struct group *grp, char *buffer, size_t len, struct group **result)
 {
   NSS_STATUS status;
@@ -265,7 +265,7 @@ getgrgid (gid_t gid)
 }
 
 #ifdef OSF1
-int 
+int
 getgrnam_r (const char *name, struct group *grp, char *buffer, size_t len, struct group **result)
 {
   NSS_STATUS status;
@@ -334,7 +334,7 @@ getgrnam (const char *name)
 }
 
 #ifdef OSF1
-int 
+int
 setgrent_r (FILE ** fp)
 {
   do_ldap_getgrent = 0;
@@ -352,10 +352,10 @@ setgrent_r (FILE ** fp)
 #endif
 
 #ifdef OSF1
-int 
+int
 setgrent (void)
 #else
-void 
+void
 setgrent (void)
 #endif
 {
@@ -376,7 +376,7 @@ setgrent (void)
 }
 
 #ifdef OSF1
-void 
+void
 endgrent_r (FILE ** fp)
 {
   if (do_ldap_getgrent == 0)
@@ -398,7 +398,7 @@ endgrent_r (FILE ** fp)
 }
 #endif
 
-void 
+void
 endgrent (void)
 {
   if (do_ldap_getgrent == 0)

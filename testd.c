@@ -5,7 +5,7 @@
 #import "util.h"
 #import "dnsconfig.h"
 
-void 
+void
 printcf (ldap_config_t * cf)
 {
   printf ("host %s\n", cf->ldc_host);
@@ -22,7 +22,7 @@ printcf (ldap_config_t * cf)
 #endif
 }
 
-void 
+void
 main (void)
 {
 /*

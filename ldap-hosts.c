@@ -75,7 +75,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t hosts_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_host (
 		       LDAP * ld,
 		       LDAPMessage * e,
@@ -246,7 +246,7 @@ _nss_ldap_parse_host (
 }
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_gethostbyname_r (nss_backend_t * be, void *args)
 {
   ldap_args_t a;
@@ -273,7 +273,7 @@ _nss_ldap_gethostbyname_r (nss_backend_t * be, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_gethostbyname_r (const char *name, struct hostent * result,
 		    char *buffer, size_t buflen, int *errnop, int *h_errnop)
 {
@@ -300,7 +300,7 @@ _nss_ldap_gethostbyname_r (const char *name, struct hostent * result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_gethostbyaddr_r (nss_backend_t * be, void *args)
 {
   struct in_addr iaddr;
@@ -329,7 +329,7 @@ _nss_ldap_gethostbyaddr_r (nss_backend_t * be, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_gethostbyaddr_r (struct in_addr * addr, int len, int type,
 			   struct hostent * result, char *buffer,
 			   size_t buflen, int *errnop, int *h_errnop)
@@ -362,7 +362,7 @@ _nss_ldap_gethostbyaddr_r (struct in_addr * addr, int len, int type,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_sethostent_r (nss_backend_t * hosts_context, void *fakeargs)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_sethostent (void)
@@ -374,7 +374,7 @@ _nss_ldap_sethostent_r (nss_backend_t * hosts_context, void *fakeargs)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_endhostent_r (nss_backend_t * hosts_context, void *fakeargs)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_endhostent (void)
@@ -386,7 +386,7 @@ _nss_ldap_endhostent_r (nss_backend_t * hosts_context, void *fakeargs)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_gethostent_r (nss_backend_t * hosts_context, void *args)
 {
   NSS_STATUS status = _nss_ldap_getent (
@@ -407,7 +407,7 @@ _nss_ldap_gethostent_r (nss_backend_t * hosts_context, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_gethostent_r (struct hostent * result, char *buffer, size_t buflen, int *errnop, int *h_errnop)
 {
   NSS_STATUS status;
@@ -429,7 +429,7 @@ _nss_ldap_gethostent_r (struct hostent * result, char *buffer, size_t buflen, in
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_hosts_destr (nss_backend_t * hosts_context, void *args)
 {
   return _nss_ldap_default_destr (hosts_context, args);

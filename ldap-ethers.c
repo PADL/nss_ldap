@@ -75,7 +75,7 @@ extern struct ether_addr *ether_aton (char *s);
 extern char *ether_ntoa (struct ether_addr *e);
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_ether (
 			LDAP * ld,
 			LDAPMessage * e,
@@ -106,7 +106,7 @@ _nss_ldap_parse_ether (
 }
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_gethostton_r (nss_backend_t * be, void *args)
 {
   struct ether result;
@@ -136,7 +136,7 @@ _nss_ldap_gethostton_r (nss_backend_t * be, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_gethostton_r (const char *name, struct ether * result,
 			char *buffer, size_t buflen, int *errnop)
 {
@@ -145,7 +145,7 @@ _nss_ldap_gethostton_r (const char *name, struct ether * result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getntohost_r (nss_backend_t * be, void *args)
 {
   struct ether result;
@@ -182,7 +182,7 @@ _nss_ldap_getntohost_r (nss_backend_t * be, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getntohost_r (struct ether_addr * addr, struct ether * result,
 			char *buffer, size_t buflen, int *errnop)
 {
@@ -194,7 +194,7 @@ _nss_ldap_getntohost_r (struct ether_addr * addr, struct ether * result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_setetherent_r (nss_backend_t * ether_context, void *fakeargs)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_setetherent (void)
@@ -206,7 +206,7 @@ _nss_ldap_setetherent_r (nss_backend_t * ether_context, void *fakeargs)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_endetherent_r (nss_backend_t * ether_context, void *fakeargs)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_endetherent (void)
@@ -218,7 +218,7 @@ _nss_ldap_endetherent_r (nss_backend_t * ether_context, void *fakeargs)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getetherent_r (nss_backend_t * ether_context, void *args)
 {
   struct ether result;
@@ -247,7 +247,7 @@ _nss_ldap_getetherent_r (nss_backend_t * ether_context, void *args)
   return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getetherent_r (struct ether * result, char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (ether_context, result, buffer, buflen, errnop, filt_getetherent, ether_attributes, _nss_ldap_parse_ether);
@@ -255,7 +255,7 @@ _nss_ldap_getetherent_r (struct ether * result, char *buffer, size_t buflen, int
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_ethers_destr (nss_backend_t * ether_context, void *args)
 {
   return _nss_ldap_default_destr (ether_context, args);

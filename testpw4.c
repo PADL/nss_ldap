@@ -10,7 +10,7 @@
 static const char *testhost = "davinci.eng.sun.com";
 static char rcsid[] = "$Id$";
 
-void 
+void
 main (void)
 {
 

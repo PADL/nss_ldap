@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <pwd.h>
 
-void 
+void
 main (int argc, char **argv)
 {
   scan_passwd ();

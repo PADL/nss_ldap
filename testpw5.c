@@ -29,7 +29,7 @@ char **ARGV;
 
 #define MAX_THREADS  16
 
-void 
+void
 main (int argc, char **argv)
 {
 #ifdef _REENTRANT
@@ -53,7 +53,7 @@ main (int argc, char **argv)
 }
 
 #ifdef _REENTRANT
-static void 
+static void
 ret (int status)
 {
   thr_exit (&status);
@@ -62,7 +62,7 @@ ret (int status)
 #define ret exit
 #endif
 
-void 
+void
 test_passwd (void)
 {
   struct passwd *pw;

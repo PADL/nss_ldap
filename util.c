@@ -71,7 +71,7 @@ static pthread_mutex_t __cache_mutex = PTHREAD_MUTEX_INITIALIZER;
 #define cache_unlock()	__libc_lock_unlock(__cache_mutex)
 #endif /* SUN_NSS */
 
-static NSS_STATUS 
+static NSS_STATUS
 dn2uid_cache_put (const char *dn, const char *uid)
 {
   DBT key, val;
@@ -98,7 +98,7 @@ dn2uid_cache_put (const char *dn, const char *uid)
   return rc ? NSS_TRYAGAIN : NSS_SUCCESS;
 }
 
-static NSS_STATUS 
+static NSS_STATUS
 dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
 {
   DBT key, val;
@@ -136,7 +136,7 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
 }
 #endif /* DN2UID_CACHE */
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_dn2uid (
 		   LDAP * ld,
 		   const char *dn,
@@ -182,7 +182,7 @@ _nss_ldap_dn2uid (
 }
 #endif /* RFC2307BIS */
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getrdnvalue (
 			LDAP * ld,
 			LDAPMessage * entry,
@@ -242,7 +242,7 @@ _nss_ldap_getrdnvalue (
   return status;
 }
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getrdnvalue_impl (
 			     const char *dn,
 			     const char *rdntype,
@@ -357,7 +357,7 @@ _nss_ldap_getrdnvalue_impl (
   return NSS_NOTFOUND;
 }
 
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_readconfig (
 		       ldap_config_t ** presult,
 		       char *buf,

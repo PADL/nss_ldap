@@ -67,7 +67,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t bp_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_bp (
 		     LDAP * ld,
 		     LDAPMessage * e,
@@ -97,7 +97,7 @@ _nss_ldap_parse_bp (
 }
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, filt_getbootparamsbyname, bp_attributes, _nss_ldap_parse_bp);
@@ -105,7 +105,7 @@ _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *args)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_bootparams_destr (nss_backend_t * bp_context, void *args)
 {
   return _nss_ldap_default_destr (bp_context, args);

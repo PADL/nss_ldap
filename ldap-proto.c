@@ -66,7 +66,7 @@ static char rcsId[] = "$Id$";
 static context_handle_t proto_context = NULL;
 #endif
 
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_parse_proto (
 			LDAP * ld,
 			LDAPMessage * e,
@@ -99,13 +99,13 @@ _nss_ldap_parse_proto (
 }
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getprotobyname_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, filt_getprotobyname, proto_attributes, _nss_ldap_parse_proto);
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getprotobyname_r (const char *name, struct protoent *result,
 			    char *buffer, size_t buflen, int *errnop)
 {
@@ -114,13 +114,13 @@ _nss_ldap_getprotobyname_r (const char *name, struct protoent *result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getprotobynumber_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NUMBER (args, key.number, filt_getprotobynumber, proto_attributes, _nss_ldap_parse_proto);
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getprotobynumber_r (int number, struct protoent *result,
 			      char *buffer, size_t buflen, int *errnop)
 {
@@ -129,7 +129,7 @@ _nss_ldap_getprotobynumber_r (int number, struct protoent *result,
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_setprotoent_r (nss_backend_t * proto_context, void *fakeargs)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_setprotoent (void)
@@ -141,7 +141,7 @@ _nss_ldap_setprotoent_r (nss_backend_t * proto_context, void *fakeargs)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_endprotoent_r (nss_backend_t * proto_context, void *fakeargs)
 #elif defined(GNU_NSS)
      NSS_STATUS _nss_ldap_endprotoent (void)
@@ -153,13 +153,13 @@ _nss_ldap_endprotoent_r (nss_backend_t * proto_context, void *fakeargs)
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_getprotoent_r (nss_backend_t * proto_context, void *args)
 {
   LOOKUP_GETENT (args, proto_context, filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
 }
 #elif defined(GNU_NSS)
-NSS_STATUS 
+NSS_STATUS
 _nss_ldap_getprotoent_r (struct protoent *result, char *buffer, size_t buflen, int *errnop)
 {
   LOOKUP_GETENT (proto_context, result, buffer, buflen, errnop, filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
@@ -167,7 +167,7 @@ _nss_ldap_getprotoent_r (struct protoent *result, char *buffer, size_t buflen, i
 #endif
 
 #ifdef SUN_NSS
-static NSS_STATUS 
+static NSS_STATUS
 _nss_ldap_protocols_destr (nss_backend_t * proto_context, void *args)
 {
   return _nss_ldap_default_destr (proto_context, args);
