@@ -39,7 +39,7 @@
 
 #define LDAP_CLASS_HOST                 "ipHost"
 #define LDAP_ATTR_HOSTNAME              "cn"
-#define LDAP_ATTR_HOSTADDR              "iphostnumber"
+#define LDAP_ATTR_HOSTADDR              "ipHostNumber"
 
 static const char *host_attributes[] =
         { LDAP_ATTR_HOSTNAME, LDAP_ATTR_HOSTADDR, NULL };

@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+2.64	Luke Howard <lukeh@padl.com>
+
+	* changed alias schema to Sun SDS nisMailAlias schema
+	* updated TODO list to reflect Bugzilla entries
+	* restored capitalization of attributes for "niceness"
+
 2.63	Luke Howard <lukeh@padl.com>
 
 	* added patch from gero@faveve.uni-stuttgart.de for

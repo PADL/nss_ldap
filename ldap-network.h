@@ -26,8 +26,8 @@
 
 #define LDAP_CLASS_NETWORK              "ipNetwork"
 #define LDAP_ATTR_NETWORKNAME           "cn"
-#define LDAP_ATTR_NETWORKADDR           "ipnetworknumber"
-#define LDAP_ATTR_NETWORKMASK           "ipnetmasknumber"
+#define LDAP_ATTR_NETWORKADDR           "ipNetworkNumber"
+#define LDAP_ATTR_NETWORKMASK           "ipNetmaskNumber"
 
 static NSS_STATUS _nss_ldap_parse_net(
 	LDAP *ld,

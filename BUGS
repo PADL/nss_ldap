@@ -2,39 +2,10 @@
 Please contact PADL Software Development Support <dev@padl.com>
 if you wish to contribute.
 
+BUGZILLA BUGS:
+==============
 
-TESTING
-=======
-
-1. passwd: ok.
-
-2. group: ok.
-
-3. ethers: ok.
-
-4. services: ok.
-
-5. protocols: ok.
-
-6. hosts: ok.
-
-7. networks: ok.
-
-8. bootparams: not done.
-
-9. netgroup: not done.
-
-10. aliases: not supported for solaris.
-
-11. shadow: untested.
-
-12. rpc: ok.
-
-TODO:
-=====
-
-Resource assignments are suggested only.
-
+[BUG#12]
 - we should probably put the session, under Solaris, in the backend. 
   We need to do so in a way that remains compatible with the GNU NSS,
   where I expect we need to open a connection for every lookup.
@@ -43,32 +14,38 @@ Resource assignments are suggested only.
   rebinding logic was put there to *allow* the connection to be long
   lived.
 
+[BUG#12]
 - ditto for IRS: the private data should contain the session and be long
   lived. 
 
+[BUG#13]
 - we could clean up the text segment a bit by generating filters on the
   fly from object classes and attributes, instead of storing them. This
   seems to be important under Solaris as the linker doesn't intern strings (?)
+  All that filter-constructing stuff in the ldap-*.h headers is UGLY.
 
+[BUG#14]
 - infinite recursion is host lookup -- libldap uses gethostbyname(). Perhaps
-  we should link with a custom gethostbyname() which uses DNS only???
+  we should link with a custom gethostbyname() which uses DNS only??? (This
+  is nominally the LDAP client library's problem but we could short-circuit
+  by resolving the IP addresses ourselves).
 
-- use one LDAP connection and ldap_init() instead of opening multiple conns?
-
+[BUG#15]
 - support getgroupsbymember() in ldap-group.c. There's a skeleton in this
   closet :-) but no code written yet. It should be implemented as it's a lot
   faster to do (&(objectclass=posixGroup)(memberUid=lukeh)) than looking up every group.
+  Tricky to do with RFC2307BIS support this.
 
+[BUG#16]
 - finish implementing dl-*.c  (LOW priority). In fact I'm tempted to remove
   this from the line up: SGI have their own LDAP C library support, and
   so do DEC (with SIA).
 
-- implement gethostbyname2()
+[BUG#17]
+- implement gethostbyname2() and
+  debug IPv6 support in ldap-hosts.c (and ldap-network.c?) (Uli?)
 
-- debug IPv6 support in ldap-hosts.c (and ldap-network.c?) (Uli?)
-
-- debug irs-network.c 
-
+[BUG#18]
 - write ldap-netgrp.c and irs-netgrp.c (Uli, +Luke IRS)
   This is a lot easier now that the schema supports triples:
 
@@ -90,31 +67,18 @@ Resource assignments are suggested only.
   NIS code for the glibc part of the NSS. Or use (b) for both. It's up to you, but the
   netgroup structs will be different...
 
-- support for bootparams map
-
-[DONE]
-- debug Netscape SDK support under Solaris (Leif???)
-
-- write testsuite. Build under Linux & BSD/OS.
-
-[DONE]
-- Build PIC LDAP library for Linux. Maybe we want to make mods to libldap (to the
-  extent of the Netscape modifications used by nss_ldap) and include that. eg.
-
-	- thread safety (probably avoidable given global mutex)
-	- not returning quasi-static data off the LDAP *ld eg. ldap_get_dn()
-	- opaque LDAP struct (not too important)
-	- roll liblber into libldap
-
-  I've started this in the libldap work area. (Uli?)
-
-[DONE]
-- fix Makefiles to build under glibc. Makefile.sun, Makefile.gnu, Makefile.bsd
-  + Configure.
-
+[BUG#19]
 - add support for DHCP and coldstart configuration. Coldstart should
   update /etc/ldap.conf (/var/ldap/LDAP_CLIENT_CACHE?).
 
+[BUG#20]
+- use asynchronous search API
+
+[BUG#21]
+- write testsuite. 
+
+[BUG#22]
+- support for bootparams map
 
 $Id$
 

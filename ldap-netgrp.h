@@ -25,8 +25,8 @@
 
 #define LDAP_CLASS_NETGROUP             "nisNetgroup"
 #define LDAP_ATTR_NETGROUPNAME          "cn"
-#define LDAP_ATTR_NETGROUPTRIPLE	"nisnetgrouptriple"
-#define LDAP_ATTR_NETGROUPMEMBER        "membernisnetgroup"
+#define LDAP_ATTR_NETGROUPTRIPLE	"nisNetgroupTriple"
+#define LDAP_ATTR_NETGROUPMEMBER        "memberNisNetgroup"
 
 /*
      int getnetgrent_r(char **machinep, char **userp,

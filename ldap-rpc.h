@@ -31,7 +31,7 @@
 
 #define LDAP_CLASS_RPC                  "oncRpc"
 #define LDAP_ATTR_RPCNAME               "cn"
-#define LDAP_ATTR_RPCNUMBER             "oncrpcnumber"
+#define LDAP_ATTR_RPCNUMBER             "oncRpcNumber"
 
 static const char *rpc_attributes[] =
         { LDAP_ATTR_RPCNAME, LDAP_ATTR_RPCNUMBER, NULL };

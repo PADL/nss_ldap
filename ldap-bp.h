@@ -25,7 +25,7 @@
 
 #define LDAP_CLASS_HOST                 "bootableDevice"
 #define LDAP_ATTR_HOSTNAME              "cn"
-#define LDAP_ATTR_BOOTPARAM		"bootparameter"
+#define LDAP_ATTR_BOOTPARAM		"bootParameter"
 
 /* I'm guessing here. This is certainly wrong. */
 struct bootparams

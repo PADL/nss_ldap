@@ -31,7 +31,7 @@
 
 #define LDAP_CLASS_HOST                 "ieee802Device"
 #define LDAP_ATTR_HOSTNAME              "cn"
-#define LDAP_ATTR_ETHERADDR		"macaddress"
+#define LDAP_ATTR_ETHERADDR		"macAddress"
 
 static const char *ether_attributes[] =
         { LDAP_ATTR_HOSTNAME, LDAP_ATTR_ETHERADDR, NULL };

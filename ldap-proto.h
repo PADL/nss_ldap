@@ -31,7 +31,7 @@
 
 #define LDAP_CLASS_PROTOCOL             "ipProtocol"
 #define LDAP_ATTR_PROTOCOLNAME          "cn"
-#define LDAP_ATTR_PROTOCOLNUMBER        "ipprotocolnumber"
+#define LDAP_ATTR_PROTOCOLNUMBER        "ipProtocolNumber"
 
 static const char *proto_attributes[] =
         { LDAP_ATTR_PROTOCOLNAME, LDAP_ATTR_PROTOCOLNUMBER,

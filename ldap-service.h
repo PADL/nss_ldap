@@ -35,8 +35,8 @@
 
 #define LDAP_CLASS_SERVICE              "ipService"
 #define LDAP_ATTR_SERVICENAME           "cn"
-#define LDAP_ATTR_SERVICEPORT           "ipserviceport"
-#define LDAP_ATTR_SERVICEPROTOCOL       "ipserviceprotocol"
+#define LDAP_ATTR_SERVICEPORT           "ipServicePort"
+#define LDAP_ATTR_SERVICEPROTOCOL       "ipServiceProtocol"
 
 static const char *serv_attributes[] =
         { LDAP_ATTR_SERVICENAME, LDAP_ATTR_SERVICEPORT,

@@ -25,14 +25,14 @@
 
 #define LDAP_CLASS_SHADOW               "shadowAccount"
 #define LDAP_ATTR_SHADOW_NAME           "uid"
-#define LDAP_ATTR_SHADOW_PASSWD		"userpassword"
-#define LDAP_ATTR_SHADOW_LASTCHANGE     "shadowlastchange"
-#define LDAP_ATTR_SHADOW_MAX            "shadowmax"
-#define LDAP_ATTR_SHADOW_MIN            "shadowmin"
-#define LDAP_ATTR_SHADOW_WARN           "shadowwarning"
-#define LDAP_ATTR_SHADOW_INACTIVE       "shadowinactive"
-#define LDAP_ATTR_SHADOW_EXPIRE         "shadowexpire"
-#define LDAP_ATTR_SHADOW_FLAG           "shadowflag"
+#define LDAP_ATTR_SHADOW_PASSWD		"userPassword"
+#define LDAP_ATTR_SHADOW_LASTCHANGE     "shadowLastChange"
+#define LDAP_ATTR_SHADOW_MAX            "shadowMax"
+#define LDAP_ATTR_SHADOW_MIN            "shadowMin"
+#define LDAP_ATTR_SHADOW_WARN           "shadowWarning"
+#define LDAP_ATTR_SHADOW_INACTIVE       "shadowInactive"
+#define LDAP_ATTR_SHADOW_EXPIRE         "shadowExpire"
+#define LDAP_ATTR_SHADOW_FLAG           "shadowFlag"
 
 static const char *sp_attributes[] =
         { LDAP_ATTR_SHADOW_NAME, LDAP_ATTR_SHADOW_PASSWD,

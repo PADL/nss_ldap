@@ -25,9 +25,9 @@
 
 #define LDAP_CLASS_GROUP		"posixGroup"
 #define LDAP_ATTR_GROUPNAME		"cn"
-#define LDAP_ATTR_GPASSWD		"userpassword"
-#define LDAP_ATTR_UIDMEMBERS		"memberuid"
-#define LDAP_ATTR_GROUP_GID		"gidnumber"
+#define LDAP_ATTR_GPASSWD		"userPassword"
+#define LDAP_ATTR_UIDMEMBERS		"memberUid"
+#define LDAP_ATTR_GROUP_GID		"gidNumber"
 #ifdef RFC2307BIS
 #define LDAP_ATTR_DNMEMBERS		"member"
 #endif /* RFC2307BIS */

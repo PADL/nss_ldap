@@ -25,12 +25,12 @@
 
 #define LDAP_CLASS_USER                 "posixAccount"
 #define LDAP_ATTR_USERNAME              "uid"
-#define LDAP_ATTR_PASSWD                "userpassword"
-#define LDAP_ATTR_UID                   "uidnumber"
-#define LDAP_ATTR_USER_GID              "gidnumber"
+#define LDAP_ATTR_PASSWD                "userPassword"
+#define LDAP_ATTR_UID                   "uidNumber"
+#define LDAP_ATTR_USER_GID              "gidNumber"
 #define LDAP_ATTR_REALNAME              "cn"
-#define LDAP_ATTR_HOME                  "homedirectory"
-#define LDAP_ATTR_SHELL                 "loginshell"
+#define LDAP_ATTR_HOME                  "homeDirectory"
+#define LDAP_ATTR_SHELL                 "loginShell"
 #define LDAP_ATTR_GECOS                 "gecos"
 #define LDAP_ATTR_COMMENT		"description"
 

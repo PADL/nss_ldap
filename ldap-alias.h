@@ -23,9 +23,9 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_ALIAS_H
 #define _LDAP_NSS_LDAP_LDAP_ALIAS_H
 
-#define LDAP_CLASS_ALIAS                "rfc822MailGroup"
+#define LDAP_CLASS_ALIAS                "nisMailAlias"
 #define LDAP_ATTR_ALIASNAME             "cn"
-#define LDAP_ATTR_MEMBERS               "mail"
+#define LDAP_ATTR_MEMBERS               "rfc822MailMember"
 
 static const char *alias_attributes[] =
         { LDAP_ATTR_ALIASNAME, LDAP_ATTR_MEMBERS, NULL };
