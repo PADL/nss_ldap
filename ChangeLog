@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+220	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#169: getntohost() on Solaris
+
 218	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#168: set errnop to ENOENT if not found

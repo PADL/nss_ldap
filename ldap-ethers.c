@@ -189,9 +189,11 @@ _nss_ldap_getntohost_r (nss_backend_t * be, void *args)
 
   if (status == NSS_SUCCESS)
     {
-      memcpy (NSS_ARGS (args)->buf.result, &result.e_addr,
-	      sizeof (result.e_addr));
-      NSS_ARGS (args)->returnval = NSS_ARGS (args)->buf.result;
+      memcpy (NSS_ARGS (args)->buf.buffer, result.e_name,
+	      strlen (result.e_name) + 1);
+      NSS_ARGS (args)->returnval = NSS_ARGS (args)->buf.result =
+				   NSS_ARGS (args)->buf.buffer;
+      NSS_ARGS (args)->buf.buflen = strlen (result.e_name);
     }
   else
     {
