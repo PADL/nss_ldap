@@ -31,11 +31,4 @@ NSS_STATUS _nss_ldap_getdnsdn (char *domain,
 NSS_STATUS _nss_ldap_readconfigfromdns (ldap_config_t ** result,
 					char *buf, size_t buflen);
 
-/*
- * These are unnecessary for the moment, as there is a coarser
- * lock around readconfig.
- */
-#define __nss_dns_lock()
-#define __nss_dns_unlock()
-
 #endif /* _LDAP_NSS_LDAP_DNSCONFIG_H */

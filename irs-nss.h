@@ -30,6 +30,8 @@
  * GNU nameservice switch modules.
  */
 #include <irs.h>
+#elif defined(_AIX)
+#include "irs.h"
 #endif
 
 struct irs_gr *irs_ldap_gr __P ((struct irs_acc *));

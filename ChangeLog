@@ -1,6 +1,17 @@
 $Header$
 ===============================================================
 
+181	Luke Howard <lukeh@padl.com>
+
+	* ignore SIGPIPE whilst inside nss_ldap library routines
+	  to prevent crashing on down LDAP server; possible fix
+	  for Debian bug 130006
+	* removed --enable-no-so-keepalive; always try to
+	  disable SO_KEEPALIVE on underlying socket to LDAP
+	  server
+	* include local copy of irs.h under AIX
+	* general cleanup of locking code
+
 180	Luke Howard <lukeh@padl.com>
 
 	* pull in libpthreads on AIX 

@@ -432,26 +432,46 @@ typedef enum nss_status NSS_STATUS;
 #define _NSS_LOOKUP_OFFSET      (0)
 #endif
 
-#ifdef HAVE_THREAD_H
-#define nss_lock()		mutex_lock(&_nss_ldap_lock)
-#define nss_unlock()		mutex_unlock(&_nss_ldap_lock)
-#elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-#define nss_lock()		__libc_lock_lock(_nss_ldap_lock)
-#define nss_unlock()		__libc_lock_unlock(_nss_ldap_lock)
-#elif defined(HAVE_PTHREAD_H)
-#define nss_lock()		pthread_mutex_lock(&_nss_ldap_lock)
-#define nss_unlock()		pthread_mutex_unlock(&_nss_ldap_lock)
-#else
-#define nss_lock()
-#define nss_unlock()
-#endif
-
 typedef NSS_STATUS (*parser_t) (LDAP *, LDAPMessage *, ldap_state_t *, void *,
 				char *, size_t);
 
+/*
+ * Portable locking macro.
+ */
+#ifdef HAVE_THREAD_H
+#define NSS_LDAP_LOCK(m)		mutex_lock(&m)
+#define NSS_LDAP_UNLOCK(m)		mutex_unlock(&m)
+#define NSS_LDAP_DEFINE_LOCK(m)		static mutex_t m = DEFAULTMUTEX
+#elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+#define NSS_LDAP_LOCK(m)		__libc_lock_lock(m)
+#define NSS_LDAP_UNLOCK(m)		__libc_lock_unlock(m)
+#define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
+#elif defined(HAVE_PTHREAD_H)
+#define NSS_LDAP_LOCK(m)		pthread_mutex_lock(&m)
+#define NSS_LDAP_UNLOCK(m)		pthread_mutex_unlock(&m)
+#define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
+#else
+#define NSS_LDAP_LOCK(m)
+#define NSS_LDAP_UNLOCK(m)
+#define NSS_LDAP_DEFINE_LOCK(m)
+#endif
+
+/*
+ * Acquire global nss_ldap lock and blocks SIGPIPE.
+ * Generally this should only be done within ldap-nss.c.
+ */
+void _nss_ldap_enter (void);
+
+/*
+ * Release global nss_ldap lock and blocks SIGPIPE.
+ * Generally this should only be done within ldap-nss.c.
+ */
+void _nss_ldap_leave (void);
+
 #ifdef LDAP_OPT_THREAD_FN_PTRS
 /*
- * Netscape's libldap is threadsafe, but we use a lock before it is initialized 
+ * Netscape's libldap is threadsafe, but we use a
+ * lock before it is initialized 
  */
 
 struct ldap_error
@@ -462,14 +482,6 @@ struct ldap_error
 };
 
 typedef struct ldap_error ldap_error_t;
-
-#define nss_libldap_lock()
-#define nss_libldap_unlock()
-
-#else
-
-#define nss_libldap_lock()		nss_lock()
-#define nss_libldap_unlock()		nss_unlock()
 
 #endif /* LDAP_OPT_THREAD_FN_PTRS */
 

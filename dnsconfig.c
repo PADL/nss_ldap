@@ -189,11 +189,8 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 #endif /* AT_OC_MAP */
   result->ldc_next = result;
 
-  __nss_dns_lock ();
-
   if ((_res.options & RES_INIT) == 0 && res_init () == -1)
     {
-      __nss_dns_unlock ();
       free (*presult);
       return NSS_UNAVAIL;
     }
@@ -203,7 +200,6 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   r = dns_lookup (domain, "srv");
   if (r == NULL)
     {
-      __nss_dns_unlock ();
       free (*presult);
       return NSS_NOTFOUND;
     }
@@ -223,7 +219,6 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	      if (result->ldc_next == NULL)
 		{
 		  dns_free_data (r);
-		  __nss_dns_unlock ();
 		  free (*presult);
 		  return NSS_UNAVAIL;
 		}
@@ -259,7 +254,6 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	  if (stat != NSS_SUCCESS)
 	    {
 	      dns_free_data (r);
-	      __nss_dns_unlock ();
 	      free (*presult);
 	      return stat;
 	    }
@@ -267,7 +261,6 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
     }
 
   dns_free_data (r);
-  __nss_dns_unlock ();
   stat = NSS_SUCCESS;
 
   return stat;

@@ -145,9 +145,9 @@
 		return NSS_UNAVAIL; \
 	return NSS_SUCCESS
 #define LOOKUP_ENDENT(key) \
-	nss_lock(); \
+	_nss_ldap_enter(); \
 	_nss_ldap_ent_context_release(((nss_ldap_backend_t *)key)->state); \
-	nss_unlock(); \
+	_nss_ldap_leave(); \
 	return NSS_SUCCESS
 
 #elif defined(HAVE_NSS_H)
@@ -157,9 +157,9 @@
 		return NSS_UNAVAIL; \
 	return NSS_SUCCESS
 #define LOOKUP_ENDENT(key) \
-	nss_lock(); \
+	_nss_ldap_enter(); \
 	_nss_ldap_ent_context_release(key); \
-	nss_unlock(); \
+	_nss_ldap_leave(); \
 	return NSS_SUCCESS
 
 #elif defined(HAVE_IRS_H)
@@ -169,9 +169,9 @@
 	(void) _nss_ldap_ent_context_init(&pvt->state)
 #define LOOKUP_ENDENT(this) \
 	struct pvt *pvt = (struct pvt *)this->private; \
-	nss_lock(); \
+	_nss_ldap_enter(); \
 	_nss_ldap_ent_context_release(pvt->state); \
-	nss_unlock();
+	_nss_ldap_leave();
 
 #endif /* HAVE_NSSWITCH_H */
 

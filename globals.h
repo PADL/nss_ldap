@@ -23,14 +23,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_THREAD_H
-#include <thread.h>
-extern mutex_t _nss_ldap_lock;
-#elif defined(HAVE_PTHREAD_H)
-#include <pthread.h>
-extern pthread_mutex_t _nss_ldap_lock;
-#endif
-
 extern int _nss_ldap_herrno2nssstat_tab[];
 extern int _nss_ldap_herrno2nssstat_tab_count;
 

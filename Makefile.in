@@ -63,15 +63,11 @@ host_alias = @host_alias@
 host_triplet = @host@
 target_alias = @target_alias@
 target_triplet = @target@
-AMTAR = @AMTAR@
-AMTARFLAGS = @AMTARFLAGS@
-AWK = @AWK@
 CC = @CC@
 CPP = @CPP@
 MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
-install_sh = @install_sh@
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 
 @AIX_TRUE@authmod = @AIX_TRUE@NSS_LDAP

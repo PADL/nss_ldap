@@ -102,6 +102,8 @@ static char rcsId[] =
 #define LDAP_MSG_RECEIVED       0x02
 #endif
 
+NSS_LDAP_DEFINE_LOCK(__lock);
+
 /*
  * the configuration is read by the first call to do_open().
  * Pointers to elements of the list are passed around but should not
@@ -109,6 +111,8 @@ static char rcsId[] =
  */
 static char __configbuf[NSS_LDAP_CONFIG_BUFSIZ];
 static ldap_config_t *__config = NULL;
+
+static void (*__sigpipe_handler) (int) = SIG_DFL;
 
 /*
  * Global LDAP session.
@@ -163,12 +167,10 @@ static void do_close (void);
  */
 static void do_close_no_unbind (void);
 
-#ifdef DISABLE_SO_KEEPALIVE
 /*
  * Disable keepalive on a LDAP connection's socket.
  */
 static void do_disable_keepalive (LDAP * ld);
-#endif
 
 /*
  * TLS routines: set global SSL session options.
@@ -372,11 +374,11 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
 
   if ((((nss_ldap_backend_t *) be)->state) != NULL)
     {
-      nss_lock ();
+      _nss_ldap_enter ();
       _nss_ldap_ent_context_release ((((nss_ldap_backend_t *) be)->state));
       free ((((nss_ldap_backend_t *) be)->state));
       ((nss_ldap_backend_t *) be)->state = NULL;
-      nss_unlock ();
+      _nss_ldap_leave ();
     }
 
   /* Ditch the backend. */
@@ -409,7 +411,7 @@ static void
 do_atfork_prepare (void)
 {
   debug ("==> do_atfork_prepare");
-  nss_lock ();
+  NSS_LDAP_LOCK (__lock);
   debug ("<== do_atfork_prepare");
 }
 
@@ -417,7 +419,7 @@ static void
 do_atfork_parent (void)
 {
   debug ("==> do_atfork_parent");
-  nss_unlock ();
+  NSS_LDAP_UNLOCK (__lock);
   debug ("<== do_atfork_parent");
 }
 
@@ -426,7 +428,7 @@ do_atfork_child (void)
 {
   debug ("==> do_atfork_child");
   do_close_no_unbind ();
-  nss_unlock ();
+  NSS_LDAP_UNLOCK (__lock);
   debug ("<== do_atfork_child");
 }
 
@@ -444,6 +446,78 @@ do_atfork_setup (void)
   debug ("<== do_atfork_setup");
 }
 #endif
+
+/*
+ * Acquires global lock, blocks SIGPIPE.
+ */
+void _nss_ldap_enter (void)
+{
+  debug ("==> _nss_ldap_enter");
+
+  NSS_LDAP_LOCK (__lock);
+
+  /*
+   * Patch for Debian Bug 130006:
+   * ignore SIGPIPE for all LDAP operations.
+   */
+#ifdef HAVE_SIGSET
+  __sigpipe_handler = sigset (SIGPIPE, SIG_IGN);
+#else
+  __sigpipe_handler = signal (SIGPIPE, SIG_IGN);
+#endif /* HAVE_SIGSET */
+
+  debug ("<== _nss_ldap_leave");
+}
+
+/*
+ * Releases global mutex, releases SIGPIPE.
+ */
+void _nss_ldap_leave (void)
+{
+  debug ("==> _nss_ldap_leave");
+
+  /*
+   * Restore signal handler for SIGPIPE.
+   */
+  if (__sigpipe_handler != SIG_ERR && __sigpipe_handler != SIG_IGN)
+    {
+#ifdef HAVE_SIGSET
+      (void) sigset (SIGPIPE, __sigpipe_handler);
+#else
+      (void) signal (SIGPIPE, __sigpipe_handler);
+#endif /* HAVE_SIGSET */
+    }
+
+  NSS_LDAP_UNLOCK (__lock);
+
+  debug ("<== _nss_ldap_leave");
+}
+
+static void
+do_disable_keepalive (LDAP * ld)
+{
+/*
+ * Netscape SSL-enabled LDAP library does not
+ * return the real socket.
+ */
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
+  int sd = -1;
+
+  debug ("==> do_disable_keepalive");
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
+  if (ldap_get_option (ld, LDAP_OPT_DESC, &sd) == 0)
+#else
+  if ((sd = ld->ld_sb.sb_sd) > 0)
+#endif /* LDAP_OPT_DESC */
+    {
+      int off = 0;
+      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, &off, sizeof off);
+    }
+  debug ("<== do_disable_keepalive");
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
+
+  return;
+}
 
 /*
  * Closes connection to the LDAP server.
@@ -538,28 +612,6 @@ do_close_no_unbind (void)
 
   return;
 }
-
-#ifdef DISABLE_SO_KEEPALIVE
-static INLINE void
-do_disable_keepalive (LDAP * ld)
-{
-  int sd = -1;
-
-  debug ("==> do_disable_keepalive");
-#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
-  if (ldap_get_option (ld, LDAP_OPT_DESC, &sd) == 0)
-#else
-  if ((sd = ld->ld_sb.sb_sd) > 0)
-#endif /* LDAP_OPT_DESC */
-    {
-      int off = 0;
-      (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, &off, sizeof off);
-    }
-  debug ("<== do_disable_keepalive");
-
-  return;
-}
-#endif /* DISABLE_SO_KEEPALIVE */
 
 /*
  * Opens connection to an LDAP server.
@@ -663,78 +715,12 @@ do_open (void)
        * close the session after an idle timeout.
        */
       time_t current_time;
-      void (*old_handler) (int sig) = SIG_DFL;
-#ifndef HAVE_LDAPSSL_CLIENT_INIT
       /*
        * Otherwise we can hand back this process' global
        * LDAP session.
        *
-       * Ensure we save signal handler for sigpipe and restore after
-       * LDAP connection is confirmed to be up or a new connection
-       * is opened. This prevents Solaris nscd and other apps from
-       * dying on a SIGPIPE. I'm not entirely convinced that we
-       * ought not to block SIGPIPE elsewhere, but at least this is
-       * the entry point where connections get woken up.
-       *
-       * This doesn't work with the Netscape SDK because they
-       * don't give us the real socket, it seems, and thus 
-       * getpeername() fails; probably the socket is instead a
-       * handle to an internal SSL connection.
-       *
-       * Also: this may not be necessary now that keepaliave is
-       * disabled (the signal code that is).  
-       *
-       * The W2K client library sends an ICMP echo to the server to
-       * check it is up. Perhaps we shold do the same.
-       */
-      struct sockaddr_in sin;
-      int sd = -1;
-
-#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
-      if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
-#else
-      if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-#endif /* LDAP_OPT_DESC */
-	{
-	  size_t len;
-
-#ifdef HAVE_SIGSET
-	  old_handler = sigset (SIGPIPE, SIG_IGN);
-#else
-	  old_handler = signal (SIGPIPE, SIG_IGN);
-#endif /* HAVE_SIGSET */
-	  len = sizeof (sin);
-	  if (getpeername (sd, (struct sockaddr *) &sin, &len) < 0)
-	    {
-	      /*
-	       * The other end has died. Close the connection.
-	       */
-	      debug ("other end dead!\n");
-	      do_close ();
-	    }
-	  if (old_handler != SIG_ERR && old_handler != SIG_IGN)
-	    {
-#ifdef HAVE_SIGSET
-	      (void) sigset (SIGPIPE, old_handler);
-#else
-	      (void) signal (SIGPIPE, old_handler);
-#endif /* HAVE_SIGSET */
-	    }
-	}
-#else
-      /* XXX Permanently ignore SIGPIPE. */
-#ifdef HAVE_SIGSET
-      (void) sigset (SIGPIPE, SIG_IGN);
-#else
-      (void) signal (SIGPIPE, SIG_IGN);
-#endif /* HAVE_SIGSET */
-#endif /* HAVE_LDAPSSL_CLIENT_INIT */
-
-      /*  
        * Patch from Steven Barrus <sbarrus@eng.utah.edu> to
-       * close the session after an idle timeout. We ignore
-       * SIGPIPE before calling do_close() to prevent nscd
-       * dying on Solaris.
+       * close the session after an idle timeout. 
        */
       if (__session.ls_config->ldc_idle_timelimit)
 	{
@@ -743,27 +729,8 @@ do_open (void)
 	      (__session.ls_timestamp +
 	       __session.ls_config->ldc_idle_timelimit) < current_time)
 	    {
-#ifndef HAVE_LDAPSSL_CLIENT_INIT
-#ifdef HAVE_SIGSET
-	      old_handler = sigset (SIGPIPE, SIG_IGN);
-#else
-	      old_handler = signal (SIGPIPE, SIG_IGN);
-#endif /* HAVE_SIGSET */
-#endif /* HAVE_LDAPSSL_CLIENT_INIT */
-
 	      debug ("idle_timelimit reached");
 	      do_close ();
-
-	      if (old_handler != SIG_ERR && old_handler != SIG_IGN)
-		{
-#ifndef HAVE_LDAPSSL_CLIENT_INIT
-#ifdef HAVE_SIGSET
-		  (void) sigset (SIGPIPE, old_handler);
-#else
-		  (void) signal (SIGPIPE, old_handler);
-#endif /* HAVE_SIGSET */
-#endif /* HAVE_LDAPSSL_CLIENT_INIT */
-		}
 	    }
 	}
 
@@ -1069,12 +1036,10 @@ do_open (void)
 	}
     }
 
-#ifdef DISABLE_SO_KEEPALIVE
   /*
    * Disable SO_KEEPALIVE on the session's socket.
    */
   do_disable_keepalive (__session.ls_conn);
-#endif /* DISABLE_SO_KEEPALIVE */
 
   __session.ls_config = cfg;
 
@@ -1263,7 +1228,7 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 
   debug ("==> _nss_ldap_ent_context_init");
 
-  nss_lock ();
+  _nss_ldap_enter ();
 
   ctx = *pctx;
 
@@ -1272,7 +1237,7 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
       ctx = (ent_context_t *) malloc (sizeof (*ctx));
       if (ctx == NULL)
 	{
-	  nss_unlock ();
+	  _nss_ldap_leave ();
 	  debug ("<== _nss_ldap_ent_context_init");
 	  return NULL;
 	}
@@ -1295,7 +1260,7 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 
   LS_INIT (ctx->ec_state);
 
-  nss_unlock ();
+  _nss_ldap_leave ();
 
   debug ("<== _nss_ldap_ent_context_init");
   return ctx;
@@ -2157,7 +2122,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
    * of the context.
    */
 
-  nss_lock ();
+  _nss_ldap_enter ();
 
   /*
    * If ctx->ec_msgid < 0, then we haven't searched yet. Let's do it!
@@ -2169,7 +2134,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
       stat = _nss_ldap_search (NULL, filterprot, sel, LDAP_NO_LIMIT, &msgid);
       if (stat != NSS_SUCCESS)
 	{
-	  nss_unlock ();
+	  _nss_ldap_leave ();
 	  debug ("<== _nss_ldap_getent");
 	  return stat;
 	}
@@ -2178,7 +2143,7 @@ _nss_ldap_getent (ent_context_t ** ctx,
     }
 
 
-  nss_unlock ();
+  _nss_ldap_leave ();
 
   stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
 
@@ -2203,7 +2168,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
   NSS_STATUS stat = NSS_NOTFOUND;
   ent_context_t ctx;
 
-  nss_lock ();
+  _nss_ldap_enter ();
 
   debug ("==> _nss_ldap_getbyname");
 
@@ -2212,7 +2177,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
   stat = _nss_ldap_search_s (args, filterprot, sel, 1, &ctx.ec_res);
   if (stat != NSS_SUCCESS)
     {
-      nss_unlock ();
+      _nss_ldap_leave ();
       debug ("<== _nss_ldap_getbyname");
       return stat;
     }
@@ -2232,7 +2197,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
   _nss_ldap_ent_context_release (&ctx);
 
   /* moved unlock here to avoid race condition bug #49 */
-  nss_unlock ();
+  _nss_ldap_leave ();
 
   debug ("<== _nss_ldap_getbyname");
 
@@ -2749,7 +2714,7 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
       return NSS_TRYAGAIN;
     }
 
-  nss_lock ();
+  _nss_ldap_enter ();
 
   stat = _nss_ldap_search_s (&args, _nss_ldap_filt_getpwnam,
 			     LM_PASSWD, 1, &res);
@@ -2809,7 +2774,7 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
       ldap_msgfree (res);
     }
 
-  nss_unlock ();
+  _nss_ldap_leave ();
 
   return stat;
 }

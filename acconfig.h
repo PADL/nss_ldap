@@ -7,9 +7,6 @@
 /* define to set RFC2307BIS support */
 #undef RFC2307BIS
 
-/* define to disable keepalive */
-#undef DISABLE_SO_KEEPALIVE
-
 /* define to enable debug code */
 #undef DEBUG
 
