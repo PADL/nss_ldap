@@ -659,8 +659,24 @@ do_bind (LDAP * ld,
   LDAPMessage *result;
     
   debug("==> do_bind");
-  msgid = ldap_simple_bind (ld, dn, pw);
 
+  msgid = ldap_simple_bind (ld, dn, pw);
+  
+  if (msgid < 0)
+    {
+#ifdef LDAP_VERSION3_API
+      if (ldap_get_option (ld, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+        {
+          rc = LDAP_UNAVAILABLE;
+        }
+#else
+      rc = ld->ld_errno;
+#endif /* LDAP_VERSION3_API */
+      debug("<== do_bind");
+
+      return rc;
+    }
+     
 #ifdef BIND_TIMEOUT
   tv.tv_sec = BIND_TIMEOUT;
 #else

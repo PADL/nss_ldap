@@ -81,7 +81,10 @@ BUGS 18, 19, 20, 34 would be good to fix soon.
 - shells hang on Solaris for LDAP users
 
 [BUG#49]
-- race condition in ldap-nss.c (fixed)
+- race condition in ldap-nss.c (fixed in nss_ldap-121)
+
+[BUG#50]
+- check return value of ldap_simple_bind() (fixed in nss_ldap-122)
 
 To: linux-ldap@rage.net
 Cc: ldap-nis@padl.com

@@ -1,9 +1,13 @@
 $Header$
 ===============================================================
 
+122	Luke Howard <lukeh@padl.com>
+
+	* fixed BUG#50 (check return value of ldap_simple_bind())
+
 121	Luke Howard <lukeh@padl.com>
 
-	* fixed BUG#49 (acknowledged race condition)
+	* fixed BUG#49 (fix acknowledged race condition)
 
 120	Luke Howard <lukeh@padl.com>
 
