@@ -35,11 +35,11 @@ static const char *ether_attributes[] =
 
 static const char filt_gethostton[] =	/* opt filter on null macaddress? */
 "(&(objectclass=" 
-OC (ipHost) ")(" AT (cn) "=%s))";
+OC (ieee802Device) ")(" AT (cn) "=%s))";
      static const char filt_getntohost[] =
-     "(&(objectclass=" OC (ipHost) ")(" AT (macAddress) "=%s))";
+     "(&(objectclass=" OC (ieee802Device) ")(" AT (macAddress) "=%s))";
      static const char filt_getetherent[] =
-     "(objectclass=" OC (ipHost) ")";
+     "(objectclass=" OC (ieee802Device) ")";
 
 
      struct ether

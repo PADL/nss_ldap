@@ -35,7 +35,7 @@ static const char *bp_attributes[] =
 
 static const char filt_getbootparamsbyname[] =
 "(&(objectclass=" 
-OC (ipHost) ")(" AT (cn) "=%s))";
+OC (bootableDevice) ")(" AT (cn) "=%s))";
 
      static NSS_STATUS _nss_ldap_parse_bp (
 					    LDAP * ld,
