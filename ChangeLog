@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+81	Luke Howard <ulkeh@padl.com>
+
+	* removed extraneous do_sleep() code
+	* updated spec file
+
 80	Luke Howard <lukeh@padl.com>
 
 	* (really 2.80) changed version number a la Solaris 7!

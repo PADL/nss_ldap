@@ -2,7 +2,7 @@
                       ANNOUNCING NSS_LDAP
                       ===================
 
-e. What is nss_ldap?
+1. What is nss_ldap?
 --------------------
 
 nss_ldap is a set of C library extensions which allows X.500 and LDAP
@@ -12,7 +12,7 @@ passwords (instead of or in addition to using flat files or NIS).
 
 nss_ldap nominally supports the following operating system libraries:
 
-	o the Nameservice Switch in Solaris 2.4, 2.5.1, 2.6, 7
+	o the Nameservice Switch in Solaris 2.4, 2.5, 2.5.1, 2.6, 7
 	o the Nameservice Switch in the GNU C Library 2.1 (as
           in libc.so.6 under Linux)
 	o the Information Retrieval Service (IRS) in BIND 
@@ -62,23 +62,23 @@ Licence (GLPL). Please read the file COPYING.LIB For more information.
 5. Where do I get it?
 ---------------------
 
-nss_ldap is available from the author directly at the moment, but
-eventually:
+nss_ldap is available from:
 
 	<URL:http://www.padl.com/download/nss_ldap.tgz>
+	<URL:ftp://ftp.padl.com/pub/nss_ldap.tgz>
 
 We have also made available some Perl scripts for populating LDAP
 databases from existing flat files, NIS and/or NetInfo data.
 
 	<URL:http://www.padl.com/download/MigrationTools.tgz>
+	<URL:ftp://www.padl.com/pub/MigrationTools.tgz>
 
 You'll need to compile a position-independent LDAP client library
 (libldap). You can either get the entire LDAP package from the University
 of Michigan (see below) and add "-fPIC" (if you're using gcc) to the
-C compiler flags, or download the Mozilla SDK from www.mozilla.org.
-
-It's easy to build a single, shared, library (libldap.so) from liblber
-and libldap. Contact the author for the makefiles.
+C compiler flags; download the Mozilla SDK from www.mozilla.org;
+download the prebuilt Netscape LDAP SDK from developer.netscape.com;
+or download OpenLDAP from www.openldap.org.
 
 6. Where can I get more information?
 ------------------------------------
