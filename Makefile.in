@@ -103,7 +103,7 @@ nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c 
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
 	ldap-bp.c util.c globals.c ltf.c snprintf.c resolve.c \
-	dnsconfig.c irs-nss.c sasl.c pagectrl.c
+	dnsconfig.c irs-nss.c pagectrl.c
 
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c \
@@ -150,7 +150,7 @@ am_nss_ldap_so_OBJECTS = ldap-nss.$(OBJEXT) ldap-pwd.$(OBJEXT) \
 	ldap-ethers.$(OBJEXT) ldap-bp.$(OBJEXT) util.$(OBJEXT) \
 	globals.$(OBJEXT) ltf.$(OBJEXT) snprintf.$(OBJEXT) \
 	resolve.$(OBJEXT) dnsconfig.$(OBJEXT) irs-nss.$(OBJEXT) \
-	sasl.$(OBJEXT) pagectrl.$(OBJEXT)
+	pagectrl.$(OBJEXT)
 nss_ldap_so_OBJECTS = $(am_nss_ldap_so_OBJECTS)
 nss_ldap_so_LDADD = $(LDADD)
 nss_ldap_so_DEPENDENCIES =

@@ -20,7 +20,7 @@ nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c 
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
 	ldap-bp.c util.c globals.c ltf.c snprintf.c resolve.c \
-	dnsconfig.c irs-nss.c sasl.c pagectrl.c
+	dnsconfig.c irs-nss.c pagectrl.c
 
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 

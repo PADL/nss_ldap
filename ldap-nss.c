@@ -67,8 +67,6 @@ static char rcsId[] =
 #include <gsssasl.h>
 #endif
 
-#include "ldap-lutil.h"
-
 #ifdef AT_OC_MAP
 #ifdef HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
@@ -269,6 +267,11 @@ do_with_reconnect (const char *base, int scope,
  */
 static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 		    int with_sasl);
+
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+static int do_sasl_interact (LDAP * ld, unsigned flags, void *defaults,
+			     void *p);
+#endif
 
 /*
  * Rebind functions.
@@ -1495,10 +1498,6 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 	  putenv (envbuf);
 	}
 # endif	/* CONFIGURE_KRB5_CCNAME */
-
-      /* FIXME: a little configurability here, perhaps? */
-      defaults =
-	_nss_ldap_sasl_defaults (ld, "GSSAPI", NULL, NULL, NULL, (char *) pw);
 
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
@@ -3421,3 +3420,27 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
 
   return stat;
 }
+
+#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && defined(HAVE_SASL_H)
+static int
+do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *p)
+{
+  char *authzid = (char *) defaults;
+  sasl_interact_t *interact = (sasl_interact_t *) _interact;
+
+  while (interact->id != SASL_CB_LIST_END)
+    {
+      if (interact->id == SASL_CB_USER)
+	{
+	  interact->result = authzid ? authzid : interact->defresult;
+	  interact->len = interact->result ? strlen (interact->result) : 0;
+	}
+      else
+	{
+	  return LDAP_PARAM_ERROR;
+	}
+      interact++;
+    }
+  return LDAP_SUCCESS;
+}
+#endif

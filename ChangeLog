@@ -4,6 +4,7 @@ $Header$
 208	Luke Howard <lukeh@padl.com>
 
 	* use socklen_t not int
+	* remove OpenLDAP SASL code
 	* incorporated patches from (see below)
 	  Geert Jansen <Geert.Jansen@shell.com>
 	* add the "sasl_secprops" option to configure SASL
