@@ -10,7 +10,6 @@ Group: System Environment/Base
 BuildRoot: %{_tmppath}/%{name}-root
 BuildPrereq: openldap-devel
 Requires: openldap cyrus-sasl openssl
-Obsoletes: pam_ldap
 
 %description
 This package includes a LDAP access client: nss_ldap.
