@@ -91,7 +91,9 @@ static ldap_session_t __session = { NULL, NULL };
 
 #if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
 static pthread_once_t __once = PTHREAD_ONCE_INIT;
-#else
+#endif
+
+#ifndef HAVE_PTHREAD_ATFORK
 /* 
  * Process ID that opened the session.
  */
@@ -474,7 +476,7 @@ do_open (void)
 {
   ldap_config_t *cfg = NULL;
   uid_t euid;
-#if !defined(HAVE_PTHREAD_ATFORK) && !defined(HAVE_LIBC_LOCK_H) && !defined(HAVE_BITS_LIBC_LOCK_H)
+#ifndef HAVE_PTHREAD_ATFORK
   pid_t pid;
 #endif
 #ifdef LDAP_X_OPT_CONNECT_TIMEOUT
@@ -483,17 +485,30 @@ do_open (void)
 
   debug ("==> do_open");
 
-#if !defined(HAVE_PTHREAD_ATFORK) && !defined(HAVE_LIBC_LOCK_H) && !defined(HAVE_BITS_LIBC_LOCK_H)
+#ifndef HAVE_PTHREAD_ATFORK
+#if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  if (__pthread_atfork != NULL)
+    pid = getpid ();
+  else
+    pid = -1;
+#else
   pid = getpid ();
-#endif
+#endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
+#endif /* HAVE_PTHREAD_ATFORK */
 
   euid = geteuid ();
 
 #ifdef DEBUG
-#if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+#ifdef HAVE_PTHREAD_ATFORK
   syslog (LOG_DEBUG,
 	  "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
 	  __session.ls_conn, __euid, euid);
+#elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  syslog (LOG_DEBUG,
+	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  __session.ls_conn,
+	  (__pthread_atfork == NULL ? __pid : -1),
+	  (__pthread_atfork == NULL ? pid : -1), __euid, euid);
 #else
   syslog (LOG_DEBUG,
 	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
@@ -501,13 +516,17 @@ do_open (void)
 #endif
 #endif /* DEBUG */
 
-#if !defined(HAVE_PTHREAD_ATFORK) && !defined(HAVE_LIBC_LOCK_H) && !defined(HAVE_BITS_LIBC_LOCK_H)
+#ifndef HAVE_PTHREAD_ATFORK
+#if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  if (__pthread_atfork != NULL && __pid != pid)
+#else
   if (__pid != pid)
+#endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
     {
       do_close_no_unbind ();
     }
   else
-#endif
+#endif /* HAVE_PTHREAD_ATFORK */
   if (__euid != euid && (__euid == 0 || euid == 0))
     {
       /*
@@ -597,7 +616,15 @@ do_open (void)
       return NSS_UNAVAIL;
     }
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  __libc_once (__once, do_atfork_setup);
+  /*
+   * Only install the pthread_atfork() handlers i
+   * we are linked against libpthreads. Otherwise,
+   * do close the session when the PID changes.
+   */
+  if (__pthread_atfork != NULL)
+    __libc_once (__once, do_atfork_setup);
+  else
+     __pid = pid;
 #else
   __pid = pid;
 #endif
