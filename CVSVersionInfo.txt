@@ -7,5 +7,6 @@ ProjectVersion: 2.51
 # run this before building in RC. @@@PLATFORM@@@ is
 # substituted for our platform names (linux, solaris etc)
 PreBuild: ln -s Makefile.@@@PLATFORM@@@.mozilla Makefile
+PostBuild: rm -f Makefile
 # binaries to ship (although we don't do that at the moment)
 Shippables: nss_ldap.so.1

@@ -71,6 +71,38 @@ static int __pid = -1;
 static void do_close(void);
 static NSS_STATUS do_open(void);
 
+/*
+ * Rebind functions.
+ */
+#ifdef NETSCAPE_SDK
+static int _nss_ldap_rebind(LDAP *ld, char **whop, char **credp, int *methodp, int freeit, void *arg)
+#else
+static int _nss_ldap_rebind(LDAP *ld, char **whop, char **credp, int *methodp, int freeit)
+#endif /* NETSCAPE_SDK */
+{
+	if (freeit)
+		{
+		if (*whop != NULL)
+			free(*whop);
+		if (*credp != NULL)
+			free(*credp);
+		}
+
+	if (__session.ls_config->ldc_binddn != NULL)
+		*whop = strdup(__session.ls_config->ldc_binddn);
+	else
+		*whop = NULL;
+
+	if (__session.ls_config->ldc_bindpw != NULL)
+		*credp = strdup(__session.ls_config->ldc_bindpw);
+	else
+		*credp = NULL;
+
+	*methodp = LDAP_AUTH_SIMPLE;
+
+	return LDAP_SUCCESS;
+}
+
 #ifdef SUN_NSS
 /*
  * Default destructor.
@@ -229,6 +261,12 @@ static NSS_STATUS do_open(void)
 		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
+#endif /* NETSCAPE_SDK */
+
+#ifdef NETSCAPE_SDK
+	ldap_set_rebind_proc(__session.ls_conn, _nss_ldap_rebind, NULL);
+#else
+	ldap_set_rebind_proc(__session.ls_conn, _nss_ldap_rebind);
 #endif /* NETSCAPE_SDK */
 
 #ifdef NETSCAPE_SDK

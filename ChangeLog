@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.51	Luke Howared <lukeh@padl.com>
+
+	* added rebind function
+
 2.51	Luke Howard <lukeh@padl.com>
 
 	* added stuff for RC
