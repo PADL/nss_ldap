@@ -2,7 +2,7 @@
 # $Id$
 # $Name$
 ProjectName: nss_ldap
-ProjectVersion: 119
+ProjectVersion: 120
 ProjectMaintainer: lukeh
 #
 # run this before building in RC. @@@PLATFORM@@@ is
