@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+161	Luke Howard <lukeh@padl.com>
+
+	* hopefully fixed use of synchronous searches in
+	  _nss_ldap_getbyname()
+
 160	Luke Howard <lukeh@padl.com>
 
 	* patch from RedHat to check for DB3, override

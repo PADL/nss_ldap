@@ -165,16 +165,16 @@ static NSS_STATUS do_open (void);
 /*
  * Perform an asynchronous search.
  */
-static NSS_STATUS do_search (const char *base, int scope,
-			     const char *filter, const char **attrs,
-			     int sizelimit, int *);
+static int do_search (const char *base, int scope,
+		      const char *filter, const char **attrs,
+		      int sizelimit, int *);
 
 /*
- * Perform a synchronous search (layered on do_search()).
+ * Perform a synchronous search.
  */
-static NSS_STATUS do_search_s (const char *base, int scope,
-			       const char *filter, const char **attrs,
-			       int sizelimit, LDAPMessage **);
+static int do_search_s (const char *base, int scope,
+			const char *filter, const char **attrs,
+			int sizelimit, LDAPMessage **);
 
 /*
  * Fetch an LDAP result.
@@ -197,12 +197,19 @@ static NSS_STATUS do_parse (ent_context_t * ctx, void *result, char *buffer,
 			    size_t buflen, int *errnop, parser_t parser);
 
 /*
+ * Parse a result, fetching results from the result chain 
+ * rather than the server.
+ */
+static NSS_STATUS do_parse_s (ent_context_t * ctx, void *result, char *buffer,
+			      size_t buflen, int *errnop, parser_t parser);
+
+/*
  * Function to be braced by reconnect harness. Used so we
  * can apply the reconnect code to both asynchronous and
  * synchronous searches.
  */
-typedef NSS_STATUS (*search_func_t) (const char *, int, const char *,
-				     const char **, int, void *);
+typedef int (*search_func_t) (const char *, int, const char *,
+			      const char **, int, void *);
 
 /*
  * Do a search with a reconnect harness.
@@ -289,8 +296,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -312,8 +318,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -1461,26 +1466,11 @@ do_with_reconnect (const char *base, int scope,
 	  continue;
 	}
 
-      if (search_func (base, scope, filter, attrs, sizelimit, private) ==
-	  NSS_SUCCESS)
-	{
-	  rc = LDAP_SUCCESS;
-	}
-      else
-	{
-#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
-	  if (ldap_get_option
-	      (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
-	    {
-	      rc = LDAP_UNAVAILABLE;
-	    }
-#else
-	  rc = __session.ls_conn->ld_errno;
-#endif /* LDAP_OPT_ERROR_NUMBER */
-	}
+      rc = search_func (base, scope, filter, attrs, sizelimit, private);
+
       switch (rc)
 	{
-	case LDAP_SUCCESS:	/* Huh? */
+	case LDAP_SUCCESS:
 	case LDAP_SIZELIMIT_EXCEEDED:
 	case LDAP_TIMELIMIT_EXCEEDED:
 	  stat = NSS_SUCCESS;
@@ -1531,33 +1521,37 @@ do_with_reconnect (const char *base, int scope,
  * always wrap calls to this with do_with_reconnect(), or,
  * better still, use _nss_ldap_search_s().
  */
-static NSS_STATUS
+static int
 do_search_s (const char *base, int scope,
 	     const char *filter, const char **attrs, int sizelimit,
 	     LDAPMessage ** res)
 {
-  ent_context_t ctx;
-  NSS_STATUS stat;
+  int rc;
+  struct timeval tv;
 
   debug ("==> do_search_s");
 
-  ctx.ec_msgid = -1;
-  ctx.ec_res = NULL;
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_SIZELIMIT)
+  ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
+		   (void *) &sizelimit);
+#else
+  __session.ls_conn->ld_sizelimit = sizelimit;
+#endif /* LDAP_OPT_SIZELIMIT */
 
-  stat = do_search (base, scope, filter, attrs, sizelimit, &ctx.ec_msgid);
+  tv.tv_sec = __session.ls_config->ldc_timelimit;
+  tv.tv_usec = 0;
 
-  if (stat == NSS_SUCCESS)
+  rc = ldap_search_st (__session.ls_conn, base, scope, filter,
+		       (char **) attrs, 0, &tv, res);
+
+  if (rc == LDAP_SUCCESS)
     {
-      stat = do_result (&ctx, LDAP_MSG_ALL);
-      if (stat == NSS_SUCCESS)
-	{
-	  *res = ctx.ec_res;
-	}
+      time (&__session.ls_timestamp);
     }
 
   debug ("<== do_search_s");
 
-  return stat;
+  return rc;
 }
 
 /*
@@ -1565,11 +1559,11 @@ do_search_s (const char *base, int scope,
  * always wrap calls to this with do_with_reconnect(), or,
  * better still, use _nss_ldap_search().
  */
-static NSS_STATUS
+static int
 do_search (const char *base, int scope,
 	   const char *filter, const char **attrs, int sizelimit, int *msgid)
 {
-  NSS_STATUS stat;
+  int rc;
 
   debug ("==> do_search");
 
@@ -1585,17 +1579,25 @@ do_search (const char *base, int scope,
 
   if (*msgid < 0)
     {
-      stat = NSS_UNAVAIL;
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
+      if (ldap_get_option
+	  (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+	{
+	  rc = LDAP_UNAVAILABLE;
+	}
+#else
+      rc = __session.ls_conn->ld_errno;
+#endif /* LDAP_OPT_ERROR_NUMBER */
     }
   else
     {
-      stat = NSS_SUCCESS;
+      rc = LDAP_SUCCESS;
       time (&__session.ls_timestamp);
     }
 
   debug ("<== do_search");
 
-  return stat;
+  return rc;
 }
 
 /*
@@ -1681,6 +1683,77 @@ do_parse (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
 }
 
 /*
+ * Parse, fetching reuslts from chain instead of server.
+ */
+static NSS_STATUS
+do_parse_s (ent_context_t * ctx, void *result, char *buffer, size_t buflen,
+	    int *errnop, parser_t parser)
+{
+  NSS_STATUS parseStat = NSS_NOTFOUND;
+  LDAPMessage *e = NULL;
+
+  debug ("==> do_parse_s");
+
+  /*
+   * if ec_state.ls_info.ls_index is non-zero, then we don't collect another
+   * entry off the LDAP chain, and instead refeed the existing result to
+   * the parser. Once the parser has finished with it, it will return
+   * NSS_NOTFOUND and reset the index to -1, at which point we'll retrieve
+   * another entry.
+   */
+  do
+    {
+      if (ctx->ec_state.ls_retry == 0 &&
+	  (ctx->ec_state.ls_type == LS_TYPE_KEY
+	   || ctx->ec_state.ls_info.ls_index == -1))
+	{
+	  if (e == NULL)
+	    e = ldap_first_entry (__session.ls_conn, ctx->ec_res);
+	  else
+	    e = ldap_next_entry (__session.ls_conn, e);
+	}
+
+      if (e == NULL)
+	{
+	  /* Could not get a result; bail */
+	  parseStat = NSS_NOTFOUND;
+	  break;
+	}
+
+      /* 
+       * We have an entry; now, try to parse it.
+       *
+       * If we do not parse the entry because of a schema
+       * violation, the parser should return NSS_NOTFOUND.
+       * We'll keep on trying subsequent entries until we 
+       * find one which is parseable, or exhaust avialable
+       * entries, whichever is first.
+       */
+      parseStat =
+	parser (__session.ls_conn, e, &ctx->ec_state, result, buffer, buflen);
+
+      /* hold onto the state if we're out of memory XXX */
+      ctx->ec_state.ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
+    }
+  while (parseStat == NSS_NOTFOUND);
+
+  *errnop = 0;
+  if (parseStat == NSS_TRYAGAIN)
+    {
+#ifdef HAVE_NSSWITCH_H
+      errno = ERANGE;
+      *errnop = 1;		/* this is really erange */
+#else
+      *errnop = ERANGE;
+#endif /* HAVE_NSSWITCH_H */
+    }
+
+  debug ("<== do_parse_s");
+
+  return parseStat;
+}
+
+/*
  * Read an entry from the directory, a la X.500. This is used
  * for functions that need to retrieve attributes from a DN,
  * such as the RFC2307bis group expansion function.
@@ -1752,8 +1825,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2010,10 +2082,8 @@ _nss_ldap_getbyname (ldap_args_t * args,
   LS_INIT (ctx.ec_state);
   ctx.ec_state.ls_type = LS_TYPE_KEY;
   ctx.ec_state.ls_info.ls_key = args->la_arg2.la_string;
-  /* fool do_parse() into not calling do_result () */
-  ctx.ec_state.ls_retry = 1;
 
-  stat = do_parse (&ctx, result, buffer, buflen, errnop, parser);
+  stat = do_parse_s (&ctx, result, buffer, buflen, errnop, parser);
 
   _nss_ldap_ent_context_zero (&ctx);
 
@@ -2286,8 +2356,7 @@ _nss_ldap_assign_authpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
