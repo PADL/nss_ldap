@@ -776,7 +776,7 @@ do_open (void)
 		   cfg->ldc_referrals ? LDAP_OPT_ON : LDAP_OPT_OFF);
 #endif
 
-#f defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_RESTART)
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_RESTART)
   ldap_set_option (__session.ls_conn, LDAP_OPT_RESTART,
 		   cfg->ldc_restart ? LDAP_OPT_ON : LDAP_OPT_OFF);
 #endif

@@ -39,6 +39,9 @@
 /* Define if you have the ldap_get_lderrno function.  */
 #undef HAVE_LDAP_GET_LDERRNO
 
+/* Define if you have the ldap_get_option function.  */
+#undef HAVE_LDAP_GET_OPTION
+
 /* Define if you have the ldap_init function.  */
 #undef HAVE_LDAP_INIT
 
