@@ -71,7 +71,7 @@ LIB=${MODULE}.so.1
 #NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
 
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module
-GNUFLAGS=-DGNU_NSS -DWEIRD_GETPWENT
+GNUFLAGS=-DGNU_NSS -DWEIRD_GETPWENT -DHAVE_SNPRINTF
 LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 
 LIBDIRS=-L.

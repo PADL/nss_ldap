@@ -5,6 +5,7 @@ $Id$
 
 	* moved to CVS repository and Linux as development
 	  environment (hey, Greg!)
+	* incorporated ldap-service.c fix from Greg
 
 2.36	Luke Howard <lukeh@xedoc.com>
 
