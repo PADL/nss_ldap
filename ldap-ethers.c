@@ -50,6 +50,9 @@ static char rcsId[] =
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#ifdef HAVE_NET_ROUTE_H
+#include <net/route.h>
+#endif
 #include <net/if.h>
 #include <netinet/in.h>
 

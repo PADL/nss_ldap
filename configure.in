@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 197)
+AM_INIT_AUTOMAKE(nss_ldap, 198)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -92,6 +92,7 @@ AC_CHECK_HEADERS(shadow.h)
 AC_CHECK_HEADERS(port_before.h)
 AC_CHECK_HEADERS(port_after.h)
 AC_CHECK_HEADERS(aliases.h)
+AC_CHECK_HEADERS(net/route.h)
 AC_CHECK_HEADERS(netinet/if_ether.h)
 AC_CHECK_HEADERS(netinet/ether.h)
 AC_CHECK_HEADERS(ctype.h)
