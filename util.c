@@ -379,6 +379,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   int scope;
 
   t = NULL;
+  filter = NULL;
   scope = -1;
 
   if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
