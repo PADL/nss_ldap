@@ -132,7 +132,7 @@ if test "$need_pthread" = "true"; then
   AC_CHECK_LIB(pthread, main)
 fi
 
-AC_CHECK_FUNCS(ldap_init ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free ldap_ld_free ldap_explode_rdn ldap_set_option ldap_get_option)
+AC_CHECK_FUNCS(ldap_init ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free ldap_ld_free ldap_explode_rdn ldap_set_option ldap_get_option ldap_sasl_interactive_bind_s)
 if test "$enable_ssl" \!= "no"; then
   AC_CHECK_FUNCS(ldapssl_client_init ldap_start_tls_s ldap_pvt_tls_set_option)
 fi

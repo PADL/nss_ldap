@@ -8,14 +8,14 @@ noinst_PROGRAMS = nss_ldap.so $(authmod)
 INST_UID=root
 INST_GID=root
 
-EXTRA_DIST = COPYING.LIB CVSVersionInfo.txt ChangeLog README \
+EXTRA_DIST = COPYING.LIB CVSVersionInfo.txt ChangeLog README LICENSE.OpenLDAP \
 	     README.IRS ldap.conf nss_ldap.spec nsswitch.ldap aix_authmeth.c
 
 nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-rpc.c \
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
 	ldap-bp.c util.c globals.c ltf.c snprintf.c resolve.c \
-	dnsconfig.c irs-nss.c
+	dnsconfig.c irs-nss.c sasl.c
 
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 

@@ -57,6 +57,9 @@
 /* Define if you have the ldap_pvt_tls_set_option function.  */
 #undef HAVE_LDAP_PVT_TLS_SET_OPTION
 
+/* Define if you have the ldap_sasl_interactive_bind_s function.  */
+#undef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+
 /* Define if you have the ldap_set_option function.  */
 #undef HAVE_LDAP_SET_OPTION
 

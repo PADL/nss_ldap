@@ -547,8 +547,12 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   result->ldc_port = 0;
   result->ldc_binddn = NULL;
   result->ldc_bindpw = NULL;
+  result->ldc_saslid = NULL;
+  result->ldc_usesasl = 0;
   result->ldc_rootbinddn = NULL;
   result->ldc_rootbindpw = NULL;
+  result->ldc_rootsaslid = NULL;
+  result->ldc_rootusesasl = 0;
 #ifdef LDAP_VERSION3
   result->ldc_version = LDAP_VERSION3;
 #else
@@ -647,9 +651,29 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	{
 	  t = &result->ldc_bindpw;
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_USESASL))
+	{
+	  result->ldc_usesasl = (!strcasecmp (v, "on")
+				 || !strcasecmp (v, "yes")
+				 || !strcasecmp (v, "true"));
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_SASLID))
+	{
+	  t = &result->ldc_saslid;
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_ROOTBINDDN))
 	{
 	  t = &result->ldc_rootbinddn;
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_ROOTUSESASL))
+	{
+	  result->ldc_rootusesasl = (!strcasecmp (v, "on")
+				     || !strcasecmp (v, "yes")
+				     || !strcasecmp (v, "true"));
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_ROOTSASLID))
+	{
+	  t = &result->ldc_rootsaslid;
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SSLPATH))
 	{
@@ -845,7 +869,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	    }
 	  fclose (fp);
 	}
-      else
+      else if (!result->ldc_rootusesasl)
 	{
 	  result->ldc_rootbinddn = NULL;
 	}

@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+175	Luke Howard <lukeh@padl.com>
+
+	* incorporated GSS-API SASL patches
+	* rebind to server on LDAP_LOCAL_ERROR
+
 174	Luke Howard <lukeh@padl.com>
 
 	* added patches from Maxim Batourine for compiling

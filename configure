@@ -3409,7 +3409,7 @@ fi
 
 fi
 
-for ac_func in ldap_init ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free ldap_ld_free ldap_explode_rdn ldap_set_option ldap_get_option
+for ac_func in ldap_init ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free ldap_ld_free ldap_explode_rdn ldap_set_option ldap_get_option ldap_sasl_interactive_bind_s
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:3416: checking for $ac_func" >&5

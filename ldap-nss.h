@@ -210,10 +210,18 @@ struct ldap_config
   char *ldc_binddn;
   /* bind cred */
   char *ldc_bindpw;
+  /* sasl auth id */
+  char *ldc_saslid;
+  /* do we use sasl when binding? */
+  int ldc_usesasl;
   /* shadow bind DN */
   char *ldc_rootbinddn;
   /* shadow bind cred */
   char *ldc_rootbindpw;
+  /* shadow sasl auth id */
+  char *ldc_rootsaslid;
+  /* do we use sasl for root? */
+  int ldc_rootusesasl;
   /* protocol version */
   int ldc_version;
   /* search timelimit */

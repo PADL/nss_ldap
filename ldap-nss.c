@@ -56,6 +56,8 @@ static char rcsId[] =
 #include <ldap_ssl.h>
 #endif
 
+#include "ldap-lutil.h"
+
 #ifdef AT_OC_MAP
 #ifdef HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
@@ -237,7 +239,12 @@ do_with_reconnect (const char *base, int scope,
 /*
  * Do a bind with a defined timeout
  */
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
+		    int with_sasl);
+#else
 static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw);
+#endif
 
 /*
  * Rebind functions.
@@ -255,21 +262,52 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 {
   char *who, *cred;
   int timelimit;
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+  int with_sasl;
+#endif
 
   if (geteuid () == 0 && __session.ls_config->ldc_rootbinddn)
     {
       who = __session.ls_config->ldc_rootbinddn;
-      cred = __session.ls_config->ldc_rootbindpw;
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+      with_sasl = __session.ls_config->ldc_rootusesasl;
+      if (with_sasl)
+	{
+	  cred = __session.ls_config->ldc_rootsaslid;
+	}
+      else
+	{
+#endif
+	  cred = __session.ls_config->ldc_rootbindpw;
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+	}
+#endif
     }
   else
     {
       who = __session.ls_config->ldc_binddn;
-      cred = __session.ls_config->ldc_bindpw;
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+      with_sasl = __session.ls_config->ldc_usesasl;
+      if (with_sasl)
+	{
+	  cred = __session.ls_config->ldc_saslid;
+	}
+      else
+	{
+#endif
+	  cred = __session.ls_config->ldc_bindpw;
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+	}
+#endif
     }
 
   timelimit = __session.ls_config->ldc_bind_timelimit;
 
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+  return do_bind (ld, timelimit, who, cred, with_sasl);
+#else
   return do_bind (ld, timelimit, who, cred);
+#endif
 }
 #else
 #if LDAP_SET_REBIND_PROC_ARGS == 3
@@ -277,8 +315,9 @@ static int
 do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 	   int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-static int
-do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
+     static int
+       do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+		  int freeit)
 #endif
 {
   if (freeit)
@@ -293,6 +332,14 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
   if (geteuid () == 0 && __session.ls_config->ldc_rootbinddn)
     {
       *whop = strdup (__session.ls_config->ldc_rootbinddn);
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+      with_sasl = __session.ls_config->ldc_rootusesasl;
+      if (with_sasl && __session.ls_config->ldc_rootsaslid)
+	{
+	  *credp = __session.ls_config->ldc_rootsaslid;
+	}
+      else
+#endif
       if (__session.ls_config->ldc_rootbindpw)
 	*credp = strdup (__session.ls_config->ldc_rootbindpw);
     }
@@ -300,6 +347,14 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
     {
       if (__session.ls_config->ldc_binddn != NULL)
 	*whop = strdup (__session.ls_config->ldc_binddn);
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+      with_sasl = __session.ls_config->ldc_usesasl;
+      if (with_sasl && __session.ls_config->ldc_saslid)
+	{
+	  *credp = __session.ls_config->ldc_saslid;
+	}
+      else
+#endif
       if (__session.ls_config->ldc_bindpw != NULL)
 	*credp = strdup (__session.ls_config->ldc_bindpw);
     }
@@ -317,8 +372,7 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -343,8 +397,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -983,7 +1036,14 @@ do_open (void)
     {
       if (do_bind
 	  (__session.ls_conn, cfg->ldc_bind_timelimit, cfg->ldc_rootbinddn,
-	   cfg->ldc_rootbindpw) != LDAP_SUCCESS)
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+	   cfg->ldc_rootusesasl ? cfg->ldc_rootsaslid :
+#endif
+	   cfg->ldc_rootbindpw
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+	   , cfg->ldc_rootusesasl
+#endif
+	  ) != LDAP_SUCCESS)
 	{
 	  do_close ();
 	  debug ("<== do_open");
@@ -994,7 +1054,14 @@ do_open (void)
     {
       if (do_bind
 	  (__session.ls_conn, cfg->ldc_bind_timelimit, cfg->ldc_binddn,
-	   cfg->ldc_bindpw) != LDAP_SUCCESS)
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+	   cfg->ldc_usesasl ? cfg->ldc_saslid :
+#endif
+	   cfg->ldc_bindpw
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+	   , cfg->ldc_usesasl
+#endif
+	  ) != LDAP_SUCCESS)
 	{
 	  do_close ();
 	  debug ("<== do_open");
@@ -1105,8 +1172,14 @@ do_ssl_options (ldap_config_t * cfg)
 }
 #endif
 
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+static int
+do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
+	 int with_sasl)
+#else
 static int
 do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw)
+#endif
 {
   int rc;
   int msgid;
@@ -1122,35 +1195,57 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw)
   tv.tv_sec = timelimit;
   tv.tv_usec = 0;
 
-  msgid = ldap_simple_bind (ld, dn, pw);
-
-  if (msgid < 0)
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+  if (!with_sasl)
     {
-#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
-      if (ldap_get_option (ld, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+#endif
+      msgid = ldap_simple_bind (ld, dn, pw);
+
+      if (msgid < 0)
 	{
-	  rc = LDAP_UNAVAILABLE;
-	}
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
+	  if (ldap_get_option (ld, LDAP_OPT_ERROR_NUMBER, &rc) !=
+	      LDAP_SUCCESS)
+	    {
+	      rc = LDAP_UNAVAILABLE;
+	    }
 #else
-      rc = ld->ld_errno;
+	  rc = ld->ld_errno;
 #endif /* LDAP_OPT_ERROR_NUMBER */
-      debug ("<== do_bind");
+	  debug ("<== do_bind");
+
+	  return rc;
+	}
+
+      rc = ldap_result (ld, msgid, 0, &tv, &result);
+      if (rc > 0)
+	{
+	  debug ("<== do_bind");
+	  return ldap_result2error (ld, result, 1);
+	}
+
+      /* took too long */
+      if (rc == 0)
+	{
+	  ldap_abandon (ld, msgid);
+	}
+#ifdef HAVE_LDAP_SASL_INTERACTIVE_BIND_S
+    }
+  else
+    {
+      void *defaults;
+
+      /* FIXME: a little configurability here, perhaps? */
+      defaults = _nss_ldap_sasl_defaults (ld, "GSSAPI", NULL, NULL, NULL, pw);
+
+      rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
+					 LDAP_SASL_QUIET,
+					 _nss_ldap_sasl_interact, defaults);
+      ber_memfree (defaults);
 
       return rc;
     }
-
-  rc = ldap_result (ld, msgid, 0, &tv, &result);
-  if (rc > 0)
-    {
-      debug ("<== do_bind");
-      return ldap_result2error (ld, result, 1);
-    }
-
-  /* took too long */
-  if (rc == 0)
-    {
-      ldap_abandon (ld, msgid);
-    }
+#endif
 
   debug ("<== do_bind");
 
@@ -1523,6 +1618,7 @@ do_with_reconnect (const char *base, int scope,
 	case LDAP_TIMEOUT:
 	case LDAP_UNAVAILABLE:
 	case LDAP_BUSY:
+	case LDAP_LOCAL_ERROR:
 #ifdef LDAP_CONNECT_ERROR
 	case LDAP_CONNECT_ERROR:
 #endif /* LDAP_CONNECT_ERROR */
@@ -1876,8 +1972,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2382,8 +2477,7 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
