@@ -1,0 +1,87 @@
+Date: Sat, Jun 16 2001 03:33:50
+Request created by sstone@foo3.com
+
+OK, this might just be a result of the specific combination I was using:
+
+OpenLDAP 2.0.11 with OpenSSL 0.9.6a, OpenLDAP compiled for SSL/TLS,
+OpenSSL compiled to use RSAREF.  slapd running on a freeBSD 4.3-STABLE
+machine, client in question that these docs refer to is a Sun
+SPARCStation4 (sun4m) running Solaris 7.  A lot of my frustration here is
+due to the fact that it compiles things really SLOW (only a 70mhz cpu...)
+
+This information is primarily for you to review and integrate into your
+docs, to hopefully make your product more usable.  I should preface this
+by saying that after I did all this stuff, it eventually DOES work
+correctly, so it has a happy ending.  I'm authenticating users on the
+solaris machine using SSL now, or so says my packet sniffer, snort. :)
+
+1) your docs should say, "Your openldap libs *and* your SSL/RSAREF libs
+must be DYNAMIC LIBRARIES or neither nss_ldap nor pam_ldap will work".
+You also should say that you need to have all these shared libraries in
+/usr/lib, since LD_LIBRARY_PATH doesn't get sourced when these modules are
+called, and if it's in /usr/local/ssl/lib or /usr/local/lib it's not going
+to find them and the dynamic link calls will fail, and so will your LDAP
+auth. [NB: compiling with -Wl,-R or -Wl,-rpath *will* include the 
+qualified library path in the resulting library or executable. LH]
+
+1a) compiling rsaref dynamically is a pain.  You have to do it yourself
+cuz its makefile will NOT.  commandline:
+
+cd rsaref/install
+make
+rm -f rdemo.o
+gcc -o librsaref.so.2 -shared -Wl,-soname,librsaref.so.2 *.o
+
+this will create you both the .a and the .so.2 file.  you must have gnu
+binutils for that to work.  Then, install with:
+
+cp librsaref.so.2 /usr/lib
+ln -sf /usr/lib/librsaref.so.2 /usr/lib/librsaref.so
+
+2)  On Solaris, you need GNU Make and GNU binutils to compile openssl
+dynamically.  Using these tools on Solaris makes your configure/makefile
+scripts act funny.  I had to take out the "-Wl,./mapfile" from the LDFLAGS
+in both nss_ldap and pam_ldap to make it link properly (but it works once
+you do that).  I was getting an error: "./mapfile: invalid file format"
+
+2a) to compile OpenSSL with RSAREF and dynamic lib support, you must:
+
+cd openssl-0.9.6a
+./config rsaref dynamic
+make
+make install
+
+3)  In your makefiles, you check for main in -lldap.  BUT you don't check
+for the SSL libraries, so this check will ALWAYS FAIL if libldap.so.2 was
+compiled with TLS support.  Go into the configure script and change:
+
+-lldap $LIBS
+
+to
+
+-lldap -lcrypto -lssl -lRSAglue -lrsaref -lsocket $LIBS
+
+and it works.  yeah, you need -lsocket too.  I dont have autoconf on my
+solaris box or I'd have fixed the configure.in directly, but I'll leave
+that up to you :)  You need to make that change both in the place where it
+specifies the libs to compile conftest.c and in in the place where it adds
+the values to the $LIBS variable for eventual linking.
+
+4) you need a random number generator.  Solaris doesn't come with one, and
+Sun's SUNWski package seems to irritate OpenSSL to the point of coredump.
+I used ANDI-rand, available as a solaris pkg for 2.5.1, 2.6, 2.7, and 2.8.
+it works.
+
+
+Anyway I hope this helps.  I figured all of this out on my own, since the
+end-to-end process isn't really well-documented ANYWHERE.  If you use my
+information here in your docs, I'd appreciate a small byline, ie,
+"portions contributed by Scott Stone <sstone@foo3.com>" or something like
+that :)  thanks!
+
+--------------------------
+Scott M. Stone <sstone@foo3.com>
+Cisco Certified Network Associate, Sun Solaris Certified Systems Administrator
+Senior Technical Consultant - UNIX and Networking
+Taos - The SysAdmin Company 
+
