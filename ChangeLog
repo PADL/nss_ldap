@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+197	Luke Howard <lukeh@padl.com>
+
+	* improved AIX documentation from Dejan Muhamedagic
+
 196	Luke Howard <lukeh@padl.com>
 
 	* return NSS_TRYAGAIN not NSS_NOTFOUND for insufficient
