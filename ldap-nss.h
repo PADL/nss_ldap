@@ -165,7 +165,7 @@ struct ldap_service_search_descriptor
     char *lsd_base;
     /* scope */
     int lsd_scope;
-    /* filter *
+    /* filter */
     char *lsd_filter;
     /* next */
     struct ldap_service_search_descriptor *lsd_next;

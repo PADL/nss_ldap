@@ -176,7 +176,7 @@ do_with_reconnect (const char *base, int scope,
 /*
  * Do a bind with a defined timeout
  */
-static int do_bind (LDAP * ld, const char *dn, const char *pw);
+static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw);
 
 
 /*
