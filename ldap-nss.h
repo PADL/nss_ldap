@@ -74,26 +74,6 @@
 #define LDAP_NSS_MAXSLEEPTIME    64	/* maximum seconds to sleep */
 #define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
 
-#ifdef notdef
-/*
- * NSS modules shouldn't open file descriptors that the program/utility
- * linked against NSS doesn't know about.  syslog() transparently opens
- * a file descriptor unless it is wrapped in openlog() and closelog().
- */
-
-#define do_syslog(kind, fmt, args...) \
-{ \
-    openlog ("", LOG_NOWAIT, LOG_USER); \
-    syslog (kind, fmt, ##args); \
-    closelog (); \
-}
-#else
-#define do_syslog(kind, fmt, args...) \
-{ \
-    syslog (kind, fmt, ##args); \
-}
-#endif
-
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
 #ifdef HAVE_NSSWITCH_H

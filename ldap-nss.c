@@ -561,7 +561,7 @@ do_close (void)
   if (__session.ls_conn != NULL)
     {
 #ifdef DEBUG
-      do_syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
+      syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
 		 __session.ls_conn);
 #endif /* DEBUG */
       ldap_unbind (__session.ls_conn);
@@ -597,7 +597,7 @@ do_close_no_unbind (void)
     }
 
 #ifdef DEBUG
-  do_syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
+  syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
 	     __session.ls_conn);
 #endif /* DEBUG */
 
@@ -727,18 +727,18 @@ do_open (void)
 
 #ifdef DEBUG
 #ifdef HAVE_PTHREAD_ATFORK
-  do_syslog (LOG_DEBUG,
+  syslog (LOG_DEBUG,
 	     "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
 	     __session.ls_conn, __euid, euid);
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  do_syslog (LOG_DEBUG,
+  syslog (LOG_DEBUG,
 	     "nss_ldap: libpthreads=%s, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	     (__pthread_atfork == NULL ? "FALSE" : "TRUE"),
 	     __session.ls_conn,
 	     (__pthread_atfork == NULL ? __pid : -1),
 	     (__pthread_atfork == NULL ? pid : -1), __euid, euid);
 #else
-  do_syslog (LOG_DEBUG,
+  syslog (LOG_DEBUG,
 	     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	     __session.ls_conn, __pid, pid, __euid, euid);
 #endif
