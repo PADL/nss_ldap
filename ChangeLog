@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.61	Luke Howard <lukeh@padl.com>
+
+	* added warning about compiling with DS 4.1 LDAP SDK
+
 2.60	Luke Howard <lukeh@padl.com>
 
 	* fixed missing close brace

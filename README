@@ -52,6 +52,10 @@ You can build a position independent LDAP client library by compiling
 -fPIC and linking with -shared, or downloading the Mozilla or Netscape
 LDAP SDKs.
 
+NOTE: There seem to be problems linking against the libraries included
+with Netscape's Directory Server 4.1. You may wish to try Netscape's
+LDAP SDK 3.0 instead.
+
 
 
 --
