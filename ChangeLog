@@ -1,7 +1,7 @@
 $Header$
 ===============================================================
 
-182	Luke Howard <lukeh@padl.com>
+183	Luke Howard <lukeh@padl.com>
 
 	* return error strings in AIX authentication routine
 	* initialise schema in getgroupsbymember()
