@@ -40,6 +40,7 @@ static char rcsId[] = "$Id$";
 #define LDAP_CONTROL_PAGE_OID           "1.2.840.113556.1.4.319"
 #endif
 
+#ifndef HAVE_LDAP_CREATE_PAGE_CONTROL
 /*---
    ldap_create_page_control
    
@@ -79,7 +80,9 @@ static char rcsId[] = "$Id$";
 
  ---*/
 
-#ifndef HAVE_LDAP_CREATE_PAGE_CONTROL
+#ifndef HAVE_LDAP_CREATE_CONTROL
+#error LDAP client library does not support ldap_create_control()
+#else
 int
 ldap_create_page_control (LDAP * ld,
 			  unsigned long pagesize,
@@ -125,8 +128,10 @@ exit:
   ber_free (ber, 1);
   return (LDAP_ENCODING_ERROR);
 }
+#endif /* HAVE_LDAP_CREATE_CONTROL */
 #endif /* HAVE_LDAP_CREATE_PAGE_CONTROL */
 
+#ifndef HAVE_LDAP_PARSE_PAGE_CONTROL
 /*---
    ldap_parse_page_control
    
@@ -151,7 +156,9 @@ exit:
    
 ---*/
 
-#ifndef HAVE_LDAP_PARSE_PAGE_CONTROL
+#ifndef HAVE_LDAP_CREATE_CONTROL
+#error LDAP client library does not support ldap_create_control()
+#else
 int
 ldap_parse_page_control (LDAP * ld,
 			 LDAPControl ** ctrls,
@@ -160,9 +167,8 @@ ldap_parse_page_control (LDAP * ld,
   BerElement *ber;
   LDAPControl *pControl;
   int i;
-  unsigned long count, err;
-  ber_tag_t tag, berTag;
-  ber_len_t berLen;
+  unsigned long count;
+  ber_tag_t tag;
 
   if (cookiep)
     {
@@ -218,6 +224,7 @@ foundPageControl:
 
   return (LDAP_SUCCESS);
 }
+#endif /* HAVE_LDAP_CREATE_CONTROL */
 #endif /* HAVE_LDAP_PARSE_PAGE_CONTROL */
 
 #endif /* PAGE_RESULTS */

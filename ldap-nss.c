@@ -84,6 +84,7 @@ static char rcsId[] =
 #include "globals.h"
 #include "util.h"
 #include "dnsconfig.h"
+#include "pagectrl.h"
 
 #ifdef HAVE_THREAD_H
 #ifdef HAVE_PTHREAD_ATFORK

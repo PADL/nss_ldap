@@ -3699,7 +3699,7 @@ else
 fi
 done
 
-for ac_func in ldap_create_page_control ldap_parse_page_control
+for ac_func in ldap_create_control ldap_create_page_control ldap_parse_page_control
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:3706: checking for $ac_func" >&5
