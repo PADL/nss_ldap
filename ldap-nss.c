@@ -20,7 +20,7 @@
  */
 
 static char rcsId[] =
-"$Id$";
+  "$Id$";
 
 #ifdef SUN_NSS
 #include <thread.h>
@@ -61,6 +61,12 @@ static char rcsId[] =
 #include "dnsconfig.h"
 
 /*
+ * If things don't link because ldap_ld_free() isn't defined,
+ * then try undefining this.
+ */
+#define HAVE_LDAP_LD_FREE
+
+/*
  * the configuration is read by the first call to do_open().
  * Pointers to elements of the list are passed around but should not
  * be freed.
@@ -71,8 +77,7 @@ static ldap_config_t *__config = NULL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session =
-{NULL, NULL};
+static ldap_session_t __session = { NULL, NULL };
 
 /* 
  * Process ID that opened the session.
@@ -81,6 +86,7 @@ static pid_t __pid = -1;
 static uid_t __euid = -1;
 
 static void do_close (void);
+static void do_close_no_unbind (void);
 static NSS_STATUS do_open (void);
 static NSS_STATUS do_search_s (const char *base, int scope,
 			       const char *filter, const char **attrs,
@@ -202,6 +208,68 @@ do_close (void)
 }
 
 /*
+ * If we've forked, then we need to open a new session.
+ * Careful: we have the socket shared with our parent,
+ * so we don't want to send an unbind to the server.
+ * However, we want to close the descriptor to avoid
+ * leaking it, and we also want to release the memory
+ * used by __session.ls_conn. The only entry point
+ * we have is ldap_unbind() which does both of these
+ * things, so we use an internal API, at the expense
+ * of compatibility.
+ */
+static void
+do_close_no_unbind (void)
+{
+  debug ("==> do_close_no_unbind");
+
+#ifdef DEBUG
+  if (__session.ls_conn != NULL)
+    {
+      syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
+	      __session.ls_conn);
+    }
+#endif /* DEBUG */
+
+  if (__session.ls_conn != NULL)
+    {
+#ifdef HAVE_LDAP_LD_FREE
+# if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+      extern int ldap_ld_free (LDAP * ld, int close, LDAPControl **,
+			       LDAPControl **);
+      (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
+      __session.ls_conn = NULL;
+# else
+      extern int ldap_ld_free (LDAP * ld, int close);
+      (void) ldap_ld_free (__session.ls_conn, 0);
+# endif				/* OPENLDAP 2.x */
+#else
+      /*
+       * We'll be rude and close the socket ourselves. 
+       * XXX untested code
+       */
+      int sd = -1;
+# ifdef LDAP_VERSION3_API
+      if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
+# else
+	if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
+# endif				/* LDAP_VERSION3_API */
+	  {
+	    close (sd);
+	    sd = -1;
+# ifdef LDAP_VERSION3_API
+	    (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
+# else
+	    __session.ls_conn->ld_sb.sb_sd = sd;
+# endif				/*  LDAP_VERSION3_API */
+	  }
+#endif /* HAVE_LDAP_LD_FREE */
+      __session.ls_conn = NULL;
+    }
+  debug ("<== do_close_no_unbind");
+}
+
+/*
  * Opens connection to an LDAP server.
  * As with do_close(), this assumes ownership of sess.
  * It also wants to own __config: is there a potential deadlock here? XXX
@@ -220,32 +288,21 @@ do_open (void)
 
 #ifdef DEBUG
   syslog (LOG_DEBUG,
-     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif /* DEBUG */
 
-  if (__euid != euid && (__euid == 0 || euid == 0))
+
+  if (__pid != pid)
+    {
+    }
+  else if (__euid != euid && (__euid == 0 || euid == 0))
     {
       /*
        * If we've changed user ids, close the session so we can
        * rebind as the correct user.
        */
       do_close ();
-    }
-
-  if (__pid != pid)
-    {
-      /*
-       * If we've forked, then we need to open a new session.
-       * Don't actually close the connection as this buggers up
-       * our parent process and seems to crash when we call
-       * ldap_unbind on the same connection repeatedly :-)
-       * XXX not calling do_close() could be a leak. Perhaps
-       * we should dup the underlying descriptor and then
-       * call do_close()? Isn't this what happens on fork?
-       */
-/*      do_close (); */
-      __session.ls_conn = NULL;
     }
   else if (__session.ls_conn != NULL && __session.ls_config != NULL)
     {
@@ -557,7 +614,7 @@ do_search_s (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-	   "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
 		  backoff);
 	  (void) sleep (backoff);
 	}
@@ -765,7 +822,7 @@ _nss_ldap_getent (ent_context_t * ctx,
 		  char *buffer,
 		  size_t buflen,
 		  int *errnop,
-		const char *filterprot, const char **attrs, parser_t parser)
+		  const char *filterprot, const char **attrs, parser_t parser)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
 
