@@ -4,6 +4,7 @@ $Header$
 173	Luke Howard <lukeh@padl.com>
 
 	* notes on IRS in doc/README.IRS
+	* added irs.h for AIX compat
 
 172	Luke Howard <lukeh@padl.com>
 
