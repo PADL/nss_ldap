@@ -56,7 +56,7 @@ NSS_STATUS _nss_ldap_dn2uid (
 			      size_t * len);
 #endif /* RFC2307BIS */
 
-#define NSS_LDAP_CONFIG_BUFSIZ		1024
+#define NSS_LDAP_CONFIG_BUFSIZ		4096
 #define NSS_LDAP_KEY_HOST		"host"
 #define NSS_LDAP_KEY_SCOPE		"scope"
 #define NSS_LDAP_KEY_BASE		"base"

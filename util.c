@@ -55,7 +55,9 @@ static NSS_STATUS _nss_ldap_getrdnvalue_impl (const char *dn,
 					      char **rval, char **buffer,
 					      size_t * buflen);
 
-static NSS_STATUS do_searchdescriptorconfig(const char *key, ldap_service_search_descriptor_t **result, const char *);
+static NSS_STATUS do_searchdescriptorconfig (const char *key,
+					     ldap_service_search_descriptor_t
+					     ** result, const char *);
 
 #ifdef RFC2307BIS
 #ifdef GNU_NSS
@@ -65,7 +67,7 @@ static NSS_STATUS do_searchdescriptorconfig(const char *key, ldap_service_search
 #ifdef DN2UID_CACHE
 #if defined(__GLIBC__)
 # if __GLIBC_MINOR__ < 2
-#  include <db_185.h> 
+#  include <db_185.h>
 # else
 #  include <db1/db.h>
 # endif
@@ -165,8 +167,7 @@ _nss_ldap_dn2uid (LDAP * ld,
       if (status != NSS_SUCCESS)
 	{
 #endif /* DN2UID_CACHE */
-	  const char *attrs[] =
-	  {"uid", NULL};
+	  const char *attrs[] = { "uid", NULL };
 	  LDAPMessage *res;
 
 	  status = NSS_NOTFOUND;
@@ -365,10 +366,13 @@ _nss_ldap_getrdnvalue_impl (const char *dn,
 }
 
 static NSS_STATUS
-do_searchdescriptorconfig (const char *key, ldap_service_search_descriptor_t **result, const char *value)
+do_searchdescriptorconfig (const char *key,
+			   ldap_service_search_descriptor_t ** result,
+			   const char *value, char **buffer, size_t * buflen)
 {
-  ldap_service_search_descriptor_t **t = NULL;
-  
+  ldap_service_search_descriptor_t **t = NULL, *p;
+  char *base;
+
   if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
     t = &result[LM_PASSWD];
   if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SHADOW))
@@ -397,17 +401,29 @@ do_searchdescriptorconfig (const char *key, ldap_service_search_descriptor_t **r
     t = &result[LM_NETGROUP];
 
   if (t == NULL)
-	return NSS_NOTFOUND;
+    return NSS_NOTFOUND;
 
-  *t = (ldap_service_search_descriptor_t *)malloc(sizeof(ldap_service_search_descriptor_t));
-  if (*t == NULL)
-	return NSS_TRYAGAIN;
+  /* we have already checked for room for the value */
+  base = buffer;
+  strcpy (base, v);
+  *buflen -= strlen (base);
 
-  (*t)->lsd_base = strdup(value);
-  if ((*t)->lsd_base == NULL)
-	return NSS_TRYAGAIN;
+  /* now we need MORE space for a descriptor, do we have it? */
+  if (*len - alignof (ldap_service_search_descriptor_t) + 1 <
+      sizeof (ldap_service_search_descriptor_t))
+    return NSS_UNAVAIL;
 
-  (*t)->lsd_scope = -1; /* reserved? */
+  /* align so we can put a descriptor in here */
+  p = *t;
+  *t += alignof (ldap_service_search_descriptor_t) - 1;
+  *t -= ((*t - NULL) % alignof (ldap_service_search_descriptor_t));
+  *len -= (*t - p);
+
+  *t = (ldap_service_search_descriptor_t *) buffer;
+  *len -= sizeof (ldap_service_search_descriptor_t);
+
+  (*t)->lsd_base = base;
+  (*t)->lsd_scope = -1;		/* reserved? */
   (*t)->lsd_filter = NULL;
 
   return NSS_SUCCESS;
@@ -428,12 +444,17 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	return NSS_UNAVAIL;
 
       /* set all namingcontexts to NULL for now */
-      (*presult)->ldc_sds = (ldap_service_search_descriptor_t **) calloc (LM_NONE, sizeof (ldap_service_search_descriptor_t *));
+      
+	(*presult)->ldc_sds =
+	(ldap_service_search_descriptor_t **) calloc (LM_NONE,
+						      sizeof
+						      (ldap_service_search_descriptor_t
+						       *));
       if ((*presult)->ldc_sds == NULL)
-        {
-          free (*presult);
-          return NSS_UNAVAIL;
-        }
+	{
+	  free (*presult);
+	  return NSS_UNAVAIL;
+	}
     }
 
   result = *presult;
@@ -459,6 +480,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
   if (fp == NULL)
     {
+      free (result->ldc_sds);
+      free (result);
       return NSS_UNAVAIL;
     }
 
@@ -487,7 +510,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
       /* skip all whitespaces between keyword and value */
       /* Lars Oergel <lars.oergel@innominate.de>, 05.10.2000 */
       while (*v == ' ' || *v == '\t')
-        v++;
+	v++;
 
       len = strlen (v);
 
@@ -565,14 +588,14 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SSL))
 	{
- 	  if (!strcasecmp(v, "yes"))
-	{
-		result->ldc_ssl_on = SSL_LDAPS;
-	}
-	  else if (!strcasecmp(v, "start_tls"))
-	{
-		result->ldc_ssl_on = SSL_START_TLS;
-	}
+	  if (!strcasecmp (v, "yes"))
+	    {
+	      result->ldc_ssl_on = SSL_LDAPS;
+	    }
+	  else if (!strcasecmp (v, "start_tls"))
+	    {
+	      result->ldc_ssl_on = SSL_START_TLS;
+	    }
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_LDAP_VERSION))
 	{
@@ -587,12 +610,15 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	  result->ldc_bind_timelimit = atoi (v);
 	}
       else
-        {
-          /* check whether the key is a naming context key */
-          if (do_searchdescriptorconfig (k, result->ldc_sds, v) == NSS_TRYAGAIN)
-		{
-			return NSS_TRYAGAIN;
-	        }
+	{
+	  /* check whether the key is a naming context key */
+	  if (do_searchdescriptorconfig (k, result->ldc_sds, v, &buf, &buflen)
+	      == NSS_UNAVAIL)
+	    {
+	      free (result->ldc_sds);
+	      free (result);
+	      return NSS_UNAVAIL;
+	    }
 	}
 
       if (t != NULL)
@@ -634,6 +660,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 
   if (result->ldc_host == NULL)
     {
+      free (result->ldc_sds);
+      free (result);
       return NSS_NOTFOUND;
     }
 
@@ -652,8 +680,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   return stat;
 }
 
-NSS_STATUS 
-_nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
   int ret = NSS_TRYAGAIN;
   char *p = buf;

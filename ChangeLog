@@ -11,6 +11,8 @@ $Header$
 	* parity with pam_ldap; "ssl" directive in
 	  ldap.conf can now specify "yes" or
 	  "start_tls" for Start TLS
+	* hopefully fixed Berkeley DB include 
+	  mess in util.c
  
 126	Luke Howard <lukeh@padl.com>
 
