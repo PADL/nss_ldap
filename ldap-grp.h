@@ -28,7 +28,11 @@ static const char *gr_attributes[] =
 {AT (cn), AT (userPassword),
  AT (memberUid),
 #ifdef RFC2307BIS
+#ifdef NDS
+ AT (member),
+#else
  AT (uniqueMember),
+#endif /* NDS */
 #endif				/* RFC2307BIS */
  AT (gidNumber), NULL};
 
@@ -42,7 +46,11 @@ OC (posixGroup) ")(" AT (cn) "=%s))";
 
 #ifdef RFC2307BIS
      static const char filt_getgroupsbymemberanddn[] =
+#ifdef NDS
+     "(&(objectclass=" OC (posixGroup) ")(|(" AT (memberUid) "=%s)(" AT (member) "=%s)))";
+#else
      "(&(objectclass=" OC (posixGroup) ")(|(" AT (memberUid) "=%s)(" AT (uniqueMember) "=%s)))";
+#endif /* NDS */
 #endif
 
      static const char filt_getgroupsbymember[] =

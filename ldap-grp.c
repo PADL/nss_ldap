@@ -95,7 +95,11 @@ _nss_ldap_parse_gr (
     return stat;
 #else
   dn_mems = NULL;
+#ifdef NDS
+  vals = ldap_get_values (ld, e, AT (member));
+#else
   vals = ldap_get_values (ld, e, AT (uniqueMember));
+#endif /* NDS */
   if (vals != NULL)
     {
       char **mem_p, **valiter;
