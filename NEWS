@@ -17,7 +17,8 @@ BUGS 18, 19, 20, 34 would be good to fix soon.
   In nscd, where the backends are cached, it doesn't make sense to keep
   opening and closing sockets to the LDAP server, particularly as the
   rebinding logic was put there to *allow* the connection to be long
-  lived.
+  lived (marked RESOLVED LATER; a single connection is now used per
+  process)
 
 [BUG#12]
 - ditto for IRS: the private data should contain the session and be long
@@ -28,17 +29,18 @@ BUGS 18, 19, 20, 34 would be good to fix soon.
   fly from object classes and attributes, instead of storing them. This
   seems to be important under Solaris as the linker doesn't intern strings (?)
   All that filter-constructing stuff in the ldap-*.h headers is UGLY.
+  (marked RESOLVED LATER)
 
 [BUG#14]
 - infinite recursion is host lookup -- libldap uses gethostbyname(). Perhaps
   we should link with a custom gethostbyname() which uses DNS only??? (This
   is nominally the LDAP client library's problem but we could short-circuit
-  by resolving the IP addresses ourselves).
+  by resolving the IP addresses ourselves). (marked RESOLVED INVALID)
 
 [BUG#16]
 - finish implementing dl-*.c  (LOW priority). In fact I'm tempted to remove
   this from the line up: SGI have their own LDAP C library support, and
-  so do DEC (with SIA).
+  so do DEC (with SIA). (removed dl-*.c; marked RESOLVED WONTFIX)
 
 [BUG#17]
 - implement gethostbyname2() and
@@ -69,22 +71,27 @@ BUGS 18, 19, 20, 34 would be good to fix soon.
 [BUG#19]
 - add support for DHCP and coldstart configuration. Coldstart should
   update /etc/ldap.conf (/var/ldap/LDAP_CLIENT_CACHE?). Should probably
-  add support for the HP/Sun server profile schema.
+  add support for the HP/Sun server profile schema (marked RESOLVED
+  LATER)
 
 [BUG#21]
-- write testsuite. 
+- write testsuite (marked RESOLVED LATER)
 
 [BUG#22]
-- support for bootparams map
+- support for bootparams map (marked RESOLVED LATER)
 
 [BUG#34]
-- shells hang on Solaris for LDAP users
+- shells hang on Solaris for LDAP users (marked RESOLVED LATER;
+Solaris 7 users get patch cluster 106541-12)
 
 [BUG#49]
-- race condition in ldap-nss.c (fixed in nss_ldap-121)
+- race condition in ldap-nss.c (FIXED in nss_ldap-121)
 
 [BUG#50]
-- check return value of ldap_simple_bind() (fixed in nss_ldap-122)
+- check return value of ldap_simple_bind() (FIXED in nss_ldap-122)
+
+[BUG#63]
+- integrate support for runtime schema mapping
 
 To: linux-ldap@rage.net
 Cc: ldap-nis@padl.com
