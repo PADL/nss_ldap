@@ -215,8 +215,6 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
-  nss_context_lock ();
-
   if ((((nss_ldap_backend_t *) be)->state) != NULL)
     {
       _nss_ldap_ent_context_free ((ent_context_t **)
@@ -225,10 +223,6 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 
   /* Ditch the backend. */
   free (be);
-
-  nss_context_unlock ();
-
-  nss_cleanup ();
 
   debug ("<== _nss_ldap_default_destr");
 

@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+105	Luke Howard <lukeh@padl.com>
+
+	* patch for deadlock under Solaris, thanks Dave.
+
+
 104	Luke Howard <lukeh@padl.com>
 
 	* new spec file
