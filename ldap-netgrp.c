@@ -447,6 +447,32 @@ nn_destroy (struct name_list **head)
 }
 
 /*
+ * Check whether we have already seen a netgroup, to avoid loops
+ * in nested netgroup traversal
+ */
+static int
+nn_check (struct name_list *head, const char *netgroup)
+{
+  struct name_list *p;
+  int found = 0;
+
+  debug ("==> nn_check");
+
+  for (p = head; p != NULL; p = p->next)
+    {
+      if (strcasecmp(p->name, netgroup) == 0)
+	{
+	  found++;
+	  break;
+	}
+    }
+
+  debug ("<== nn_check");
+
+  return found;
+}
+
+/*
  * Chase nested netgroups. If we can't find a nested netgroup, we try
  * the next one - don't want to fail authoritatively because of bad
  * user data.
@@ -465,11 +491,18 @@ nn_chase (nss_ldap_netgr_backend_t * ngbe, LDAPMessage ** pEntry)
       ngbe->state->ec_res = NULL;
     }
 
-  while (ngbe->namelist != NULL)
+  while (ngbe->needed_groups != NULL)
     {
+      /* If this netgroup has already been seen, avoid it  */
+      if (nn_check(ngbe->known_groups, ngbe->needed_groups->name))
+	{
+	  nn_pop (&ngbe->needed_groups);
+	  continue;
+	}	
+
       LA_INIT (a);
       LA_TYPE (a) = LA_TYPE_STRING;
-      LA_STRING (a) = ngbe->namelist->name;
+      LA_STRING (a) = ngbe->needed_groups->name;
 
       debug (":== nn_chase: nested netgroup=%s", LA_STRING (a));
 
@@ -478,7 +511,18 @@ nn_chase (nss_ldap_netgr_backend_t * ngbe, LDAPMessage ** pEntry)
 				 LM_NETGROUP, 1, &ngbe->state->ec_res);
       _nss_ldap_leave ();
 
-      nn_pop (&ngbe->namelist);
+      if (stat == NSS_SUCCESS)
+	{
+	  /* we have "seen" this netgroup; track it for loop detection */
+	  stat = nn_push (&ngbe->known_groups, ngbe->needed_groups->name);
+	  if (stat != NSS_SUCCESS)
+	    {
+	      nn_pop (&ngbe->needed_groups);
+	      break;
+	    }
+	}
+
+      nn_pop (&ngbe->needed_groups);
 
       if (stat == NSS_SUCCESS)
 	{
@@ -582,7 +626,7 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 	    {
 	      for (p = vals; *p != NULL; p++)
 		{
-		  parseStat = nn_push (&be->namelist, *p);
+		  parseStat = nn_push (&be->needed_groups, *p);
 		  if (parseStat != NSS_SUCCESS)
 		      break;
 		}
@@ -979,7 +1023,8 @@ _nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
   ngbe->ops = netgroup_ops;
   ngbe->n_ops = 6;
   ngbe->state = NULL;
-  ngbe->namelist = NULL;
+  ngbe->known_groups = NULL;
+  ngbe->needed_groups = NULL;
 
   stat = _nss_ldap_default_constr ((nss_ldap_backend_t *) ngbe);
   if (stat != NSS_SUCCESS)
@@ -1006,6 +1051,12 @@ _nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
 
   if (stat == NSS_SUCCESS)
     {
+      /* we have "seen" this netgroup; track it for loop detection */
+      stat = nn_push (&ngbe->known_groups, args->netgroup);
+    }
+
+  if (stat == NSS_SUCCESS)
+    {
       args->iterator = (nss_backend_t *) ngbe;
     }
   else
@@ -1024,7 +1075,8 @@ _nss_ldap_netgroup_destr (nss_backend_t * _ngbe, void *args)
   nss_ldap_netgr_backend_t *ngbe = (nss_ldap_netgr_backend_t *) _ngbe;
 
   /* free list of nested netgroups */
-  nn_destroy (&ngbe->namelist);
+  nn_destroy (&ngbe->known_groups);
+  nn_destroy (&ngbe->needed_groups);
 
   return _nss_ldap_default_destr (_ngbe, args);
 }
@@ -1049,7 +1101,8 @@ _nss_ldap_netgroup_constr (const char *db_name,
 
   be->ops = netgroup_ops;
   be->n_ops = sizeof (netgroup_ops) / sizeof (nss_backend_op_t);
-  be->namelist = NULL;
+  be->known_groups = NULL;
+  be->needed_groups = NULL;
 
   if (_nss_ldap_default_constr ((nss_ldap_backend_t *)be) != NSS_SUCCESS)
    {

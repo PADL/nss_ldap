@@ -484,7 +484,8 @@ struct nss_ldap_netgr_backend
   nss_backend_op_t *ops;
   int n_ops;
   ent_context_t *state;
-  struct name_list *namelist;
+  struct name_list *known_groups; /* netgroups seen, for loop detection */
+  struct name_list *needed_groups; /* nested netgroups to chase */
 };
 
 typedef struct nss_ldap_netgr_backend nss_ldap_netgr_backend_t;
