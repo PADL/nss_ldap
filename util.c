@@ -60,12 +60,19 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 					     ** result, char **buffer,
 					     size_t * buflen);
 
+/*
+ * Use db_185.h first, as that's an old DB wrapper
+ * around DB 2.x. If we don't have that, use db1/db.h,
+ * which I think may me the original DB library.
+ * Last resort, use db.h, which we hope has the
+ * right API!
+ */
 #ifdef RFC2307BIS
-# ifdef HAVE_DB1_DB_H
-#  include <db1/db.h>
-#  define DN2UID_CACHE
-# elif defined(HAVE_DB_185_H)
+# ifdef HAVE_DB_185_H
 #  include <db_185.h>
+#  define DN2UID_CACHE
+# elif defined(HAVE_DB1_DB_H)
+#  include <db1/db.h>
 #  define DN2UID_CACHE
 # elif defined(HAVE_DB_H)
 #  include <db.h>
