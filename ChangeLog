@@ -17,7 +17,10 @@ $Id$
 	  _nss_ldap_innetgr()
 	* fix deadlock if getXXXent() called without first
 	  calling setXXXent()
-	* only request gidNumber attribute initgroups()
+	* only request gidNumber attribute when initgroups()
+	  (avoids sending back rest of a group's entry)
+	* don't request any attributes when mapping a user
+	  to a DN (we want the DN only)
 
 215	Luke Howard <lukeh@padl.com>
 
