@@ -67,6 +67,29 @@ static ent_context_t *gr_context = NULL;
 static char *_nss_ldap_no_members[] = { NULL };
 #endif
 
+#ifdef AIX
+typedef struct ldap_initgroups_args
+{
+  char **grplist;
+  size_t listlen;
+}
+ldap_initgroups_args_t;
+#else
+# ifdef HAVE_NSSWITCH_H
+typedef struct nss_groupsbymem ldap_initgroups_args_t;
+# else
+typedef struct ldap_initgroups_args
+{
+  gid_t group;
+  long int *start;
+  long int *size;
+  gid_t **groups;
+  long int limit;
+}
+ldap_initgroups_args_t;
+# endif
+#endif /* AIX */
+
 static NSS_STATUS
 _nss_ldap_parse_gr (LDAP * ld,
 		    LDAPMessage * e,
@@ -202,29 +225,6 @@ _nss_ldap_parse_gr (LDAP * ld,
 
   return NSS_SUCCESS;
 }
-
-#ifdef AIX
-typedef struct ldap_initgroups_args
-{
-  char **grplist;
-  size_t listlen;
-}
-ldap_initgroups_args_t;
-#else
-# ifdef HAVE_NSSWITCH_H
-typedef struct nss_groupsbymem ldap_initgroups_args_t;
-# else
-typedef struct ldap_initgroups_args
-{
-  gid_t group;
-  long int *start;
-  long int *size;
-  gid_t **groups;
-  long int limit;
-}
-ldap_initgroups_args_t;
-# endif
-#endif /* AIX */
 
 /*
  * Add a group to a group list.
@@ -374,7 +374,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #if defined(HAVE_NSS_H) || defined(AIX)
   LA_STRING (a) = user;
 #else
-  LA_STRING (a) = lia->username;
+  LA_STRING (a) = liap->username;
 #endif /* HAVE_NSS_H || AIX */
   LA_TYPE (a) = LA_TYPE_STRING;
 
@@ -397,11 +397,11 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   if (stat != NSS_SUCCESS)
     {
       _nss_ldap_leave ();
-#ifndef AIX
-      return stat;
-#else
+# ifdef AIX
       return NULL;
-#endif /* !AIX */
+# else
+      return stat;
+# endif /* !AIX */
     }
 
   /* lookup the user's DN. */
@@ -428,7 +428,12 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 
   if (_nss_ldap_ent_context_init (&ctx) == NULL)
     {
+      _nss_ldap_leave ();
+# ifdef AIX
+      return NULL;
+# else
       return NSS_UNAVAIL;
+# endif /* AIX */
     }
 #else
   filter = _nss_ldap_filt_getgroupsbymember;
@@ -438,7 +443,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #ifdef HAVE_NSS_H
 			      errnop,
 #else
-			      erange,
+			      &erange,
 #endif /* HAVE_NSS_H */
 			      filter, LM_GROUP, do_parse_initgroups);
 
@@ -457,9 +462,9 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
     {
 #ifndef HAVE_NSS_H
       if (erange)
-	errno = ERANGE
+	errno = ERANGE;
 #endif /* HAVE_NSS_H */
-	  _nss_ldap_leave ();
+      _nss_ldap_leave ();
 #ifndef AIX
       return stat;
 #else
