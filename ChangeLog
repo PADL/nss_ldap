@@ -1,6 +1,14 @@
 $Header$
 ===============================================================
 
+143	Luke Howard <lukeh@padl.com>
+
+	* patch from nalin@redhat.com to avoid 
+	  corrupting the heap when the configuration
+	  file exists but has no host and base values.
+	  _nss_ldap_readconfigfromdns() will write to
+	  the region which was already freed.
+
 142	Luke Howard <lukeh@padl.com>
 
 	* patch from Simon Wilkinson <sxw@sxw.org.uk>

@@ -667,6 +667,7 @@ do_open (void)
 
       if (status != NSS_SUCCESS)
 	{
+	  __config = NULL; /* reset otherwise heap is corrupted */
 	  status =
 	    _nss_ldap_readconfigfromdns (&__config, __configbuf,
 					 sizeof (__configbuf));
