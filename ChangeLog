@@ -11,6 +11,9 @@ $Id$
 	  pointers with pointers to a structure that
 	  contains a reference-counted LDAP handle as well
 	  as the message
+	* fix crasher when internal group membership
+	  buffer was reallocated (introduced with nested
+	  group expansion code)
 
 223	Luke Howard <lukeh@padl.com>
 
