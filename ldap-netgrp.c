@@ -515,7 +515,7 @@ nn_chase (nss_ldap_netgr_backend_t * ngbe, LDAPMessage ** pEntry)
 
       _nss_ldap_enter ();
       stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getnetgrent,
-				 LM_NETGROUP, 1, &ngbe->state->ec_res);
+				 LM_NETGROUP, NULL, 1, &ngbe->state->ec_res);
       _nss_ldap_leave ();
 
       if (stat == NSS_SUCCESS)
@@ -805,7 +805,7 @@ do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
 
   stat = _nss_ldap_getent_ex (&a, &ctx, (void *) li_args, NULL, 0,
 			      &li_args->lia_erange, _nss_ldap_filt_innetgr,
-			      LM_NETGROUP, do_parse_innetgr);
+			      LM_NETGROUP, NULL, do_parse_innetgr);
 
   _nss_ldap_ent_context_release (ctx);
 
@@ -845,7 +845,7 @@ do_innetgr (ldap_innetgr_args_t * li_args,
 
   stat = _nss_ldap_getent_ex (&a, &ctx, (void *) li_args, NULL, 0,
 			      &li_args->lia_erange, NULL, LM_NETGROUP,
-			      do_parse_innetgr);
+			      NULL, do_parse_innetgr);
 
   _nss_ldap_ent_context_release (ctx);
 
@@ -984,7 +984,7 @@ _nss_ldap_setnetgrent (nss_backend_t * be, void *_args)
 
   _nss_ldap_enter ();
   stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getnetgrent,
-			     LM_NETGROUP, 1, &ngbe->state->ec_res);
+			     LM_NETGROUP, NULL, 1, &ngbe->state->ec_res);
   _nss_ldap_leave ();
 
   if (stat == NSS_SUCCESS)

@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+217	Luke Howard <lukeh@padl.com>
+	
+	* fix for BUG#167: compilation fails on Solaris
+
 216	Luke Howard <lukeh@padl.com>
 
 	* patch from Thorsten Kukuk to avoid overwriting
