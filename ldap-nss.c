@@ -1355,9 +1355,10 @@ _nss_ldap_search_s (const ldap_args_t * args,
 		    ldap_map_selector_t sel,
 		    int sizelimit, LDAPMessage ** res)
 {
-  char filter[LDAP_FILT_MAXSIZ], *base;
+  char filter[LDAP_FILT_MAXSIZ], sdFilter[LDAP_FILT_MAXSIZ];
   const char **attrs;
   NSS_STATUS stat;
+  ldap_service_search_descriptor_t *sd = NULL, defaultSd;
 
   debug ("==> _nss_ldap_search_s");
 
@@ -1369,25 +1370,40 @@ _nss_ldap_search_s (const ldap_args_t * args,
       return stat;
     }
 
+  defaultSd.lsd_base = __session.ls_config->ldc_base;
+  defaultSd.lsd_scope = __session.ls_config->ldc_scope;
+  defaultSd.lsd_filter = NULL;
+
   if (sel < LM_NONE)
     {
-      base = __session.ls_config->ldc_namingcontexts[sel];
-      if (base == NULL)
-	base = __session.ls_config->ldc_base;
+      sd = __session.ls_config->ldc_sds[sel];
+      if (sd == NULL)
+	sd = &defaultSd;
       attrs = _nss_ldap_attrtab[sel];
     }
   else
     {
-      base = __session.ls_config->ldc_base;
+      sd = &defaultSd;
       attrs = NULL;
+    }
+
+  if (sd->lsd_filter != NULL)
+    {  
+       snprintf(sdFilter, sizeof(sdFilter), "(&(%s)(%s))", sd->lsd_filter, filterprot);
+       filterprot = sdFilter;
+    }
+
+  if (sd->lsd_scope == -1)
+    { 
+       sd->lsd_scope = __session.ls_config->ldc_scope;
     }
 
   stat = do_filter (args, filterprot, attrs, filter, sizeof (filter));
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = do_with_reconnect (base,
-			    __session.ls_config->ldc_scope,
+  stat = do_with_reconnect (sd->lsd_base,
+			    sd->lsd_scope,
 			    (args == NULL) ? (char *) filterprot : filter,
 			    attrs, sizelimit, res,
 			    (search_func_t) do_search_s);
@@ -1406,9 +1422,10 @@ _nss_ldap_search (const ldap_args_t * args,
 		  const char *filterprot,
 		  ldap_map_selector_t sel, int sizelimit, int *msgid)
 {
-  char filter[LDAP_FILT_MAXSIZ], *base;
+  char filter[LDAP_FILT_MAXSIZ], sdFilter[LDAP_FILT_MAXSIZ];
   const char **attrs;
   NSS_STATUS stat;
+  ldap_service_search_descriptor_t *sd = NULL, defaultSd;
 
   debug ("==> _nss_ldap_search");
 
@@ -1420,25 +1437,40 @@ _nss_ldap_search (const ldap_args_t * args,
       return stat;
     }
 
+  defaultSd.lsd_base = __session.ls_config->ldc_base;
+  defaultSd.lsd_scope = __session.ls_config->ldc_scope;
+  defaultSd.lsd_filter = NULL;
+
   if (sel < LM_NONE)
     {
-      base = __session.ls_config->ldc_namingcontexts[sel];
-      if (base == NULL)
-	base = __session.ls_config->ldc_base;
+      sd = __session.ls_config->ldc_sds[sel];
+      if (sd == NULL)
+	sd = &defaultSd;
       attrs = _nss_ldap_attrtab[sel];
     }
   else
     {
-      base = __session.ls_config->ldc_base;
+      sd = &defaultSd;
       attrs = NULL;
+    }
+
+  if (sd->lsd_filter != NULL)
+    {  
+       snprintf(sdFilter, sizeof(sdFilter), "(&(%s)(%s))", sd->lsd_filter, filterprot);
+       filterprot = sdFilter;
+    }
+
+  if (sd->lsd_scope == -1)
+    { 
+       sd->lsd_scope = __session.ls_config->ldc_scope;
     }
 
   stat = do_filter (args, filterprot, attrs, filter, sizeof (filter));
   if (stat != NSS_SUCCESS)
     return stat;
 
-  stat = do_with_reconnect (base,
-			    __session.ls_config->ldc_scope,
+  stat = do_with_reconnect (sd->lsd_base,
+			    sd->lsd_scope,
 			    (args == NULL) ? (char *) filterprot : filter,
 			    attrs, sizelimit, msgid,
 			    (search_func_t) do_search);

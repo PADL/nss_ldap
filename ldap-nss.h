@@ -213,7 +213,7 @@ struct ldap_config
     /* SSL certificate path */
     char *ldc_sslpath;
     /* naming contexts */
-    char **ldc_namingcontexts;
+    ldap_service_search_descriptor_t **ldc_sds;
     /* next configuration. loops back onto itself for last entry */
     struct ldap_config *ldc_next;
   };

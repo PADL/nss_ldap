@@ -55,7 +55,7 @@ static NSS_STATUS _nss_ldap_getrdnvalue_impl (const char *dn,
 					      char **rval, char **buffer,
 					      size_t * buflen);
 
-static char ** do_namingcontextconfig (const char *key, char **result);
+static NSS_STATUS do_searchdescriptorconfig(const char *key, ldap_service_search_descriptor_t **result, const char *);
 
 #ifdef RFC2307BIS
 #ifdef GNU_NSS
@@ -364,10 +364,10 @@ _nss_ldap_getrdnvalue_impl (const char *dn,
   return NSS_NOTFOUND;
 }
 
-static char **
-do_namingcontextconfig (const char *key, char **result)
+static NSS_STATUS
+do_searchdescriptorconfig (const char *key, ldap_service_search_descriptor_t **result, const char *value)
 {
-  char **t = NULL;
+  ldap_service_search_descriptor_t **t = NULL;
   
   if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
     t = &result[LM_PASSWD];
@@ -396,7 +396,21 @@ do_namingcontextconfig (const char *key, char **result)
   else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETGROUP))
     t = &result[LM_NETGROUP];
 
-  return t;
+  if (t == NULL)
+	return NSS_NOTFOUND;
+
+  *t = (ldap_service_search_descriptor_t *)malloc(sizeof(ldap_service_search_descriptor_t));
+  if (*t == NULL)
+	return NSS_TRYAGAIN;
+
+  (*t)->lsd_base = strdup(value);
+  if ((*t)->lsd_base == NULL)
+	return NSS_TRYAGAIN;
+
+  (*t)->lsd_scope = -1; /* reserved? */
+  (*t)->lsd_filter = NULL;
+
+  return NSS_SUCCESS;
 }
 
 NSS_STATUS
@@ -414,8 +428,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	return NSS_UNAVAIL;
 
       /* set all namingcontexts to NULL for now */
-      (*presult)->ldc_namingcontexts = (char **) calloc (LM_NONE, sizeof (char *));
-      if ((*presult)->ldc_namingcontexts == NULL)
+      (*presult)->ldc_sds = (ldap_service_search_descriptor_t **) calloc (LM_NONE, sizeof (ldap_service_search_descriptor_t *));
+      if ((*presult)->ldc_sds == NULL)
         {
           free (*presult);
           return NSS_UNAVAIL;
@@ -575,8 +589,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
       else
         {
           /* check whether the key is a naming context key */
-          t = do_namingcontextconfig (k, result->ldc_namingcontexts);
-        }
+          if (do_searchdescriptorconfig (k, result->ldc_sds, v) == NSS_TRYAGAIN)
+		{
+			return NSS_TRYAGAIN;
+	        }
+	}
 
       if (t != NULL)
 	{
