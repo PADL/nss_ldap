@@ -553,7 +553,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_tls_key = NULL;
   result->ldc_tls_randfile = NULL;
   result->ldc_idle_timelimit = 0;
-  result->ldc_reconnect_pol = LP_RECONNECT_HARD;
+  result->ldc_reconnect_pol = LP_RECONNECT_HARD_OPEN;
   result->ldc_sasl_secprops = NULL;
   result->ldc_logdir = NULL;
   result->ldc_debug = 0;
@@ -779,9 +779,14 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_POLICY))
 	{
-	  if (!strcasecmp (v, "hard"))
+	  if (!strcasecmp (v, "hard") ||
+	      !strcasecmp (v, "hard_open"))
 	    {
-	      result->ldc_reconnect_pol = LP_RECONNECT_HARD;
+	      result->ldc_reconnect_pol = LP_RECONNECT_HARD_OPEN;
+	    }
+	  else if (!strcasecmp (v, "hard_init"))
+	    {
+	      result->ldc_reconnect_pol = LP_RECONNECT_HARD_INIT;
 	    }
 	  else if (!strcasecmp (v, "soft"))
 	    {

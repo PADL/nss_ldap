@@ -250,7 +250,8 @@ typedef enum ldap_ssl_options ldap_ssl_options_t;
 
 enum ldap_reconnect_policy
 {
-  LP_RECONNECT_HARD,
+  LP_RECONNECT_HARD_INIT,
+  LP_RECONNECT_HARD_OPEN,
   LP_RECONNECT_SOFT
 };
 

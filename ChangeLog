@@ -1,6 +1,14 @@
 $Id$
 ===============================================================
 
+234	Luke Howard <lukeh@padl.com>
+
+	* don't reacquire global lock in do_next_page()
+	* restore old "bind_policy hard" behaviour (don't try to
+	  reconnect if initialization failed). The behaviour
+	  introduced in nss_ldap-227 can be enabled with
+	  "bind_policy hard_init".
+
 233	Luke Howard <lukeh@padl.com>
 
 	* if do_open() returns NSS_UNAVAIL, don't try to do

@@ -206,6 +206,7 @@ static int do_ssl_options (ldap_config_t * cfg);
  * Read configuration file and initialize schema
  */
 static NSS_STATUS do_init (void);
+static NSS_STATUS do_init2 (void);
 
 /*
  * Open the global session
@@ -942,7 +943,24 @@ do_close_no_unbind (void)
  */
 NSS_STATUS _nss_ldap_init (void)
 {
-  return do_init ();
+  return do_init2();
+}
+
+static NSS_STATUS do_init2 (void)
+{
+  NSS_STATUS stat;
+
+  stat = do_init();
+
+  if (stat == NSS_SUCCESS &&
+      __session.ls_config != NULL &&
+      __session.ls_config->ldc_reconnect_pol != LP_RECONNECT_HARD_INIT)
+  {
+    if ( do_open() != NSS_SUCCESS )
+      stat = NSS_UNAVAIL;
+  }
+
+  return stat;
 }
 
 static NSS_STATUS do_init (void)
@@ -2661,7 +2679,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
 
   debug ("==> _nss_ldap_search_s");
 
-  stat = do_init ();
+  stat = do_init2 ();
   if (stat != NSS_SUCCESS)
     {
       debug ("<== _nss_ldap_search_s");
@@ -2750,7 +2768,7 @@ _nss_ldap_search (const ldap_args_t * args,
 
   *msgid = -1;
 
-  stat = do_init ();
+  stat = do_init2 ();
   if (stat != NSS_SUCCESS)
     {
       debug ("<== _nss_ldap_search");
