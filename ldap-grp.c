@@ -137,15 +137,14 @@ do_parse_range (const char *attributeType,
     }
 
   /* XXX need to copy as strtok() is destructive */
-  attribute = strdup(attributeDescription);
+  attribute = strdup (attributeDescription);
   if (attribute == NULL)
     {
       return NSS_TRYAGAIN;
     }
 
 #ifndef HAVE_STRTOK_R
-  for (p = strtok (attribute, ";");
-       p != NULL; p = strtok (NULL, ";"))
+  for (p = strtok (attribute, ";"); p != NULL; p = strtok (NULL, ";"))
 #else
   for (p = strtok_r (attribute, ";", &st);
        p != NULL; p = strtok_r (NULL, ";", &st))
@@ -313,7 +312,7 @@ do_parse_group_members (LDAP * ld,
 	  goto out;
 	}
 
-      groupMembersCount = 0; /* number of members in this group */
+      groupMembersCount = 0;	/* number of members in this group */
 
       (void) do_get_range_values (ld, e, uniquemember_attrs[0], &start, &end, &dnValues);
       if (dnValues != NULL)
@@ -332,11 +331,16 @@ do_parse_group_members (LDAP * ld,
        * As an optimization the buffer is preferentially allocated off
        * the stack
        */
-      if ((i + groupMembersCount) * sizeof (char *) > *pGroupMembersBufferSize)
+      if ((i + groupMembersCount) * sizeof (char *) >
+	  *pGroupMembersBufferSize)
 	{
-	  *pGroupMembersBufferSize = (i + groupMembersCount) * sizeof (char *);
-	  *pGroupMembersBufferSize += (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)) - 1;
-	  *pGroupMembersBufferSize -= (*pGroupMembersBufferSize % (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)));
+	  *pGroupMembersBufferSize =
+	    (i + groupMembersCount) * sizeof (char *);
+	  *pGroupMembersBufferSize +=
+	    (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)) - 1;
+	  *pGroupMembersBufferSize -=
+	    (*pGroupMembersBufferSize %
+	     (LDAP_NSS_MAXGR_BUFSIZ * sizeof (char *)));
 
 	  if (*pGroupMembersBufferIsMalloced == 0)
 	    {
@@ -344,7 +348,8 @@ do_parse_group_members (LDAP * ld,
 	      *pGroupMembers = NULL;	/* force malloc() */
 	    }
 
-	  *pGroupMembers = (char **) realloc (*pGroupMembers, *pGroupMembersBufferSize);
+	  *pGroupMembers =
+	    (char **) realloc (*pGroupMembers, *pGroupMembersBufferSize);
 	  if (*pGroupMembers == NULL)
 	    {
 	      stat = NSS_TRYAGAIN;
@@ -1001,8 +1006,7 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_setgrent (void)
+NSS_STATUS _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -1015,8 +1019,7 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS
-_nss_ldap_endgrent (void)
+NSS_STATUS _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
