@@ -66,7 +66,7 @@ ho_byname (struct irs_ho *this, const char *name)
 			   sizeof (pvt->buffer),
 			   &errno,
 			   _nss_ldap_filt_gethostbyname,
-			   LM_HOSTS, _nss_ldap_parse_host);
+			   LM_HOSTS, _nss_ldap_parse_hostv4);
 
   if (s != NSS_SUCCESS)
     {
@@ -111,7 +111,7 @@ ho_byaddr (struct irs_ho *this, const void *addr, int len, int af)
 			   sizeof (pvt->buffer),
 			   &errno,
 			   _nss_ldap_filt_gethostbyaddr,
-			   LM_HOSTS, _nss_ldap_parse_host);
+			   LM_HOSTS, _nss_ldap_parse_hostv4);
 
   if (s != NSS_SUCCESS)
     {
@@ -143,7 +143,7 @@ ho_next (struct irs_ho *this)
 			sizeof (pvt->buffer),
 			&errno,
 			_nss_ldap_filt_gethostent,
-			LM_HOSTS, _nss_ldap_parse_host);
+			LM_HOSTS, _nss_ldap_parse_hostv4);
 
   if (s != NSS_SUCCESS)
     {
