@@ -62,7 +62,8 @@ static char rcsId[] =
 
 /*
  * If things don't link because ldap_ld_free() isn't defined,
- * then try undefining this.
+ * then try undefining this. I think it is exported on
+ * Linux but not Solaris with Netscape's C SDK.
  */
 #define HAVE_LDAP_LD_FREE
 

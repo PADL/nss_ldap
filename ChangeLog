@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+100	Luke Howard <lukeh@padl.com>
+
+	* added some contributors
+	* notes about ldap_ld_free()
+
 99	Luke Howard <lukeh@padl.com>
 
 	* added some netgroup implementation tips
@@ -272,7 +277,7 @@ $Id$
 2.37	Luke Howard <lukeh@xedoc.com>
 
 	* moved to CVS repository and Linux as development
-	  environment (hey, Greg!)
+	  environment 
 	* incorporated ldap-service.c fix from Greg
 
 2.36	Luke Howard <lukeh@xedoc.com>
