@@ -550,7 +550,7 @@ do_set_sockopts (void)
 #endif /* LDAP_OPT_DESC */
     {
       int off = 0;
-      int namelen = sizeof (struct sockaddr);
+      socklen_t namelen = sizeof (struct sockaddr);
 
       (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *) &off, sizeof (off));
       (void) fcntl (sd, F_SETFD, FD_CLOEXEC);
@@ -648,8 +648,8 @@ do_close_no_unbind (void)
     {
       struct sockaddr sockname;
       struct sockaddr peername;
-      int socknamelen = sizeof(sockname);
-      int peernamelen = sizeof(peername);
+      socklen_t socknamelen = sizeof(sockname);
+      socklen_t peernamelen = sizeof(peername);
 
       /*
        * Important to perform comparison "family-aware" to not count

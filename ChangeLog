@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+208	Luke Howard <lukeh@padl.com>
+
+	* use socklen_t not int
+
 207	Luke Howard <lukeh@padl.com>
 
 	* work without LDAP_OPT_X_TLS_RANDOM_FILE
