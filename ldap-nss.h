@@ -39,15 +39,13 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#ifdef __STDC__
 #ifndef __P
-#define __P(x)  x
+# if defined(__STDC__) || defined(__GNUC__)
+#  define __P(x) x
+# else
+#  define __P(x) ()
+# endif
 #endif
-#else
-#ifndef __P
-#define __P(x)  ()
-#endif
-#endif /* __STDC__ */
 
 #include <netdb.h>
 #include <netinet/in.h>
@@ -646,7 +644,6 @@ const char *_nss_ldap_map_at (const char *pChar);
 const char *_nss_ldap_map_oc (const char *pChar);
 #endif /* AT_OC_MAP */
 
-#ifdef PROXY_AUTH
 /*
  * Proxy bind support for AIX.
  */
@@ -659,7 +656,6 @@ struct ldap_proxy_bind_args
 typedef struct ldap_proxy_bind_args ldap_proxy_bind_args_t;
 
 NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password);
-#endif /* PROXY_AUTH */
 
 NSS_STATUS _nss_ldap_init (void);
 

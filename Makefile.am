@@ -6,10 +6,15 @@ endif
 
 noinst_PROGRAMS = nss_ldap.so $(authmod)
 INST_UID=root
+if AIX
+INST_GID=system
+else
 INST_GID=root
+endif
 
-EXTRA_DIST = COPYING.LIB CVSVersionInfo.txt ChangeLog README LICENSE.OpenLDAP \
-	     README.IRS ldap.conf nss_ldap.spec nsswitch.ldap aix_authmeth.c
+EXTRA_DIST = CVSVersionInfo.txt ChangeLog \
+	     AUTHORS ANNOUNCE NEWS INSTALL README LICENSE.OpenLDAP COPYING\
+	     ldap.conf nss_ldap.spec nsswitch.ldap 
 
 nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-rpc.c \
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
@@ -23,7 +28,7 @@ NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c \
 	util.c globals.c ltf.c snprintf.c resolve.c dnsconfig.c \
 	irs-nss.c sasl.c pagectrl.c aix_authmeth.c
 
-NSS_LDAP_LDFLAGS = -enss_ldap_initialize -lsys -lcsys -lc
+NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
 
 if GLIBC
 LIBC_VERS = `ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
@@ -34,17 +39,23 @@ NSS_LDAP_NSS_VERSIONED = libnss_ldap.so.$(NSS_VERS)
 endif
 
 if USE_NATIVE_LINKER
-LINK = $(nss_ldap_so_LD) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+NATIVE_LINK = $(nss_ldap_so_LD) $(AM_LDFLAGS) -o $@ 
 else
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+GNU_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 endif
+
+# This is horrible but appears to be the only way to work with
+# recent versions of automake. Any better ideas, let me know.
+LINK = $(NATIVE_LINK) $(GNU_LINK)
 
 if AIX
 
 # AIX install instructions per doc/README.AIX
 
 install-exec-local: nss_ldap.so NSS_LDAP
+	mkdir -p $(DESTDIR)$(libdir)/netsvc/dynload
 	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/netsvc/dynload/nss_ldap.so
+	mkdir -p $(DESTDIR)$(libdir)/security
 	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) NSS_LDAP $(DESTDIR)$(libdir)/security/NSS_LDAP
 
 else

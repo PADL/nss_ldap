@@ -72,15 +72,15 @@ static char rcsId[] =
 #ifdef AT_OC_MAP
 #ifdef HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
-#else
-#ifdef HAVE_DB_185_H
+#elif defined(HAVE_DB_185_H)
 #include <db_185.h>
 #elif defined(HAVE_DB1_DB_H)
 #include <db1/db.h>
 #elif defined(HAVE_DB_H)
 #include <db.h>
-#endif /* HAVE_DB1_DB_H */
-#endif /* HAVE_DB3_DB_H */
+#else
+#error Schema mapping requires the Berkeley DB library.
+#endif /* DB */
 #endif /* AT_OC_MAP */
 
 #ifndef HAVE_SNPRINTF
@@ -595,7 +595,7 @@ do_close (void)
 static void
 do_close_no_unbind (void)
 {
-  int sd;
+  int sd = -1;
 #ifndef HAVE_LDAP_LD_FREE
   int bogusSd = -1;
 #endif /* HAVE_LDAP_LD_FREE */
@@ -799,7 +799,8 @@ do_close_no_unbind (void)
 #endif /* OPENLDAP 2.x */
 
 #else
-  close (sd);
+  if (sd > 0)
+    close (sd);
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
   (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
 #else
@@ -2994,7 +2995,6 @@ _nss_ldap_ocmap_get (ldap_config_t * config,
 }
 #endif /* AT_OC_MAP */
 
-#ifdef PROXY_AUTH
 /*
  * Proxy bind support for AIX. Very simple, but should do 
  * the job.
@@ -3073,6 +3073,8 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
   ldap_proxy_bind_args_t *proxy_args = &__proxy_args;
 #endif
 
+  debug ("==> _nss_ldap_proxy_bind");
+
   LA_INIT (args);
   LA_TYPE (args) = LA_TYPE_STRING;
   LA_STRING (args) = user;
@@ -3083,6 +3085,7 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
    */
   if (password == NULL || password[0] == '\0')
     {
+      debug ("<== _nss_ldap_proxy_bind (empty password not permitted)");
       /* XXX overload */
       return NSS_TRYAGAIN;
     }
@@ -3107,6 +3110,9 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
 	      ldap_set_rebind_proc (__session.ls_conn, do_proxy_rebind);
 #endif
+
+	      debug (":== _nss_ldap_proxy_bind: %s", proxy_args->binddn);
+
 	      rc = do_bind (__session.ls_conn,
 			    __session.ls_config->ldc_bind_timelimit,
 			    proxy_args->binddn, proxy_args->bindpw, 0);
@@ -3149,7 +3155,8 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
 
   _nss_ldap_leave ();
 
+  debug ("<== _nss_ldap_proxy_bind");
+
   return stat;
 }
 
-#endif /* PROXY_AUTH */

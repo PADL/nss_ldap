@@ -1,15 +1,34 @@
+/* Copyright (C) 2002 Luke Howard.
+   This file is part of the nss_ldap library.
+   Contributed by Luke Howard, <lukeh@padl.com>, 2002.
+
+   The nss_ldap library is free software; you can redistribute it and/or
+   modify it under the terms of the GNU Library General Public License as
+   published by the Free Software Foundation; either version 2 of the
+   License, or (at your option) any later version.
+
+   The nss_ldap library is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+   Library General Public License for more details.
+
+   You should have received a copy of the GNU Library General Public
+   License along with the nss_ldap library; see the file COPYING.LIB.  If not,
+   write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+   Boston, MA 02111-1307, USA.
+ */
 
 /*
-   Glue code to support AIX loadable authentication modules.
-
-   Note: only information functions are supported, so you need to
-   specify "options = dbonly" in /usr/lib/security/methods.cfg
-
-   (Note: the is now experimental support for authentication
-   functions - getpasswd/authenticate. This has not been tested
-   as PADL do not have access to an AIX machine.)
+ * Glue code to support AIX loadable authentication modules.
+ *
+ * Note: only information functions are supported, so you need to
+ * specify "options = dbonly" in /usr/lib/security/methods.cfg
  */
+
 #include "config.h"
+
+static char rcsId[] =
+  "$Id$";
 
 #ifdef _AIX
 
@@ -25,7 +44,6 @@
 #endif
 
 #include "ldap-nss.h"
-#include "ldap-grp.h"
 #include "globals.h"
 #include "util.h"
 
@@ -114,15 +132,17 @@ _nss_ldap_getgracct (void *id, int type)
     return _nss_ldap_getgrnam ((char *) id);
 }
 
-#ifdef PROXY_AUTH
 int
-_nss_ldap_authenticate (char *user, char *response, int **reenter,
+_nss_ldap_authenticate (char *user, char *response, int *reenter,
 			char **message)
 {
   NSS_STATUS stat;
   int rc;
 
-  *reenter = 0;
+  debug ("==> _nss_ldap_authenticate");
+
+  *reenter = FALSE;
+  *message = NULL;
 
   stat = _nss_ldap_proxy_bind (user, response);
 
@@ -130,11 +150,9 @@ _nss_ldap_authenticate (char *user, char *response, int **reenter,
     {
     case NSS_TRYAGAIN:
       rc = AUTH_FAILURE;
-      *message = "Invalid Password.\n";
       break;
     case NSS_NOTFOUND:
       rc = AUTH_NOTFOUND;
-      *message = "Unknown User.\n";
       break;
     case NSS_SUCCESS:
       rc = AUTH_SUCCESS;
@@ -142,16 +160,13 @@ _nss_ldap_authenticate (char *user, char *response, int **reenter,
     default:
     case NSS_UNAVAIL:
       rc = AUTH_UNAVAIL;
-      *message = "LDAP Unavailable.\n";
       break;
     }
 
-  if (rc == AUTH_FAILURE)
-    *reenter = 1;
+  debug ("<== _nss_ldap_authenticate");
 
   return rc;
 }
-#endif /* PROXY_AUTH */
 
 /*
  * Support this for when proxy authentication is disabled.
@@ -167,6 +182,8 @@ _nss_ldap_getpasswd (char *user)
   static char pwdbuf[32];
   char *p = NULL;
 
+  debug ("==> _nss_ldap_getpasswd");
+
   pw = _nss_ldap_getpwnam (user);
   if (pw != NULL)
     {
@@ -181,13 +198,15 @@ _nss_ldap_getpasswd (char *user)
 	}
     }
 
+  debug ("<== _nss_ldap_getpasswd");
+
   return p;
 }
 
 int
 nss_ldap_initialize (struct secmethod_table *meths)
 {
-  bzero (meths, sizeof (*meths));
+  memset (meths, 0, sizeof (*meths));
 
   /* Identification methods */
   meths->method_getpwnam = _nss_ldap_getpwnam;
@@ -202,12 +221,11 @@ nss_ldap_initialize (struct secmethod_table *meths)
   meths->method_close = _nss_ldap_close;
 
   /* Authentication methods */
-#ifdef PROXY_AUTH
   meths->method_authenticate = _nss_ldap_authenticate;
-#endif
   meths->method_getpasswd = _nss_ldap_getpasswd;
 
   return AUTH_SUCCESS;
 }
 
 #endif /* _AIX */
+

@@ -31,6 +31,14 @@
 #include <resolv.h>
 #include <pwd.h>
 
+#ifndef __P
+# if defined(__STDC__) || defined(__GNUC__)
+#  define __P(x) x
+# else
+#  define __P(x) ()
+# endif
+#endif
+
 /*
  * This is the group map class.
  */

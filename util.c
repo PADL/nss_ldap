@@ -93,8 +93,8 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 #ifdef RFC2307BIS
 #ifdef HAVE_DB3_DB_185_H
 #include <db3/db_185.h>
-#else
-#ifdef HAVE_DB_185_H
+#define DN2UID_CACHE
+#elif defined(HAVE_DB_185_H)
 #include <db_185.h>
 #define DN2UID_CACHE
 #elif defined(HAVE_DB1_DB_H)
@@ -103,7 +103,6 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 #elif defined(HAVE_DB_H)
 #include <db.h>
 #define DN2UID_CACHE
-#endif /* HAVE_DB1_DB_H */
 #endif /* HAVE_DB3_DB_H */
 
 #ifdef DN2UID_CACHE

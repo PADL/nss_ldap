@@ -5,6 +5,8 @@ $Header$
 
 	* return NSS_TRYAGAIN not NSS_NOTFOUND for insufficient
 	  buffer space in dn2uid_cache_get()
+	* support automake 1.5 and friends
+	* out of box build on AIX 4.3.3
 
 195	Luke Howard <lukeh@padl.com>
 
