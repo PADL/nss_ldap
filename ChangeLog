@@ -1,6 +1,13 @@
 $Header$
 ===============================================================
 
+174	Luke Howard <lukeh@padl.com>
+
+	* added patches from Maxim Batourine for compiling
+	  with Sun workshop compiler
+	* added notes re: 64-bit compile on Solaris from
+	  above source
+
 173	Luke Howard <lukeh@padl.com>
 
 	* notes on IRS in doc/README.IRS
