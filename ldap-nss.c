@@ -31,10 +31,12 @@ static char rcsId[] =
 #include <string.h>
 #include <stdio.h>
 #include <syslog.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 #include <lber.h>
 #include <ldap.h>
-#include <sys/socket.h>
-#include <signal.h>
 
 #ifdef GNU_NSS
 #include <nss.h>
@@ -219,16 +221,14 @@ do_open (void)
       /*
        * Otherwise we can hand back this process' global
        * LDAP session.
-       */
-
-      struct sockaddr_in sin;
-      int len, sd;
-      /*
-       * ensure we save signal handler for sigpipe and restore after
-       * ldap connection is confirmed to be up or a new connection
+       *
+       * Ensure we save signal handler for sigpipe and restore after
+       * LDAP connection is confirmed to be up or a new connection
        * is opened. This prevents Solaris nscd and other apps from
        * dying on a SIGPIPE.
        */
+      struct sockaddr_in sin;
+      int len, sd;
 #ifdef LDAP_VERSION3_API
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 #else
