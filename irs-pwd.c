@@ -25,12 +25,15 @@
 
 /* $Id$ */
 
-static void pw_close (struct irs_pw *);
-static struct passwd *pw_next (struct irs_pw *);
-static struct passwd *pw_byname (struct irs_pw *, const char *);
-static struct passwd *pw_byuid (struct irs_pw *, uid_t);
-static void pw_rewind (struct irs_pw *);
-static void pw_minimize (struct irs_pw *);
+#ifdef AIX_IRS
+void *pw_pvtinit (void);
+#endif
+IRS_EXPORT void pw_close (struct irs_pw *);
+IRS_EXPORT struct passwd *pw_next (struct irs_pw *);
+IRS_EXPORT struct passwd *pw_byname (struct irs_pw *, const char *);
+IRS_EXPORT struct passwd *pw_byuid (struct irs_pw *, uid_t);
+IRS_EXPORT void pw_rewind (struct irs_pw *);
+IRS_EXPORT void pw_minimize (struct irs_pw *);
 
 struct pvt
   {
@@ -39,44 +42,52 @@ struct pvt
     ent_context_t * state;
   };
 
-static struct passwd *
+IRS_EXPORT struct passwd *
 pw_byname (struct irs_pw *this, const char *name)
 {
   LOOKUP_NAME (name, this, filt_getpwnam, pw_attributes, _nss_ldap_parse_pw);
 }
 
-static struct passwd *
+IRS_EXPORT struct passwd *
 pw_byuid (struct irs_pw *this, uid_t uid)
 {
   LOOKUP_NUMBER (uid, this, filt_getpwuid, pw_attributes, _nss_ldap_parse_pw);
 }
 
-static void
+IRS_EXPORT void
 pw_close (struct irs_pw *this)
 {
   LOOKUP_ENDENT (this);
+#ifdef AIX_IRS
+  free (this->private);
+  free (this);
+#endif
 }
 
-static struct passwd *
+IRS_EXPORT struct passwd *
 pw_next (struct irs_pw *this)
 {
   LOOKUP_GETENT (this, filt_getpwent, pw_attributes, _nss_ldap_parse_pw);
 }
 
-static void
+IRS_EXPORT void
 pw_rewind (struct irs_pw *this)
 {
   LOOKUP_SETENT (this);
 }
 
-static void
+IRS_EXPORT void
 pw_minimize (struct irs_pw *this)
 {
 }
 
-
+#ifdef AIX_IRS
+void *
+pw_pvtinit (void)
+#else
 struct irs_pw *
 irs_ldap_pw (struct irs_acc *this)
+#endif
 {
   struct irs_pw *pw;
   struct pvt *pvt;

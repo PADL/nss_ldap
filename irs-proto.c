@@ -26,13 +26,15 @@
 
 /* $Id$ */
 
-
-static void pr_close (struct irs_pr *);
-static struct protoent *pr_byname (struct irs_pr *, const char *);
-static struct protoent *pr_bynumber (struct irs_pr *, int);
-static struct protoent *pr_next (struct irs_pr *);
-static void pr_rewind (struct irs_pr *);
-static void pr_minimize (struct irs_pr *);
+#ifdef AIX_IRS
+void *pr_pvtinit (void);
+#endif
+IRS_EXPORT void pr_close (struct irs_pr *);
+IRS_EXPORT struct protoent *pr_byname (struct irs_pr *, const char *);
+IRS_EXPORT struct protoent *pr_bynumber (struct irs_pr *, int);
+IRS_EXPORT struct protoent *pr_next (struct irs_pr *);
+IRS_EXPORT void pr_rewind (struct irs_pr *);
+IRS_EXPORT void pr_minimize (struct irs_pr *);
 
 struct pvt
   {
@@ -41,47 +43,55 @@ struct pvt
     ent_context_t * state;
   };
 
-static struct protoent *
+IRS_EXPORT struct protoent *
 pr_byname (struct irs_pr *this, const char *name)
 {
   LOOKUP_NAME (name, this, filt_getprotobyname, proto_attributes,
 	       _nss_ldap_parse_proto);
 }
 
-static struct protoent *
+IRS_EXPORT struct protoent *
 pr_bynumber (struct irs_pr *this, int num)
 {
   LOOKUP_NUMBER (num, this, filt_getprotobynumber, proto_attributes,
 		 _nss_ldap_parse_proto);
 }
 
-static void
+IRS_EXPORT void
 pr_close (struct irs_pr *this)
 {
   LOOKUP_ENDENT (this);
+#ifdef AIX_IRS
+  free (this->private);
+  free (this);
+#endif
 }
 
-static struct protoent *
+IRS_EXPORT struct protoent *
 pr_next (struct irs_pr *this)
 {
   LOOKUP_GETENT (this, filt_getprotoent, proto_attributes,
 		 _nss_ldap_parse_proto);
 }
 
-static void
+IRS_EXPORT void
 pr_rewind (struct irs_pr *this)
 {
   LOOKUP_SETENT (this);
 }
 
-static void
+IRS_EXPORT void
 pr_minimize (struct irs_pr *this)
 {
 }
 
-
+#ifdef AIX_IRS
+void *
+pr_pvtinit (void)
+#else
 struct irs_pr *
 irs_ldap_pr (struct irs_acc *this)
+#endif
 {
   struct irs_pr *pr;
   struct pvt *pvt;

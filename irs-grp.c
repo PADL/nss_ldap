@@ -27,12 +27,15 @@
 
 /* $Id$ */
 
-static void gr_close (struct irs_gr *);
-static struct group *gr_next (struct irs_gr *);
-static struct group *gr_byname (struct irs_gr *, const char *);
-static struct group *gr_bygid (struct irs_gr *, gid_t);
-static void gr_rewind (struct irs_gr *);
-static void gr_minimize (struct irs_gr *);
+#ifdef AIX_IRS
+void *gr_pvtinit (void);
+#endif
+IRS_EXPORT void gr_close (struct irs_gr *);
+IRS_EXPORT struct group *gr_next (struct irs_gr *);
+IRS_EXPORT struct group *gr_byname (struct irs_gr *, const char *);
+IRS_EXPORT struct group *gr_bygid (struct irs_gr *, gid_t);
+IRS_EXPORT void gr_rewind (struct irs_gr *);
+IRS_EXPORT void gr_minimize (struct irs_gr *);
 
 struct pvt
   {
@@ -41,44 +44,52 @@ struct pvt
     ent_context_t * state;
   };
 
-static struct group *
+IRS_EXPORT struct group *
 gr_byname (struct irs_gr *this, const char *name)
 {
   LOOKUP_NAME (name, this, filt_getgrnam, gr_attributes, _nss_ldap_parse_gr);
 }
 
-static struct group *
+IRS_EXPORT struct group *
 gr_bygid (struct irs_gr *this, gid_t gid)
 {
   LOOKUP_NUMBER (gid, this, filt_getgrgid, gr_attributes, _nss_ldap_parse_gr);
 }
 
-static void
+IRS_EXPORT void
 gr_close (struct irs_gr *this)
 {
   LOOKUP_ENDENT (this);
+#ifdef AIX_IRS
+  free (this->private);
+  free (this);
+#endif
 }
 
-static struct group *
+IRS_EXPORT struct group *
 gr_next (struct irs_gr *this)
 {
   LOOKUP_GETENT (this, filt_getgrent, gr_attributes, _nss_ldap_parse_gr);
 }
 
-static void
+IRS_EXPORT void
 gr_rewind (struct irs_gr *this)
 {
   LOOKUP_SETENT (this);
 }
 
-static void
+IRS_EXPORT void
 gr_minimize (struct irs_gr *this)
 {
 }
 
-
+#ifdef AIX_IRS
+void *
+gr_pvtinit (void)
+#else
 struct irs_gr *
 irs_ldap_gr (struct irs_acc *this)
+#endif
 {
   struct irs_gr *gr;
   struct pvt *pvt;
@@ -97,7 +108,11 @@ irs_ldap_gr (struct irs_acc *this)
   gr->next = gr_next;
   gr->byname = gr_byname;
   gr->bygid = gr_bygid;
+#ifndef AIX_IRS
   gr->list = make_group_list;
+#else
+  gr->list = NULL;
+#endif
   gr->rewind = gr_rewind;
   gr->minimize = gr_minimize;
   return gr;

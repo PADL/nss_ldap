@@ -444,7 +444,7 @@ do_open (void)
 #endif /* LDAP_VERSION3_API */
 	{
 	  void (*old_handler) (int sig);
-	  int len;
+	  size_t len;
 
 #ifdef SUN_NSS
 	  old_handler = sigset (SIGPIPE, SIG_IGN);

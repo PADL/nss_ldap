@@ -21,6 +21,7 @@
 static char rcsId[] = "$Id$";
 
 #ifdef IRS_NSS
+#ifndef AIX_IRS
 
 #include <stdlib.h>
 #include <string.h>
@@ -84,4 +85,5 @@ ldap_close (struct irs_acc *this)
 {
   free (this);
 }
-#endif
+#endif /* AIX_IRS */
+#endif /* IRS_NSS */

@@ -25,13 +25,16 @@
 
 /* $Id$ */
 
-static void sv_close (struct irs_sv *);
-static struct servent *sv_next (struct irs_sv *);
-static struct servent *sv_byname (struct irs_sv *, const char *,
+#ifdef AIX_IRS
+void *sv_pvtinit (void);
+#endif
+IRS_EXPORT void sv_close (struct irs_sv *);
+IRS_EXPORT struct servent *sv_next (struct irs_sv *);
+IRS_EXPORT struct servent *sv_byname (struct irs_sv *, const char *,
 				  const char *);
-static struct servent *sv_byport (struct irs_sv *, int, const char *);
-static void sv_rewind (struct irs_sv *);
-static void sv_minimize (struct irs_sv *);
+IRS_EXPORT struct servent *sv_byport (struct irs_sv *, int, const char *);
+IRS_EXPORT void sv_rewind (struct irs_sv *);
+IRS_EXPORT void sv_minimize (struct irs_sv *);
 
 struct pvt
   {
@@ -40,7 +43,7 @@ struct pvt
     ent_context_t * state;
   };
 
-static struct servent *
+IRS_EXPORT struct servent *
 sv_byname (struct irs_sv *this, const char *name, const char *proto)
 {
   ldap_args_t a;
@@ -68,7 +71,7 @@ sv_byname (struct irs_sv *this, const char *name, const char *proto)
   return &pvt->result;
 }
 
-static struct servent *
+IRS_EXPORT struct servent *
 sv_byport (struct irs_sv *this, int port, const char *proto)
 {
   ldap_args_t a;
@@ -96,33 +99,41 @@ sv_byport (struct irs_sv *this, int port, const char *proto)
   return &pvt->result;
 }
 
-static void
+IRS_EXPORT void
 sv_close (struct irs_sv *this)
 {
   LOOKUP_ENDENT (this);
+#ifdef AIX_IRS
+  free (this->private);
+  free (this);
+#endif
 }
 
-static struct servent *
+IRS_EXPORT struct servent *
 sv_next (struct irs_sv *this)
 {
   LOOKUP_GETENT (this, filt_getservent, serv_attributes,
 		 _nss_ldap_parse_serv);
 }
 
-static void
+IRS_EXPORT void
 sv_rewind (struct irs_sv *this)
 {
   LOOKUP_SETENT (this);
 }
 
-static void
+IRS_EXPORT void
 sv_minimize (struct irs_sv *this)
 {
 }
 
-
+#ifdef AIX_IRS
+void *
+sv_pvtinit (void)
+#else
 struct irs_sv *
 irs_ldap_sv (struct irs_acc *this)
+#endif
 {
   struct irs_sv *sv;
   struct pvt *pvt;

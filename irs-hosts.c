@@ -25,16 +25,18 @@
 
 /* $Id$ */
 
-
-static void ho_close (struct irs_ho *this);
-static struct hostent *ho_byname (struct irs_ho *this, const char *name);
-static struct hostent *ho_byname2 (struct irs_ho *this, const char *name,
+#ifdef AIX_IRS
+void *ho_pvtinit (void);
+#endif
+IRS_EXPORT void ho_close (struct irs_ho *this);
+IRS_EXPORT struct hostent *ho_byname (struct irs_ho *this, const char *name);
+IRS_EXPORT struct hostent *ho_byname2 (struct irs_ho *this, const char *name,
 				   int af);
-static struct hostent *ho_byaddr (struct irs_ho *this, const void *addr,
+IRS_EXPORT struct hostent *ho_byaddr (struct irs_ho *this, const void *addr,
 				  int len, int af);
-static struct hostent *ho_next (struct irs_ho *this);
-static void ho_rewind (struct irs_ho *this);
-static void ho_minimize (struct irs_ho *this);
+IRS_EXPORT struct hostent *ho_next (struct irs_ho *this);
+IRS_EXPORT void ho_rewind (struct irs_ho *this);
+IRS_EXPORT void ho_minimize (struct irs_ho *this);
 
 
 static const u_char mapped[] =
@@ -49,7 +51,7 @@ struct pvt
     ent_context_t * state;
   };
 
-static struct hostent *
+IRS_EXPORT struct hostent *
 ho_byname (struct irs_ho *this, const char *name)
 {
   NSS_STATUS s;
@@ -77,7 +79,7 @@ ho_byname (struct irs_ho *this, const char *name)
   return &pvt->result;
 }
 
-static struct hostent *
+IRS_EXPORT struct hostent *
 ho_byaddr (struct irs_ho *this, const void *addr, int len, int af)
 {
   struct pvt *pvt = (struct pvt *) this->private;
@@ -123,13 +125,17 @@ ho_byaddr (struct irs_ho *this, const void *addr, int len, int af)
   return &pvt->result;
 }
 
-static void
+IRS_EXPORT void
 ho_close (struct irs_ho *this)
 {
   LOOKUP_ENDENT (this);
+#ifdef AIX_IRS
+  free (this->private);
+  free (this);
+#endif
 }
 
-static struct hostent *
+IRS_EXPORT struct hostent *
 ho_next (struct irs_ho *this)
 {
   struct pvt *pvt = (struct pvt *) this->private;
@@ -152,19 +158,24 @@ ho_next (struct irs_ho *this)
   return &pvt->result;
 }
 
-static void
+IRS_EXPORT void
 ho_rewind (struct irs_ho *this)
 {
   LOOKUP_SETENT (this);
 }
 
-static void
+IRS_EXPORT void
 ho_minimize (struct irs_ho *this)
 {
 }
 
+#ifdef AIX_IRS
+void *
+ho_pvtinit (void)
+#else
 struct irs_ho *
 irs_ldap_ho (struct irs_acc *this)
+#endif
 {
   struct irs_ho *ho;
   struct pvt *pvt;

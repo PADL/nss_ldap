@@ -78,6 +78,7 @@ size_t _nss_ldap_herrno2nssstat_tab_count =
  sizeof (_nss_ldap_herrno2nssstat_tab[0]));
 
 #ifdef IRS_NSS
+#ifdef __GNUC__
 int _nss_ldap_errno2nssstat_tab[] =
 {
   [NSS_SUCCESS] = 0,
@@ -85,6 +86,15 @@ int _nss_ldap_errno2nssstat_tab[] =
   [NSS_NOTFOUND] = ENOENT,
   [NSS_UNAVAIL] = EPERM
 };
+#else
+int _nss_ldap_errno2nssstat_tab[] =
+{
+  0,
+  ERANGE,
+  ENOENT,
+  EPERM
+};
+#endif
 
 size_t _nss_ldap_errno2nssstat_tab_count =
 (sizeof (_nss_ldap_errno2nssstat_tab) /

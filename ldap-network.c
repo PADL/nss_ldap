@@ -27,7 +27,9 @@ static char rcsId[] =
 "$Id$";
 
 #ifdef IRS_NSS
+#ifndef AIX_IRS
 #include <port_before.h>
+#endif
 #endif
 
 #ifdef SUN_NSS
@@ -61,7 +63,9 @@ static char rcsId[] =
 
 #ifdef IRS_NSS
 #include <irs.h>
+#ifndef AIX_IRS
 #include <port_after.h>
+#endif
 
 #define MAXALIASES 35
 #define MAXADDRSIZE 4

@@ -25,13 +25,15 @@
 
 /* $Id$ */
 
-
-static void nw_close (struct irs_nw *);
-static struct nwent *nw_byname (struct irs_nw *, const char *, int);
-static struct nwent *nw_byaddr (struct irs_nw *, void *, int, int);
-static struct nwent *nw_next (struct irs_nw *);
-static void nw_rewind (struct irs_nw *);
-static void nw_minimize (struct irs_nw *);
+#ifdef AIX_IRS
+void *nw_pvtinit (void);
+#endif
+IRS_EXPORT void nw_close (struct irs_nw *);
+IRS_EXPORT struct nwent *nw_byname (struct irs_nw *, const char *, int);
+IRS_EXPORT struct nwent *nw_byaddr (struct irs_nw *, void *, int, int);
+IRS_EXPORT struct nwent *nw_next (struct irs_nw *);
+IRS_EXPORT void nw_rewind (struct irs_nw *);
+IRS_EXPORT void nw_minimize (struct irs_nw *);
 
 struct pvt
   {
@@ -40,7 +42,7 @@ struct pvt
     ent_context_t * state;
   };
 
-static struct nwent *
+IRS_EXPORT struct nwent *
 nw_byname (struct irs_nw *this, const char *name, int af)
 {
   NSS_STATUS s;
@@ -75,7 +77,7 @@ nw_byname (struct irs_nw *this, const char *name, int af)
   return &pvt->result;
 }
 
-static struct nwent *
+IRS_EXPORT struct nwent *
 nw_byaddr (struct irs_nw *this, void *net, int length, int af)
 {
   ldap_args_t a;
@@ -134,13 +136,17 @@ nw_byaddr (struct irs_nw *this, void *net, int length, int af)
   return &pvt->result;
 }
 
-static void
+IRS_EXPORT void
 nw_close (struct irs_nw *this)
 {
   LOOKUP_ENDENT (this);
+#ifdef AIX_IRS
+  free (this->private);
+  free (this);
+#endif
 }
 
-static struct nwent *
+IRS_EXPORT struct nwent *
 nw_next (struct irs_nw *this)
 {
   struct pvt *pvt = (struct pvt *) this->private;
@@ -162,19 +168,24 @@ nw_next (struct irs_nw *this)
   return &pvt->result;
 }
 
-static void
+IRS_EXPORT void
 nw_rewind (struct irs_nw *this)
 {
   LOOKUP_SETENT (this);
 }
 
-static void
+IRS_EXPORT void
 nw_minimize (struct irs_nw *this)
 {
 }
 
+#ifdef AIX_IRS
+void *
+nw_pvtinit (void)
+#else
 struct irs_nw *
 irs_ldap_nw (struct irs_acc *this)
+#endif
 {
   struct irs_nw *nw;
   struct pvt *pvt;

@@ -31,6 +31,16 @@
 #include <pthread.h>
 #endif /* GNU_NSS */
 
+#ifdef __STDC__
+#ifndef __P
+#define __P(x)  x
+#endif
+#else
+#ifndef __P
+#define __P(x)  ()
+#endif
+#endif /* __STDC__ */
+
 /*
  * Timeouts for reconnecting code. Similar to rebind
  * logic in Darwin NetInfo. Some may find sleeping
@@ -43,17 +53,35 @@
 #define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
 
 #ifdef DEBUG
-#ifdef DEBUG_SYSLOG
-#ifdef SUN_NSS
-#define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, thr_self() , ## args);
+# ifdef DEBUG_SYSLOG
+#  ifdef SUN_NSS
+#   define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, thr_self() , ## args);
+#  else
+#   define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, pthread_self() , ## args)
+#  endif /* SUN_NSS */
+# else
+#  ifdef AIX_IRS
+#   include <stdarg.h>
+static void debug(char *fmt, ...)
+{
+	va_list ap;
+
+	va_start(ap, fmt);
+	fprintf(stderr, "nss_ldap: ");
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	fprintf(stderr, "\n");
+}
+#  else
+#   define debug(fmt, args...) fprintf(stderr, "nss_ldap: " fmt "\n" , ## args)
+#  endif /* AIX_IRS */
+# endif /* DEBUG_SYSLOG */
 #else
-#define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, pthread_self() , ## args)
-#endif /* SUN_NSS */
-#else
-#define debug(fmt, args...) fprintf(stderr, "nss_ldap: " fmt "\n" , ## args)
-#endif /* DEBUG_SYSLOG */
-#else
-#define debug(fmt, args...)
+# ifdef AIX_IRS
+static void debug(char *fmt, ...) {}
+# else
+#  define debug(fmt, args...)
+# endif /* AIX_IRS */
 #endif /* DEBUG */
 
 #ifdef __GNUC__

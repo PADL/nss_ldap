@@ -25,13 +25,13 @@
 #define _LDAP_NSS_LDAP_IRS_H
 
 #ifdef IRS_NSS
-
-/* This header is only needed when using the BSD Information 
+/*
+ * This header is only needed when using the BSD Information 
  * Retrieval Service. It is not necessary for the Solaris or
  * GNU nameservice switch modules.
  */
-
 #include <irs.h>
+#ifndef AIX_IRS
 #include <irs_p.h>
 
 extern struct irs_gr *irs_ldap_gr __P ((struct irs_acc *));
@@ -48,7 +48,13 @@ extern struct irs_ng *irs_ldap_ng __P ((struct irs_acc *));
 
 extern struct irs_acc *irs_ldap_acc __P ((const char *));
 
-/* These lengths were derived from the Solaris headers.
+#define IRS_EXPORT static
+#else
+#define IRS_EXPORT
+#endif /* AIX_IRS */
+
+/*
+ * These lengths were derived from the Solaris headers.
  * Copyright (c) 1992, by Sun Microsystems, Inc.
  */
 

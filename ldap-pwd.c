@@ -23,7 +23,9 @@ static char rcsId[] =
 "$Id$";
 
 #ifdef IRS_NSS
+#ifndef AIX_IRS
 #include <port_before.h>
+#endif
 #endif
 
 #ifdef SUN_NSS
@@ -52,7 +54,9 @@ static char rcsId[] =
 #include "util.h"
 
 #ifdef IRS_NSS
+#ifndef AIX_IRS
 #include <port_after.h>
+#endif
 #endif
 
 #ifdef GNU_NSS

@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+119	Luke Howard <lukeh@padl.com>
+
+	* patch from Gabor Gombas <gombasg@inf.elte.hu>
+	  to support AIX implementation of BIND IRS
+
 118	Luke Howard <lukeh@padl.com>
 
 	* Makefile.RPM.openldap2 from Joe Little
