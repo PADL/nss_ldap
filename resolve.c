@@ -119,6 +119,7 @@ parse_reply (unsigned char *data, int len)
   unsigned char *p;
   char host[128];
   int status;
+  int query, response;
 
   struct dns_reply *r;
   struct resource_record **rr;
@@ -129,6 +130,7 @@ parse_reply (unsigned char *data, int len)
 #else
   memset (r, 0, sizeof (struct dns_reply));
 #endif
+  r->q.domain = NULL;
 
   p = data;
 #ifdef NeXT
@@ -137,22 +139,32 @@ parse_reply (unsigned char *data, int len)
   memcpy (&r->h, p, sizeof (HEADER));
 #endif
   p += sizeof (HEADER);
-  status = dn_expand (data, data + len, p, host, sizeof (host));
-  if (status < 0)
+  for (query = 0; query < ntohs(r->h.qdcount); query++)
     {
-      dns_free_data (r);
-      return NULL;
+      status = dn_expand (data, data + len, p, host, sizeof (host));
+      if (status < 0)
+        {
+          dns_free_data (r);
+          return NULL;
+        }
+      p += status;
+      if (p + 4 > data + len)
+        {
+          dns_free_data (r);
+          return NULL;
+        }
+      if (r->q.domain == NULL)
+        {
+          r->q.domain = strdup (host);
+          r->q.type = (p[0] << 8 | p[1]);
+          r->q.class = (p[2] << 8 | p[3]);
+        }
+      p += 4;
     }
-  r->q.domain = strdup (host);
-  p += status;
-  r->q.type = (p[0] << 8 | p[1]);
-  p += 2;
-  r->q.class = (p[0] << 8 | p[1]);
-  p += 2;
   rr = &r->head;
-  while (p < data + len)
+  for (response = 0; (response < ntohs(r->h.ancount)) && (p < data + len); response++)
     {
-      int type, class, ttl, size;
+      unsigned int type, class, ttl, size;
       status = dn_expand (data, data + len, p, host, sizeof (host));
       if (status < 0)
 	{
@@ -160,6 +172,11 @@ parse_reply (unsigned char *data, int len)
 	  return NULL;
 	}
       p += status;
+      if (p + 10 > data + len)
+        {
+          dns_free_data (r);
+          return NULL;
+        }
       type = (p[0] << 8) | p[1];
       p += 2;
       class = (p[0] << 8) | p[1];
@@ -168,6 +185,11 @@ parse_reply (unsigned char *data, int len)
       p += 4;
       size = (p[0] << 8) | p[1];
       p += 2;
+      if (p + size > data + len)
+        {
+          dns_free_data (r);
+          return NULL;
+        }
       *rr = (struct resource_record *) calloc (1,
 					       sizeof (struct
 						       resource_record));
@@ -192,6 +214,11 @@ parse_reply (unsigned char *data, int len)
 	case T_MX:
 	case T_AFSDB:
 	  {
+            if (p + 2 > data + len)
+              {
+                dns_free_data (r);
+                return NULL;
+              }
 	    status = dn_expand (data, data + len, p + 2, host, sizeof (host));
 	    if (status < 0)
 	      {
@@ -208,6 +235,11 @@ parse_reply (unsigned char *data, int len)
 	  }
 	case T_SRV:
 	  {
+            if (p + 6 > data + len)
+              {
+                dns_free_data (r);
+                return NULL;
+              }
 	    status = dn_expand (data, data + len, p + 6, host, sizeof (host));
 	    if (status < 0)
 	      {
@@ -225,6 +257,11 @@ parse_reply (unsigned char *data, int len)
 	  }
 	case T_TXT:
 	  {
+            if (p + *p > data + len)
+              {
+                dns_free_data (r);
+                return NULL;
+              }
 	    (*rr)->u.txt = (char *) malloc (size + 1);
 	    strncpy ((*rr)->u.txt, (char *) p + 1, *p);
 	    (*rr)->u.txt[*p] = 0;
@@ -251,15 +288,28 @@ parse_reply (unsigned char *data, int len)
 struct dns_reply *
 dns_lookup (const char *domain, const char *type_name)
 {
-  unsigned char reply[1024];
-  int len;
+  unsigned char *reply = NULL;
+  int len, rlen;
   int type;
   struct dns_reply *r = NULL;
 
   type = string_to_type (type_name);
-  len = res_search (domain, C_IN, type, reply, sizeof (reply));
+  rlen = 1024;
+  reply = malloc(rlen);
+  do
+    {
+      len = res_search (domain, C_IN, type, reply, rlen);
+      if ((len == -1) || (len < rlen))
+        {
+          break;
+        }
+      reply = realloc (reply, len + 1024);
+      rlen = len + 1024;
+    }
+  while (1);
   if (len >= 0)
     r = parse_reply (reply, len);
+  free(reply);
   return r;
 }
 

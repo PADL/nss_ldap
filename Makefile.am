@@ -77,8 +77,7 @@ if HPUX
 	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/libnss_ldap.1
 else
 	$(INSTALL_PROGRAM) -o $(INST_UID) -g $(INST_GID) nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.so.1
-	-rm -f $(DESTDIR)$(libdir)/nss_ldap.so
-	-ln -s $(DESTDIR)$(libdir)/nss_ldap.so.1 $(DESTDIR)$(libdir)/nss_ldap.so
+	(cd $(DESTDIR)$(libdir); rm -f nss_ldap.so; ln -s nss_ldap.so.1 nss_ldap.so)
 endif
 endif
 

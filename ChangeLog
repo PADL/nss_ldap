@@ -9,6 +9,9 @@ $Header$
 	* export required symbols only on Linux
 	* corrected symbol names for glibc alias enumeration
 	  functions
+	* the DNS response parser doesn't stop after parsing the
+	  right number of records, and doesn't handle long responses
+	  (Nalin at RedHat)
 
 198	 Luke Howard <lukeh@padl.com>
 

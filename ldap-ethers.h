@@ -42,11 +42,13 @@ struct ether
   struct ether_addr e_addr;
 };
 
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 static NSS_STATUS _nss_ldap_parse_ether (LDAP * ld,
 					 LDAPMessage * e,
 					 ldap_state_t * pvt,
 					 void *result,
 					 char *buffer, size_t buflen);
+#endif
 
 #ifdef HAVE_NSSWITCH_H
 static NSS_STATUS _nss_ldap_gethostton_r (nss_backend_t * be, void *fakeargs);
