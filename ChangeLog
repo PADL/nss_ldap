@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+225	Luke Howard <lukeh@padl.com>
+
+	* make LDAP_NSS_NGROUPS 64 - better choice for
+	  small directories
+
 224	Luke Howard <lukeh@padl.com>
 
 	* don't double-free on realloc() failure in
