@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1996, 1997 Free Software Foundation, Inc.
    This file is part of the GNU C Library.
 
@@ -33,13 +34,13 @@ extern const char *const __nss_shlib_revision;
 
 /* Possible results of lookup using a nss_* function.  */
 enum nss_status
-{
-  NSS_STATUS_TRYAGAIN = -2,
-  NSS_STATUS_UNAVAIL,
-  NSS_STATUS_NOTFOUND,
-  NSS_STATUS_SUCCESS,
-  NSS_STATUS_RETURN
-};
+  {
+    NSS_STATUS_TRYAGAIN = -2,
+    NSS_STATUS_UNAVAIL,
+    NSS_STATUS_NOTFOUND,
+    NSS_STATUS_SUCCESS,
+    NSS_STATUS_RETURN
+  };
 
 
 /* Overwrite service selection for database DBNAME using specification
@@ -49,7 +50,7 @@ enum nss_status
    Attention: Using this function repeatedly will slowly eat up the
    whole memory since previous selection data cannot be freed.  */
 extern int __nss_configure_lookup (__const char *__dbname,
-					__const char *__string);
+				   __const char *__string);
 
 
 #endif /* nss.h */

@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -24,9 +25,9 @@
 #define _LDAP_NSS_LDAP_LDAP_PROTO_H
 
 /*
-	Determine the canonical name of the protocol with _nss_ldap_getrdnvalue(),
-	and assign any values of "cn" which do NOT match this canonical name 
-	as aliases.
+   Determine the canonical name of the protocol with _nss_ldap_getrdnvalue(),
+   and assign any values of "cn" which do NOT match this canonical name 
+   as aliases.
  */
 
 #define LDAP_CLASS_PROTOCOL             "ipProtocol"
@@ -34,35 +35,34 @@
 #define LDAP_ATTR_PROTOCOLNUMBER        "ipProtocolNumber"
 
 static const char *proto_attributes[] =
-        { LDAP_ATTR_PROTOCOLNAME, LDAP_ATTR_PROTOCOLNUMBER,
-          NULL };
+{LDAP_ATTR_PROTOCOLNAME, LDAP_ATTR_PROTOCOLNUMBER,
+ NULL};
 
 static const char filt_getprotobyname[] =
-        "(&(objectclass="LDAP_CLASS_PROTOCOL")("LDAP_ATTR_PROTOCOLNAME"=%s))";
+"(&(objectclass=" LDAP_CLASS_PROTOCOL ")(" LDAP_ATTR_PROTOCOLNAME "=%s))";
 static const char filt_getprotobynumber[] =
-        "(&(objectclass="LDAP_CLASS_PROTOCOL")("LDAP_ATTR_PROTOCOLNUMBER"=%d))";
+"(&(objectclass=" LDAP_CLASS_PROTOCOL ")(" LDAP_ATTR_PROTOCOLNUMBER "=%d))";
 static const char filt_getprotoent[] =
-        "(objectclass="LDAP_CLASS_PROTOCOL")";
+"(objectclass=" LDAP_CLASS_PROTOCOL ")";
 
-static NSS_STATUS _nss_ldap_parse_proto(
-	LDAP *ld,
-	LDAPMessage *e,
-	ldap_state_t *pvt,
-	void *result,
-	char *buffer,
-	size_t buflen);
+static NSS_STATUS _nss_ldap_parse_proto (
+					  LDAP * ld,
+					  LDAPMessage * e,
+					  ldap_state_t * pvt,
+					  void *result,
+					  char *buffer,
+					  size_t buflen);
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getprotobyname_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getprotobynumber_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_setprotoent_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_endprotoent_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getprotoent_r(nss_backend_t *be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getprotobyname_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getprotobynumber_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_setprotoent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_endprotoent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getprotoent_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_protocols_constr(const char *db_name,
-        const char *src_name,
-        const char *cfg_args);
+nss_backend_t *_nss_ldap_protocols_constr (const char *db_name,
+					   const char *src_name,
+					   const char *cfg_args);
 #endif /* SUN_NSS */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_PROTO_H */
-

@@ -41,4 +41,3 @@ extern void *_nss_ldap_libc_handle;
 #endif
 
 #endif /* _LDAP_NSS_LDAP_GLOBAL_H */
-

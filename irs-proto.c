@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -26,79 +27,79 @@
 /* $Id$ */
 
 
-static void                     pr_close(struct irs_pr *);
-static struct protoent *        pr_byname(struct irs_pr *, const char *);
-static struct protoent *        pr_bynumber(struct irs_pr *, int);
-static struct protoent *        pr_next(struct irs_pr *);
-static void                     pr_rewind(struct irs_pr *);
-static void                     pr_minimize(struct irs_pr *);
+static void pr_close (struct irs_pr *);
+static struct protoent *pr_byname (struct irs_pr *, const char *);
+static struct protoent *pr_bynumber (struct irs_pr *, int);
+static struct protoent *pr_next (struct irs_pr *);
+static void pr_rewind (struct irs_pr *);
+static void pr_minimize (struct irs_pr *);
 
 struct pvt
-{
-	struct protoent result;
-	char buffer[NSS_BUFLEN_PROTOCOLS];
-	context_handle_t state;
-};
+  {
+    struct protoent result;
+    char buffer[NSS_BUFLEN_PROTOCOLS];
+    context_handle_t state;
+  };
 
 static struct protoent *
-pr_byname(struct irs_pr *this, const char *name)
+pr_byname (struct irs_pr *this, const char *name)
 {
-	LOOKUP_NAME(name, this, filt_getprotobyname, proto_attributes, _nss_ldap_parse_proto);
-}
-
-static struct protoent *
-pr_bynumber(struct irs_pr *this, int num)
-{
-	LOOKUP_NUMBER(num, this, filt_getprotobynumber, proto_attributes, _nss_ldap_parse_proto);
-}
-
-static void
-pr_close(struct irs_pr *this)
-{
-	LOOKUP_ENDENT(this);
+  LOOKUP_NAME (name, this, filt_getprotobyname, proto_attributes, _nss_ldap_parse_proto);
 }
 
 static struct protoent *
-pr_next(struct irs_pr *this)
+pr_bynumber (struct irs_pr *this, int num)
 {
-	LOOKUP_GETENT(this, filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
+  LOOKUP_NUMBER (num, this, filt_getprotobynumber, proto_attributes, _nss_ldap_parse_proto);
 }
 
 static void
-pr_rewind(struct irs_pr *this)
+pr_close (struct irs_pr *this)
 {
-	LOOKUP_SETENT(this);
+  LOOKUP_ENDENT (this);
+}
+
+static struct protoent *
+pr_next (struct irs_pr *this)
+{
+  LOOKUP_GETENT (this, filt_getprotoent, proto_attributes, _nss_ldap_parse_proto);
 }
 
 static void
-pr_minimize(struct irs_pr *this)
+pr_rewind (struct irs_pr *this)
+{
+  LOOKUP_SETENT (this);
+}
+
+static void
+pr_minimize (struct irs_pr *this)
 {
 }
 
 
 struct irs_pr *
-irs_ldap_pr(struct irs_acc *this)
+irs_ldap_pr (struct irs_acc *this)
 {
-	struct irs_pr *pr;
-	struct pvt *pvt;
+  struct irs_pr *pr;
+  struct pvt *pvt;
 
-	pr = calloc(1, sizeof(*pr));
-	if (pr == NULL)
-		return NULL;
+  pr = calloc (1, sizeof (*pr));
+  if (pr == NULL)
+    return NULL;
 
-	pvt = calloc(1, sizeof(*pvt));
-	if (pvt == NULL)
-		return NULL;
+  pvt = calloc (1, sizeof (*pvt));
+  if (pvt == NULL)
+    return NULL;
 
-	pvt->state = NULL;
-	pr->private = pvt;
-	pr->close = pr_close;
-	pr->next = pr_next;
-	pr->byname = pr_byname;
-	pr->bynumber = pr_bynumber;
-	pr->rewind = pr_rewind;
-	pr->minimize = pr_minimize;
-	return pr;	
+  pvt->state = NULL;
+  pr->private = pvt;
+  pr->close = pr_close;
+  pr->next = pr_next;
+  pr->byname = pr_byname;
+  pr->bynumber = pr_bynumber;
+  pr->rewind = pr_rewind;
+  pr->minimize = pr_minimize;
+  return pr;
 }
 
-#endif /*IRS_NSS*/
+#endif /*IRS_NSS */

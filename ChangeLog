@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+2.69	Luke Howard <lukeh@padl.com>
+
+	* added timeout, unavailable, and server busy 
+	  conditions to rebind logic
+	* indent -gnu all source files
+
 2.68	Luke Howard <lukeh@padl.com>
 
 	* mods for glibc 2.1 (__set_errno is obselete it seems)

@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -34,51 +35,51 @@
 #define LDAP_ATTR_ETHERADDR		"macAddress"
 
 static const char *ether_attributes[] =
-        { LDAP_ATTR_HOSTNAME, LDAP_ATTR_ETHERADDR, NULL };
+{LDAP_ATTR_HOSTNAME, LDAP_ATTR_ETHERADDR, NULL};
 
-static const char filt_gethostton[] = /* opt filter on null macaddress? */
-        "(&(objectclass="LDAP_CLASS_HOST")("LDAP_ATTR_HOSTNAME"=%s))";
+static const char filt_gethostton[] =	/* opt filter on null macaddress? */
+"(&(objectclass=" LDAP_CLASS_HOST ")(" LDAP_ATTR_HOSTNAME "=%s))";
 static const char filt_getntohost[] =
-        "(&(objectclass="LDAP_CLASS_HOST")("LDAP_ATTR_ETHERADDR"=%s))";
+"(&(objectclass=" LDAP_CLASS_HOST ")(" LDAP_ATTR_ETHERADDR "=%s))";
 static const char filt_getetherent[] =
-        "(objectclass="LDAP_CLASS_HOST")";
+"(objectclass=" LDAP_CLASS_HOST ")";
 
 
 struct ether
-{
-	char *e_name;
-	struct ether_addr e_addr;
-};
+  {
+    char *e_name;
+    struct ether_addr e_addr;
+  };
 
 /*
-typedef u_char ether_addr_t[6];
-struct ether_addr {
-        u_char  ether_addr_octet[6];
-};
+   typedef u_char ether_addr_t[6];
+   struct ether_addr {
+   u_char  ether_addr_octet[6];
+   };
  */
 
-static NSS_STATUS _nss_ldap_parse_ether(
-	LDAP *ld,
-	LDAPMessage *e,
-	ldap_state_t *pvt,
-	void *result,
-	char *buffer,
-	size_t buflen);
+static NSS_STATUS _nss_ldap_parse_ether (
+					  LDAP * ld,
+					  LDAPMessage * e,
+					  ldap_state_t * pvt,
+					  void *result,
+					  char *buffer,
+					  size_t buflen);
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_gethostton_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getntohost_r(nss_backend_t *be, void *fakeargs);
+static NSS_STATUS _nss_ldap_gethostton_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getntohost_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_ethers_constr(const char *db_name,
-        const char *src_name,
-        const char *cfg_args);
+nss_backend_t *_nss_ldap_ethers_constr (const char *db_name,
+					const char *src_name,
+					const char *cfg_args);
 
 #elif defined(GNU_NSS)
 /* for the record */
 NSS_STATUS _nss_ldap_gethostton_r (const char *name, struct ether *eth,
-                       char *buffer, size_t buflen, int *errnop);
+				   char *buffer, size_t buflen, int *errnop);
 NSS_STATUS _nss_ldap_getntohost_r (struct ether_addr *addr, struct ether *eth,
-                       char *buffer, size_t buflen, int *errnop);
+				   char *buffer, size_t buflen, int *errnop);
 NSS_STATUS _nss_ldap_endetherent (void);
 NSS_STATUS _nss_ldap_setetherent (void);
 NSS_STATUS _nss_ldap_getetherent_r (struct ether *result, char *buffer, size_t buflen, int *errnop);
@@ -86,4 +87,3 @@ NSS_STATUS _nss_ldap_getetherent_r (struct ether *result, char *buffer, size_t b
 
 
 #endif /* _LDAP_NSS_LDAP_LDAP_ETHERS_H */
-

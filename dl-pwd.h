@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -23,25 +24,24 @@
 
 #include "ldap-nss.h"
 
-NSS_STATUS _nss_ldap_getpwnam_r(
-        const char *name,
-        struct passwd *result,
-        char *buffer,
-        size_t buflen);
+NSS_STATUS _nss_ldap_getpwnam_r (
+				  const char *name,
+				  struct passwd *result,
+				  char *buffer,
+				  size_t buflen);
 
-NSS_STATUS _nss_ldap_getpwuid_r(
-        uid_t uid,
-        struct passwd *result,
-        char *buffer,
-        size_t buflen);
+NSS_STATUS _nss_ldap_getpwuid_r (
+				  uid_t uid,
+				  struct passwd *result,
+				  char *buffer,
+				  size_t buflen);
 
-NSS_STATUS _nss_ldap_setpwent_r(void);
-NSS_STATUS _nss_ldap_endpwent_r(void);
+NSS_STATUS _nss_ldap_setpwent_r (void);
+NSS_STATUS _nss_ldap_endpwent_r (void);
 
-NSS_STATUS _nss_ldap_getpwent_r(
-        struct passwd *result,
-        char *buffer,
-        size_t buflen);
+NSS_STATUS _nss_ldap_getpwent_r (
+				  struct passwd *result,
+				  char *buffer,
+				  size_t buflen);
 
 #endif
-

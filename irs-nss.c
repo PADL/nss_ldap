@@ -37,53 +37,52 @@ static char rcsId[] = "$Id$";
 #include "util.h"
 
 static void
-ldap_close(struct irs_acc *this);
+  ldap_close (struct irs_acc *this);
 
 /* Dispatch table for IRS LDAP module */
 
 struct irs_acc *
-irs_ldap_acc(const char *options)
+irs_ldap_acc (const char *options)
 {
-	struct irs_acc *acc;
+  struct irs_acc *acc;
 
-	if (!(acc = malloc(sizeof(*acc))))
-		{
-		errno = ENOMEM;
-		return NULL;
-		}
+  if (!(acc = malloc (sizeof (*acc))))
+    {
+      errno = ENOMEM;
+      return NULL;
+    }
 
-	memset(acc, 0x5e, sizeof *acc);
+  memset (acc, 0x5e, sizeof *acc);
 
-	/* private stuff gets kept as static in ldap-nss.c. */
-	acc->private = NULL;
+  /* private stuff gets kept as static in ldap-nss.c. */
+  acc->private = NULL;
 
-	acc->gr_map = irs_ldap_gr;
+  acc->gr_map = irs_ldap_gr;
 #ifdef WANT_IRS_PW
-	acc->pw_map = irs_ldap_pw;
+  acc->pw_map = irs_ldap_pw;
 #endif
-	acc->sv_map = irs_ldap_sv;
-	acc->pr_map = irs_ldap_pr;
-	acc->ho_map = irs_ldap_ho;
-	acc->nw_map = irs_ldap_nw;
+  acc->sv_map = irs_ldap_sv;
+  acc->pr_map = irs_ldap_pr;
+  acc->ho_map = irs_ldap_ho;
+  acc->nw_map = irs_ldap_nw;
 
-	/* haven't done netgroups yet */
+  /* haven't done netgroups yet */
 #if 0
-	acc->ng_map = irs_ldap_ng;
+  acc->ng_map = irs_ldap_ng;
 #else
-	acc->ng_map = NULL;
+  acc->ng_map = NULL;
 #endif
 
-	acc->close = ldap_close;
+  acc->close = ldap_close;
 
-	return (acc);
+  return (acc);
 }
 
 /* Methods */
 
 static void
-ldap_close(struct irs_acc *this)
+ldap_close (struct irs_acc *this)
 {
-	free(this);
+  free (this);
 }
 #endif
-

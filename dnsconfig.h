@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -25,16 +26,16 @@
 
 /* utility routines.  */
 
-NSS_STATUS _nss_ldap_getdnsdn(
-        char *domain,
-        char **rval,
-        char **buffer,
-        size_t *buflen);
+NSS_STATUS _nss_ldap_getdnsdn (
+				char *domain,
+				char **rval,
+				char **buffer,
+				size_t * buflen);
 
-NSS_STATUS _nss_ldap_readconfigfromdns(
-        ldap_config_t **result,
-        char *buf,
-        size_t buflen);
+NSS_STATUS _nss_ldap_readconfigfromdns (
+					 ldap_config_t ** result,
+					 char *buf,
+					 size_t buflen);
 
 /* 
  * The symbolic name of the desired service, as defined in Assigned

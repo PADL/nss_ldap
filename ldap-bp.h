@@ -29,41 +29,40 @@
 
 /* I'm guessing here. This is certainly wrong. */
 struct bootparams
-{
-	char *bp_name;
-	char **bp_params;
-};
+  {
+    char *bp_name;
+    char **bp_params;
+  };
 
 static const char *bp_attributes[] =
-        { LDAP_ATTR_HOSTNAME, LDAP_ATTR_BOOTPARAM, NULL };
+{LDAP_ATTR_HOSTNAME, LDAP_ATTR_BOOTPARAM, NULL};
 
-static const char filt_getbootparamsbyname[] = 
-        "(&(objectclass="LDAP_CLASS_HOST")("LDAP_ATTR_HOSTNAME"=%s))";
+static const char filt_getbootparamsbyname[] =
+"(&(objectclass=" LDAP_CLASS_HOST ")(" LDAP_ATTR_HOSTNAME "=%s))";
 
-static NSS_STATUS _nss_ldap_parse_bp(
-	LDAP *ld,
-	LDAPMessage *e,
-	ldap_state_t *pvt,
-	void *result,
-	char *buffer,
-	size_t buflen);
+static NSS_STATUS _nss_ldap_parse_bp (
+				       LDAP * ld,
+				       LDAPMessage * e,
+				       ldap_state_t * pvt,
+				       void *result,
+				       char *buffer,
+				       size_t buflen);
 
 #ifdef SUN_NSS
 
 /*
-int parse_bootparams_entry(const char *bp_entry,
-    char **bp_uniquehostname, char **bp_sharedhostname,
-    char **bp_rootpath, char **bp_swappath, char **bp_dumppath,
-    char **bp_execpath, char **bp_kvmpath);
+   int parse_bootparams_entry(const char *bp_entry,
+   char **bp_uniquehostname, char **bp_sharedhostname,
+   char **bp_rootpath, char **bp_swappath, char **bp_dumppath,
+   char **bp_execpath, char **bp_kvmpath);
  */
 
-static NSS_STATUS _nss_ldap_getbootparamsbyname_r(nss_backend_t *be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_bootparams_constr(const char *db_name,
-        const char *src_name,
-        const char *cfg_args);
+nss_backend_t *_nss_ldap_bootparams_constr (const char *db_name,
+					    const char *src_name,
+					    const char *cfg_args);
 
 #endif
 
 #endif /* _LDAP_NSS_LDAP_LDAP_BP_H */
-

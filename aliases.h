@@ -45,17 +45,17 @@ extern void endaliasent __P ((void));
 extern struct aliasent *getaliasent __P ((void));
 
 /* Get the next entry from the alias data base and put it in RESULT_BUF.  */
-extern int getaliasent_r __P ((struct aliasent *__result_buf, char *__buffer,
-                               size_t __buflen, struct aliasent **__result));
+extern int getaliasent_r __P ((struct aliasent * __result_buf, char *__buffer,
+			     size_t __buflen, struct aliasent ** __result));
 
 /* Get alias entry corresponding to NAME.  */
 extern struct aliasent *getaliasbyname __P ((__const char *__name));
 
 /* Get alias entry corresponding to NAME and put it in RESULT_BUF.  */
 extern int getaliasbyname_r __P ((__const char *__name,
-                                  struct aliasent *__result_buf,
-                                  char *__buffer, size_t __buflen,
-                                  struct aliasent **__result));
+				  struct aliasent * __result_buf,
+				  char *__buffer, size_t __buflen,
+				  struct aliasent ** __result));
 
 __END_DECLS
 

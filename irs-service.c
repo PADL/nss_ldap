@@ -25,112 +25,114 @@
 
 /* $Id$ */
 
-static void                     sv_close(struct irs_sv*);
-static struct servent *         sv_next(struct irs_sv *);
-static struct servent *         sv_byname(struct irs_sv *, const char *,
-                                          const char *);
-static struct servent *         sv_byport(struct irs_sv *, int, const char *);
-static void                     sv_rewind(struct irs_sv *);
-static void                     sv_minimize(struct irs_sv *);
+static void sv_close (struct irs_sv *);
+static struct servent *sv_next (struct irs_sv *);
+static struct servent *sv_byname (struct irs_sv *, const char *,
+				  const char *);
+static struct servent *sv_byport (struct irs_sv *, int, const char *);
+static void sv_rewind (struct irs_sv *);
+static void sv_minimize (struct irs_sv *);
 
 struct pvt
-{
-	struct servent result;
-	char buffer[NSS_BUFLEN_PROTOCOLS];
-	context_handle_t state;
-};
+  {
+    struct servent result;
+    char buffer[NSS_BUFLEN_PROTOCOLS];
+    context_handle_t state;
+  };
 
 static struct servent *
-sv_byname(struct irs_sv *this, const char *name, const char *proto)
+sv_byname (struct irs_sv *this, const char *name, const char *proto)
 {
-	ldap_args_t a;
-	struct pvt *pvt = (struct pvt *)this->private;
-	NSS_STATUS s;
+  ldap_args_t a;
+  struct pvt *pvt = (struct pvt *) this->private;
+  NSS_STATUS s;
 
-	LA_INIT(a);
-	LA_STRING(a) = name;
-	LA_TYPE(a) = (proto == NULL) ? LA_TYPE_STRING : LA_TYPE_STRING_AND_STRING;
-	LA_STRING2(a) = proto;
-	s = _nss_ldap_getbyname(&a, &pvt->result, pvt->buffer, sizeof(pvt->buffer),
-		(proto == NULL) ? filt_getservbyname : filt_getservbynameproto,
-		(const char **)serv_attributes, _nss_ldap_parse_serv);
+  LA_INIT (a);
+  LA_STRING (a) = name;
+  LA_TYPE (a) = (proto == NULL) ? LA_TYPE_STRING : LA_TYPE_STRING_AND_STRING;
+  LA_STRING2 (a) = proto;
+  s = _nss_ldap_getbyname (&a, &pvt->result, pvt->buffer, sizeof (pvt->buffer),
+	     (proto == NULL) ? filt_getservbyname : filt_getservbynameproto,
+		     (const char **) serv_attributes, _nss_ldap_parse_serv);
 
-	if (s != NSS_SUCCESS) {
-		errno = ENOENT;
-		return NULL;
-	}
-	return &pvt->result;
-}
-
-static struct servent *
-sv_byport(struct irs_sv *this, int port, const char *proto)
-{
-	ldap_args_t a;
-	struct pvt *pvt = (struct pvt *)this->private;
-	NSS_STATUS s;
-
-	LA_INIT(a);
-	LA_NUMBER(a) = port;
-	LA_TYPE(a) = (proto == NULL) ? LA_TYPE_NUMBER : LA_TYPE_NUMBER_AND_STRING;
-	LA_STRING2(a) = proto;
-	s = _nss_ldap_getbyname(&a, &pvt->result, pvt->buffer, sizeof(pvt->buffer),
-		(proto == NULL) ? filt_getservbyport : filt_getservbyportproto,
-		(const char **)serv_attributes, _nss_ldap_parse_serv);
-
-	if (s != NSS_SUCCESS) {
-		errno = ENOENT;
-		return NULL;
-	}
-	return &pvt->result;
-}
-
-static void
-sv_close(struct irs_sv *this)
-{
-	LOOKUP_ENDENT(this);
+  if (s != NSS_SUCCESS)
+    {
+      errno = ENOENT;
+      return NULL;
+    }
+  return &pvt->result;
 }
 
 static struct servent *
-sv_next(struct irs_sv *this)
+sv_byport (struct irs_sv *this, int port, const char *proto)
 {
-	LOOKUP_GETENT(this, filt_getservent, serv_attributes, _nss_ldap_parse_serv);
+  ldap_args_t a;
+  struct pvt *pvt = (struct pvt *) this->private;
+  NSS_STATUS s;
+
+  LA_INIT (a);
+  LA_NUMBER (a) = port;
+  LA_TYPE (a) = (proto == NULL) ? LA_TYPE_NUMBER : LA_TYPE_NUMBER_AND_STRING;
+  LA_STRING2 (a) = proto;
+  s = _nss_ldap_getbyname (&a, &pvt->result, pvt->buffer, sizeof (pvt->buffer),
+	     (proto == NULL) ? filt_getservbyport : filt_getservbyportproto,
+		     (const char **) serv_attributes, _nss_ldap_parse_serv);
+
+  if (s != NSS_SUCCESS)
+    {
+      errno = ENOENT;
+      return NULL;
+    }
+  return &pvt->result;
 }
 
 static void
-sv_rewind(struct irs_sv *this)
+sv_close (struct irs_sv *this)
 {
-	LOOKUP_SETENT(this);
+  LOOKUP_ENDENT (this);
+}
+
+static struct servent *
+sv_next (struct irs_sv *this)
+{
+  LOOKUP_GETENT (this, filt_getservent, serv_attributes, _nss_ldap_parse_serv);
 }
 
 static void
-sv_minimize(struct irs_sv *this)
+sv_rewind (struct irs_sv *this)
+{
+  LOOKUP_SETENT (this);
+}
+
+static void
+sv_minimize (struct irs_sv *this)
 {
 }
 
 
 struct irs_sv *
-irs_ldap_sv(struct irs_acc *this)
+irs_ldap_sv (struct irs_acc *this)
 {
-	struct irs_sv *sv;
-	struct pvt *pvt;
+  struct irs_sv *sv;
+  struct pvt *pvt;
 
-	sv = calloc(1, sizeof(*sv));
-	if (sv == NULL)
-		return NULL;
+  sv = calloc (1, sizeof (*sv));
+  if (sv == NULL)
+    return NULL;
 
-	pvt = calloc(1, sizeof(*pvt));
-	if (pvt == NULL)
-		return NULL;
+  pvt = calloc (1, sizeof (*pvt));
+  if (pvt == NULL)
+    return NULL;
 
-	pvt->state = NULL;
-	sv->private = pvt;
-	sv->close = sv_close;
-	sv->next = sv_next;
-	sv->byname = sv_byname;
-	sv->byport = sv_byport;
-	sv->rewind = sv_rewind;
-	sv->minimize = sv_minimize;
-	return sv;
+  pvt->state = NULL;
+  sv->private = pvt;
+  sv->close = sv_close;
+  sv->next = sv_next;
+  sv->byname = sv_byname;
+  sv->byport = sv_byport;
+  sv->rewind = sv_rewind;
+  sv->minimize = sv_minimize;
+  return sv;
 }
 
-#endif /*IRS_NSS*/
+#endif /*IRS_NSS */

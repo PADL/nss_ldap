@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -29,38 +30,37 @@
 #define LDAP_ATTR_NETWORKADDR           "ipNetworkNumber"
 #define LDAP_ATTR_NETWORKMASK           "ipNetmaskNumber"
 
-static NSS_STATUS _nss_ldap_parse_net(
-	LDAP *ld,
-	LDAPMessage *e,
-	ldap_state_t *pvt,
-	void *result,
-	char *buffer,
-	size_t buflen);
+static NSS_STATUS _nss_ldap_parse_net (
+					LDAP * ld,
+					LDAPMessage * e,
+					ldap_state_t * pvt,
+					void *result,
+					char *buffer,
+					size_t buflen);
 
 static const char *net_attributes[] =
-        { LDAP_ATTR_NETWORKNAME, LDAP_ATTR_NETWORKADDR, 
-          NULL };
+{LDAP_ATTR_NETWORKNAME, LDAP_ATTR_NETWORKADDR,
+ NULL};
 
 static const char filt_getnetbyname[] =
-        "(&(objectclass="LDAP_CLASS_NETWORK")("LDAP_ATTR_NETWORKNAME"=%s))";
+"(&(objectclass=" LDAP_CLASS_NETWORK ")(" LDAP_ATTR_NETWORKNAME "=%s))";
 static const char filt_getnetbyaddr[] =
-        "(&(objectclass="LDAP_CLASS_NETWORK")("LDAP_ATTR_NETWORKADDR"=%s))";
+"(&(objectclass=" LDAP_CLASS_NETWORK ")(" LDAP_ATTR_NETWORKADDR "=%s))";
 static const char filt_getnetent[] =
-        "(objectclass="LDAP_CLASS_NETWORK")";
+"(objectclass=" LDAP_CLASS_NETWORK ")";
 
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getnetbyname_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getnetbyaddr_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_setnetent_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_endnetent_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getnetent_r(nss_backend_t *be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getnetbyname_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getnetbyaddr_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_setnetent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_endnetent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getnetent_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_networks_constr(const char *db_name,
-        const char *src_name,
-        const char *cfg_args);
+nss_backend_t *_nss_ldap_networks_constr (const char *db_name,
+					  const char *src_name,
+					  const char *cfg_args);
 
 #endif /* !GNU_NSS */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NETWORK_H */
-

@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -31,7 +32,7 @@
 #define NSS_REENTRANT_FUNCTIONS
 #endif
 
-#include "irs-nss.h" /* for buffer sizes */
+#include "irs-nss.h"		/* for buffer sizes */
 
 #ifdef OSF1
 #define INIT_HANDLE()	do { \
@@ -49,4 +50,3 @@
 #endif
 
 #endif /* _LDAP_NSS_LDAP_DL_H */
-

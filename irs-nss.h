@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -32,19 +33,19 @@
 
 #include <irs_p.h>
 
-extern struct irs_gr *  irs_ldap_gr __P((struct irs_acc *));
-extern struct irs_pw *  irs_ldap_pw __P((struct irs_acc *));
-extern struct irs_sv *  irs_ldap_sv __P((struct irs_acc *));
-extern struct irs_pr *  irs_ldap_pr __P((struct irs_acc *));
-extern struct irs_ho *  irs_ldap_ho __P((struct irs_acc *));
-extern struct irs_nw *  irs_ldap_nw __P((struct irs_acc *));
+extern struct irs_gr *irs_ldap_gr __P ((struct irs_acc *));
+extern struct irs_pw *irs_ldap_pw __P ((struct irs_acc *));
+extern struct irs_sv *irs_ldap_sv __P ((struct irs_acc *));
+extern struct irs_pr *irs_ldap_pr __P ((struct irs_acc *));
+extern struct irs_ho *irs_ldap_ho __P ((struct irs_acc *));
+extern struct irs_nw *irs_ldap_nw __P ((struct irs_acc *));
 /* not done yet */
-extern struct irs_ng *  irs_ldap_ng __P((struct irs_acc *));
+extern struct irs_ng *irs_ldap_ng __P ((struct irs_acc *));
 
 /* Keep namespace clean. */
 #define irs_ldap_acc	__irs_ldap_acc
 
-extern struct irs_acc *	irs_ldap_acc __P((const char *));
+extern struct irs_acc *irs_ldap_acc __P ((const char *));
 
 /* These lengths were derived from the Solaris headers.
  * Copyright (c) 1992, by Sun Microsystems, Inc.
@@ -79,4 +80,3 @@ extern struct irs_acc *	irs_ldap_acc __P((const char *));
 #endif
 
 #endif /* _LDAP_NSS_LDAP_IRS_H */
-

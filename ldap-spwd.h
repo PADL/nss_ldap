@@ -35,36 +35,35 @@
 #define LDAP_ATTR_SHADOW_FLAG           "shadowFlag"
 
 static const char *sp_attributes[] =
-        { LDAP_ATTR_SHADOW_NAME, LDAP_ATTR_SHADOW_PASSWD,
-          LDAP_ATTR_SHADOW_LASTCHANGE, LDAP_ATTR_SHADOW_MAX,
-          LDAP_ATTR_SHADOW_MIN, LDAP_ATTR_SHADOW_WARN,
-          LDAP_ATTR_SHADOW_INACTIVE, LDAP_ATTR_SHADOW_EXPIRE,
-	  NULL };
+{LDAP_ATTR_SHADOW_NAME, LDAP_ATTR_SHADOW_PASSWD,
+ LDAP_ATTR_SHADOW_LASTCHANGE, LDAP_ATTR_SHADOW_MAX,
+ LDAP_ATTR_SHADOW_MIN, LDAP_ATTR_SHADOW_WARN,
+ LDAP_ATTR_SHADOW_INACTIVE, LDAP_ATTR_SHADOW_EXPIRE,
+ NULL};
 
 static const char filt_getspnam[] =
-        "(&(objectclass="LDAP_CLASS_SHADOW")("LDAP_ATTR_SHADOW_NAME"=%s))";
+"(&(objectclass=" LDAP_CLASS_SHADOW ")(" LDAP_ATTR_SHADOW_NAME "=%s))";
 
 static const char filt_getspent[] =
-        "(objectclass="LDAP_CLASS_SHADOW")";
+"(objectclass=" LDAP_CLASS_SHADOW ")";
 
-static NSS_STATUS _nss_ldap_parse_sp(
-	LDAP *ld,
-	LDAPMessage *e,
-	ldap_state_t *pvt,
-	void *result,
-	char *buffer,
-	size_t buflen);
+static NSS_STATUS _nss_ldap_parse_sp (
+				       LDAP * ld,
+				       LDAPMessage * e,
+				       ldap_state_t * pvt,
+				       void *result,
+				       char *buffer,
+				       size_t buflen);
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_getspnam_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_setspent_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_endspent_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getspent_r(nss_backend_t *be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getspnam_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_setspent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_endspent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getspent_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_shadow_constr(const char *db_name,
-        const char *src_name,
-        const char *cfg_args);
+nss_backend_t *_nss_ldap_shadow_constr (const char *db_name,
+					const char *src_name,
+					const char *cfg_args);
 #endif /* !GNU_NSS */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_SPWD_H */
-

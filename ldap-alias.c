@@ -23,7 +23,7 @@
 
 static char rcsId[] = "$Id$";
 
-#ifdef GNU_NSS		/* for the moment */
+#ifdef GNU_NSS			/* for the moment */
 
 #ifdef IRS_NSS
 #include <port_before.h>
@@ -62,49 +62,54 @@ static char rcsId[] = "$Id$";
 static context_handle_t alias_context = NULL;
 #endif
 
-static NSS_STATUS _nss_ldap_parse_alias(
-	LDAP *ld,
-	LDAPMessage *e,
-	ldap_state_t *pvt,
-	void *result,
-	char *buffer,
-	size_t buflen)
+static NSS_STATUS 
+_nss_ldap_parse_alias (
+			LDAP * ld,
+			LDAPMessage * e,
+			ldap_state_t * pvt,
+			void *result,
+			char *buffer,
+			size_t buflen)
 {
 
-	struct aliasent *alias = (struct aliasent *)result;
-	NSS_STATUS stat;
+  struct aliasent *alias = (struct aliasent *) result;
+  NSS_STATUS stat;
 
-	stat = _nss_ldap_getrdnvalue(ld, e, LDAP_ATTR_ALIASNAME, &alias->alias_name, &buffer, &buflen);
-	if (stat != NSS_SUCCESS) return stat;
+  stat = _nss_ldap_getrdnvalue (ld, e, LDAP_ATTR_ALIASNAME, &alias->alias_name, &buffer, &buflen);
+  if (stat != NSS_SUCCESS)
+    return stat;
 
-	stat = _nss_ldap_assign_attrvals(ld, e, LDAP_ATTR_MEMBERS, NULL, &alias->alias_members,
-		&buffer, &buflen, &alias->alias_members_len);
+  stat = _nss_ldap_assign_attrvals (ld, e, LDAP_ATTR_MEMBERS, NULL, &alias->alias_members,
+			       &buffer, &buflen, &alias->alias_members_len);
 
-	alias->alias_local = 0;
+  alias->alias_local = 0;
 
-	return stat;
+  return stat;
 }
 
-NSS_STATUS _nss_ldap_getaliasbyname_r(const char *name, struct aliasent *result,
-				char *buffer, size_t buflen, int *errnop)
+NSS_STATUS 
+_nss_ldap_getaliasbyname_r (const char *name, struct aliasent * result,
+			    char *buffer, size_t buflen, int *errnop)
 {
-	LOOKUP_NAME(name, result, buffer, buflen, errnop, filt_getaliasbyname, alias_attributes, _nss_ldap_parse_alias);
+  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getaliasbyname, alias_attributes, _nss_ldap_parse_alias);
 }
 
-NSS_STATUS _nss_ldap_setaliasent_r(void)
+NSS_STATUS 
+_nss_ldap_setaliasent_r (void)
 {
-	LOOKUP_SETENT(alias_context);
+  LOOKUP_SETENT (alias_context);
 }
 
-NSS_STATUS _nss_ldap_endaliasent_r(void)
+NSS_STATUS 
+_nss_ldap_endaliasent_r (void)
 {
-	LOOKUP_ENDENT(alias_context);
+  LOOKUP_ENDENT (alias_context);
 }
 
-NSS_STATUS _nss_ldap_getaliasent_r(struct aliasent *result, char *buffer, size_t buflen, int *errnop)
+NSS_STATUS 
+_nss_ldap_getaliasent_r (struct aliasent *result, char *buffer, size_t buflen, int *errnop)
 {
-	LOOKUP_GETENT(alias_context, result, buffer, buflen, errnop, filt_getaliasent, alias_attributes, _nss_ldap_parse_alias);
+  LOOKUP_GETENT (alias_context, result, buffer, buflen, errnop, filt_getaliasent, alias_attributes, _nss_ldap_parse_alias);
 }
 
 #endif /* GNU_NSS */
-

@@ -44,21 +44,21 @@ static char rcsId[] = "$Id$";
 #include "globals.h"
 
 #ifdef OSF1
-typedef int (*libc_getgrnam_r_t)(const char *,struct group *,char *,size_t,struct group **);
-typedef int (*libc_getgrgid_r_t)(gid_t,struct group *,char *,size_t,struct group **);
-typedef int (*libc_getgrent_r_t)(struct group *,char *,int,FILE **);
-typedef int (*libc_setgrent_r_t)(FILE **);
-typedef int (*libc_endgrent_r_t)(FILE **);
+typedef int (*libc_getgrnam_r_t) (const char *, struct group *, char *, size_t, struct group **);
+typedef int (*libc_getgrgid_r_t) (gid_t, struct group *, char *, size_t, struct group **);
+typedef int (*libc_getgrent_r_t) (struct group *, char *, int, FILE **);
+typedef int (*libc_setgrent_r_t) (FILE **);
+typedef int (*libc_endgrent_r_t) (FILE **);
 #endif
-typedef struct group *(*libc_getgrnam_t)(const char *);
-typedef struct group *(*libc_getgrgid_t)(gid_t);
-typedef struct group *(*libc_getgrent_t)(void);
+typedef struct group *(*libc_getgrnam_t) (const char *);
+typedef struct group *(*libc_getgrgid_t) (gid_t);
+typedef struct group *(*libc_getgrent_t) (void);
 #ifdef OSF1
-typedef int (*libc_setgrent_t)(void);
+typedef int (*libc_setgrent_t) (void);
 #else
-typedef void (*libc_setgrent_t)(void);
+typedef void (*libc_setgrent_t) (void);
 #endif
-typedef void (*libc_endgrent_t)(void);
+typedef void (*libc_endgrent_t) (void);
 
 #ifdef OSF1
 static libc_getgrnam_r_t libc_getgrnam_r = NULL;
@@ -74,118 +74,122 @@ static libc_endgrent_t libc_endgrent = NULL;
 static libc_getgrent_t libc_getgrent = NULL;
 
 #ifdef OSF1
-static char nss_buf[SIABUFSIZ] = { '\0' };
+static char nss_buf[SIABUFSIZ] =
+{'\0'};
 #else
-static char nss_buf[NSS_BUFLEN_GROUP] = { '\0' };
+static char nss_buf[NSS_BUFLEN_GROUP] =
+{'\0'};
 #endif
 
 static int do_ldap_getgrent = 0;
 
 #ifdef OSF1
 /* this is the OSF/1 interface, anyway. Disgusting. */
-int getgrent_r(struct group *gr, char *buffer, int len, FILE **gr_fp)
+int 
+getgrent_r (struct group *gr, char *buffer, int len, FILE ** gr_fp)
 {
-	/* returns 0 or errno */
-	NSS_STATUS status;
+  /* returns 0 or errno */
+  NSS_STATUS status;
 
-	if (do_ldap_getgrent == 0)
-		{
-		INIT_HANDLE();
-		if (libc_getgrent_r == NULL)
-			{
-			libc_getgrent_r = (libc_getgrent_r_t)dlsym(_nss_ldap_libc_handle, "getgrent_r");
-			}
-		if (libc_getgrent_r == NULL)
-			{
-			errno = EINVAL;
-			return -1;
-			}
-		if (libc_getgrent_r(gr, buffer, len, gr_fp) == 0)
-			{
-			return 0;
-			}
-		if (libc_endgrent_r == NULL)
-			{
-			libc_endgrent_r = (libc_endgrent_r_t)dlsym(_nss_ldap_libc_handle, "endgrent_r");
-			}
-		if (libc_endgrent_r == NULL)
-			{
-			errno = EINVAL;
-			return -1;
-			}	
-		libc_endgrent_r(gr_fp);
-		if (_nss_ldap_setgrent_r() != NSS_SUCCESS)
-			{
-			errno = EINVAL;
-			return -1;
-			}
-		do_ldap_getgrent = 1;
-		}
+  if (do_ldap_getgrent == 0)
+    {
+      INIT_HANDLE ();
+      if (libc_getgrent_r == NULL)
+	{
+	  libc_getgrent_r = (libc_getgrent_r_t) dlsym (_nss_ldap_libc_handle, "getgrent_r");
+	}
+      if (libc_getgrent_r == NULL)
+	{
+	  errno = EINVAL;
+	  return -1;
+	}
+      if (libc_getgrent_r (gr, buffer, len, gr_fp) == 0)
+	{
+	  return 0;
+	}
+      if (libc_endgrent_r == NULL)
+	{
+	  libc_endgrent_r = (libc_endgrent_r_t) dlsym (_nss_ldap_libc_handle, "endgrent_r");
+	}
+      if (libc_endgrent_r == NULL)
+	{
+	  errno = EINVAL;
+	  return -1;
+	}
+      libc_endgrent_r (gr_fp);
+      if (_nss_ldap_setgrent_r () != NSS_SUCCESS)
+	{
+	  errno = EINVAL;
+	  return -1;
+	}
+      do_ldap_getgrent = 1;
+    }
 
-	status = _nss_ldap_getgrent_r(gr, buffer, (size_t)len);
-	switch (status)
-		{
-		case NSS_TRYAGAIN:
-			errno = ERANGE;
-			return -1;
-		case NSS_NOTFOUND:
-			errno = ENOENT;
-			return -1;
-		default:
-			errno = ESUCCESS;
-		}
+  status = _nss_ldap_getgrent_r (gr, buffer, (size_t) len);
+  switch (status)
+    {
+    case NSS_TRYAGAIN:
+      errno = ERANGE;
+      return -1;
+    case NSS_NOTFOUND:
+      errno = ENOENT;
+      return -1;
+    default:
+      errno = ESUCCESS;
+    }
 
-	return 0;
+  return 0;
 }
 #endif
 
-struct group *getgrent(void)
+struct group *
+getgrent (void)
 {
-	static struct group gr;
+  static struct group gr;
 
-	if (do_ldap_getgrent == 0)
-		{
-		struct group *p;
+  if (do_ldap_getgrent == 0)
+    {
+      struct group *p;
 
-		INIT_HANDLE();
+      INIT_HANDLE ();
 
-		if (libc_getgrent == NULL)
-			{
-			libc_getgrent = (libc_getgrent_t)dlsym(_nss_ldap_libc_handle, "getgrent");
-			}
-		if (libc_getgrent == NULL)
-			{
-			return NULL;
-			}
+      if (libc_getgrent == NULL)
+	{
+	  libc_getgrent = (libc_getgrent_t) dlsym (_nss_ldap_libc_handle, "getgrent");
+	}
+      if (libc_getgrent == NULL)
+	{
+	  return NULL;
+	}
 
-		p = libc_getgrent();
-		if (p == NULL)
-			{
-			if (libc_endgrent == NULL)
-				{
-				libc_endgrent = (libc_endgrent_t)dlsym(_nss_ldap_libc_handle, "endgrent");
-				}
-			if (libc_endgrent == NULL)
-				{
-				return NULL;
-				}
-			libc_endgrent();
-			if (_nss_ldap_setgrent_r() != NSS_SUCCESS)
-				{
-				return NULL;
-				}
-			do_ldap_getgrent = 1;
-			}
-		else
-			{
-			return p;
-			}
-		}
+      p = libc_getgrent ();
+      if (p == NULL)
+	{
+	  if (libc_endgrent == NULL)
+	    {
+	      libc_endgrent = (libc_endgrent_t) dlsym (_nss_ldap_libc_handle, "endgrent");
+	    }
+	  if (libc_endgrent == NULL)
+	    {
+	      return NULL;
+	    }
+	  libc_endgrent ();
+	  if (_nss_ldap_setgrent_r () != NSS_SUCCESS)
+	    {
+	      return NULL;
+	    }
+	  do_ldap_getgrent = 1;
+	}
+      else
+	{
+	  return p;
+	}
+    }
 
-	if (_nss_ldap_getgrent_r(&gr, nss_buf, sizeof(nss_buf)) == NSS_SUCCESS)
-		return &gr;
+  if (_nss_ldap_getgrent_r (&gr, nss_buf, sizeof (nss_buf)) == NSS_SUCCESS)
+    return &gr;
 
-	return NULL;
+  return NULL;
 }
 
 #ifdef OSF1
@@ -194,219 +198,227 @@ struct group *getgrent(void)
  * That doesn't take the last argument, and has a symbol name of getgrgid_r
  * instead of Pgetgrgid_r. Ditto for getgrnam.
  */
-int getgrgid_r(gid_t gid, struct group *grp, char *buffer, size_t len, struct group **result)
+int 
+getgrgid_r (gid_t gid, struct group *grp, char *buffer, size_t len, struct group **result)
 {
-	NSS_STATUS status;
-	INIT_HANDLE();
+  NSS_STATUS status;
+  INIT_HANDLE ();
 
-	if (libc_getgrgid_r == NULL)
-		{
-		libc_getgrgid_r = (libc_getgrgid_r_t)dlsym(_nss_ldap_libc_handle, "getgrgid_r");
-		}
-	if (libc_getgrgid_r == NULL)
-		{
-		return EINVAL;
-		}
+  if (libc_getgrgid_r == NULL)
+    {
+      libc_getgrgid_r = (libc_getgrgid_r_t) dlsym (_nss_ldap_libc_handle, "getgrgid_r");
+    }
+  if (libc_getgrgid_r == NULL)
+    {
+      return EINVAL;
+    }
 
-	if (libc_getgrgid_r(gid, grp, buffer, len, result) == ESUCCESS)
-		{
-		return ESUCCESS;
-		}
+  if (libc_getgrgid_r (gid, grp, buffer, len, result) == ESUCCESS)
+    {
+      return ESUCCESS;
+    }
 
-	status = _nss_ldap_getgrgid_r(gid, grp, buffer, len);
-	switch (status)
-		{
-		case NSS_TRYAGAIN:
-			*result = NULL;
-			return ERANGE;
-		case NSS_UNAVAIL:
-			*result = NULL;
-			return ENOENT;
-		default:
-			*result = grp;
-		}
-	return ESUCCESS;
+  status = _nss_ldap_getgrgid_r (gid, grp, buffer, len);
+  switch (status)
+    {
+    case NSS_TRYAGAIN:
+      *result = NULL;
+      return ERANGE;
+    case NSS_UNAVAIL:
+      *result = NULL;
+      return ENOENT;
+    default:
+      *result = grp;
+    }
+  return ESUCCESS;
 }
 #endif
 
-struct group *getgrgid(gid_t gid)
+struct group *
+getgrgid (gid_t gid)
 {
-	static struct group gr;
-	struct group *p;
+  static struct group gr;
+  struct group *p;
 
-	INIT_HANDLE();
+  INIT_HANDLE ();
 
-	if (libc_getgrgid == NULL)
-		{
-		libc_getgrgid = (libc_getgrgid_t)dlsym(_nss_ldap_libc_handle, "getgrgid");
-		}	
-	if (libc_getgrgid == NULL)
-		{
-		return NULL;
-		}
+  if (libc_getgrgid == NULL)
+    {
+      libc_getgrgid = (libc_getgrgid_t) dlsym (_nss_ldap_libc_handle, "getgrgid");
+    }
+  if (libc_getgrgid == NULL)
+    {
+      return NULL;
+    }
 
-	p = libc_getgrgid(gid);
+  p = libc_getgrgid (gid);
 
-	if (p != NULL)
-		{
-		return p;
-		}
-	if (_nss_ldap_getgrgid_r(gid, &gr, nss_buf, sizeof(nss_buf)) == NSS_SUCCESS)
-		{
-		return &gr;
-		}
-	return NULL;
+  if (p != NULL)
+    {
+      return p;
+    }
+  if (_nss_ldap_getgrgid_r (gid, &gr, nss_buf, sizeof (nss_buf)) == NSS_SUCCESS)
+    {
+      return &gr;
+    }
+  return NULL;
 }
 
 #ifdef OSF1
-int getgrnam_r(const char *name, struct group *grp, char *buffer, size_t len, struct group **result)
+int 
+getgrnam_r (const char *name, struct group *grp, char *buffer, size_t len, struct group **result)
 {
-	NSS_STATUS status;
-	INIT_HANDLE();
+  NSS_STATUS status;
+  INIT_HANDLE ();
 
-	if (libc_getgrnam_r == NULL)
-		{
-		libc_getgrnam_r = (libc_getgrnam_r_t)dlsym(_nss_ldap_libc_handle, "getgrnam_r");
-		}
-	if (libc_getgrnam_r == NULL)
-		{
-		return EINVAL;
-		}
+  if (libc_getgrnam_r == NULL)
+    {
+      libc_getgrnam_r = (libc_getgrnam_r_t) dlsym (_nss_ldap_libc_handle, "getgrnam_r");
+    }
+  if (libc_getgrnam_r == NULL)
+    {
+      return EINVAL;
+    }
 
-	if (libc_getgrnam_r(name, grp, buffer, len, result) == ESUCCESS)
-		{
-		return ESUCCESS;
-		}
+  if (libc_getgrnam_r (name, grp, buffer, len, result) == ESUCCESS)
+    {
+      return ESUCCESS;
+    }
 
-	status = _nss_ldap_getgrnam_r(name, grp, buffer, len);
-	switch (status)
-		{
-		case NSS_TRYAGAIN:
-			*result = NULL;
-			return ERANGE;
-		case NSS_UNAVAIL:
-			*result = NULL;
-			return ENOENT;
-		default:
-			*result = grp;
-		}
-	return ESUCCESS;
+  status = _nss_ldap_getgrnam_r (name, grp, buffer, len);
+  switch (status)
+    {
+    case NSS_TRYAGAIN:
+      *result = NULL;
+      return ERANGE;
+    case NSS_UNAVAIL:
+      *result = NULL;
+      return ENOENT;
+    default:
+      *result = grp;
+    }
+  return ESUCCESS;
 }
 #endif
 
-struct group *getgrnam(const char *name)
+struct group *
+getgrnam (const char *name)
 {
-	static struct group gr;
-	struct group *p;
+  static struct group gr;
+  struct group *p;
 
-	INIT_HANDLE();
+  INIT_HANDLE ();
 
-	if (libc_getgrnam == NULL)
-		{
-		libc_getgrnam = (libc_getgrnam_t)dlsym(_nss_ldap_libc_handle, "getgrnam");
-		}
-	if (libc_getgrnam == NULL)
-		{
-		return NULL;
-		}
+  if (libc_getgrnam == NULL)
+    {
+      libc_getgrnam = (libc_getgrnam_t) dlsym (_nss_ldap_libc_handle, "getgrnam");
+    }
+  if (libc_getgrnam == NULL)
+    {
+      return NULL;
+    }
 
-	p = libc_getgrnam(name);
+  p = libc_getgrnam (name);
 
-	if (p != NULL)
-		{
-		return p;
-		}
+  if (p != NULL)
+    {
+      return p;
+    }
 
-	if (_nss_ldap_getgrnam_r(name, &gr, nss_buf, sizeof(nss_buf)) == NSS_SUCCESS)
-		{
-		return &gr;
-		}
-	
-	return NULL;
+  if (_nss_ldap_getgrnam_r (name, &gr, nss_buf, sizeof (nss_buf)) == NSS_SUCCESS)
+    {
+      return &gr;
+    }
+
+  return NULL;
 }
 
 #ifdef OSF1
-int setgrent_r(FILE **fp)
+int 
+setgrent_r (FILE ** fp)
 {
-	do_ldap_getgrent = 0;
-	INIT_HANDLE();
-	if (libc_setgrent_r == NULL)
-		{
-		libc_setgrent_r = (libc_setgrent_r_t)dlsym(_nss_ldap_libc_handle, "setgrent_r");
-		}
-	if (libc_setgrent_r != NULL)
-		{
-		return libc_setgrent_r(fp);
-		}
-	return EINVAL;
+  do_ldap_getgrent = 0;
+  INIT_HANDLE ();
+  if (libc_setgrent_r == NULL)
+    {
+      libc_setgrent_r = (libc_setgrent_r_t) dlsym (_nss_ldap_libc_handle, "setgrent_r");
+    }
+  if (libc_setgrent_r != NULL)
+    {
+      return libc_setgrent_r (fp);
+    }
+  return EINVAL;
 }
 #endif
 
 #ifdef OSF1
-int setgrent(void)
+int 
+setgrent (void)
 #else
-void setgrent(void)
+void 
+setgrent (void)
 #endif
 {
-	do_ldap_getgrent = 0;
-	INIT_HANDLE();
-	if (libc_setgrent == NULL)
-		{
-		libc_setgrent = (libc_setgrent_t)dlsym(_nss_ldap_libc_handle, "setgrent");
-		}
-	if (libc_setgrent != NULL)
-		{
+  do_ldap_getgrent = 0;
+  INIT_HANDLE ();
+  if (libc_setgrent == NULL)
+    {
+      libc_setgrent = (libc_setgrent_t) dlsym (_nss_ldap_libc_handle, "setgrent");
+    }
+  if (libc_setgrent != NULL)
+    {
 #ifdef OSF1
-		return libc_setgrent();
+      return libc_setgrent ();
 #else
-		libc_setgrent();
+      libc_setgrent ();
 #endif
-		}
+    }
 }
 
 #ifdef OSF1
-void endgrent_r(FILE **fp)
+void 
+endgrent_r (FILE ** fp)
 {
-	if (do_ldap_getgrent == 0)
-		{
-		INIT_HANDLE();
-		if (libc_endgrent_r == NULL)
-			{
-			libc_endgrent_r = (libc_endgrent_r_t)dlsym(_nss_ldap_libc_handle, "endgrent_r");
-			}
-		if (libc_endgrent_r != NULL)
-			{
-			libc_endgrent_r(fp);
-			}
-		}
-	else
-		{
-		(void) _nss_ldap_endgrent_r();
-		}
+  if (do_ldap_getgrent == 0)
+    {
+      INIT_HANDLE ();
+      if (libc_endgrent_r == NULL)
+	{
+	  libc_endgrent_r = (libc_endgrent_r_t) dlsym (_nss_ldap_libc_handle, "endgrent_r");
+	}
+      if (libc_endgrent_r != NULL)
+	{
+	  libc_endgrent_r (fp);
+	}
+    }
+  else
+    {
+      (void) _nss_ldap_endgrent_r ();
+    }
 }
 #endif
 
-void endgrent(void)
+void 
+endgrent (void)
 {
-	if (do_ldap_getgrent == 0)
-		{
-		INIT_HANDLE();
-		if (libc_endgrent == NULL)
-			{
-			libc_endgrent = (libc_endgrent_t)dlsym(_nss_ldap_libc_handle, "endgrent");
-			}
-		if (libc_endgrent != NULL)
-			{
-			libc_endgrent();
-			}
-		}
-	else
-		{
-		(void) _nss_ldap_endgrent_r();
-		}
+  if (do_ldap_getgrent == 0)
+    {
+      INIT_HANDLE ();
+      if (libc_endgrent == NULL)
+	{
+	  libc_endgrent = (libc_endgrent_t) dlsym (_nss_ldap_libc_handle, "endgrent");
+	}
+      if (libc_endgrent != NULL)
+	{
+	  libc_endgrent ();
+	}
+    }
+  else
+    {
+      (void) _nss_ldap_endgrent_r ();
+    }
 
-	do_ldap_getgrent = 0;
+  do_ldap_getgrent = 0;
 }
 
 #endif /* DL_NSS */
-

@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -22,8 +23,7 @@
 #define _LDAP_NSS_LDAP_LTF_H
 
 #ifdef NETSCAPE_API_EXTENSIONS
-NSS_STATUS _nss_ldap_ltf_thread_init(LDAP *ld);
+NSS_STATUS _nss_ldap_ltf_thread_init (LDAP * ld);
 #endif
 
 #endif /* _LDAP_NSS_LDAP_LTF_H */
-

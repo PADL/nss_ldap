@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -23,25 +24,24 @@
 
 #include "ldap-nss.h"
 
-NSS_STATUS _nss_ldap_getgrnam_r(
-        const char *name,
-        struct group *result,
-        char *buffer,
-        size_t buflen);
+NSS_STATUS _nss_ldap_getgrnam_r (
+				  const char *name,
+				  struct group *result,
+				  char *buffer,
+				  size_t buflen);
 
-NSS_STATUS _nss_ldap_getgrgid_r(
-        gid_t gid,
-        struct group *result,
-        char *buffer,
-        size_t buflen);
+NSS_STATUS _nss_ldap_getgrgid_r (
+				  gid_t gid,
+				  struct group *result,
+				  char *buffer,
+				  size_t buflen);
 
-NSS_STATUS _nss_ldap_setgrent_r(void);
-NSS_STATUS _nss_ldap_endgrent_r(void);
+NSS_STATUS _nss_ldap_setgrent_r (void);
+NSS_STATUS _nss_ldap_endgrent_r (void);
 
-NSS_STATUS _nss_ldap_getgrent_r(
-        struct group *result,
-        char *buffer,
-        size_t buflen);
+NSS_STATUS _nss_ldap_getgrent_r (
+				  struct group *result,
+				  char *buffer,
+				  size_t buflen);
 
 #endif
-

@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -29,37 +30,36 @@
 #define LDAP_ATTR_NETGROUPMEMBER        "memberNisNetgroup"
 
 /*
-     int getnetgrent_r(char **machinep, char **userp,
-          char **domainp, char *buffer, int buflen);
+   int getnetgrent_r(char **machinep, char **userp,
+   char **domainp, char *buffer, int buflen);
 
-     int setnetgrent(const char *netgroup);
+   int setnetgrent(const char *netgroup);
 
-     int endnetgrent(void);
+   int endnetgrent(void);
  */
 
 static const char *netgr_attributes[] =
-        { LDAP_ATTR_NETGROUPNAME, LDAP_ATTR_NETGROUPTRIPLE, LDAP_ATTR_NETGROUPMEMBER, NULL };
+{LDAP_ATTR_NETGROUPNAME, LDAP_ATTR_NETGROUPTRIPLE, LDAP_ATTR_NETGROUPMEMBER, NULL};
 
-static const char *filt_setnetgrent[] = 
-	"(&(objectclass="LDAP_CLASS_NETGROUP")("LDAP_ATTR_NETGROUPNAME"=%s))";
+static const char *filt_setnetgrent[] =
+"(&(objectclass=" LDAP_CLASS_NETGROUP ")(" LDAP_ATTR_NETGROUPNAME "=%s))";
 
-static NSS_STATUS _nss_ldap_parse_netgr(
-	LDAP *ld,
-	LDAPMessage *e,
-	ldap_state_t *pvt,
-	void *result,
-	char *buffer,
-	size_t buflen);
+static NSS_STATUS _nss_ldap_parse_netgr (
+					  LDAP * ld,
+					  LDAPMessage * e,
+					  ldap_state_t * pvt,
+					  void *result,
+					  char *buffer,
+					  size_t buflen);
 
 #ifdef SUN_NSS
-static NSS_STATUS _nss_ldap_setnetgrent_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_endnetgrent_r(nss_backend_t *be, void *fakeargs);
-static NSS_STATUS _nss_ldap_getnetgrent_r(nss_backend_t *be, void *fakeargs);
+static NSS_STATUS _nss_ldap_setnetgrent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_endnetgrent_r (nss_backend_t * be, void *fakeargs);
+static NSS_STATUS _nss_ldap_getnetgrent_r (nss_backend_t * be, void *fakeargs);
 
-nss_backend_t *_nss_ldap_netgroup_constr(const char *db_name,
-        const char *src_name,
-        const char *cfg_args);
+nss_backend_t *_nss_ldap_netgroup_constr (const char *db_name,
+					  const char *src_name,
+					  const char *cfg_args);
 #endif /* !GNU_NSS */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NETGRP_H */
-

@@ -1,3 +1,4 @@
+
 /* Copyright (C) 1997 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
@@ -68,182 +69,183 @@
 #include "dnsconfig.h"
 
 /* map gnu.org into DC=gnu,DC=org */
-NSS_STATUS _nss_ldap_getdnsdn(
-        char *src_domain,
-        char **rval,
-        char **buffer,
-        size_t *buflen)
+NSS_STATUS 
+_nss_ldap_getdnsdn (
+		     char *src_domain,
+		     char **rval,
+		     char **buffer,
+		     size_t * buflen)
 {
-        char *p;
-        int len = 0;
+  char *p;
+  int len = 0;
 #ifdef HAVE_STRTOK_R
-        char *st = NULL;
+  char *st = NULL;
 #endif
-        char *bptr;
-	char *domain, *domain_copy;
+  char *bptr;
+  char *domain, *domain_copy;
 
-	/* we need to take a copy of domain, because strtok() modifies
-	 * it in place. Bad.
-	 */
-	domain_copy = strdup(src_domain);
-	if (domain_copy == NULL)
-		{
-		return NSS_TRYAGAIN;
-		}
+  /* we need to take a copy of domain, because strtok() modifies
+   * it in place. Bad.
+   */
+  domain_copy = strdup (src_domain);
+  if (domain_copy == NULL)
+    {
+      return NSS_TRYAGAIN;
+    }
 
-	domain = domain_copy;
+  domain = domain_copy;
 
-	bptr = *rval = *buffer;
-	**rval = '\0';
+  bptr = *rval = *buffer;
+  **rval = '\0';
 
 #ifndef HAVE_STRTOK_R
-        while ((p = strtok(domain, ".")))
+  while ((p = strtok (domain, ".")))
 #else
-        while ((p = strtok_r(domain, ".", &st)))
+  while ((p = strtok_r (domain, ".", &st)))
 #endif
-                {
-                len = strlen(p);
+    {
+      len = strlen (p);
 
-                if (*buflen < (size_t)(len + DC_ATTR_AVA_LEN + 1 /* D C = [,|\0] */))
-                        {
-			free(domain_copy);
-                        return NSS_TRYAGAIN;
-                        }
+      if (*buflen < (size_t) (len + DC_ATTR_AVA_LEN + 1 /* D C = [,|\0] */ ))
+	{
+	  free (domain_copy);
+	  return NSS_TRYAGAIN;
+	}
 
-		if (domain == NULL)
-                        {
-                        strcpy(bptr, ",");
-                        bptr++;
-                        }
-		else
-			{
-			domain = NULL;
-			}
+      if (domain == NULL)
+	{
+	  strcpy (bptr, ",");
+	  bptr++;
+	}
+      else
+	{
+	  domain = NULL;
+	}
 
-                strcpy(bptr, DC_ATTR_AVA);
-		bptr += DC_ATTR_AVA_LEN;
+      strcpy (bptr, DC_ATTR_AVA);
+      bptr += DC_ATTR_AVA_LEN;
 
-                strcpy(bptr, p);
-                bptr += len; /* don't include comma */
-                *buffer += len + DC_ATTR_AVA_LEN + 1;
-                *buflen -= len + DC_ATTR_AVA_LEN + 1;
-                }
+      strcpy (bptr, p);
+      bptr += len;		/* don't include comma */
+      *buffer += len + DC_ATTR_AVA_LEN + 1;
+      *buflen -= len + DC_ATTR_AVA_LEN + 1;
+    }
 
-        if (bptr != NULL)
-                {
-                (*rval)[bptr - *rval] = '\0';
-                }
+  if (bptr != NULL)
+    {
+      (*rval)[bptr - *rval] = '\0';
+    }
 
-	free(domain_copy);
+  free (domain_copy);
 
-        return NSS_SUCCESS;
+  return NSS_SUCCESS;
 }
 
 
-NSS_STATUS _nss_ldap_readconfigfromdns(
-        ldap_config_t **presult,
-        char *buf,
-        size_t buflen
+NSS_STATUS 
+_nss_ldap_readconfigfromdns (
+			      ldap_config_t ** presult,
+			      char *buf,
+			      size_t buflen
 )
 {
-	NSS_STATUS stat = NSS_SUCCESS;
-	struct dns_reply *r;
-	struct resource_record *rr;
-	char domain[MAXHOSTNAMELEN + 1];
-	char *bptr;
-	ldap_config_t *result;
+  NSS_STATUS stat = NSS_SUCCESS;
+  struct dns_reply *r;
+  struct resource_record *rr;
+  char domain[MAXHOSTNAMELEN + 1];
+  char *bptr;
+  ldap_config_t *result;
 
-	bptr = buf;
+  bptr = buf;
 
-	/* Bogus... this never gets freed... */
-	if (*presult == NULL)
-		{
-		*presult = (ldap_config_t *)calloc(1, sizeof(*result));
-		if (*presult == NULL)
-			return NSS_UNAVAIL;
-		}
+  /* Bogus... this never gets freed... */
+  if (*presult == NULL)
+    {
+      *presult = (ldap_config_t *) calloc (1, sizeof (*result));
+      if (*presult == NULL)
+	return NSS_UNAVAIL;
+    }
 
-	result = *presult;
-	result->ldc_scope = LDAP_SCOPE_SUBTREE;
-	result->ldc_host = NULL;
-	result->ldc_base = NULL;
-	result->ldc_port = LDAP_PORT;
-	result->ldc_binddn = NULL;
-	result->ldc_bindpw = NULL;
-	result->ldc_next = result;
+  result = *presult;
+  result->ldc_scope = LDAP_SCOPE_SUBTREE;
+  result->ldc_host = NULL;
+  result->ldc_base = NULL;
+  result->ldc_port = LDAP_PORT;
+  result->ldc_binddn = NULL;
+  result->ldc_bindpw = NULL;
+  result->ldc_next = result;
 
-	__nss_dns_lock();
+  __nss_dns_lock ();
 
-	if ((_res.options & RES_INIT) == 0 && res_init() == -1)
-		{
-		__nss_dns_unlock();
-		return NSS_UNAVAIL;
-		}
+  if ((_res.options & RES_INIT) == 0 && res_init () == -1)
+    {
+      __nss_dns_unlock ();
+      return NSS_UNAVAIL;
+    }
 
 #ifdef RFC2052BIS
-	snprintf(domain, sizeof(domain), "_ldap._tcp.%s.", _res.defdname);
+  snprintf (domain, sizeof (domain), "_ldap._tcp.%s.", _res.defdname);
 #else
-	snprintf(domain, sizeof(domain), "ldap.tcp.%s.", _res.defdname);
+  snprintf (domain, sizeof (domain), "ldap.tcp.%s.", _res.defdname);
 #endif /* RFC2307BIS */
 
-	r = dns_lookup(domain, "srv");
-	if (r == NULL)
+  r = dns_lookup (domain, "srv");
+  if (r == NULL)
+    {
+      __nss_dns_unlock ();
+      return NSS_NOTFOUND;
+    }
+
+  /* XXX sort by priority */
+  for (rr = r->head; rr != NULL; rr = rr->next)
+    {
+      if (rr->type == T_SRV)
+	{
+	  int len;
+
+	  if (result->ldc_host != NULL)
+	    {
+	      /* need more space. Need to revise memory mgmnt in ldap-nss.c */
+
+	      result->ldc_next = (ldap_config_t *) malloc (sizeof (*result));
+	      if (result->ldc_next == NULL)
 		{
-		__nss_dns_unlock();
-		return NSS_NOTFOUND;
+		  return NSS_UNAVAIL;
 		}
+	      result = result->ldc_next;
 
-	/* XXX sort by priority */
-	for (rr = r->head; rr != NULL; rr = rr->next)
-		{
-		if (rr->type == T_SRV)
-			{
-			int len;
+	      result->ldc_scope = LDAP_SCOPE_SUBTREE;
+	      result->ldc_binddn = NULL;
+	      result->ldc_bindpw = NULL;
+	      result->ldc_next = result;
+	    }
 
-			if (result->ldc_host != NULL)
-				{
-				/* need more space. Need to revise memory mgmnt in ldap-nss.c */
+	  /* Server Host */
+	  strcpy (bptr, rr->u.srv->target);
+	  result->ldc_host = bptr;
 
-				result->ldc_next = (ldap_config_t *)malloc(sizeof(*result));
-				if (result->ldc_next == NULL)
-					{
-					return NSS_UNAVAIL;
-					}
-				result = result->ldc_next;
+	  len = strlen (rr->u.srv->target);
+	  bptr += len + 1;
+	  buflen -= len + 1;
 
-				result->ldc_scope = LDAP_SCOPE_SUBTREE;
-				result->ldc_binddn = NULL;
-				result->ldc_bindpw = NULL;
-				result->ldc_next = result;
-				}
+	  /* Port */
+	  result->ldc_port = rr->u.srv->port;
 
-			/* Server Host */
-			strcpy(bptr, rr->u.srv->target);
-			result->ldc_host = bptr;
+	  /* DN */
+	  stat = _nss_ldap_getdnsdn (_res.defdname,
+				     &result->ldc_base,
+				     &bptr,
+				     &buflen);
+	  if (stat != NSS_SUCCESS)
+	    {
+	      __nss_dns_unlock ();
+	      return stat;
+	    }
+	}
+    }
 
-			len = strlen(rr->u.srv->target);
-			bptr += len + 1;
-			buflen -= len + 1;
+  __nss_dns_unlock ();
+  stat = NSS_SUCCESS;
 
-			/* Port */
-			result->ldc_port = rr->u.srv->port;
-
-			/* DN */
-			stat = _nss_ldap_getdnsdn(_res.defdname,
-				&result->ldc_base,
-				&bptr,
-				&buflen);
-			if (stat != NSS_SUCCESS)
-				{
-				__nss_dns_unlock();
-				return stat;
-				}
-			}
-		}
-
-	__nss_dns_unlock();
-	stat = NSS_SUCCESS;
-
-	return stat;
+  return stat;
 }
-

@@ -1,3 +1,5 @@
+
+
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Hvgskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -58,51 +60,58 @@
 #define T_SRV		 33
 #endif
 
-struct dns_query{
+struct dns_query
+  {
     char *domain;
     unsigned type;
     unsigned class;
-};
+  };
 
-struct mx_record{
-    unsigned  preference;
+struct mx_record
+  {
+    unsigned preference;
     char domain[1];
-};
+  };
 
-struct srv_record{
+struct srv_record
+  {
     unsigned priority;
     unsigned weight;
     unsigned port;
     char target[1];
-};
+  };
 
-struct resource_record{
+struct resource_record
+  {
     char *domain;
     unsigned type;
     unsigned class;
     unsigned ttl;
     unsigned size;
-    union {
+    union
+      {
 	void *data;
 	struct mx_record *mx;
-	struct mx_record *afsdb; /* mx and afsdb are identical */
+	struct mx_record *afsdb;	/* mx and afsdb are identical */
 	struct srv_record *srv;
 	struct in_addr *a;
 	char *txt;
-    }u;
+      }
+    u;
     struct resource_record *next;
-};
+  };
 
 
-#ifndef HAVE_ARPA_NAMESER_H /* XXX */
-typedef int HEADER; /* will never be used */
+#ifndef HAVE_ARPA_NAMESER_H	/* XXX */
+typedef int HEADER;		/* will never be used */
 #endif
 
-struct dns_reply{
+struct dns_reply
+  {
     HEADER h;
     struct dns_query q;
     struct resource_record *head;
-};
+  };
 
 #if defined(GNU_NSS) || defined(SUN_NSS) || defined(IRS_NSS)
 /* Keep namespace tidy. */
@@ -110,10 +119,8 @@ struct dns_reply{
 #define dns_free_data	_nss_ldap_dns_free_data
 #endif /* NSS */
 
-struct dns_reply* dns_lookup(const char *, const char *);
+struct dns_reply *dns_lookup (const char *, const char *);
 
-void dns_free_data(struct dns_reply *r);
+void dns_free_data (struct dns_reply *r);
 
 #endif /* __RESOLVE_H__ */
-
-
