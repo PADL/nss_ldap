@@ -35,6 +35,26 @@ IBM SecureWay, so use
 to avoid confusion.  If everything went OK, you will get two
 objects: nss_ldap.so and NSS_LDAP.
 
+Some notes on dynamic linking that apply to dependent libraries
+(such as Cyrus SASL and OpenLDAP; the nss_ldap Makefile will
+take care of these for you within nss_ldap itself):
+
+   o You may find it useful to build a current libtool and
+     use that rather than the version distributed with many
+     third party packages.
+
+   o The GNU linker cannot reliably build shared libraries
+     on AIX and, even if newer versions can, libtool doesn't
+     think it can.
+
+   o You should ensure libtool is using the runtime linker
+     (-brtl) -- this builds shared libraries that resolve
+     their symbols at runtime rather than link time.
+
+eg. for configuring libtool:
+
+   $ LD=/usr/ccs/bin/ld LDFLAGS=-Wl,-brtl ./configure
+
 3. Installation
 ---------------
 
