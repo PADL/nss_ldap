@@ -492,7 +492,7 @@ _nss_ldap_enter (void)
 #ifdef HAVE_SIGPROCMASK
   sigemptyset (&sigset);
   sigaddset (&sigset, SIGPIPE);
-  __sigprocmask_retval = sigprocmask (SIG_IGN, &sigset, &__signal_mask); 
+  __sigprocmask_retval = sigprocmask (SIG_BLOCK, &sigset, &__signal_mask); 
 #elif defined(HAVE_SIGSET)
   __sigpipe_handler = sigset (SIGPIPE, SIG_IGN);
 #else

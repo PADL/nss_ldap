@@ -1,9 +1,8 @@
 $Header$
 ===============================================================
 
-206	Luke Howard <lukeh@padl.com>
+207	Luke Howard <lukeh@padl.com>
 
-	* for HAVE_SIGPROCMASK, ignore not block SIGPIPE
 	* work without LDAP_OPT_X_TLS_RANDOM_FILE
 	* fix schema mapping regression from nss_ldap-205;
 	  attribute mapping now works again
