@@ -70,7 +70,7 @@ static char *_nss_ldap_no_members[] = { NULL };
 #ifdef AIX
 typedef struct ldap_initgroups_args
 {
-  char **grplist;
+  char *grplist;
   size_t listlen;
 }
 ldap_initgroups_args_t;
@@ -261,7 +261,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       return NSS_TRYAGAIN;
     }
   memcpy (lia->grplist + lia->listlen, values[0], i);
-  lia->grplist[lia->listlen + i] = '.';
+  lia->grplist[lia->listlen + i] = ',';
   lia->listlen += i + 1;
   ldap_value_free (values);
 #else
@@ -359,12 +359,12 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 #elif defined(HAVE_NSS_H)
-  NSS_STATUS
+NSS_STATUS
 _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 			  long int *size, gid_t ** groupsp, long int limit,
 			  int *errnop)
 #elif defined(AIX)
-     char *_nss_ldap_getgrset (char *user)
+char *_nss_ldap_getgrset (char *user)
 #endif
 {
 #ifdef HAVE_NSSWITCH_H
