@@ -125,7 +125,7 @@ mkinstalldirs
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = tar
+TAR = gtar
 GZIP_ENV = --best
 DEP_FILES =  .deps/aix_authmeth.P .deps/dnsconfig.P .deps/globals.P \
 .deps/irs-nss.P .deps/ldap-alias.P .deps/ldap-bp.P .deps/ldap-ethers.P \

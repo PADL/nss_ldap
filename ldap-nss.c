@@ -18,7 +18,8 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] = "$Id$";
+static char rcsId[] =
+  "$Id$";
 
 #include "config.h"
 
@@ -95,7 +96,7 @@ static pthread_once_t __once = PTHREAD_ONCE_INIT;
  * Process ID that opened the session.
  */
 static pid_t __pid = -1;
-#endif 
+#endif
 static uid_t __euid = -1;
 
 #ifdef HAVE_LDAPSSL_CLIENT_INIT
@@ -231,10 +232,10 @@ static int
 _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		  int freeit, void *arg)
 # elif LDAP_SET_REBIND_PROC_ARGS == 2
-     static int
-       _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-			 int freeit)
-# endif				
+static int
+_nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+		  int freeit)
+# endif
 {
   if (freeit)
     {
@@ -272,8 +273,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -295,8 +295,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -313,7 +312,7 @@ static void
 do_atfork_prepare (void)
 {
   debug ("==> do_atfork_prepare");
-  nss_lock();
+  nss_lock ();
   debug ("<== do_atfork_prepare");
 }
 
@@ -321,7 +320,7 @@ static void
 do_atfork_parent (void)
 {
   debug ("==> do_atfork_parent");
-  nss_unlock();
+  nss_unlock ();
   debug ("<== do_atfork_parent");
 }
 
@@ -329,8 +328,8 @@ static void
 do_atfork_child (void)
 {
   debug ("==> do_atfork_child");
-  do_close_no_unbind();
-  nss_unlock();
+  do_close_no_unbind ();
+  nss_unlock ();
   debug ("<== do_atfork_child");
 }
 
@@ -340,9 +339,9 @@ do_atfork_setup (void)
   debug ("==> do_atfork_setup");
 
 #ifdef HAVE_PTHREAD_ATFORK
-  (void) pthread_atfork(do_atfork_prepare, do_atfork_parent, do_atfork_child);
+  (void) pthread_atfork (do_atfork_prepare, do_atfork_parent, do_atfork_child);
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  (void) __libc_atfork(do_atfork_prepare, do_atfork_parent, do_atfork_child);
+  (void) __libc_atfork (do_atfork_prepare, do_atfork_parent, do_atfork_child);
 #endif
 
   debug ("<== do_atfork_setup");
@@ -408,7 +407,7 @@ do_close_no_unbind (void)
 # else
       extern int ldap_ld_free (LDAP * ld, int close);
       (void) ldap_ld_free (__session.ls_conn, 0);
-# endif				/* OPENLDAP 2.x */
+# endif	/* OPENLDAP 2.x */
 
 #else
       /*
@@ -419,17 +418,17 @@ do_close_no_unbind (void)
 # ifdef LDAP_OPT_DESC
       if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 # else
-	if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-# endif				/* LDAP_OPT_DESC */
-	  {
-	    close (sd);
-	    sd = -1;
+      if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
+# endif	/* LDAP_OPT_DESC */
+	{
+	  close (sd);
+	  sd = -1;
 # ifdef LDAP_OPT_DESC
-	    (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
+	  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
 # else
-	    __session.ls_conn->ld_sb.sb_sd = sd;
-# endif				/*  LDAP_OPT_DESC */
-	  }
+	  __session.ls_conn->ld_sb.sb_sd = sd;
+# endif	/*  LDAP_OPT_DESC */
+	}
 
       /* hope we closed it OK! */
       ldap_unbind (__session.ls_conn);
@@ -477,7 +476,7 @@ do_open (void)
   uid_t euid;
 #if !defined(HAVE_PTHREAD_ATFORK) && !defined(HAVE_LIBC_LOCK_H) && !defined(HAVE_BITS_LIBC_LOCK_H)
   pid_t pid;
-#endif 
+#endif
 #ifdef LDAP_X_OPT_CONNECT_TIMEOUT
   int timeout;
 #endif
@@ -493,12 +492,13 @@ do_open (void)
 #ifdef DEBUG
 #if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i", __session.ls_conn, __euid, euid);
+	  "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i",
+	  __session.ls_conn, __euid, euid);
 #else
   syslog (LOG_DEBUG,
 	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
-#endif 
+#endif
 #endif /* DEBUG */
 
 #if !defined(HAVE_PTHREAD_ATFORK) && !defined(HAVE_LIBC_LOCK_H) && !defined(HAVE_BITS_LIBC_LOCK_H)
@@ -591,13 +591,13 @@ do_open (void)
     }
 
 #ifdef HAVE_PTHREAD_ATFORK
-  if (pthread_once(&__once, do_atfork_setup) != 0)
+  if (pthread_once (&__once, do_atfork_setup) != 0)
     {
       debug ("<== do_open");
       return NSS_UNAVAIL;
     }
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  __libc_once(__once, do_atfork_setup);
+  __libc_once (__once, do_atfork_setup);
 #else
   __pid = pid;
 #endif
@@ -781,7 +781,7 @@ do_open (void)
 	  debug ("<== do_open");
 	  return NSS_UNAVAIL;
 	}
-#endif 
+#endif
     }
 
   /*
@@ -1039,7 +1039,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	}
     }
 
-  debug (":== do_filter: %s\n", filter);
+  debug (":== do_filter: %s\n", (args == NULL ? filterprot : filter));
 
   debug ("<== do_filter");
 
@@ -1457,7 +1457,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -1941,8 +1942,7 @@ _nss_ldap_assign_passwd (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;

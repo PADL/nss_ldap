@@ -75,7 +75,7 @@
 #   define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, thr_self() , ## args);
 #  else
 #   define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: thread %u - " fmt, pthread_self() , ## args)
-#  endif			/* HAVE_NSSWITCH_H */
+#  endif /* HAVE_NSSWITCH_H */
 # else
 #  ifdef _AIX
 #   include <stdarg.h>
@@ -92,8 +92,8 @@ debug (char *fmt, ...)
 }
 #  else
 #   define debug(fmt, args...) fprintf(stderr, "nss_ldap: " fmt "\n" , ## args)
-#  endif			/* AIX */
-# endif				/* DEBUG_SYSLOG */
+#  endif /* AIX */
+# endif	/* DEBUG_SYSLOG */
 #else
 # ifdef _AIX
 static void
@@ -102,7 +102,7 @@ debug (char *fmt, ...)
 }
 # else
 #  define debug(fmt, args...)
-# endif				/* AIX */
+# endif	/* AIX */
 #endif /* DEBUG */
 
 #ifdef __GNUC__

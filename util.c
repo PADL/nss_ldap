@@ -77,7 +77,7 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 # elif defined(HAVE_DB_H)
 #  include <db.h>
 #  define DN2UID_CACHE
-# endif				/* HAVE_DB1_DB_H */
+# endif	/* HAVE_DB1_DB_H */
 
 #ifdef DN2UID_CACHE
 #include <fcntl.h>
@@ -95,7 +95,7 @@ static pthread_mutex_t __cache_mutex = PTHREAD_MUTEX_INITIALIZER;
 # else
 #  define cache_lock()     pthread_mutex_lock(&__cache_mutex)
 #  define cache_unlock()   pthread_mutex_unlock(&__cache_mutex)
-# endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
+# endif	/* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
 #else
 # define cache_lock()
 # define cache_unlock()
@@ -758,7 +758,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   return stat;
 }
 
-NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+NSS_STATUS
+_nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
   int ret = NSS_TRYAGAIN;
   char *p = buf;
