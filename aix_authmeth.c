@@ -20,9 +20,6 @@
 
 /*
  * Glue code to support AIX loadable authentication modules.
- *
- * Note: only information functions are supported, so you need to
- * specify "options = dbonly" in /usr/lib/security/methods.cfg
  */
 
 #include "config.h"
