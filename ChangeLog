@@ -15,6 +15,8 @@ $Id$
 	  correctly
 	* fix for BUG#161: remove redundant lock in
 	  _nss_ldap_innetgr()
+	* fix for BUG#164: set schema element array size
+	  to LM_NONE + 1 not LM_NONE
 	* fix for BUG#165: make _nss_ldap_result() private
 	* fix for BUG#166: chase all nested netgroups in
 	  innetgr()

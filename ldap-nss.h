@@ -335,7 +335,7 @@ struct ldap_config
   /* 
    * attribute table for ldap search requensts
    */
-  const char **ldc_attrtab[LM_NONE];
+  const char **ldc_attrtab[LM_NONE + 1];
 
   /* next configuration. loops back onto itself for last entry */
   struct ldap_config *ldc_next;
