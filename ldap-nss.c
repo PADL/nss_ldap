@@ -20,7 +20,7 @@
  */
 
 static char rcsId[] =
-  "$Id$";
+"$Id$";
 
 #ifdef SUN_NSS
 #include <thread.h>
@@ -37,6 +37,9 @@ static char rcsId[] =
 #include <netinet/in.h>
 #include <lber.h>
 #include <ldap.h>
+#ifdef SSL
+#include <ldap_ssl.h> 
+#endif /* SSL */ 
 
 #ifdef GNU_NSS
 #include <nss.h>
@@ -68,7 +71,8 @@ static ldap_config_t *__config = NULL;
 /*
  * Global LDAP session.
  */
-static ldap_session_t __session = { NULL, NULL };
+static ldap_session_t __session =
+{NULL, NULL};
 
 /* 
  * Process ID that opened the session.
@@ -125,7 +129,8 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS 
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   ent_context_t *ctx = ((nss_ldap_backend_t *) be)->state;
 
@@ -159,7 +164,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS 
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -213,7 +219,7 @@ do_open (void)
   pid = getpid ();
 #ifdef DEBUG
   syslog (LOG_DEBUG,
-	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
+     "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
 #endif /* DEBUG */
 
@@ -338,9 +344,9 @@ do_open (void)
        */
       if (cfg->ldc_ssl_on)
 	{
-	  if (ldapssl_client_init (cfg->ldc_ssl_path, NULL) != LDAP_SUCCESS)
+	  if (ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
 	    {
-		continue;
+	      continue;
 	    }
 	}
 #endif /* SSL */
@@ -550,7 +556,7 @@ do_search_s (const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
+	   "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
 		  backoff);
 	  (void) sleep (backoff);
 	}
@@ -758,7 +764,7 @@ _nss_ldap_getent (ent_context_t * ctx,
 		  char *buffer,
 		  size_t buflen,
 		  int *errnop,
-		  const char *filterprot, const char **attrs, parser_t parser)
+		const char *filterprot, const char **attrs, parser_t parser)
 {
   NSS_STATUS stat = NSS_NOTFOUND;
 

@@ -66,7 +66,7 @@ NSS_STATUS _nss_ldap_dn2uid (
 #define NSS_LDAP_KEY_BINDPW     "bindpw"
 #define NSS_LDAP_KEY_ROOTBINDDN	"rootbinddn"
 #define NSS_LDAP_KEY_LDAP_VERSION	"ldap_version"
-#define NSS_LDAP_KEY_SSL_ON	"ssl"
+#define NSS_LDAP_KEY_SSL	"ssl"
 #define NSS_LDAP_KEY_SSLPATH	"sslpath"
 #define NSS_LDAP_PATH_CONF	"/etc/ldap.conf"
 #define NSS_LDAP_PATH_ROOTPASSWD	"/etc/nss_ldap.secret"
