@@ -404,6 +404,7 @@ do_open (void)
     }
   else if (__session.ls_conn != NULL && __session.ls_config != NULL)
     {
+#ifndef SSL
       /*
        * Otherwise we can hand back this process' global
        * LDAP session.
@@ -456,7 +457,7 @@ do_open (void)
 #endif /* SUN_NSS */
 	    }
 	}
-
+#endif /* SSL */
       /*
        * If the connection is still there (ie. do_close() wasn't
        * called) then we can return the cached connection.
