@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+2.37	Luke Howard <lukeh@xedoc.com>
+
+	* moved to CVS repository and Linux as development
+	  environment (hey, Greg!)
+
 2.36	Luke Howard <lukeh@xedoc.com>
 
 	* util.c: will use ldap_explode_rdn() if it exists
