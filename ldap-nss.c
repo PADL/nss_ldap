@@ -100,6 +100,9 @@ static ldap_session_t __session = { NULL, NULL };
 static pid_t __pid = -1;
 static uid_t __euid = -1;
 
+#ifdef SSL
+static int __ssl_initialized = 0;
+#endif /* SSL */
 /*
  * Close the global session, sending an unbind.
  */
@@ -510,15 +513,15 @@ do_open (void)
     {
 #ifdef SSL
       /*
-       * Initialize the SSL library. Should be one-time, but 
-       * things could change between config files.
+       * Initialize the SSL library. 
        */
       if (cfg->ldc_ssl_on)
 	{
-	  if (ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
+	  if (__ssl_initialized == 0 && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
 	    {
 	      continue;
 	    }
+	  __ssl_initialized = 1;
 	}
 #endif /* SSL */
 

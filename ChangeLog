@@ -1,6 +1,13 @@
 $Header$
 ===============================================================
 
+114	Luke Howard <lukeh@padl.com>
+
+	* fixed filter escaping (based on ypldapd code;
+	  must check whether unencumbered)
+	* call ldapssl_client_init() once only
+	* include db_185.h not db.h for dn2uid cache
+
 113	Luke Howard <lukeh@padl.com>
 
 	* patch from Ben Collins to escape '*' in filters

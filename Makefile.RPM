@@ -70,7 +70,7 @@ SRCS=	ldap-nss.c \
 OBJS=$(SRCS:.c=.o)
 
 # uncomment NSFLAGS if you are using the Netscape SDK
-#NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
+#NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API -DRFC2307BIS
 
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module
 GNUFLAGS=-DGNU_NSS -DHAVE_SNPRINTF -D_REENTRANT #-DLDAP_VERSION3_API

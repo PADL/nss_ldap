@@ -61,7 +61,7 @@ static NSS_STATUS _nss_ldap_getrdnvalue_impl (const char *dn,
 #endif /* GNU_NSS */
 
 #ifdef DN2UID_CACHE
-#include <db.h>
+#include <db_185.h>
 #include <fcntl.h>
 static DB *__cache = NULL;
 #ifdef SUN_NSS
@@ -552,28 +552,47 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   return stat;
 }
 
-/*
- * Patch from Ben Collins <bcollins@debian.org>
- */
-NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
+NSS_STATUS 
+_nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 {
-  int ret = NSS_TRYAGAIN, c;
+  int ret = NSS_TRYAGAIN;
   char *p = buf;
+  char *limit = p + buflen - 3;
+  const char *s = str;
 
-  memset(p, '\0', buflen);
-  for (c = 0 ; str[c] ; c++) {
-    if ((p - buf) > buflen)
-	goto fail;
-    if (str[c] == '*') {
-      *p++ = '\\';
-      if ((p - buf) > buflen)
-	goto fail;
+  while (p < limit && *s)
+    {
+      switch (*s)
+	{
+	case '*':
+	  strcpy (p, "\\2a");
+	  p += 3;
+	  break;
+	case '(':
+	  strcpy (p, "\\28");
+	  p += 3;
+	  break;
+	case ')':
+	  strcpy (p, "\\29");
+	  p += 3;
+	  break;
+	case '\\':
+	  strcpy (p, "\\5c");
+	  p += 3;
+	  break;
+	default:
+	  *p++ = *s;
+	  break;
+	}
+      s++;
     }
-    *p++ = str[c];
-  }
 
-  ret = NSS_SUCCESS; 
+  if (*s == '\0')
+    {
+      /* got to end */
+      *p = '\0';
+      ret = NSS_SUCCESS;
+    }
 
-fail:
   return ret;
 }
