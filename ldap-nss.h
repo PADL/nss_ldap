@@ -159,6 +159,7 @@ enum ldap_map_selector
   LM_BOOTPARAMS,
   LM_ALIASES,
   LM_NETGROUP,
+  LM_AUTOMOUNT,
   LM_NONE
 };
 
@@ -360,7 +361,8 @@ enum ldap_args_types
   LA_TYPE_STRING,
   LA_TYPE_NUMBER,
   LA_TYPE_STRING_AND_STRING,
-  LA_TYPE_NUMBER_AND_STRING
+  LA_TYPE_NUMBER_AND_STRING,
+  LA_TYPE_STRING_UNESCAPED
 };
 
 typedef enum ldap_args_types ldap_args_types_t;
@@ -456,6 +458,12 @@ struct ent_context
 
 typedef struct ent_context ent_context_t;
 
+struct name_list
+{
+  char *name;
+  struct name_list *next;
+};
+
 #ifdef HAVE_NSSWITCH_H
 
 struct nss_ldap_backend
@@ -466,6 +474,16 @@ struct nss_ldap_backend
 };
 
 typedef struct nss_ldap_backend nss_ldap_backend_t;
+
+struct nss_ldap_netgr_backend
+{
+  nss_backend_op_t *ops;
+  int n_ops;
+  ent_context_t *state;
+  struct name_list *namelist;
+};
+
+typedef struct nss_ldap_netgr_backend nss_ldap_netgr_backend_t;
 
 typedef nss_status_t NSS_STATUS;
 

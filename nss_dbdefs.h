@@ -41,6 +41,18 @@ enum nss_netgr_status {
 	NSS_NETGR_NO,
 	NSS_NETGR_NOMEM
 };
+
+struct nss_setnetgrent_args {
+	const char *netgroup;
+	nss_backend_t *iterator;
+};
+
+struct nss_getnetgrent_args {
+	char *buffer;
+	int buflen;
+	enum nss_netgr_status status;
+	char *retp[NSS_NETGR_N];
+};
  
 typedef unsigned nss_innetgr_argc;
 typedef char **nss_innetgr_argv;
@@ -48,6 +60,12 @@ typedef char **nss_innetgr_argv;
 struct nss_innetgr_1arg {
 	nss_innetgr_argc argc;
 	nss_innetgr_argv argv;
+};
+
+struct nss_innetgr_args {
+	struct nss_innetgr_1arg arg[NSS_NETGR_N];
+	struct nss_innetgr_1arg groups;
+	enum nss_netgr_status status;
 };
  
 typedef struct {

@@ -500,6 +500,8 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
     t = &result[LM_ALIASES];
   else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETGROUP))
     t = &result[LM_NETGROUP];
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_AUTOMOUNT))
+    t = &result[LM_AUTOMOUNT];
 
   if (t == NULL)
     return NSS_SUCCESS;

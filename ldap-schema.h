@@ -97,6 +97,8 @@ extern char _nss_ldap_filt_getspent[];
 
 /* netgroups */
 extern char _nss_ldap_filt_getnetgrent[];
+extern char _nss_ldap_filt_innetgr[];
+extern char _nss_ldap_filt_innetgr2[];
 
 #ifdef AT_OC_MAP
 /**
@@ -114,7 +116,6 @@ extern char _nss_ldap_filt_getnetgrent[];
 #define OV(at)                   _nss_ldap_map_ov(at)
 
 #else /* AT_OC_MAP */
-
 #define OC(oc)                    OC##_##oc
 #define AT(at)                    AT##_##at
 #define DF(at)                    NULL

@@ -123,6 +123,8 @@ char _nss_ldap_filt_getspent[LDAP_FILT_MAXSIZ];
 
 /* netgroups */
 char _nss_ldap_filt_getnetgrent[LDAP_FILT_MAXSIZ];
+char _nss_ldap_filt_innetgr[LDAP_FILT_MAXSIZ];
+char _nss_ldap_filt_innetgr2[LDAP_FILT_MAXSIZ];
 
 /**
  * lookup filter initialization
@@ -235,6 +237,10 @@ _nss_ldap_init_filters ()
   /* netgroups */
   snprintf (_nss_ldap_filt_getnetgrent, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (cn), "%s");
+  snprintf (_nss_ldap_filt_innetgr, LDAP_FILT_MAXSIZ,
+	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (nisNetgroupTriple), "%s");
+  snprintf (_nss_ldap_filt_innetgr2, LDAP_FILT_MAXSIZ,
+	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (memberNisNetgroup), "%s");
 }
 
 #ifdef AT_OC_MAP
@@ -250,6 +256,7 @@ static void init_ethers_attributes (const char ***ethers_attrs);
 static void init_bp_attributes (const char ***bp_attrs);
 static void init_alias_attributes (const char ***alias_attrs);
 static void init_netgrp_attributes (const char ***netgrp_attrs);
+static void init_automount_attributes (const char ***automount_attrs);
 
 /**
  * attribute table initialization routines
@@ -270,6 +277,7 @@ _nss_ldap_init_attributes (const char ***attrtab)
   init_bp_attributes (&attrtab[LM_BOOTPARAMS]);
   init_alias_attributes (&attrtab[LM_ALIASES]);
   init_netgrp_attributes (&attrtab[LM_NETGROUP]);
+  init_automount_attributes (&attrtab[LM_AUTOMOUNT]);
 
   attrtab[LM_NONE] = NULL;
 }
@@ -442,6 +450,20 @@ init_netgrp_attributes (const char ***netgrp_attrs)
   (*netgrp_attrs)[3] = NULL;
 }
 
+void
+init_automount_attributes (const char ***automount_attrs)
+{
+  static const char *__automount_attrs[ATTRTAB_SIZE + 1];
+
+  (*automount_attrs) = __automount_attrs;
+
+  (*automount_attrs)[0] = AT (cn);
+  (*automount_attrs)[1] = AT (nisMapEntry);
+  (*automount_attrs)[2] = AT (nisMapName);
+  (*automount_attrs)[3] = AT (description);
+  (*automount_attrs)[4] = NULL;
+}
+
 #else /* AT_OC_MAP */
 
 static const char *pwd_attributes[] = { AT (uid), AT (userPassword),
@@ -488,11 +510,13 @@ static const char *ethers_attributes[] = { AT (cn), AT (macAddress), NULL };
 static const char *bp_attributes[] = { AT (cn), AT (bootParameter), NULL };
 
 static const char *alias_attributes[] =
-
   { AT (cn), AT (rfc822MailMember), NULL };
 
 static const char *netgrp_attributes[] =
   { AT (cn), AT (nisNetgroupTriple), AT (memberNisNetgroup), NULL };
+
+static const char *automount_attributes[] =
+  { AT (cn), AT (nisMapEntry), AT (nisMapName), AT (description), NULL };
 
 void
 _nss_ldap_init_attributes (const char ***attrtab)
@@ -510,6 +534,7 @@ _nss_ldap_init_attributes (const char ***attrtab)
   attrtab[LM_BOOTPARAMS] = bp_attributes;
   attrtab[LM_ALIASES] = alias_attributes;
   attrtab[LM_NETGROUP] = netgrp_attributes;
+  attrtab[LM_AUTOMOUNT] = automount_attributes;
   attrtab[LM_NONE] = NULL;
 }
 

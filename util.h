@@ -102,6 +102,7 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 #define NSS_LDAP_KEY_NSS_BASE_BOOTPARAMS	"nss_base_bootparams"
 #define NSS_LDAP_KEY_NSS_BASE_ALIASES		"nss_base_aliases"
 #define NSS_LDAP_KEY_NSS_BASE_NETGROUP		"nss_base_netgroup"
+#define NSS_LDAP_KEY_NSS_BASE_AUTOMOUNT		"nss_base_automount"
 
 /*
  * There are a number of means of obtaining configuration information.

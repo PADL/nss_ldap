@@ -12,6 +12,11 @@ nss_ldap.so.1 {
 		_nss_ldap_rpc_constr;
 		_nss_ldap_services_constr;
 		_nss_ldap_shadow_constr;
+		_nss_ldap_netgroup_constr;
+#		__ns_ldap_err2str;
+#		__ns_ldap_freeError;
+#		__ns_ldap_freeResult;
+#		__ns_ldap_list;
 	local:
 		*;
 };

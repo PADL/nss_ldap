@@ -1706,6 +1706,10 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  snprintf (filterBufP, filterSiz, filterprot,
 		    args->la_arg1.la_number, buf1);
 	  break;
+	case LA_TYPE_STRING_UNESCAPED:
+	  /* literal string */
+	  snprintf (filterBufP, filterSiz, filterprot, args->la_arg1.la_string);
+	  break;
 	}
 
       /*
@@ -2319,6 +2323,10 @@ _nss_ldap_next_entry (LDAPMessage * res)
 NSS_STATUS
 _nss_ldap_result (ent_context_t * ctx)
 {
+  if (__session.ls_conn == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
   return do_result (ctx, LDAP_MSG_ONE);
 }
 
@@ -2422,6 +2430,8 @@ _nss_ldap_search (const ldap_args_t * args,
 
   debug ("==> _nss_ldap_search");
 
+  *msgid = -1;
+
   stat = do_open ();
   if (stat != NSS_SUCCESS)
     {
@@ -2435,15 +2445,15 @@ _nss_ldap_search (const ldap_args_t * args,
   scope = __session.ls_config->ldc_scope;
   attrs = NULL;
 
-  if (sel < LM_NONE || *csd)
+  if (sel < LM_NONE || *csd != NULL)
     {
       /* If we were chasing multiple descriptors and there are none left,
        * just quit with NSS_NOTFOUND.
        */
-      if (*csd)
+      if (*csd != NULL)
 	{
 	  sd = (*csd)->lsd_next;
-	  if (!sd)
+	  if (sd == NULL)
 	    return NSS_NOTFOUND;
 	}
       else
@@ -3460,3 +3470,6 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
   return LDAP_SUCCESS;
 }
 #endif
+
+/* #include "sldap-compat.c" */
+

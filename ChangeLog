@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+SHX-1	Luke Howard <lukeh@padl.com>
+	*** Restricted Release - Use Subject to License ***
+
+	* Solaris netgroup support
+
 211	Luke Howard <lukeh@padl.com>
 
 	* do AT_OC_MAP cache initialization at config init
