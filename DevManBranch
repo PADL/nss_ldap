@@ -15,8 +15,8 @@ dl-grp.h	2.1	0
 dl-nss.h	2.1	0
 dl-pwd.c	2.1	0
 dl-pwd.h	2.1	0
-dnsconfig.c	2.1	0
-dnsconfig.h	2.1	0
+dnsconfig.c	2.2	0
+dnsconfig.h	2.2	0
 exports.osf	2.1	0
 exports.sgi	2.1	0
 globals.c	2.1	0

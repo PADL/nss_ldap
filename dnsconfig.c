@@ -61,8 +61,7 @@
 #include "util.h"
 #include "snprintf.h"
 #include "resolve.h"
-
-#define MYDOMAINNAME "asdf"
+#include "dnsconfig.h"
 
 /* map gnu.org into DC=gnu,DC=org */
 NSS_STATUS _nss_ldap_getdnsdn(
@@ -144,7 +143,6 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 	result->ldc_bindpw = NULL;
 	result->ldc_next = result;
 
-	snprintf(domain, sizeof(domain), "ldap.tcp.%s.", _res.defdname);
 	__nss_lock();
 
 	if ((_res.options & RES_INIT) == 0 && res_init() == -1)
@@ -152,6 +150,12 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 		__nss_unlock();
 		return NSS_UNAVAIL;
 		}
+
+/*
+	strcpy(_res.defdname,"toorak.xedoc.com.au");
+ */
+
+	snprintf(domain, sizeof(domain), "ldap.tcp.%s.", _res.defdname);
 
 	r = dns_lookup(domain, "srv");
 	if (r == NULL)

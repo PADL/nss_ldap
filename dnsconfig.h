@@ -32,8 +32,8 @@
 NSS_STATUS _nss_ldap_getdnsdn(
         char *domain,
         char **rval,
-        char **buffer;
-        size_t &buflen);
+        char **buffer,
+        size_t *buflen);
 
 NSS_STATUS _nss_ldap_readconfigfromdns(
         ldap_config_t *result,
