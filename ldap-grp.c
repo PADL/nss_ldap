@@ -218,6 +218,11 @@ do_get_range_values (LDAP * ld,
 	      stat = NSS_NOTFOUND;
 	    }
 	}
+
+#ifdef HAVE_LDAP_MEMFREE
+      ldap_memfree (attribute);
+#endif
+
       if (stat == NSS_SUCCESS)
 	break;
     }
@@ -494,7 +499,11 @@ out:
   if (res != NULL)
     ldap_msgfree (res);
   if (groupdn != NULL)
+#ifdef HAVE_LDAP_MEMFREE
     ldap_memfree (groupdn);
+#else
+    free (groupdn);
+#endif
 
   *pGroupMembers = groupMembers;
   *pGroupMembersCount = i;
@@ -744,7 +753,11 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
       lia->depth++;
       stat = ng_chase (ld, groupdn, lia);
       lia->depth--;
+#ifdef HAVE_LDAP_MEMFREE
       ldap_memfree (groupdn);
+#else
+      free (groupdn);
+#endif
 
       return stat;
     }

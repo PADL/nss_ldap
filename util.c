@@ -40,6 +40,7 @@
 #include <syslog.h>
 #include <string.h>
 #include <fcntl.h>
+#include <assert.h>
 
 #ifdef HAVE_LBER_H
 #include <lber.h>
@@ -76,81 +77,27 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 					     ** result, char **buffer,
 					     size_t * buflen);
 
-/*
- * Use db_185.h first, as that's an old DB wrapper
- * around DB 2.x. If we don't have that, use db1/db.h,
- * which I think may me the original DB library.
- * Last resort, use db.h, which we hope has the
- * right API!
- */
-#if defined(RFC2307BIS) || defined(AT_OC_MAP)
-#ifdef HAVE_DB3_DB_185_H
-#include <db3/db_185.h>
-#define DN2UID_CACHE
-#elif defined(HAVE_DB_185_H)
-#include <db_185.h>
-#define DN2UID_CACHE
-#elif defined(HAVE_DB1_DB_H)
-#include <db1/db.h>
-#define DN2UID_CACHE
-#elif defined(HAVE_DB_H)
-#include <db.h>
-#define DN2UID_CACHE
-#endif /* HAVE_DB3_DB_H */
-
-#ifdef DN2UID_CACHE
-
-/* Used for both DN2UID and AT_OC mapping */
-void *
-_nss_hash_open()
-{
-  DB *db = NULL;
-#if DB_VERSION_MAJOR > 2
-  int rc;
-
-  rc = db_create(&db, NULL, 0);
-  if (rc != 0) {
-    return NULL;
-  }
-
-#if (DB_VERSION_MAJOR > 3) && (DB_VERSION_MINOR > 0)
-  rc = db->open(db, NULL, NULL, NULL, DB_HASH, DB_CREATE, 0600);
-#else
-  rc = db->open(db, NULL, NULL, DB_HASH, DB_CREATE, 0600);
-#endif
-
-  if (rc != 0) {
-    db->close(db, 0);
-    return NULL;
-  }
-#else
-  db = dbopen(NULL, O_RDWR, 0600, DB_HASH, NULL);
-#endif /* DB_VERSION_MAJOR */
-
-  return db;
-}
-#endif
-
-#if defined(DN2UID_CACHE) && defined(RFC2307BIS)
+#ifdef RFC2307BIS
 
 #include <fcntl.h>
-static DB *__cache = NULL;
+static void *__cache = NULL;
 
 NSS_LDAP_DEFINE_LOCK (__cache_lock);
 
 #define cache_lock()     NSS_LDAP_LOCK(__cache_lock)
 #define cache_unlock()   NSS_LDAP_UNLOCK(__cache_lock)
+
 static NSS_STATUS
 dn2uid_cache_put (const char *dn, const char *uid)
 {
-  DBT key, val;
-  int rc;
+  NSS_STATUS stat;
+  ldap_datum_t key, val;
 
   cache_lock ();
 
   if (__cache == NULL)
     {
-      __cache = _nss_hash_open();
+      __cache = _nss_ldap_db_open();
       if (__cache == NULL)
 	{
 	  cache_unlock ();
@@ -158,28 +105,23 @@ dn2uid_cache_put (const char *dn, const char *uid)
 	}
     }
 
-  memset (&key, 0, sizeof(key));
-  key.data = (void *) dn;
-  key.size = strlen (dn);
+  key.data = (void *)dn;
+  key.size = strlen(dn);
+  val.data = (void *)uid;
+  val.size = strlen(uid);
 
-  memset (&val, 0, sizeof(val));
-  val.data = (void *) uid;
-  val.size = strlen (uid);
-
-  rc = (__cache->put) (__cache,
-#if DB_VERSION_MAJOR >= 2
-	NULL,
-#endif
-	&key, &val, 0);
+  stat = _nss_ldap_db_put(__cache, &key, &val);
 
   cache_unlock ();
-  return rc ? NSS_TRYAGAIN : NSS_SUCCESS;
+
+  return stat;
 }
 
 static NSS_STATUS
 dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
 {
-  DBT key, val;
+  ldap_datum_t key, val;
+  NSS_STATUS stat;
 
   cache_lock ();
 
@@ -189,20 +131,14 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
       return NSS_NOTFOUND;
     }
 
-  memset (&key, 0, sizeof(key));
   key.data = (void *) dn;
   key.size = strlen (dn);
 
-  memset (&val, 0, sizeof(val));
-
-  if ((__cache->get) (__cache,
-#if DB_VERSION_MAJOR >= 2
-	NULL,
-#endif
-	&key, &val, 0) != 0)
+  stat = _nss_ldap_db_get(__cache, &key, &val);
+  if (stat != NSS_SUCCESS)
     {
       cache_unlock ();
-      return NSS_NOTFOUND;
+      return stat;
     }
 
   if (*buflen <= val.size)
@@ -212,7 +148,7 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
     }
 
   *uid = *buffer;
-  strncpy (*uid, (char *) val.data, val.size);
+  memcpy (*uid, (char *) val.data, val.size);
   (*uid)[val.size] = '\0';
   *buffer += val.size + 1;
   *buflen -= val.size + 1;
@@ -220,10 +156,6 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
   cache_unlock ();
   return NSS_SUCCESS;
 }
-#endif /* DN2UID_CACHE */
-#endif
-
-#ifdef RFC2307BIS
 
 #ifdef HPUX
 static int lock_inited = 0;
@@ -234,7 +166,7 @@ _nss_ldap_dn2uid (LDAP * ld,
 		  const char *dn, char **uid, char **buffer, size_t * buflen,
 		  int *pIsNestedGroup, LDAPMessage **pRes)
 {
-  NSS_STATUS status;
+  NSS_STATUS stat;
 
   debug ("==> _nss_ldap_dn2uid");
 
@@ -249,11 +181,9 @@ _nss_ldap_dn2uid (LDAP * ld,
     }
 #endif
 
-#ifdef DN2UID_CACHE
-      status = dn2uid_cache_get (dn, uid, buffer, buflen);
-      if (status == NSS_NOTFOUND)
+      stat = dn2uid_cache_get (dn, uid, buffer, buflen);
+      if (stat == NSS_NOTFOUND)
 	{
-#endif /* DN2UID_CACHE */
 	  const char *attrs[4];
 	  LDAPMessage *res;
 
@@ -275,21 +205,19 @@ _nss_ldap_dn2uid (LDAP * ld,
 		      return NSS_SUCCESS;
 		    }
 
-		  status =
+		  stat =
 		    _nss_ldap_assign_attrval (ld, e, ATM (passwd, uid), uid,
                                               buffer, buflen);
-#ifdef DN2UID_CACHE
-		  if (status == NSS_SUCCESS)
+		  if (stat == NSS_SUCCESS)
 		    dn2uid_cache_put (dn, *uid);
 		}
-#endif /* DN2UID_CACHE */
 	    }
 	  ldap_msgfree (res);
 	}
 
   debug ("<== _nss_ldap_dn2uid");
 
-  return status;
+  return stat;
 }
 #endif /* RFC2307BIS */
 
@@ -639,7 +567,7 @@ _nss_ldap_init_config (ldap_config_t * result)
 #ifdef AT_OC_MAP
   for (i = 0; i <= MAP_MAX; i++)
     {
-      result->ldc_maps[i] = _nss_hash_open();
+      result->ldc_maps[i] = _nss_ldap_db_open();
       if (result->ldc_maps[i] == NULL)
 	{
 	  return NSS_UNAVAIL;
@@ -1067,3 +995,132 @@ NSS_STATUS _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 
   return ret;
 }
+
+/* XXX just a linked list for now */
+
+struct ldap_dictionary
+{
+	ldap_datum_t key;
+	ldap_datum_t value;
+	struct ldap_dictionary *next;
+};
+
+static struct ldap_dictionary *do_alloc_dictionary(void)
+{
+	struct ldap_dictionary *dict;
+
+	dict = malloc(sizeof(*dict));
+	if (dict == NULL) {
+		return NULL;
+	}
+	NSS_LDAP_DATUM_ZERO(&dict->key);
+	NSS_LDAP_DATUM_ZERO(&dict->value);
+	dict->next = NULL;
+
+	return dict;
+}
+
+static void do_free_datum(ldap_datum_t *datum)
+{
+	if (datum->data != NULL) {
+		free(datum->data);
+		datum->data = NULL;
+	}
+	datum->size = 0;
+}
+
+static struct ldap_dictionary *do_find_last(struct ldap_dictionary *dict)
+{
+	struct ldap_dictionary *p;
+
+	for (p = dict; p->next != NULL; p = p->next)
+		;
+
+	return p;
+}
+
+static void do_free_dictionary(struct ldap_dictionary *dict)
+{
+	do_free_datum(&dict->key);
+	do_free_datum(&dict->value);
+	free(dict);
+}
+
+static NSS_STATUS do_dup_datum(ldap_datum_t *dst, const ldap_datum_t *src)
+{
+	dst->data = malloc(src->size);
+	if (dst->data == NULL)
+		return NSS_TRYAGAIN;
+
+	memcpy(dst->data, src->data, src->size);
+	dst->size = src->size;
+
+	return NSS_SUCCESS;
+}
+
+void *_nss_ldap_db_open(void)
+{
+	return (void *)do_alloc_dictionary();
+}
+
+void _nss_ldap_db_close(void *db)
+{
+	struct ldap_dictionary *dict;
+
+	dict = (struct ldap_dictionary *)db;
+
+	while (dict != NULL) {
+		struct ldap_dictionary *next = dict->next;
+
+		do_free_dictionary(dict);
+
+		dict = next;
+	}
+}
+
+NSS_STATUS _nss_ldap_db_get(void *db, const ldap_datum_t *key, ldap_datum_t *value)
+{
+	struct ldap_dictionary *dict = (struct ldap_dictionary *)db;
+	struct ldap_dictionary *p;
+
+	for (p = dict; p != NULL; p = p->next) {
+		if (p->key.size == key->size &&
+		    memcmp(p->key.data, key->data, key->size) == 0) {
+			value->data = p->value.data;
+			value->size = p->value.size;
+
+			return NSS_SUCCESS;
+		}
+	}
+
+	return NSS_NOTFOUND;
+}
+
+NSS_STATUS _nss_ldap_db_put(void *db, const ldap_datum_t *key, const ldap_datum_t *value)
+{
+	struct ldap_dictionary *dict = (struct ldap_dictionary *)db;
+	struct ldap_dictionary *p, *q;
+
+	p = do_find_last(dict);
+	assert(p != NULL);
+	assert(p->next == NULL);
+
+	q = do_alloc_dictionary();
+	if (q == NULL)
+		return NSS_TRYAGAIN;
+
+	if (do_dup_datum(&q->key, key) != NSS_SUCCESS) {
+		do_free_dictionary(q);
+		return NSS_TRYAGAIN;
+	}
+
+	if (do_dup_datum(&q->value, value) != NSS_SUCCESS) {
+		do_free_dictionary(q);
+		return NSS_TRYAGAIN;
+	}
+
+	p->next = q;
+
+	return NSS_SUCCESS;
+}
+

@@ -71,19 +71,6 @@ static char rcsId[] =
 #elif defined(HAVE_SASL_H)
 #include <sasl.h>
 #endif
-#ifdef AT_OC_MAP
-#ifdef HAVE_DB3_DB_185_H
-#include <db3/db_185.h>
-#elif defined(HAVE_DB_185_H)
-#include <db_185.h>
-#elif defined(HAVE_DB1_DB_H)
-#include <db1/db.h>
-#elif defined(HAVE_DB_H)
-#include <db.h>
-#else
-#error Schema mapping requires the Berkeley DB library.
-#endif /* DB */
-#endif /* AT_OC_MAP */
 
 #ifndef HAVE_SNPRINTF
 #include "snprintf.h"
@@ -3337,9 +3324,7 @@ NSS_STATUS
 _nss_ldap_map_put (ldap_config_t * config, ldap_map_type_t type,
 		   const char *rfc2307attribute, const char *value)
 {
-  DBT key, val;
-  int rc;
-  char *vadup;
+  ldap_datum_t key, val;
   void **map;
 
   switch (type)
@@ -3377,25 +3362,15 @@ _nss_ldap_map_put (ldap_config_t * config, ldap_map_type_t type,
   map = &config->ldc_maps[type];
   assert (*map != NULL);
 
-  vadup = strdup (value);
-  if (vadup == NULL)
-    return NSS_TRYAGAIN;
-
-  memset (&key, 0, sizeof (key));
+  NSS_LDAP_DATUM_ZERO(&key);
   key.data = (void *) rfc2307attribute;
   key.size = strlen (rfc2307attribute);
 
-  memset (&val, 0, sizeof (val));
-  val.data = (void *) &vadup;
-  val.size = sizeof (vadup);
+  NSS_LDAP_DATUM_ZERO(&val);
+  val.data = (void *) value;
+  val.size = strlen (value) + 1;
 
-  rc = (((DB *) (*map))->put) ((DB *) * map,
-#if DB_VERSION_MAJOR > 2
-			       NULL,	/* DB_TXN */
-#endif /* DB_VERSION_MAJOR */
-			       &key, &val, 0);
-
-  return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
+  return _nss_ldap_db_put(*map, &key, &val);
 }
 
 NSS_STATUS
@@ -3407,7 +3382,7 @@ _nss_ldap_atmap_get (ldap_config_t * config, const char *map,
 
   if (map != NULL)
     {
-      sprintf (key, "%s:%s", map, rfc2307attribute);
+      snprintf (key, sizeof(key), "%s:%s", map, rfc2307attribute);
       stat = _nss_ldap_map_get (config, MAP_ATTRIBUTE, key, attribute);
     }
   else
@@ -3472,8 +3447,9 @@ NSS_STATUS
 _nss_ldap_map_get (ldap_config_t * config, ldap_map_type_t type,
 		   const char *rfc2307attribute, const char **value)
 {
-  DBT key, val;
+  ldap_datum_t key, val;
   void *map;
+  NSS_STATUS stat;
 
   if (config == NULL || type > MAP_MAX)
     {
@@ -3483,24 +3459,17 @@ _nss_ldap_map_get (ldap_config_t * config, ldap_map_type_t type,
   map = config->ldc_maps[type];
   assert (map != NULL);
 
-  memset (&key, 0, sizeof (key));
+  NSS_LDAP_DATUM_ZERO(&key);
   key.data = (void *) rfc2307attribute;
   key.size = strlen (rfc2307attribute);
 
-  memset (&val, 0, sizeof (val));
+  NSS_LDAP_DATUM_ZERO(&val);
+  stat = _nss_ldap_db_get(map, &key, &val);
 
-  if ((((DB *) map)->get) ((DB *) map,
-#if DB_VERSION_MAJOR > 2
-			   NULL,
-#endif
-			   &key, &val, 0) != 0)
-    {
-      return NSS_NOTFOUND;
-    }
+  if (stat == NSS_SUCCESS)
+      *value = (char *)val.data;
 
-  *value = *((char **) val.data);
-
-  return NSS_SUCCESS;
+  return stat;
 }
 #endif /* AT_OC_MAP */
 

@@ -171,4 +171,23 @@ NSS_STATUS _nss_ldap_escape_string (const char *str,
 	} while (0)
 #endif /* HAVE_IRS_H */
 
+struct ldap_datum
+{
+	void *data;
+	size_t size;
+};
+
+typedef struct ldap_datum ldap_datum_t;
+
+#define NSS_LDAP_DATUM_ZERO(d)	do { \
+		(d)->data = NULL; \
+		(d)->size = 0; \
+	} while (0)
+
+void *_nss_ldap_db_open(void);
+void _nss_ldap_db_close(void *db);
+NSS_STATUS _nss_ldap_db_put(void *db, const ldap_datum_t *key, const ldap_datum_t *value);
+NSS_STATUS _nss_ldap_db_get(void *db, const ldap_datum_t *key, ldap_datum_t *value);
+
 #endif /* _LDAP_NSS_LDAP_UTIL_H */
+

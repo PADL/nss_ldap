@@ -129,10 +129,10 @@ AC_CHECK_HEADERS(net/route.h)
 AC_CHECK_HEADERS(netinet/if_ether.h)
 AC_CHECK_HEADERS(netinet/ether.h)
 AC_CHECK_HEADERS(ctype.h)
-AC_CHECK_HEADERS(db.h)
-AC_CHECK_HEADERS(db1/db.h)
-AC_CHECK_HEADERS(db_185.h)
-AC_CHECK_HEADERS(db3/db_185.h)
+dnl AC_CHECK_HEADERS(db.h)
+dnl AC_CHECK_HEADERS(db1/db.h)
+dnl AC_CHECK_HEADERS(db_185.h)
+dnl AC_CHECK_HEADERS(db3/db_185.h)
 AC_CHECK_HEADERS(alignof.h)
 AC_CHECK_HEADERS(rpc/rpcent.h)
 AC_CHECK_HEADERS(sys/byteorder.h)
@@ -190,7 +190,7 @@ if test -z "$with_ldap_lib"; then
 fi
 
 AC_CHECK_LIB(dl, dlopen,[LIBS="-ldl $LIBS"],,$LIBS)
-AC_CHECK_LIB(db, main,[LIBS="-ldb $LIBS"],,$LIBS)
+dnl AC_CHECK_LIB(db, main,[LIBS="-ldb $LIBS"],,$LIBS)
 
 AC_CHECK_LIB(gssapi, gss_krb5_ccache_name,[LIBS="-lgssapi $LIBS" found_gssapi_lib=yes],,$LIBS)
 if test -z "$found_gssapi_lib"; then

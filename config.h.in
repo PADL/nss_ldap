@@ -57,18 +57,6 @@
 /* Define to 1 if you have the <ctype.h> header file. */
 #undef HAVE_CTYPE_H
 
-/* Define to 1 if you have the <db1/db.h> header file. */
-#undef HAVE_DB1_DB_H
-
-/* Define to 1 if you have the <db3/db_185.h> header file. */
-#undef HAVE_DB3_DB_185_H
-
-/* Define to 1 if you have the <db_185.h> header file. */
-#undef HAVE_DB_185_H
-
-/* Define to 1 if you have the <db.h> header file. */
-#undef HAVE_DB_H
-
 /* Define to 1 if you have the `dn_expand' function. */
 #undef HAVE_DN_EXPAND
 

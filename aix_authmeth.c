@@ -128,7 +128,7 @@ _nss_ldap_getgracct (void *id, int type)
     return _nss_ldap_getgrnam ((char *) id);
 }
 
-int
+static int
 _nss_ldap_authenticate (char *user, char *response, int *reenter,
 			char **message)
 {
@@ -171,7 +171,7 @@ _nss_ldap_authenticate (char *user, char *response, int *reenter,
  * this is not documented. I am assuming not in line with
  * the other APIs.
  */
-char *
+static char *
 _nss_ldap_getpasswd (char *user)
 {
   struct passwd *pw;
