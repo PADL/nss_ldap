@@ -9,6 +9,9 @@ $Id$
 	* initgroups() should require user to be a POSIX
 	  account	
 	* define LOGNAME_MAX for HP-UX
+	* do not use sigprocmask() - this blocks rather
+	  than disabling signals
+	* SASL version check fix from Howard Chu
 
 212	Luke Howard <lukeh@padl.com>
 

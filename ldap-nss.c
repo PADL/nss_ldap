@@ -138,12 +138,7 @@ NSS_LDAP_DEFINE_LOCK (__lock);
 static char __configbuf[NSS_LDAP_CONFIG_BUFSIZ];
 static ldap_config_t *__config = NULL;
 
-#ifdef HAVE_SIGPROCMASK
-static sigset_t __signal_mask;
-static int __sigprocmask_retval;
-#else
 static void (*__sigpipe_handler) (int) = SIG_DFL;
-#endif /* HAVE_SIGPROCMASK */
 
 /*
  * Global LDAP session.
@@ -495,10 +490,6 @@ do_atfork_setup (void)
 void
 _nss_ldap_enter (void)
 {
-#ifdef HAVE_SIGPROCMASK
-  sigset_t sigset;
-#endif
-
   debug ("==> _nss_ldap_enter");
 
   NSS_LDAP_LOCK (__lock);
@@ -507,11 +498,7 @@ _nss_ldap_enter (void)
    * Patch for Debian Bug 130006:
    * ignore SIGPIPE for all LDAP operations.
    */
-#ifdef HAVE_SIGPROCMASK
-  sigemptyset (&sigset);
-  sigaddset (&sigset, SIGPIPE);
-  __sigprocmask_retval = sigprocmask (SIG_BLOCK, &sigset, &__signal_mask);
-#elif defined(HAVE_SIGSET)
+#if defined(HAVE_SIGSET)
   __sigpipe_handler = sigset (SIGPIPE, SIG_IGN);
 #else
   __sigpipe_handler = signal (SIGPIPE, SIG_IGN);
@@ -531,19 +518,14 @@ _nss_ldap_leave (void)
   /*
    * Restore signal handler for SIGPIPE.
    */
-#ifdef HAVE_SIGPROCMASK
-  if (__sigprocmask_retval == 0)
-    sigprocmask (SIG_SETMASK, &__signal_mask, NULL);
-#else
   if (__sigpipe_handler != SIG_ERR && __sigpipe_handler != SIG_IGN)
     {
-# ifdef HAVE_SIGSET
+#ifdef HAVE_SIGSET
       (void) sigset (SIGPIPE, __sigpipe_handler);
-# else
+#else
       (void) signal (SIGPIPE, __sigpipe_handler);
 # endif				/* HAVE_SIGSET */
     }
-#endif /* HAVE_SIGPROCMASK */
 
   NSS_LDAP_UNLOCK (__lock);
 
@@ -3654,7 +3636,7 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 	      interact->result = "";
 	      interact->len = 0;
 	    }
-#ifdef SASL_VERSION_MAJOR < 2
+#if SASL_VERSION_MAJOR < 2
 	  interact->result = strdup (interact->result);
 	  if (interact->result == NULL)
 	    {
