@@ -9,6 +9,10 @@ $Id$
 	* fix for BUG#157: check for __pthread_once rather
 	  than __pthread_atfork on glibc, as the latter is
 	  no longer exported
+	* fix for BUG#158: escape netgroup search filters
+	  correctly
+	* fix for BUG#161: remove redundant lock in
+	  _nss_ldap_innetgr()
 
 215	Luke Howard <lukeh@padl.com>
 
