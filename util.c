@@ -569,7 +569,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_URI))
 	{
-	  t = &result->ldc_hosturi;
+	  t = &result->ldc_uri;
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_BASE))
 	{
@@ -740,7 +740,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 
   if (result->ldc_host == NULL 
 #ifdef HAVE_LDAP_INITIALIZE
-      && result->ldc_hosturi == NULL
+      && result->ldc_uri == NULL
 #endif
       )
     {
