@@ -191,7 +191,7 @@ fi
 AC_CHECK_LIB(dl, dlopen,[LIBS="-ldl $LIBS"],,$LIBS)
 AC_CHECK_LIB(db, main,[LIBS="-ldb $LIBS"],,$LIBS)
 
-AC_CHECK_LIB(gssapi, gss_krb5_ccache_name,[LIBS="-lgssapi" found_gssapi_lib=yes],,$LIBS)
+AC_CHECK_LIB(gssapi, gss_krb5_ccache_name,[LIBS="-lgssapi $LIBS" found_gssapi_lib=yes],,$LIBS)
 if test -z "$found_gssapi_lib"; then
   AC_CHECK_LIB(gssapi_krb5, gss_krb5_ccache_name,[LIBS="-lgssapi_krb5 $LIBS"],,$LIBS)
 fi
