@@ -52,6 +52,7 @@ DESCRIPTION
            local           Use a local file, usually in /etc
            dns             Use the domain name service (includes hesiod)
            nis             Use the Sun-compatible Network Information Service
+>>         ldap            Use the Lightweight Directory Access Protocol
 
      Available options:
 

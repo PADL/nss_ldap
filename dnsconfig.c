@@ -180,7 +180,11 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
 		return NSS_UNAVAIL;
 		}
 
+#ifdef RFC2052BIS
+	snprintf(domain, sizeof(domain), "_ldap._tcp.%s.", _res.defdname);
+#else
 	snprintf(domain, sizeof(domain), "ldap.tcp.%s.", _res.defdname);
+#endif /* RFC2307BIS */
 
 	r = dns_lookup(domain, "srv");
 	if (r == NULL)

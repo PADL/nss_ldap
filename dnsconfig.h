@@ -36,6 +36,16 @@ NSS_STATUS _nss_ldap_readconfigfromdns(
         char *buf,
         size_t buflen);
 
+/* 
+ * The symbolic name of the desired service, as defined in Assigned
+ * Numbers or locally.  An underscore (_) is prepended to the
+ * service identifier to avoid collisions with DNS labels that
+ * occur in nature.
+ */
+#ifndef RFC2052BIS
+#define RFC2052BIS	1
+#endif /* RFC2052BIS */
+
 /*
  * These are unnecessary for the moment, as there is a coarser
  * lock around readconfig.

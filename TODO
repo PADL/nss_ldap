@@ -3,7 +3,7 @@ Please contact Luke Howard <lukeh@xedoc.com> if you can help.
 
 People with spare time and experience need only apply. :-)
 
-There is a list for developers at <nss_ldap@gday.net.au>.
+There is a list for developers at <nss_ldap@roach.xedoc.com.au>
 
 TESTING
 =======
@@ -62,8 +62,8 @@ Resource assignments are suggested only.
   faster to do (&(objectclass=posixGroup)(memberUid=lukeh)) than looking up every group.
 
 - finish implementing dl-*.c  (LOW priority). In fact I'm tempted to remove
-  this from the line up: SGI have their own LDAP C library support, and the
-  OSF/1 implementation is done the wrong way (it should use SIA, not preloading)
+  this from the line up: SGI have their own LDAP C library support, and
+  so do DEC (with SIA).
 
 - implement gethostbyname2()
 
