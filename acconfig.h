@@ -43,3 +43,6 @@
 /* path to LDAP root secret file */
 #define NSS_LDAP_PATH_ROOTPASSWD        "/etc/ldap.secret"
 
+/* maximum number of group members in static buffer */
+#define LDAP_NSS_NGROUPS	 64
+

@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 225)
+AM_INIT_AUTOMAKE(nss_ldap, 226)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -20,6 +20,7 @@ AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of LDAP SDK])
 AC_ARG_WITH(ldap-conf-file, [  --with-ldap-conf-file     path to LDAP configuration file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_CONF, "$with_ldap_conf_file")])
 AC_ARG_WITH(ldap-secret-file, [  --with-ldap-secret-file   path to LDAP root secret file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_ROOTPASSWD, "$with_ldap_secret_file")])
 AC_ARG_WITH(gssapi-dir, [  --with-gssapi-dir=DIR     base directory of gssapi SDK])
+AC_ARG_WITH(ngroups, [  --with-ngroups=num        average group size hint, experts only], [AC_DEFINE_UNQUOTED(LDAP_NSS_NGROUPS, $with_ngroups)])
 
 if test "$ac_cv_prog_gcc" = "yes"; then CFLAGS="$CFLAGS -Wall -fPIC"; fi
 
