@@ -9,6 +9,10 @@ a clean diff, so here is a list of the modifications you need to
 make to the IRS to get things to compile "right". You will 
 need to apply these diffs by hand, sorry.
 
+- Add a prototype to irs/gen.c:
+
+  struct irs_acc *irs_ldap_acc(const char *);
+
 - Edit gen.c and add "ldap" to the two stanzas, I suggest between
   irs_nis and irs_irp.
 
