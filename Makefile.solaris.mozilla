@@ -108,10 +108,10 @@ CFLAGS=${DEBUGFLAGS} ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFL
 all: ${MODULE} install
 
 ${MODULE}: ${OBJS}
-	${LD} ${LIBDIRS} ${LDFLAGS} -o /tmp/${LIB} ${OBJS} ${LIBS}
+	${LD} ${LIBDIRS} ${LDFLAGS} -o ${LIB} ${OBJS} ${LIBS}
 
 install:
-	cp /tmp/${LIB} /usr/lib/
+	cp ${LIB} /usr/lib/
 
 clean:
 	rm -f ${OBJS} ${LIB}
