@@ -88,6 +88,7 @@ static uid_t __euid = -1;
 
 static void do_close (void);
 static void do_close_no_unbind (void);
+static void do_disable_keepalive (LDAP *ld);
 static NSS_STATUS do_open (void);
 static NSS_STATUS do_search_s (const char *base, int scope,
 			       const char *filter, const char **attrs,
@@ -268,6 +269,25 @@ do_close_no_unbind (void)
       __session.ls_conn = NULL;
     }
   debug ("<== do_close_no_unbind");
+	return;
+}
+
+static INLINE void
+do_disable_keepalive (LDAP *ld)
+{
+	debug("==> do_disable_keepalive");
+      int sd = -1;
+#ifdef LDAP_VERSION3_API
+      if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
+#else
+      if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
+#endif /* LDAP_VERSION3_API */
+	{
+		int on = 0;
+		(void) setsockopt(sd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof on);	
+	}
+	debug("<== do_disable_keepalive");
+	return;
 }
 
 /*
