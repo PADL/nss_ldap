@@ -214,15 +214,19 @@ nss_ldap_initialize (struct secmethod_table *meths)
   meths->method_getgrnam = _nss_ldap_getgrnam;
   meths->method_getgrgid = _nss_ldap_getgrgid;
   meths->method_getgrset = _nss_ldap_getgrset;
-  meths->method_getgracct = _nss_ldap_getgracct;
+  /*
+   * These casts are necessary because the prototypes 
+   * in the AIX headers are wrong.
+   */
+  meths->method_getgracct = (int (*)(void *, int))_nss_ldap_getgracct;
+  meths->method_getpasswd = (int (*)(char *))_nss_ldap_getpasswd;
 
   /* Support methods */
   meths->method_open = _nss_ldap_open;
   meths->method_close = _nss_ldap_close;
 
-  /* Authentication methods */
+  /* Authentication method */
   meths->method_authenticate = _nss_ldap_authenticate;
-  meths->method_getpasswd = _nss_ldap_getpasswd;
 
   return AUTH_SUCCESS;
 }
