@@ -6,6 +6,7 @@ $Header$
 	* make bogusSd in ldap-nss.c conditional on
 	  !HAVE_LDAP_LD_FREE
 	* merge in paged result support from Max Caines
+	* bugfixes for Debian Bug report #140854
 
 186	Luke Howard <lukeh@padl.com>
 

@@ -36,6 +36,8 @@
 
 #include <errno.h>
 #include <time.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #ifdef __STDC__
 #ifndef __P
