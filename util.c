@@ -1144,3 +1144,110 @@ _nss_ldap_db_put (void *db, const ldap_datum_t * key,
 }
 
 #endif /* RFC2307BIS || AT_OC_MAP */
+
+/*
+ * Add a nested netgroup or group to the namelist
+ */
+NSS_STATUS
+_nss_ldap_namelist_push (struct name_list **head, const char *name)
+{
+  struct name_list *nl;
+
+  debug ("==> _nss_ldap_namelist_push (%s)", name);
+
+  nl = (struct name_list *) malloc (sizeof (*nl));
+  if (nl == NULL)
+    {
+      debug ("<== _nss_ldap_namelist_push");
+      return NSS_TRYAGAIN;
+    }
+
+  nl->name = strdup (name);
+  if (nl->name == NULL)
+    {
+      debug ("<== _nss_ldap_namelist_push");
+      free (nl);
+      return NSS_TRYAGAIN;
+    }
+
+  nl->next = *head;
+
+  *head = nl;
+
+  debug ("<== _nss_ldap_namelist_push");
+
+  return NSS_SUCCESS;
+}
+
+/*
+ * Remove last nested netgroup or group from the namelist
+ */
+void
+_nss_ldap_namelist_pop (struct name_list **head)
+{
+  struct name_list *nl;
+
+  debug ("==> _nss_ldap_namelist_pop");
+
+  assert (*head != NULL);
+  nl = *head;
+
+  *head = nl->next;
+
+  assert (nl->name != NULL);
+  free (nl->name);
+  free (nl);
+
+  debug ("<== _nss_ldap_namelist_pop");
+}
+
+/*
+ * Cleanup nested netgroup or group namelist.
+ */
+void
+_nss_ldap_namelist_destroy (struct name_list **head)
+{
+  struct name_list *p, *next;
+
+  debug ("==> _nss_ldap_namelist_destroy");
+
+  for (p = *head; p != NULL; p = next)
+    {
+      next = p->next;
+
+      if (p->name != NULL)
+	free (p->name);
+      free (p);
+    }
+
+  *head = NULL;
+
+  debug ("<== _nss_ldap_namelist_destroy");
+}
+
+/*
+ * Check whether we have already seen a netgroup or group,
+ * to avoid loops in nested netgroup traversal
+ */
+int
+_nss_ldap_namelist_find (struct name_list *head, const char *netgroup)
+{
+  struct name_list *p;
+  int found = 0;
+
+  debug ("==> _nss_ldap_namelist_find");
+
+  for (p = head; p != NULL; p = p->next)
+    {
+      if (strcasecmp (p->name, netgroup) == 0)
+	{
+	  found++;
+	  break;
+	}
+    }
+
+  debug ("<== _nss_ldap_namelist_find");
+
+  return found;
+}
+

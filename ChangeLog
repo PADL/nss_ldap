@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+223	Luke Howard <lukeh@padl.com>
+
+	* do loop detection in nested groups
+
 222	Luke Howard <lukeh@padl.com>
 
 	* fix deadlock in _nss_ldap_getentry()

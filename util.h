@@ -192,4 +192,11 @@ NSS_STATUS _nss_ldap_db_get (void *db, const ldap_datum_t * key,
 			     ldap_datum_t * value);
 #endif /* RFC2307BIS || AT_OC_MAP */
 
+/* Routines for managing namelists */
+
+NSS_STATUS _nss_ldap_namelist_push (struct name_list **head, const char *name);
+void _nss_ldap_namelist_pop (struct name_list **head);
+int _nss_ldap_namelist_find (struct name_list *head, const char *netgroup);
+void _nss_ldap_namelist_destroy (struct name_list **head);
+
 #endif /* _LDAP_NSS_LDAP_UTIL_H */
