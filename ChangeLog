@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+108	Luke Howard <lukeh@padl.com>
+
+	* included "deref" option in /etc/ldap.conf, compatible
+	  with OpenLDAP syntax. Patch from Michael Mattice.
+
 107	Luke Howard <lukeh@padl.com>
 
 	* fixed argument to _nss_ldap_getent() in ldap-ethers.c

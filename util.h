@@ -63,6 +63,7 @@ NSS_STATUS _nss_ldap_dn2uid (
 #define NSS_LDAP_KEY_PORT	"port"
 #define NSS_LDAP_KEY_BINDDN	"binddn"
 #define NSS_LDAP_KEY_BINDPW     "bindpw"
+#define NSS_LDAP_KEY_DEREF      "deref"
 #define NSS_LDAP_KEY_ROOTBINDDN	"rootbinddn"
 #define NSS_LDAP_KEY_LDAP_VERSION	"ldap_version"
 #define NSS_LDAP_KEY_SSL	"ssl"

@@ -159,9 +159,9 @@ _nss_ldap_dn2uid (LDAP * ld,
 	  {"uid", NULL};
 	  LDAPMessage *res;
 
-          status = NSS_NOTFOUND;
+	  status = NSS_NOTFOUND;
 
-	  if (_nss_ldap_read(dn, attrs, &res) == NSS_SUCCESS)
+	  if (_nss_ldap_read (dn, attrs, &res) == NSS_SUCCESS)
 	    {
 	      LDAPMessage *e = ldap_first_entry (ld, res);
 	      if (e != NULL)
@@ -374,6 +374,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
   p = buf;
 
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
+  result->ldc_deref = LDAP_DEREF_NEVER;
   result->ldc_host = NULL;
   result->ldc_base = NULL;
   result->ldc_port = 0;
@@ -460,6 +461,25 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 	  else if (!strcasecmp (v, "base"))
 	    {
 	      result->ldc_scope = LDAP_SCOPE_BASE;
+	    }
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_DEREF))
+	{
+	  if (!strcasecmp (v, "never"))
+	    {
+	      result->ldc_deref = LDAP_DEREF_NEVER;
+	    }
+	  else if (!strcasecmp (v, "searching"))
+	    {
+	      result->ldc_deref = LDAP_DEREF_SEARCHING;
+	    }
+	  else if (!strcasecmp (v, "finding"))
+	    {
+	      result->ldc_deref = LDAP_DEREF_FINDING;
+	    }
+	  else if (!strcasecmp (v, "always"))
+	    {
+	      result->ldc_deref = LDAP_DEREF_ALWAYS;
 	    }
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_PORT))

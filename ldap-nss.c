@@ -556,6 +556,13 @@ do_open (void)
   __session.ls_conn->ld_version = cfg->ldc_version;
 #endif /* LDAP_VERSION3_API */
 
+#ifdef LDAP_VERSION3_API
+  ldap_set_option (__session.ls_conn, LDAP_OPT_DEREF,
+		   &cfg->ldc_version);
+#else
+  __session.ls_conn->ld_deref = cfg->ldc_deref;
+#endif /* LDAP_VERSION3_API */
+
 #ifdef SSL
   /*
    * If SSL is desired, then enable it.

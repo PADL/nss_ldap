@@ -121,6 +121,8 @@ struct ldap_config
     char *ldc_base;
     /* scope for searches */
     int ldc_scope;
+    /* dereference aliases/links */
+    int ldc_deref;
     /* bind DN */
     char *ldc_binddn;
     /* bind cred */
