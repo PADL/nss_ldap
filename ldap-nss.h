@@ -121,7 +121,7 @@
 
 #ifndef HAVE_NSSWITCH_H
 #define NSS_BUFLEN_HOSTS        \
-        (NSS_BUSIZ + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
+        (NSS_BUFSIZ + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
 #define NSS_BUFLEN_NETGROUP     (MAXHOSTNAMELEN * 2 + LOGNAME_MAX + 3)
 #define NSS_BUFLEN_NETWORKS     NSS_BUFSIZ
 #define NSS_BUFLEN_PROTOCOLS    NSS_BUFSIZ

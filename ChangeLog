@@ -14,6 +14,12 @@ $Id$
 	* fix crasher when internal group membership
 	  buffer was reallocated (introduced with nested
 	  group expansion code)
+	* immediately return NSS_TRYAGAIN and errno=ERANGE
+	  if there is not enough buffer space to handle
+	  LDAP_NSS_NGROUPS groups; this prevents getgrXXX()
+	  from expensive repeated directory searches when
+	  there is a priori knowledge that group memberships
+	  are large
 
 223	Luke Howard <lukeh@padl.com>
 
