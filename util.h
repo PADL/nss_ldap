@@ -36,24 +36,18 @@
  * get the RDN's value: eg. if the RDN was cn=lukeh, getrdnvalue(entry)
  * would return lukeh.
  */
-NSS_STATUS _nss_ldap_getrdnvalue (
-				   LDAP * ld,
-				   LDAPMessage * entry,
-				   const char *rdntype,
-				   char **rval,
-				   char **buf,
-				   size_t * len);
+NSS_STATUS _nss_ldap_getrdnvalue (LDAP * ld,
+				  LDAPMessage * entry,
+				  const char *rdntype,
+				  char **rval, char **buf, size_t * len);
 
 #ifdef RFC2307BIS
 /*
  * map a distinguished name to a login naem.
  */
-NSS_STATUS _nss_ldap_dn2uid (
-			      LDAP * ld,
-			      const char *dn,
-			      char **uid,
-			      char **buf,
-			      size_t * len);
+NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
+			     const char *dn,
+			     char **uid, char **buf, size_t * len);
 #endif /* RFC2307BIS */
 
 #define NSS_LDAP_CONFIG_BUFSIZ		4096
@@ -109,21 +103,15 @@ NSS_STATUS _nss_ldap_dn2uid (
  * ** implemented
  */
 
-NSS_STATUS _nss_ldap_readconfig (
-				  ldap_config_t ** result,
-				  char *buf,
-				  size_t buflen
-);
+NSS_STATUS _nss_ldap_readconfig (ldap_config_t ** result,
+				 char *buf, size_t buflen);
 
 /*
  * Escape '*' in a string for use as a filter
  */
 
-NSS_STATUS _nss_ldap_escape_string (
-			      const char *str,
-			      char *buf,
-			      size_t buflen
-);
+NSS_STATUS _nss_ldap_escape_string (const char *str,
+				    char *buf, size_t buflen);
 
 #define MAP_H_ERRNO(nss_status, herr)   do { \
 	if ((unsigned int) (nss_status - _NSS_LOOKUP_OFFSET) > _nss_ldap_herrno2nssstat_tab_count) \

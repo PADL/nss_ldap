@@ -215,9 +215,9 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 	      result->ldc_next = (ldap_config_t *) malloc (sizeof (*result));
 	      if (result->ldc_next == NULL)
 		{
-		  dns_free_data( r );
-                  __nss_dns_unlock ();
-      		  free (*presult);
+		  dns_free_data (r);
+		  __nss_dns_unlock ();
+		  free (*presult);
 		  return NSS_UNAVAIL;
 		}
 	      result = result->ldc_next;
@@ -251,15 +251,15 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
 				     &result->ldc_base, &bptr, &buflen);
 	  if (stat != NSS_SUCCESS)
 	    {
-	      dns_free_data( r );
+	      dns_free_data (r);
 	      __nss_dns_unlock ();
-      	 free (*presult);
+	      free (*presult);
 	      return stat;
 	    }
 	}
     }
 
-  dns_free_data( r );
+  dns_free_data (r);
   __nss_dns_unlock ();
   stat = NSS_SUCCESS;
 

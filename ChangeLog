@@ -3,6 +3,8 @@ $Header$
 
 127	Luke Howard <lukeh@padl.com>
 
+	* added support for "referrals" and "restart"
+	  options to ldap.conf
 	* fixed up RPM Makefiles to build libnss_ldap
 	* added "timelimit" and "bind_timelimit"
 	  directives to ldap.conf
