@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.49	Luke Howard <lukeh@padl.com>
+
+	* configuration file is now case insensitive
+
 2.47  Luke Howard <lukeh@xedoc.com>
 
 	* RFC2052BIS (_ldap._tcp) support

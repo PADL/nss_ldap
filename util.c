@@ -274,57 +274,57 @@ NSS_STATUS _nss_ldap_readconfig(
 			break;
 			}
 
-		if (!strcmp(k, NSS_LDAP_KEY_HOST))
+		if (!strcasecmp(k, NSS_LDAP_KEY_HOST))
 			{
 			t = &result->ldc_host;
 			}
-		else if (!strcmp(k, NSS_LDAP_KEY_BASE))
+		else if (!strcasecmp(k, NSS_LDAP_KEY_BASE))
 			{
 			t = &result->ldc_base;
 			}
-		else if (!strcmp(k, NSS_LDAP_KEY_BINDDN))
+		else if (!strcasecmp(k, NSS_LDAP_KEY_BINDDN))
 			{
 			t = &result->ldc_binddn;
 			}
-		else if (!strcmp(k, NSS_LDAP_KEY_BINDPW))
+		else if (!strcasecmp(k, NSS_LDAP_KEY_BINDPW))
 			{
 			t = &result->ldc_bindpw;
 			}
-		else if (!strcmp(k, NSS_LDAP_KEY_CRYPT))
+		else if (!strcasecmp(k, NSS_LDAP_KEY_CRYPT))
 			{
-			if (!strcmp(v, "md5"))
+			if (!strcasecmp(v, "md5"))
 				{
 				_nss_ldap_crypt_prefix = MD5_CRYPT;
 				}
-			else if (!strcmp(v, "sha"))
+			else if (!strcasecmp(v, "sha"))
 				{
 				_nss_ldap_crypt_prefix = SHA_CRYPT;
 				}
-			else if (!strcmp(v, "des"))
+			else if (!strcasecmp(v, "des"))
 				{
 				_nss_ldap_crypt_prefix = UNIX_CRYPT;
 				}
 			}
-		else if (!strcmp(k, NSS_LDAP_KEY_SCOPE))
+		else if (!strcasecmp(k, NSS_LDAP_KEY_SCOPE))
 			{
-			if (!strcmp(v, "sub"))
+			if (!strcasecmp(v, "sub"))
 				{
 				result->ldc_scope = LDAP_SCOPE_SUBTREE;
 				}
-			else if (!strcmp(v, "one"))
+			else if (!strcasecmp(v, "one"))
 				{
 				result->ldc_scope = LDAP_SCOPE_ONELEVEL;
 				}
-			else if (!strcmp(v, "base"))
+			else if (!strcasecmp(v, "base"))
 				{
 				result->ldc_scope = LDAP_SCOPE_BASE;
 				}
 			}
-		else if (!strcmp(k, NSS_LDAP_KEY_PORT))
+		else if (!strcasecmp(k, NSS_LDAP_KEY_PORT))
 			{
 			result->ldc_port = atoi(v);
 			}
-		else if (!strcmp(k, NSS_LDAP_KEY_LDAP_VERSION))
+		else if (!strcasecmp(k, NSS_LDAP_KEY_LDAP_VERSION))
 			{
 			result->ldc_version = atoi(v);
 			}
