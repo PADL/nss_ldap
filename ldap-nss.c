@@ -1515,7 +1515,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
-					 do_sasl_interact, (void *)pw);
+					 do_sasl_interact, (void *) pw);
 
 # ifdef CONFIGURE_KRB5_CCNAME
       /* Restore default Kerberos ticket cache. */
@@ -1708,7 +1708,8 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  break;
 	case LA_TYPE_STRING_UNESCAPED:
 	  /* literal string */
-	  snprintf (filterBufP, filterSiz, filterprot, args->la_arg1.la_string);
+	  snprintf (filterBufP, filterSiz, filterprot,
+		    args->la_arg1.la_string);
 	  break;
 	}
 
@@ -3164,17 +3165,17 @@ _nss_ldap_map_put (ldap_config_t * config, ldap_map_type_t type,
     }
 
   map = &config->ldc_maps[type];
-  assert(*map != NULL);
+  assert (*map != NULL);
 
   vadup = strdup (value);
   if (vadup == NULL)
     return NSS_TRYAGAIN;
 
-  memset (&key, 0, sizeof(key));
+  memset (&key, 0, sizeof (key));
   key.data = (void *) rfc2307attribute;
   key.size = strlen (rfc2307attribute);
 
-  memset (&val, 0, sizeof(val));
+  memset (&val, 0, sizeof (val));
   val.data = (void *) &vadup;
   val.size = sizeof (vadup);
 
@@ -3259,13 +3260,13 @@ _nss_ldap_map_get (ldap_config_t * config, ldap_map_type_t type,
     }
 
   map = config->ldc_maps[type];
-  assert(map != NULL);
+  assert (map != NULL);
 
-  memset (&key, 0, sizeof(key));
+  memset (&key, 0, sizeof (key));
   key.data = (void *) rfc2307attribute;
   key.size = strlen (rfc2307attribute);
 
-  memset (&val, 0, sizeof(val));
+  memset (&val, 0, sizeof (val));
 
   if ((((DB *) map)->get) ((DB *) map,
 #if DB_VERSION_MAJOR > 2
@@ -3451,7 +3452,7 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
 static int
 do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 {
-  char *authzid = (char *)defaults;
+  char *authzid = (char *) defaults;
   sasl_interact_t *interact = (sasl_interact_t *) _interact;
 
   while (interact->id != SASL_CB_LIST_END)
@@ -3460,19 +3461,19 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 	{
 	  if (authzid != NULL)
 	    {
-		interact->result = authzid;
-		interact->len = strlen(authzid);
+	      interact->result = authzid;
+	      interact->len = strlen (authzid);
 	    }
 	  else if (interact->defresult != NULL)
 	    {
-		interact->result = interact->defresult;
-		interact->len = strlen(interact->defresult);
+	      interact->result = interact->defresult;
+	      interact->len = strlen (interact->defresult);
 	    }
 	  else
-	   {
-		interact->result = "";
-		interact->len = 0;
-	   }
+	    {
+	      interact->result = "";
+	      interact->len = 0;
+	    }
 	}
       else
 	{
@@ -3485,4 +3486,3 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 #endif
 
 /* #include "sldap-compat.c" */
-
