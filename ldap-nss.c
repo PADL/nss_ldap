@@ -34,6 +34,7 @@ static char rcsId[] =
 #include <syslog.h>
 #include <signal.h>
 #include <sys/types.h>
+#include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <lber.h>
@@ -172,7 +173,7 @@ do_with_reconnect (const char *base, int scope,
 /*
  * Do a bind with a defined timeout
  */
-int
+static int
 do_bind (LDAP *ld, const char *dn, const char *pw);
 
 
