@@ -75,14 +75,9 @@ static int ltf_get_errno (void);
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-static void *ltf_mutex_alloc ();
-static void ltf_mutex_free ();
-static int ltf_mutex_lock ();
-static int ltf_mutex_unlock ();
-static void ltf_set_ld_error ();
-static int ltf_get_ld_error ();
-static void ltf_set_errno ();
-static int ltf_get_errno ();
+
+static int ltf_mutex_lock (void *);
+static int ltf_mutex_unlock (void *);
 
 static pthread_key_t key;
 
@@ -134,7 +129,7 @@ static int
 ltf_mutex_lock (void *mutexp)
 {
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  return __libc_lock(*(pthread_mutex_t *)mutexp);
+  return __libc_lock_lock(*(pthread_mutex_t *)mutexp);
 #else
   return pthread_mutex_lock((pthread_mutex_t *)mutexp);
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
@@ -144,7 +139,7 @@ static int
 ltf_mutex_unlock (void *mutexp)
 {
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  return __libc_unlock(*(pthread_mutex_t *)mutexp);
+  return __libc_lock_unlock(*(pthread_mutex_t *)mutexp);
 #else
   return pthread_mutex_unlock((pthread_mutex_t *)mutexp);
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
