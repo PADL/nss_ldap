@@ -7,7 +7,7 @@ ProjectMaintainer: lukeh
 #
 # run this before building in RC. @@@PLATFORM@@@ is
 # substituted for our platform names (linux, solaris etc)
-PreBuild: ln -s Makefile.@@@PLATFORM@@@.mozilla Makefile
-PostBuild: rm -f Makefile
+PreBuild: configure
+PostBuild: make distclean
 # binaries to ship (although we don't do that at the moment)
-Shippables: nss_ldap.so.1
+Shippables: nss_ldap.so
