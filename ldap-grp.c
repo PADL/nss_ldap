@@ -72,6 +72,7 @@ typedef struct ldap_initgroups_args
 {
   char *grplist;
   size_t listlen;
+  int depth;
 }
 ldap_initgroups_args_t;
 #else
@@ -85,12 +86,17 @@ typedef struct ldap_initgroups_args
   long int *size;
   gid_t **groups;
   long int limit;
+  int depth;
 }
 ldap_initgroups_args_t;
 # endif
 #endif /* AIX */
 
 #ifdef RFC2307BIS
+static NSS_STATUS
+ng_chase (LDAP *ld, const char *dn,
+	  ldap_initgroups_args_t *lia);
+
 /* 
  * Expand group members, including nested groups
  */
@@ -256,7 +262,8 @@ out:
 }
 
 /*
- * "Fix" group membership list into caller provided buffer
+ * "Fix" group membership list into caller provided buffer,
+ * and NULL terminate.
  */
 static NSS_STATUS
 do_fix_group_members_buffer (char **mallocedGroupMembers,
@@ -371,7 +378,9 @@ _nss_ldap_parse_gr (LDAP * ld,
 }
 
 /*
- * Add a group to a group list.
+ * Add a group ID to a group list, and optionally the group IDs
+ * of any groups to which this group belongs (RFC2307bis nested
+ * group expansion).
  */
 static NSS_STATUS
 do_parse_initgroups (LDAP * ld, LDAPMessage * e,
@@ -382,6 +391,9 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
   ssize_t i;
   gid_t gid;
   ldap_initgroups_args_t *lia = (ldap_initgroups_args_t *) result;
+#ifdef RFC2307BIS
+  char *groupdn;
+#endif
 
   values = _nss_ldap_get_values (e, ATM (group, gidNumber));
   if (values == NULL)
@@ -479,8 +491,69 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
 # endif				/* HAVE_NSSWITCH_H */
 #endif /* AIX */
 
+#ifdef RFC2307BIS
+  /*
+   * Now add the GIDs of any groups which refer to this group
+   */
+  groupdn = ldap_get_dn (ld, e);
+  if (groupdn != NULL)
+    {
+      NSS_STATUS stat;
+
+#ifndef HAVE_NSSWITCH_H /* XXX not yet implemented for Solaris */
+      lia->depth++;
+#endif
+      stat = ng_chase (ld, groupdn, lia);
+#ifndef HAVE_NSSWITCH_H
+      lia->depth--;
+#endif
+      ldap_memfree (groupdn);
+
+      return stat;
+    }
+#endif /* RFC2307BIS */
+
   return NSS_NOTFOUND;
 }
+
+#ifdef RFC2307BIS
+static NSS_STATUS
+ng_chase (LDAP *ld, const char *dn,
+	  ldap_initgroups_args_t *lia)
+{
+	ldap_args_t a;
+	NSS_STATUS stat;
+	ent_context_t *ctx = NULL;
+	const char *gidnumber_attrs[2];
+	int erange;
+
+	if (lia->depth > LDAP_NSS_MAXGR_DEPTH)
+		return NSS_NOTFOUND;
+
+	LA_INIT (a);
+
+	gidnumber_attrs[0] = ATM(group, gidNumber);
+	gidnumber_attrs[1] = NULL;
+
+	LA_INIT (a);
+	LA_STRING (a) = dn;
+	LA_TYPE (a) = LA_TYPE_STRING;
+
+	if (_nss_ldap_ent_context_init_locked(&ctx) == NULL) {
+		return NSS_UNAVAIL;
+	}
+
+	stat = _nss_ldap_getent_ex(&a, &ctx, lia, NULL, 0,
+		&erange, _nss_ldap_filt_getgroupsbydn,
+		LM_GROUP, gidnumber_attrs,
+		do_parse_initgroups);
+
+	_nss_ldap_ent_context_release (ctx);
+	free (ctx);
+
+	return stat;
+}
+#endif /* RFC2307BIS */
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(AIX)
 #ifdef HAVE_NSS_H
@@ -541,12 +614,14 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #ifdef AIX
   lia.grplist = NULL;
   lia.listlen = 0;
+  lia.depth = 0;
 #elif !defined(HAVE_NSSWITCH_H)
   lia.group = group;
   lia.start = start;
   lia.size = size;
   lia.groups = groupsp;
   lia.limit = limit;
+  lia.depth = 0;
 #endif /* AIX */
 
   _nss_ldap_enter ();

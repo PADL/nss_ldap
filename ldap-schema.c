@@ -82,6 +82,7 @@ char _nss_ldap_filt_getgrgid[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getgrent[LDAP_FILT_MAXSIZ];
 #ifdef RFC2307BIS
 char _nss_ldap_filt_getgroupsbymemberanddn[LDAP_FILT_MAXSIZ];
+char _nss_ldap_filt_getgroupsbydn[LDAP_FILT_MAXSIZ];
 #endif /* RFC2307BIS */
 char _nss_ldap_filt_getgroupsbymember[LDAP_FILT_MAXSIZ];
 
@@ -166,6 +167,9 @@ _nss_ldap_init_filters ()
   snprintf (_nss_ldap_filt_getgroupsbymemberanddn, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(|(%s=%s)(%s=%s)))",
 	    OC (posixGroup), AT (memberUid), "%s", AT (uniqueMember), "%s");
+  snprintf (_nss_ldap_filt_getgroupsbydn, LDAP_FILT_MAXSIZ,
+	    "(&(objectclass=%s)(%s=%s))",
+	    OC (posixGroup), AT (uniqueMember), "%s");
 #endif /* RFC2307BIS */
   snprintf (_nss_ldap_filt_getgroupsbymember, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup), AT (memberUid),
