@@ -23,12 +23,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_ALIAS_H
 #define _LDAP_NSS_LDAP_LDAP_ALIAS_H
 
-static const char filt_getaliasbyname[] =
-"(&(objectclass="
-OC (nisMailAlias) ")(" AT (cn) "=%s))";
-     static const char filt_getaliasent[] =
-     "(objectclass=" OC (nisMailAlias) ")";
-
      static NSS_STATUS _nss_ldap_parse_alias (LDAP * ld,
 					      LDAPMessage * e,
 					      ldap_state_t *,

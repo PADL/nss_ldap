@@ -23,9 +23,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_NETGRP_H
 #define _LDAP_NSS_LDAP_LDAP_NETGRP_H
 
-static const char *filt_setnetgrent[] =
-"(&(objectclass="
-OC (nisNetgroup) ")(" AT (cn) "=%s))";
 
      static NSS_STATUS _nss_ldap_parse_netgr (
 					       LDAP * ld,

@@ -148,6 +148,11 @@ enum ldap_map_selector
 
 typedef enum ldap_map_selector ldap_map_selector_t;
 
+#ifdef AT_OC_MAP
+extern const char* _nss_ldap_map_at(const char* pChar);
+extern const char* _nss_ldap_map_oc(const char* pChar);
+#endif /* AT_OC_MAP */
+
 /*
  * POSIX profile information (not used yet)
  * see draft-joslin-config-schema-00.txt
@@ -228,6 +233,26 @@ struct ldap_config
     /* idle timeout */
     time_t ldc_idle_timelimit;
     /* next configuration. loops back onto itself for last entry */
+
+#ifdef AT_OC_MAP
+    /*
+     * attribute/objectclass maps relative to this config
+     */
+    void *ldc_at_map;
+    void *ldc_oc_map;
+
+    /*
+     * is userPassword "userPassword" or not? 
+     * ie. do we need {crypt} to be stripped
+     */
+    int ldc_crypt_prefix;
+#endif /* AT_OC_MAP */
+
+    /* 
+     * attribute table for ldap search requensts
+     */
+    const char **ldc_attrtab[LM_NONE];
+
     struct ldap_config *ldc_next;
   };
 
@@ -451,7 +476,7 @@ void _nss_ldap_ent_context_release (ent_context_t *);
 /*
  * these are helper functions for ldap-grp.c only on Solaris
  */
-char **_nss_ldap_get_values (LDAPMessage * e, char *attr);
+char **_nss_ldap_get_values (LDAPMessage * e, const char *attr);
 char *_nss_ldap_get_dn (LDAPMessage * e);
 LDAPMessage *_nss_ldap_first_entry (LDAPMessage * res);
 LDAPMessage *_nss_ldap_next_entry (LDAPMessage * res);
@@ -543,5 +568,28 @@ NSS_STATUS _nss_ldap_assign_authpassword (LDAP * ld,	/* IN */
 					  size_t * buflen);	/* IN/OUT */
 
 NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc);
+
+#ifdef AT_OC_MAP
+/**
+ * Functions for mapping attributes and objectclasses
+ * relative to an ldap_config as proposed by Luke Howard
+ * in his eMail from Nov 15 2000
+ */
+NSS_STATUS _nss_ldap_atmap_put (ldap_config_t *config,
+				const char *rfc2307attribute,
+				const char *attribute);
+
+NSS_STATUS _nss_ldap_ocmap_put (ldap_config_t *config,
+				const char *rfc2307objectclass,
+				const char* objectclass);
+
+NSS_STATUS _nss_ldap_atmap_get (ldap_config_t *config,
+				const char *rfc2307attribute,
+				const char **attribute);
+
+NSS_STATUS _nss_ldap_ocmap_get (ldap_config_t *config,
+				const char *rfc2307objectclass,
+				const char **objectclass);
+#endif /* AT_OC_MAP */
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

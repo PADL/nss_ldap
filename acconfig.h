@@ -19,6 +19,6 @@
 /* define to enable ActiveDirectory user schema support */
 #undef MSSFU_SCHEMA
 
-/* define to enable NDS schema: member vs uniqueMember */
-#undef NDS_SCHEMA
+/* define to enable attribute/objectclass mapping */
+#undef AT_OC_MAP
 

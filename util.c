@@ -54,6 +54,20 @@ static NSS_STATUS do_getrdnvalue (const char *dn,
 				  char **rval, char **buffer,
 				  size_t * buflen);
 
+#ifdef AT_OC_MAP
+enum ldap_map_type
+  {
+    MAP_ATTRIBUTE,
+    MAP_OBJECTCLASS
+  };
+
+typedef enum ldap_map_type ldap_map_type_t;
+
+static NSS_STATUS do_parse_map_statement (ldap_config_t* cfg,
+					  const char* statement,
+					  ldap_map_type_t type);
+#endif /* AT_OC_MAP */
+
 static NSS_STATUS do_searchdescriptorconfig (const char *key,
 					     const char *value,
 					     size_t valueLength,
@@ -386,6 +400,37 @@ do_getrdnvalue (const char *dn,
   return NSS_NOTFOUND;
 }
 
+#ifdef AT_OC_MAP
+static NSS_STATUS
+do_parse_map_statement (ldap_config_t* cfg,
+			const char* statement,
+			ldap_map_type_t type)
+{
+  /**
+   * statement has already been prepared in _nss_ldap_readconfig
+   * => only a split dumping white space inbetween is necessary!
+   */
+  NSS_STATUS stat;
+  char *key, *val;
+
+  key = (char*)statement;
+  val = key;
+  while (*val != ' ' && *val != '\t')
+    val++;
+  *(val++) = '\0';
+
+  while (*val == ' ' || *val == '\t')
+    val++;
+
+  if (type == MAP_ATTRIBUTE)
+    stat = _nss_ldap_atmap_put (cfg, key, val);
+  else /* type == MAP_OBJECTCLASS */
+    stat = _nss_ldap_ocmap_put (cfg, key, val);
+
+  return stat;
+}
+#endif /* AT_OC_MAP */
+
 static NSS_STATUS
 do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 			   ldap_service_search_descriptor_t ** result,
@@ -522,6 +567,12 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   result->ldc_tls_cert = NULL;
   result->ldc_tls_key = NULL;
   result->ldc_idle_timelimit = 0;
+#ifdef AT_OC_MAP
+  result->ldc_at_map = NULL;
+  result->ldc_oc_map = NULL;
+  result->ldc_crypt_prefix = 1;
+#endif /* AT_OC_MAP */
+
   result->ldc_next = result;
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
@@ -713,6 +764,18 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
         {
 	  t = &result->ldc_tls_key;
         }
+#ifdef AT_OC_MAP
+      else if (!strncasecmp (k, NSS_LDAP_KEY_MAP_ATTRIBUTE,
+			     strlen(NSS_LDAP_KEY_MAP_ATTRIBUTE)))
+	{
+	  do_parse_map_statement(result, v, MAP_ATTRIBUTE);
+	}
+      else if (!strncasecmp (k, NSS_LDAP_KEY_MAP_OBJECTCLASS,
+			     strlen(NSS_LDAP_KEY_MAP_OBJECTCLASS)))
+	{
+	  do_parse_map_statement(result, v, MAP_OBJECTCLASS);
+	}
+#endif /* AT_OC_MAP */
       else
 	{
 	  /*
@@ -855,3 +918,4 @@ _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
 
   return ret;
 }
+

@@ -36,14 +36,6 @@
 #endif
 #endif
 
-static const char filt_gethostbyname[] =
-"(&(objectclass="
-OC (ipHost) ")(" AT (cn) "=%s))";
-     static const char filt_gethostbyaddr[] =
-     "(&(objectclass=" OC (ipHost) ")(" AT (ipHostNumber) "=%s))";
-     static const char filt_gethostent[] =
-     "(objectclass=" OC (ipHost) ")";
-
 
      static NSS_STATUS _nss_ldap_parse_host (
 					      LDAP * ld,

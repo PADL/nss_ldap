@@ -23,22 +23,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_GRP_H
 #define _LDAP_NSS_LDAP_LDAP_GRP_H
 
-static const char filt_getgrnam[] =
-"(&(objectclass="
-OC (posixGroup) ")(" AT (cn) "=%s))";
-     static const char filt_getgrgid[] =
-     "(&(objectclass=" OC (posixGroup) ")(" AT (gidNumber) "=%d))";
-     static const char filt_getgrent[] =
-     "(objectclass=" OC (posixGroup) ")";
-
-#ifdef RFC2307BIS
-     static const char filt_getgroupsbymemberanddn[] =
-     "(&(objectclass=" OC (posixGroup) ")(|(" AT (memberUid) "=%s)(" AT (uniqueMember) "=%s)))";
-#endif
-
-     static const char filt_getgroupsbymember[] =
-     "(&(objectclass=" OC (posixGroup) ")(" AT (memberUid) "=%s))";
-
      static NSS_STATUS _nss_ldap_parse_gr (
 					    LDAP * ld,
 					    LDAPMessage * e,

@@ -126,7 +126,7 @@ _nss_ldap_gethostton_r (nss_backend_t * be, void *args)
 				buffer,
 				sizeof (buffer),
 				&NSS_ARGS (args)->erange,
-				filt_gethostton,
+				_nss_ldap_filt_gethostton,
 				LM_ETHERS,
 				_nss_ldap_parse_ether);
 
@@ -144,7 +144,7 @@ NSS_STATUS
 _nss_ldap_gethostton_r (const char *name, struct ether * result,
 			char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_gethostton,
+  LOOKUP_NAME (name, result, buffer, buflen, errnop, _nss_ldap_filt_gethostton,
 	       LM_ETHERS, _nss_ldap_parse_ether);
 }
 #endif
@@ -170,7 +170,7 @@ _nss_ldap_getntohost_r (nss_backend_t * be, void *args)
 				buffer,
 				sizeof (buffer),
 				&NSS_ARGS (args)->erange,
-				filt_getntohost,
+				_nss_ldap_filt_getntohost,
 				LM_ETHERS,
 				_nss_ldap_parse_ether);
 
@@ -196,7 +196,7 @@ _nss_ldap_getntohost_r (struct ether_addr * addr, struct ether * result,
    result->e_addr is */
 
   LOOKUP_NAME (ether_ntoa ((struct ether_addr *) (&result->e_addr)), result,
-	       buffer, buflen, errnop, filt_getntohost, LM_ETHERS,
+	       buffer, buflen, errnop, _nss_ldap_filt_getntohost, LM_ETHERS,
 	       _nss_ldap_parse_ether);
 }
 #endif
@@ -238,7 +238,7 @@ _nss_ldap_getetherent_r (nss_backend_t * ether_context, void *args)
 			      NSS_ARGS (args)->buf.buffer,
 			      NSS_ARGS (args)->buf.buflen,
 			      &NSS_ARGS (args)->erange,
-			      filt_getetherent,
+			      _nss_ldap_filt_getetherent,
 			      LM_ETHERS,
 			      _nss_ldap_parse_ether);
 
@@ -261,7 +261,7 @@ _nss_ldap_getetherent_r (struct ether * result, char *buffer, size_t buflen,
 			 int *errnop)
 {
   LOOKUP_GETENT (ether_context, result, buffer, buflen, errnop,
-		 filt_getetherent, LM_ETHERS, _nss_ldap_parse_ether);
+		 _nss_ldap_filt_getetherent, LM_ETHERS, _nss_ldap_parse_ether);
 }
 #endif
 

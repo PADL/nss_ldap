@@ -49,6 +49,11 @@ NSS_STATUS _nss_ldap_dn2uid (LDAP * ld,
 			     char **uid, char **buf, size_t * len);
 #endif /* RFC2307BIS */
 
+#ifdef AT_OC_MAP
+#define NSS_LDAP_KEY_MAP_ATTRIBUTE      "nss_map_attribute"
+#define NSS_LDAP_KEY_MAP_OBJECTCLASS    "nss_map_objectclass"
+#endif /* AT_OC_MAP */
+
 #define NSS_LDAP_CONFIG_BUFSIZ		4096
 #define NSS_LDAP_KEY_HOST		"host"
 #define NSS_LDAP_KEY_SCOPE		"scope"

@@ -140,7 +140,7 @@ _nss_ldap_getnetbyname_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buffer,
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
-				filt_getnetbyname,
+				_nss_ldap_filt_getnetbyname,
 				LM_NETWORKS,
 				_nss_ldap_parse_net);
 
@@ -169,7 +169,7 @@ _nss_ldap_getnetbyname_r (const char *name, struct netent * result,
 				buffer,
 				buflen,
 				errnop,
-				filt_getnetbyname,
+				_nss_ldap_filt_getnetbyname,
 				LM_NETWORKS,
 				_nss_ldap_parse_net);
 
@@ -219,7 +219,7 @@ _nss_ldap_getnetbyaddr_r (unsigned long addr, int type,
 #else
       retval = _nss_ldap_getbyname (&a, result, buffer, buflen, errnop,
 #endif
-				    filt_getnetbyaddr,
+				    _nss_ldap_filt_getnetbyaddr,
 				    LM_NETWORKS,
 				    _nss_ldap_parse_net);
 
@@ -308,7 +308,7 @@ _nss_ldap_getnetent_r (nss_backend_t * net_context, void *args)
 					 NSS_ARGS (args)->buf.buffer,
 					 NSS_ARGS (args)->buf.buflen,
 					 &NSS_ARGS (args)->erange,
-					 filt_getnetent,
+					 _nss_ldap_filt_getnetent,
 					 LM_NETWORKS,
 					 _nss_ldap_parse_net);
 
@@ -329,7 +329,7 @@ _nss_ldap_getnetent_r (struct netent * result, char *buffer, size_t buflen,
 			     buffer,
 			     buflen,
 			     errnop,
-			     filt_getnetent,
+			     _nss_ldap_filt_getnetent,
 			     LM_NETWORKS,
 			     _nss_ldap_parse_net);
 

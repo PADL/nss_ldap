@@ -45,14 +45,14 @@ struct pvt
 IRS_EXPORT struct protoent *
 pr_byname (struct irs_pr *this, const char *name)
 {
-  LOOKUP_NAME (name, this, filt_getprotobyname, LM_PROTOCOLS,
+  LOOKUP_NAME (name, this, _nss_ldap_filt_getprotobyname, LM_PROTOCOLS,
 	       _nss_ldap_parse_proto);
 }
 
 IRS_EXPORT struct protoent *
 pr_bynumber (struct irs_pr *this, int num)
 {
-  LOOKUP_NUMBER (num, this, filt_getprotobynumber, LM_PROTOCOLS,
+  LOOKUP_NUMBER (num, this, _nss_ldap_filt_getprotobynumber, LM_PROTOCOLS,
 		 _nss_ldap_parse_proto);
 }
 
@@ -69,7 +69,7 @@ pr_close (struct irs_pr *this)
 IRS_EXPORT struct protoent *
 pr_next (struct irs_pr *this)
 {
-  LOOKUP_GETENT (this, filt_getprotoent, LM_PROTOCOLS,
+  LOOKUP_GETENT (this, _nss_ldap_filt_getprotoent, LM_PROTOCOLS,
 		 _nss_ldap_parse_proto);
 }
 

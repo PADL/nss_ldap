@@ -248,7 +248,7 @@ _nss_ldap_gethostbyname_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buffer,
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
-				filt_gethostbyname,
+				_nss_ldap_filt_gethostbyname,
 				LM_HOSTS, _nss_ldap_parse_host);
 
   if (status == NSS_SUCCESS)
@@ -276,7 +276,7 @@ _nss_ldap_gethostbyname_r (const char *name, struct hostent * result,
 				buffer,
 				buflen,
 				errnop,
-				filt_gethostbyname,
+				_nss_ldap_filt_gethostbyname,
 				LM_HOSTS, _nss_ldap_parse_host);
 
   MAP_H_ERRNO (status, *h_errnop);
@@ -304,7 +304,7 @@ _nss_ldap_gethostbyaddr_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buffer,
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
-				filt_gethostbyaddr,
+				_nss_ldap_filt_gethostbyaddr,
 				LM_HOSTS, _nss_ldap_parse_host);
 
   if (status == NSS_SUCCESS)
@@ -337,7 +337,7 @@ _nss_ldap_gethostbyaddr_r (struct in_addr * addr, int len, int type,
 				buffer,
 				buflen,
 				errnop,
-				filt_gethostbyaddr,
+				_nss_ldap_filt_gethostbyaddr,
 				LM_HOSTS, _nss_ldap_parse_host);
 
   MAP_H_ERRNO (status, *h_errnop);
@@ -380,7 +380,7 @@ _nss_ldap_gethostent_r (nss_backend_t * hosts_context, void *args)
 					NSS_ARGS (args)->buf.buffer,
 					NSS_ARGS (args)->buf.buflen,
 					&NSS_ARGS (args)->erange,
-					filt_gethostent,
+					_nss_ldap_filt_gethostent,
 					LM_HOSTS,
 					_nss_ldap_parse_host);
 
@@ -403,7 +403,7 @@ _nss_ldap_gethostent_r (struct hostent * result, char *buffer, size_t buflen,
 			     buffer,
 			     buflen,
 			     errnop,
-			   filt_gethostent, LM_HOSTS, _nss_ldap_parse_host);
+			   _nss_ldap_filt_gethostent, LM_HOSTS, _nss_ldap_parse_host);
 
   MAP_H_ERRNO (status, *h_errnop);
 

@@ -65,7 +65,7 @@ nw_byname (struct irs_nw *this, const char *name, int af)
 			   pvt->buffer,
 			   sizeof (pvt->buffer),
 			   &errno,
-			   filt_getnetbyname,
+			   _nss_ldap_filt_getnetbyname,
 			   LM_NETWORKS,
 			   _nss_ldap_parse_net);
 
@@ -108,7 +108,7 @@ nw_byaddr (struct irs_nw *this, void *net, int length, int af)
 			   pvt->buffer,
 			   sizeof (pvt->buffer),
 			   &errno,
-			   filt_getnetbyaddr,
+			   _nss_ldap_filt_getnetbyaddr,
 			   LM_NETWORKS,
 			   _nss_ldap_parse_net);
 
@@ -122,7 +122,7 @@ nw_byaddr (struct irs_nw *this, void *net, int length, int af)
 				   pvt->buffer,
 				   sizeof (pvt->buffer),
 				   &errno,
-				   filt_getnetbyaddr,
+				   _nss_ldap_filt_getnetbyaddr,
 				   LM_NETWORKS,
 				   _nss_ldap_parse_net);
 	  if (s != NSS_SUCCESS)
@@ -157,7 +157,7 @@ nw_next (struct irs_nw *this)
 			pvt->buffer,
 			sizeof (pvt->buffer),
 			&errno,
-			filt_getnetent,
+			_nss_ldap_filt_getnetent,
 			LM_NETWORKS, _nss_ldap_parse_net);
 
   if (s != NSS_SUCCESS)

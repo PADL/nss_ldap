@@ -23,13 +23,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_PWD_H
 #define _LDAP_NSS_LDAP_LDAP_PWD_H
 
-static const char filt_getpwnam[] =
-"(&(objectclass=" OC (posixAccount) ")(" AT (uid) "=%s))";
-     static const char filt_getpwuid[] =
-     "(&(objectclass=" OC (posixAccount) ")(" AT (uidNumber) "=%d))";
-     static const char filt_getpwent[] =
-     "(objectclass=" OC (posixAccount) ")";
-
      static NSS_STATUS _nss_ldap_parse_pw (
 					    LDAP * ld,
 					    LDAPMessage * e,

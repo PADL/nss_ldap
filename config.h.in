@@ -18,11 +18,8 @@
 /* define to enable authPassword checking code */
 #undef AUTHPASSWORD
 
-/* define to enable ActiveDirectory user schema support */
-#undef MSSFU_SCHEMA
-
-/* define to enable NDS schema: member vs uniqueMember */
-#undef NDS_SCHEMA
+/* define to enable attribute/objectclass mapping */
+#undef AT_OC_MAP
 
 /* Define if you have the dn_expand function.  */
 #undef HAVE_DN_EXPAND

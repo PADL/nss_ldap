@@ -23,13 +23,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_SPWD_H
 #define _LDAP_NSS_LDAP_LDAP_SPWD_H
 
-static const char filt_getspnam[] =
-"(&(objectclass="
-OC (shadowAccount) ")(" AT (uid) "=%s))";
-
-     static const char filt_getspent[] =
-     "(objectclass=" OC (shadowAccount) ")";
-
      static NSS_STATUS _nss_ldap_parse_sp (
 					    LDAP * ld,
 					    LDAPMessage * e,

@@ -135,14 +135,14 @@ _nss_ldap_getspnam_r (const char *name,
 		      struct spwd * result,
 		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getspnam,
+  LOOKUP_NAME (name, result, buffer, buflen, errnop, _nss_ldap_filt_getspnam,
 	       LM_SHADOW, _nss_ldap_parse_sp);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getspnam_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, filt_getspnam, LM_SHADOW, _nss_ldap_parse_sp);
+  LOOKUP_NAME (args, _nss_ldap_filt_getspnam, LM_SHADOW, _nss_ldap_parse_sp);
 }
 #endif /* HAVE_NSS_H */
 
@@ -177,14 +177,14 @@ NSS_STATUS
 _nss_ldap_getspent_r (struct spwd *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_GETENT (sp_context, result, buffer, buflen, errnop, filt_getspent,
+  LOOKUP_GETENT (sp_context, result, buffer, buflen, errnop, _nss_ldap_filt_getspent,
 		 LM_SHADOW, _nss_ldap_parse_sp);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getspent_r (nss_backend_t * sp_context, void *args)
 {
-  LOOKUP_GETENT (args, sp_context, filt_getspent, LM_SHADOW,
+  LOOKUP_GETENT (args, sp_context, _nss_ldap_filt_getspent, LM_SHADOW,
 		 _nss_ldap_parse_sp);
 }
 #endif

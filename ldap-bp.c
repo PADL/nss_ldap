@@ -92,7 +92,7 @@ _nss_ldap_parse_bp (LDAP * ld,
 static NSS_STATUS
 _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, filt_getbootparamsbyname, LM_BOOTPARAMS,
+  LOOKUP_NAME (args, _nss_ldap_filt_getbootparamsbyname, LM_BOOTPARAMS,
 	       _nss_ldap_parse_bp);
 }
 #endif

@@ -33,18 +33,6 @@
  *
  */
 
-static const char filt_getservbyname[] =
-"(&(objectclass="
-OC (ipService) ")(" AT (cn) "=%s))";
-     static const char filt_getservbynameproto[] =
-     "(&(objectclass=" OC (ipService) ")(" AT (cn) "=%s)(" AT (ipServiceProtocol) "=%s))";
-     static const char filt_getservbyport[] =
-     "(&(objectclass=" OC (ipService) ")(" AT (ipServicePort) "=%d))";
-     static const char filt_getservbyportproto[] =
-     "(&(objectclass=" OC (ipService) ")(" AT (ipServicePort) "=%d)(" AT (ipServiceProtocol) "=%s))";
-     static const char filt_getservent[] =
-     "(objectclass=" OC (ipService) ")";
-
 
      static NSS_STATUS _nss_ldap_parse_serv (
 					      LDAP * ld,

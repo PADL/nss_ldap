@@ -29,13 +29,6 @@
    as aliases.
  */
 
-static const char filt_getprotobyname[] =
-"(&(objectclass="
-OC (ipProtocol) ")(" AT (cn) "=%s))";
-     static const char filt_getprotobynumber[] =
-     "(&(objectclass=" OC (ipProtocol) ")(" AT (ipProtocolNumber) "=%d))";
-     static const char filt_getprotoent[] =
-     "(objectclass=" OC (ipProtocol) ")";
 
      static NSS_STATUS _nss_ldap_parse_proto (
 					       LDAP * ld,

@@ -29,14 +29,6 @@
  * as aliases.
  */
 
-static const char filt_getrpcbyname[] =
-"(&(objectclass="
-OC (oncRpc) ")(" AT (cn) "=%s))";
-     static const char filt_getrpcbynumber[] =
-     "(&(objectclass=" OC (oncRpc) ")(" AT (oncRpcNumber) "=%d))";
-     static const char filt_getrpcent[] =
-     "(objectclass=" OC (oncRpc) ")";
-
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
      static NSS_STATUS _nss_ldap_parse_rpc (
 					     LDAP * ld,

@@ -31,14 +31,6 @@ static NSS_STATUS _nss_ldap_parse_net (
 					char *buffer,
 					size_t buflen);
 
-static const char filt_getnetbyname[] =
-"(&(objectclass="
-OC (ipNetwork) ")(" AT (cn) "=%s))";
-     static const char filt_getnetbyaddr[] =
-     "(&(objectclass=" OC (ipNetwork) ")(" AT (ipNetworkNumber) "=%s))";
-     static const char filt_getnetent[] =
-     "(objectclass=" OC (ipNetwork) ")";
-
 
 #ifdef HAVE_NSSWITCH_H
      static NSS_STATUS _nss_ldap_getnetbyname_r (nss_backend_t * be, void *fakeargs);

@@ -29,14 +29,6 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_ETHERS_H
 #define _LDAP_NSS_LDAP_LDAP_ETHERS_H
 
-static const char filt_gethostton[] =	/* opt filter on null macaddress? */
-"(&(objectclass="
-OC (ieee802Device) ")(" AT (cn) "=%s))";
-     static const char filt_getntohost[] =
-     "(&(objectclass=" OC (ieee802Device) ")(" AT (macAddress) "=%s))";
-     static const char filt_getetherent[] =
-     "(objectclass=" OC (ieee802Device) ")";
-
 
      struct ether
        {

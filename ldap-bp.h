@@ -30,9 +30,6 @@ struct bootparams
     char **bp_params;
   };
 
-static const char filt_getbootparamsbyname[] =
-"(&(objectclass="
-OC (bootableDevice) ")(" AT (cn) "=%s))";
 
      static NSS_STATUS _nss_ldap_parse_bp (
 					    LDAP * ld,

@@ -4,6 +4,11 @@ $Header$
 168	Luke Howard <lukeh@padl.com>
 
 	* initialize old_handler to SIG_DFL
+	* incorporate Stephan Cremer's mapping patches,
+	  a big thanks to Stephan for these!
+	* use LDAP_OPT_NETWORK_TIMEOUT if available for
+	  network connect timeout
+	* removed hard-coded schema mapping
 
 167	Luke Howard <lukeh@padl.com>
 

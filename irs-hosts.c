@@ -67,7 +67,7 @@ ho_byname (struct irs_ho *this, const char *name)
 			   pvt->buffer,
 			   sizeof (pvt->buffer),
 			   &errno,
-			   filt_gethostbyname,
+			   _nss_ldap_filt_gethostbyname,
 			   LM_HOSTS,
 			   _nss_ldap_parse_host);
 
@@ -113,7 +113,7 @@ ho_byaddr (struct irs_ho *this, const void *addr, int len, int af)
 			   pvt->buffer,
 			   sizeof (pvt->buffer),
 			   &errno,
-			   filt_gethostbyaddr,
+			   _nss_ldap_filt_gethostbyaddr,
 			   LM_HOSTS,
 			   _nss_ldap_parse_host);
 
@@ -146,7 +146,7 @@ ho_next (struct irs_ho *this)
 			pvt->buffer,
 			sizeof (pvt->buffer),
 			&errno,
-			filt_gethostent,
+			_nss_ldap_filt_gethostent,
 			LM_HOSTS,
 			_nss_ldap_parse_host);
 

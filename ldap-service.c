@@ -208,7 +208,7 @@ _nss_ldap_getservbyname_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
 				(NSS_ARGS (args)->key.serv.proto == NULL) ?
-				filt_getservbyname : filt_getservbynameproto,
+				_nss_ldap_filt_getservbyname : filt_getservbynameproto,
 				LM_SERVICES,
 				_nss_ldap_parse_serv);
 
@@ -232,8 +232,8 @@ _nss_ldap_getservbyname_r (const char *name,
   LA_STRING2 (a) = proto;
 
   return _nss_ldap_getbyname (&a, result, buffer, buflen, errnop,
-			      ((proto == NULL) ? filt_getservbyname :
-			       filt_getservbynameproto),
+			      ((proto == NULL) ? _nss_ldap_filt_getservbyname :
+			       _nss_ldap_filt_getservbynameproto),
 			      LM_SERVICES,
 			      _nss_ldap_parse_serv);
 }
@@ -258,7 +258,7 @@ _nss_ldap_getservbyport_r (nss_backend_t * be, void *args)
 				NSS_ARGS (args)->buf.buflen,
 				&NSS_ARGS (args)->erange,
 				(NSS_ARGS (args)->key.serv.proto == NULL) ?
-				filt_getservbyport : filt_getservbyportproto,
+				_nss_ldap_filt_getservbyport : filt_getservbyportproto,
 				LM_SERVICES,
 				_nss_ldap_parse_serv);
 
@@ -282,8 +282,8 @@ _nss_ldap_getservbyport_r (int port,
   LA_STRING2 (a) = proto;
   return _nss_ldap_getbyname (&a, result, buffer, buflen, errnop,
 			      (proto ==
-			       NULL) ? filt_getservbyport :
-			      filt_getservbyportproto,
+			       NULL) ? _nss_ldap_filt_getservbyport :
+			      _nss_ldap_filt_getservbyportproto,
 			      LM_SERVICES,
 			      _nss_ldap_parse_serv);
 }
@@ -317,7 +317,7 @@ _nss_ldap_endservent_r (nss_backend_t * serv_context, void *args)
 static NSS_STATUS
 _nss_ldap_getservent_r (nss_backend_t * serv_context, void *args)
 {
-  LOOKUP_GETENT (args, serv_context, filt_getservent, LM_SERVICES,
+  LOOKUP_GETENT (args, serv_context, _nss_ldap_filt_getservent, LM_SERVICES,
 		 _nss_ldap_parse_serv);
 }
 #elif defined(HAVE_NSS_H)
@@ -326,7 +326,7 @@ _nss_ldap_getservent_r (struct servent *result, char *buffer, size_t buflen,
 			int *errnop)
 {
   LOOKUP_GETENT (serv_context, result, buffer, buflen, errnop,
-		 filt_getservent, LM_SERVICES, _nss_ldap_parse_serv);
+		 _nss_ldap_filt_getservent, LM_SERVICES, _nss_ldap_parse_serv);
 }
 #endif
 

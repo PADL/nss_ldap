@@ -40,6 +40,7 @@ static char rcsId[] =
 #include <stdio.h>
 #include <syslog.h>
 #include <signal.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -54,6 +55,23 @@ static char rcsId[] =
 #ifdef HAVE_LDAP_SSL_H
 #include <ldap_ssl.h>
 #endif
+
+#ifdef AT_OC_MAP
+#ifdef HAVE_DB3_DB_185_H
+#include <db3/db_185.h>   
+#else   
+#ifdef HAVE_DB_185_H
+#include <db_185.h>
+#define DN2UID_CACHE
+#elif defined(HAVE_DB1_DB_H)
+#include <db1/db.h>
+#define DN2UID_CACHE
+#elif defined(HAVE_DB_H)  
+#include <db.h>
+#define DN2UID_CACHE
+#endif /* HAVE_DB1_DB_H */
+#endif /* HAVE_DB3_DB_H */
+#endif /* AT_OC_MAP */
 
 #ifndef HAVE_SNPRINTF
 #include "snprintf.h"
@@ -512,6 +530,9 @@ do_open (void)
 #ifdef LDAP_X_OPT_CONNECT_TIMEOUT
   int timeout;
 #endif
+#ifdef LDAP_OPT_NETWORK_TIMEOUT
+  struct timeval tv;
+#endif
 
   debug ("==> do_open");
 
@@ -756,6 +777,9 @@ do_open (void)
 
   cfg = __config;
 
+  _nss_ldap_init_attributes(cfg->ldc_attrtab);
+  _nss_ldap_init_filters();
+
   while (1)
     {
 #ifdef HAVE_LDAPSSL_CLIENT_INIT
@@ -859,6 +883,12 @@ do_open (void)
   ldap_set_option (__session.ls_conn, LDAP_X_OPT_CONNECT_TIMEOUT, &timeout);
 #endif /* LDAP_X_OPT_CONNECT_TIMEOUT */
 
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_NETWORK_TIMEOUT)
+  tv.tv_sec = cfg->ldc_bind_timelimit;
+  tv.tv_usec = 0;
+  ldap_set_option (__session.ls_conn, LDAP_OPT_NETWORK_TIMEOUT, &tv);
+#endif /* LDAP_OPT_NETWORK_TIMEOUT */
+
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_REFERRALS)
   ldap_set_option (__session.ls_conn, LDAP_OPT_REFERRALS,
 		   cfg->ldc_referrals ? LDAP_OPT_ON : LDAP_OPT_OFF);
@@ -872,7 +902,7 @@ do_open (void)
 #ifdef HAVE_LDAP_START_TLS_S
   if (cfg->ldc_ssl_on == SSL_START_TLS)
     {
-      int version, rc;
+      int version;
 
       if (ldap_get_option
 	  (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
@@ -1086,6 +1116,13 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw)
 
   debug ("==> do_bind");
 
+  /*
+   * set timelimit in ld for select() call in ldap_pvt_connect() 
+   * function implemented in libldap2's os-ip.c
+   */
+  tv.tv_sec = timelimit;
+  tv.tv_usec = 0;
+
   msgid = ldap_simple_bind (ld, dn, pw);
 
   if (msgid < 0)
@@ -1102,9 +1139,6 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw)
 
       return rc;
     }
-
-  tv.tv_sec = timelimit;
-  tv.tv_usec = 0;
 
   rc = ldap_result (ld, msgid, 0, &tv, &result);
   if (rc > 0)
@@ -1789,13 +1823,13 @@ _nss_ldap_read (const char *dn, const char **attributes, LDAPMessage ** res)
  * session is already established.
  */
 char **
-_nss_ldap_get_values (LDAPMessage * e, char *attr)
+_nss_ldap_get_values (LDAPMessage * e, const char *attr)
 {
   if (__session.ls_conn == NULL)
     {
       return NULL;
     }
-  return ldap_get_values (__session.ls_conn, e, attr);
+  return ldap_get_values (__session.ls_conn, e, (char *)attr);
 }
 
 /*
@@ -1903,7 +1937,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
 	      scope = sd->lsd_scope;
 	    }
 	}
-      attrs = _nss_ldap_attrtab[sel];
+      attrs = __session.ls_config->ldc_attrtab[sel];
     }
 
   stat =
@@ -1975,7 +2009,7 @@ _nss_ldap_search (const ldap_args_t * args,
 	      scope = sd->lsd_scope;
 	    }
 	}
-      attrs = _nss_ldap_attrtab[sel];
+      attrs = __session.ls_config->ldc_attrtab[sel];
     }
 
   stat =
@@ -2263,6 +2297,18 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   char *pwd = NULL;
   int vallen;
 
+#ifdef AT_OC_MAP
+  /*
+   * if the userPassword attribute is not "userPassword" then
+   * don't bother about stripping the {crypt} prefix. Treat it
+   * like any other attribute, garbage in, garbage out.
+   */
+  if (__config != NULL && __config->ldc_crypt_prefix == 0)
+    {
+      return _nss_ldap_assign_attrval(ld, e, attr, valptr, buffer, buflen);
+    }
+#endif /* AT_OC_MAP */
+
   vals = ldap_get_values (ld, e, (char *) attr);
   if (vals != NULL)
     {
@@ -2399,3 +2445,137 @@ NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 
   return ret;
 }
+
+#ifdef AT_OC_MAP
+const char*
+_nss_ldap_map_at(const char* attribute)
+{
+  char *mapped;
+
+  if (_nss_ldap_atmap_get(__config, attribute, (const char**) &mapped) == NSS_NOTFOUND)
+     return attribute;
+
+  return mapped;
+}
+
+const char*
+_nss_ldap_map_oc(const char* objectclass)
+{
+  char *mapped;
+
+  if (_nss_ldap_ocmap_get(__config, objectclass, (const char**) &mapped) == NSS_NOTFOUND)
+    return objectclass;
+
+  return mapped;
+}
+
+NSS_STATUS
+_nss_ldap_atmap_put (ldap_config_t *config,
+		     const char *rfc2307attribute, 
+		     const char *attribute)
+{
+  DBT key, val;
+  int rc;
+
+  if (config->ldc_at_map == NULL)
+    {
+      config->ldc_at_map = dbopen (NULL, O_RDWR, 0600, DB_HASH, NULL);
+      if (config->ldc_at_map == NULL)
+	{
+	  return NSS_TRYAGAIN;
+	}
+    }
+
+  if (strcmp(rfc2307attribute, "userPassword") == 0 &&
+      strcasecmp(rfc2307attribute, attribute) != 0)
+        config->ldc_crypt_prefix = 0;
+
+  key.data = (void *) rfc2307attribute;
+  key.size = strlen (rfc2307attribute);
+  val.data = (void *) attribute;
+  val.size = strlen (attribute) + 1;
+  rc = (((DB *)(config->ldc_at_map))->put) ((DB *)config->ldc_at_map, &key, &val, 0);
+
+  return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
+}
+
+NSS_STATUS
+_nss_ldap_ocmap_put (ldap_config_t *config,
+		     const char *rfc2307objectclass,
+		     const char* objectclass)
+{
+  DBT key, val;
+  int rc;
+
+  if (config->ldc_oc_map == NULL)
+    {
+      config->ldc_oc_map = dbopen (NULL, O_RDWR, 0600, DB_HASH, NULL);
+      if (config->ldc_oc_map == NULL)
+	{
+	  return NSS_TRYAGAIN;
+	}
+    }
+
+  key.data = (void *) rfc2307objectclass;
+  key.size = strlen (rfc2307objectclass);
+  val.data = (void *) objectclass;
+  val.size = strlen (objectclass) + 1;
+  rc = (((DB *)(config->ldc_oc_map))->put) ((DB *)config->ldc_oc_map, &key, &val, 0);
+
+  return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
+}
+
+NSS_STATUS
+_nss_ldap_atmap_get (ldap_config_t *config,
+		     const char *rfc2307attribute,
+		     const char **attribute)
+{
+  DBT key, val;
+
+  if (config == NULL || config->ldc_at_map == NULL)
+    {
+     *attribute = rfc2307attribute;
+     return NSS_NOTFOUND;
+    }
+
+  key.data = (void *) rfc2307attribute;
+  key.size = strlen (rfc2307attribute);
+
+  if ((((DB *)config->ldc_at_map)->get) ((DB *)config->ldc_at_map, &key, &val, 0) != 0)
+    {
+     *attribute = rfc2307attribute;
+     return NSS_NOTFOUND;
+    }
+
+  *attribute = (char *) val.data;
+
+  return NSS_SUCCESS;
+}
+
+NSS_STATUS
+_nss_ldap_ocmap_get (ldap_config_t *config,
+		     const char *rfc2307objectclass,
+		     const char **objectclass)
+{
+  DBT key, val;
+
+  if (config == NULL || config->ldc_oc_map == NULL)
+    {
+      *objectclass = rfc2307objectclass;
+      return NSS_NOTFOUND;
+    }
+
+  key.data = (void *) rfc2307objectclass;
+  key.size = strlen (rfc2307objectclass);
+
+  if ((((DB *)config->ldc_oc_map)->get) ((DB *)config->ldc_oc_map, &key, &val, 0) != 0)
+    {
+      *objectclass = rfc2307objectclass;
+      return NSS_NOTFOUND;
+    }
+
+  *objectclass = (char *) val.data;
+
+  return NSS_SUCCESS;
+}
+#endif /* AT_OC_MAP */

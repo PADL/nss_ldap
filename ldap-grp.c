@@ -36,6 +36,7 @@ static char rcsId[] =
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>
 #include <grp.h>
@@ -45,6 +46,10 @@ static char rcsId[] =
 #endif
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
+#endif
+
+#ifndef HAVE_SNPRINTF
+#include "snprintf.h"
 #endif
 
 #include "ldap-nss.h"
@@ -134,7 +139,7 @@ _nss_ldap_parse_gr (LDAP * ld,
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
 	  char *uid;
-#if !defined(MSSFU_SCHEMA) && !defined(NDS_SCHEMA)
+
 	  /*
 	   * Remove optional UID (as in unique identifier)
 	   * only for uniqueMember; member does not have UID
@@ -143,7 +148,7 @@ _nss_ldap_parse_gr (LDAP * ld,
 	    {
 	      *uid = '\0';
 	    }
-#endif /* NDS_SCHEMA */
+
 	  stat = _nss_ldap_dn2uid (ld, *valiter, &uid, &buffer, &buflen);
 	  if (stat == NSS_SUCCESS)
 	    {
@@ -227,6 +232,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #ifdef RFC2307BIS
   char *userdn = NULL;
   const char *filter;
+  char filt[LDAP_FILT_MAXSIZ];
 #endif /* RFC2307BIS */
   ldap_args_t a;
   NSS_STATUS stat;
@@ -250,7 +256,8 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 
 #ifdef RFC2307BIS
   /* lookup the user's DN. XXX: import this filter from somewhere else */
-  stat = _nss_ldap_search_s (&a, "(" AT (uid) "=%s)", LM_NONE, 1, &res);
+  snprintf(filt, LDAP_FILT_MAXSIZ, "(%s=%s)", AT(uid), "%s");
+  stat = _nss_ldap_search_s (&a, filt, LM_NONE, 1, &res);
   if (stat == NSS_SUCCESS)
     {
       e = _nss_ldap_first_entry (res);
@@ -264,11 +271,11 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
     {
       LA_STRING2 (a) = userdn;
       LA_TYPE (a) = LA_TYPE_STRING_AND_STRING;
-      filter = filt_getgroupsbymemberanddn;
+      filter = _nss_ldap_filt_getgroupsbymemberanddn;
     }
   else
     {
-      filter = filt_getgroupsbymember;
+      filter = _nss_ldap_filt_getgroupsbymember;
     }
   stat = _nss_ldap_search_s (&a, filter, LM_GROUP, LDAP_NO_LIMIT, &res);
   if (userdn != NULL)
@@ -281,7 +288,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
     }
 #else
   stat =
-    _nss_ldap_search_s (&a, filt_getgroupsbymember, LM_GROUP,
+    _nss_ldap_search_s (&a, _nss_ldap_filt_getgroupsbymember, LM_GROUP,
 			LDAP_NO_LIMIT, &res);
 #endif /* RFC2307BIS */
 
@@ -402,14 +409,14 @@ _nss_ldap_getgrnam_r (const char *name,
 		      struct group * result,
 		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NAME (name, result, buffer, buflen, errnop, filt_getgrnam,
+  LOOKUP_NAME (name, result, buffer, buflen, errnop, _nss_ldap_filt_getgrnam,
 	       LM_GROUP, _nss_ldap_parse_gr);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrnam_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NAME (args, filt_getgrnam, LM_GROUP, _nss_ldap_parse_gr);
+  LOOKUP_NAME (args, _nss_ldap_filt_getgrnam, LM_GROUP, _nss_ldap_parse_gr);
 }
 #endif
 
@@ -419,14 +426,14 @@ _nss_ldap_getgrgid_r (gid_t gid,
 		      struct group *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_NUMBER (gid, result, buffer, buflen, errnop, filt_getgrgid,
+  LOOKUP_NUMBER (gid, result, buffer, buflen, errnop, _nss_ldap_filt_getgrgid,
 		 LM_GROUP, _nss_ldap_parse_gr);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 {
-  LOOKUP_NUMBER (args, key.gid, filt_getgrgid, LM_GROUP, _nss_ldap_parse_gr);
+  LOOKUP_NUMBER (args, key.gid, _nss_ldap_filt_getgrgid, LM_GROUP, _nss_ldap_parse_gr);
 }
 #endif
 
@@ -461,14 +468,14 @@ NSS_STATUS
 _nss_ldap_getgrent_r (struct group *result,
 		      char *buffer, size_t buflen, int *errnop)
 {
-  LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop, filt_getgrent,
+  LOOKUP_GETENT (gr_context, result, buffer, buflen, errnop, _nss_ldap_filt_getgrent,
 		 LM_GROUP, _nss_ldap_parse_gr);
 }
 #elif defined(HAVE_NSSWITCH_H)
 static NSS_STATUS
 _nss_ldap_getgrent_r (nss_backend_t * gr_context, void *args)
 {
-  LOOKUP_GETENT (args, gr_context, filt_getgrent, LM_GROUP,
+  LOOKUP_GETENT (args, gr_context, _nss_ldap_filt_getgrent, LM_GROUP,
 		 _nss_ldap_parse_gr);
 }
 #endif

@@ -181,6 +181,11 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   result->ldc_tls_cert = NULL;
   result->ldc_tls_key = NULL;
   result->ldc_idle_timelimit = 0;
+#ifdef AT_OC_MAP
+  result->ldc_at_map = NULL;
+  result->ldc_oc_map = NULL;
+  result->ldc_crypt_prefix = 1;
+#endif /* AT_OC_MAP */
   result->ldc_next = result;
 
   __nss_dns_lock ();
