@@ -2985,8 +2985,11 @@ _nss_ldap_atmap_put (ldap_config_t * config,
   val.size = sizeof (attrdup);
 
   rc =
-    (((DB *) (config->ldc_at_map))->put) ((DB *) config->ldc_at_map, &key,
-					  &val, 0);
+    (((DB *) (config->ldc_at_map))->put) ((DB *) config->ldc_at_map,
+#if DB_VERSION_MAJOR > 2
+					  NULL, /* DB_TXN */
+#endif /* DB_VERSION_MAJOR */
+					  &val, &val, 0);
 
   return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
 }
@@ -3017,8 +3020,11 @@ _nss_ldap_ocmap_put (ldap_config_t * config,
   val.data = (void *) &ocdup;
   val.size = sizeof (ocdup);
   rc =
-    (((DB *) (config->ldc_oc_map))->put) ((DB *) config->ldc_oc_map, &key,
-					  &val, 0);
+    (((DB *) (config->ldc_oc_map))->put) ((DB *) config->ldc_oc_map,
+#if DB_VERSION_MAJOR > 2
+					  NULL, /* DB_TXN */
+#endif /* DB_VERSION_MAJOR */
+					  &key, &val, 0);
 
   return (rc != 0) ? NSS_TRYAGAIN : NSS_SUCCESS;
 }
@@ -3039,7 +3045,11 @@ _nss_ldap_atmap_get (ldap_config_t * config,
   key.size = strlen (rfc2307attribute);
 
   if ((((DB *) config->ldc_at_map)->get)
-      ((DB *) config->ldc_at_map, &key, &val, 0) != 0)
+      ((DB *) config->ldc_at_map,
+#if DB_VERSION_MAJOR > 2
+	NULL,
+#endif
+	&key, &val, 0) != 0)
     {
       *attribute = rfc2307attribute;
       return NSS_NOTFOUND;
@@ -3065,7 +3075,11 @@ _nss_ldap_ocmap_get (ldap_config_t * config,
   key.size = strlen (rfc2307objectclass);
 
   if ((((DB *) config->ldc_oc_map)->get)
-      ((DB *) config->ldc_oc_map, &key, &val, 0) != 0)
+      ((DB *) config->ldc_oc_map,
+#if DB_VERSION_MAJOR > 2
+	NULL,
+#endif
+	&key, &val, 0) != 0)
     {
       *objectclass = rfc2307objectclass;
       return NSS_NOTFOUND;

@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+205	Luke Howard <lukeh@padl.com>
+
+	* build with Sleepycat DB without db185 compat layer
+	  (tested with 4.x; needs testing on 3.x)
+
 204	Luke Howard <lukeh@padl.com>
 
 	* Linux netgroup implementation from Larry Lile

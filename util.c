@@ -113,8 +113,27 @@ void *
 _nss_hash_open()
 {
   DB *db = NULL;
+#if DB_VERSION_MAJOR > 2
+  int rc;
 
+  rc = db_create(&db, NULL, 0);
+  if (rc != 0) {
+    return NULL;
+  }
+
+#if (DB_VERSION_MAJOR > 3) && (DB_VERSION_MINOR > 0)
+  rc = db->open(db, NULL, NULL, NULL, DB_HASH, DB_CREATE, 0600);
+#else
+  rc = db->open(db, NULL, NULL, DB_HASH, DB_CREATE, 0600);
+#endif
+
+  if (rc != 0) {
+    db->close(db, 0);
+    return NULL;
+  }
+#else
   db = dbopen(NULL, O_RDWR, 0600, DB_HASH, NULL);
+#endif /* DB_VERSION_MAJOR */
 
   return db;
 }
