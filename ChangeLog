@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.40	Luke Howard <lukeh@xedoc.com>
+
+   * fixed crasher in dnsconfig.c
+
 2.39	Luke Howard <lukeh@xedoc.com>
 
 	* fixed warning in ldap-ethers.c (removed const from 

@@ -80,31 +80,33 @@ NSS_STATUS _nss_ldap_getdnsdn(
         char *st = NULL;
 #endif
         char *bptr;
-	char *domain;
+	char *domain, *domain_copy;
 
 	/* we need to take a copy of domain, because strtok() modifies
 	 * it in place. Bad.
 	 */
-	domain = strdup(src_domain);
-	if (domain == NULL)
+	domain_copy = strdup(src_domain);
+	if (domain_copy == NULL)
 		{
 		return NSS_TRYAGAIN;
 		}
+
+	domain = domain_copy;
 
 	bptr = *rval = *buffer;
 	**rval = '\0';
 
 #ifndef HAVE_STRTOK_R
-        while ((p = strtok(domain,".")))
+        while ((p = strtok(domain, ".")))
 #else
-        while ((p = strtok_r(domain,".", &st)))
+        while ((p = strtok_r(domain, ".", &st)))
 #endif
                 {
                 len = strlen(p);
 
                 if (*buflen < (size_t)(len + DC_ATTR_AVA_LEN + 1 /* D C = [,|\0] */))
                         {
-			free(domain);
+			free(domain_copy);
                         return NSS_TRYAGAIN;
                         }
 
@@ -132,7 +134,7 @@ NSS_STATUS _nss_ldap_getdnsdn(
                 (*rval)[bptr - *rval] = '\0';
                 }
 
-	free(domain);
+	free(domain_copy);
 
         return NSS_SUCCESS;
 }
