@@ -404,13 +404,21 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buf, size_t buflen)
 
       k = b;
       v = k;
+
+      /* skip past all characters in keyword */
       while (*v != '\0' && *v != ' ' && *v != '\t')
 	v++;
 
       if (*v == '\0')
 	continue;
 
+      /* terminate keyword */
       *(v++) = '\0';
+
+      /* skip all whitespaces between keyword and value */
+      /* Lars Oergel <lars.oergel@innominate.de>, 05.10.2000 */
+      while (*v == ' ' || *v == '\t')
+        v++;
 
       len = strlen (v);
 
