@@ -1502,8 +1502,8 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
 }
 
 /*
- * Clears a given context; as of nss_ldap-121
- * we require the caller to acquire the lock.
+ * Clears a given context; we require the caller
+ * to acquire the lock.
  */
 void
 _nss_ldap_ent_context_release (ent_context_t * ctx)

@@ -622,11 +622,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 
       if (buflen < (size_t) (len + 1))
 	{
-	  /*
-	   * fix in nss_ldap-127: don't return NSS_TRYAGAIN,
-	   * as we have no way to increase the buffer size.
-	   */
-	  stat = NSS_UNAVAIL;
+	  stat = NSS_TRYAGAIN;
 	  break;
 	}
 
@@ -834,16 +830,12 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	  buffer[len] = '\0';
 	  *t = buffer;
 	  buffer += len + 1;
-	  /* fix in nss_ldap-127: decrement buflen */
 	  buflen -= len + 1;
 	}
     }
 
   fclose (fp);
 
-  /*
-   * fix in nss_ldap-127: return if out of buffer space
-   */
   if (stat != NSS_SUCCESS)
     {
       return stat;
@@ -862,7 +854,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	      if (len > 0)
 		len--;
 
-	      /* fix in nss_ldap-127: check for enough buffer space */
 	      if (buflen < (size_t) (len + 1))
 		{
 		  return NSS_UNAVAIL;
@@ -872,7 +863,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	      buffer[len] = '\0';
 	      result->ldc_rootbindpw = buffer;
 	      buffer += len + 1;
-	      /* fix in nss_ldap-127: decrement buflen */
 	      buflen -= len + 1;
 	    }
 	  fclose (fp);
