@@ -33,6 +33,12 @@ NSS_VERS = $(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss
 NSS_LDAP_NSS_VERSIONED = libnss_ldap.so.$(NSS_VERS)
 endif
 
+if USE_NATIVE_LINKER
+LINK = $(nss_ldap_so_LD) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+else
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+endif
+
 if AIX
 
 # AIX install instructions per doc/README.AIX

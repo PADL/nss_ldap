@@ -72,6 +72,7 @@ MAKEINFO = @MAKEINFO@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 install_sh = @install_sh@
+nss_ldap_so_LD = @nss_ldap_so_LD@
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 
 @AIX_TRUE@authmod = @AIX_TRUE@NSS_LDAP
@@ -106,6 +107,8 @@ NSS_LDAP_LDFLAGS = -enss_ldap_initialize -lsys -lcsys -lc
 
 @GLIBC_TRUE@NSS_VERS = @GLIBC_TRUE@$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 @GLIBC_TRUE@NSS_LDAP_NSS_VERSIONED = @GLIBC_TRUE@libnss_ldap.so.$(NSS_VERS)
+@USE_NATIVE_LINKER_TRUE@LINK = @USE_NATIVE_LINKER_TRUE@$(nss_ldap_so_LD) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+@USE_NATIVE_LINKER_FALSE@LINK = @USE_NATIVE_LINKER_FALSE@$(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
@@ -134,7 +137,6 @@ nss_ldap_so_DEPENDENCIES =
 COMPILE = $(CC) $(DEFS) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 CFLAGS = @CFLAGS@
 CCLD = $(CC)
-LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 DIST_SOURCES =  $(NSS_LDAP_SOURCES) $(nss_ldap_so_SOURCES)
 DIST_COMMON =  README ./stamp-h.in AUTHORS COPYING ChangeLog INSTALL \
 Makefile.am Makefile.in NEWS acconfig.h aclocal.m4 config.guess \

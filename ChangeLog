@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+188	Luke Howard <lukeh@padl.com>
+
+	* use native linker on Solaris and AIX
+
 187	Luke Howard <lukeh@padl.com>
 
 	* make bogusSd in ldap-nss.c conditional on
