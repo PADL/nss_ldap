@@ -33,11 +33,7 @@ OC (posixGroup) ")(" AT (cn) "=%s))";
 
 #ifdef RFC2307BIS
      static const char filt_getgroupsbymemberanddn[] =
-#ifdef NDS
-     "(&(objectclass=" OC (posixGroup) ")(|(" AT (memberUid) "=%s)(" AT (member) "=%s)))";
-#else
      "(&(objectclass=" OC (posixGroup) ")(|(" AT (memberUid) "=%s)(" AT (uniqueMember) "=%s)))";
-#endif /* NDS */
 #endif
 
      static const char filt_getgroupsbymember[] =

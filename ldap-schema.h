@@ -48,12 +48,13 @@ extern const char **_nss_ldap_attrtab[];
 #define AT_uid                    "uid"
 #endif /* MSSFU_SCHEMA */
 #define AT_description            "description"
-#define AT_member                 "member"
-#ifdef MSSFU_SCHEMA
+#ifdef NDS_SCHEMA
+#define AT_uniqueMember           "member"
+#elif defined(MSSFU_SCHEMA)
 #define AT_uniqueMember           "posixMember"
 #else
 #define AT_uniqueMember           "uniqueMember"
-#endif /* MSSFU_SCHEMA */
+#endif /* NDS_SCHEMA */
 #define AT_l                      "l"
 #define AT_manager                "manager"
 
@@ -121,11 +122,7 @@ extern const char **_nss_ldap_attrtab[];
 #define OC_posixGroup             "posixGroup"
 #endif /* MSSFU_SCHEMA */
 #define AT_gidNumber              "gidNumber"
-#ifdef MSSFU_SCHEMA
-#define AT_memberUid              "posixMember"
-#else
 #define AT_memberUid              "memberUid"
-#endif /* MSSFU_SCHEMA */
 
 /*
  * ( nisSchema.2.3 NAME 'ipService' SUP top STRUCTURAL

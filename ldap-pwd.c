@@ -104,7 +104,10 @@ _nss_ldap_parse_pw (LDAP * ld,
     }
   else
     {
-#ifdef AUTHPASSWORD
+#ifdef MSSFU_SCHEMA
+	/* I don't think mssfu schema prefixes with {crypt} */
+	stat = _nss_ldap_assign_attrval(ld, e, AT(userPassword), &pw->passwd, &buffer, &buflen);
+#elif defined(AUTHPASSWORD)
       stat =
 	_nss_ldap_assign_authpassword (ld, e, AT (authPassword),
 				       &pw->pw_passwd, &buffer, &buflen);

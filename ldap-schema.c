@@ -78,11 +78,7 @@ static const char *gr_attributes[] =
 #endif				/* AUTHPASSWORD */
  AT (memberUid),
 #ifdef RFC2307BIS
-#ifdef NDS
- AT (member),
-#else
  AT (uniqueMember),
-#endif				/* NDS */
 #endif				/* RFC2307BIS */
  AT (gidNumber), NULL};
 

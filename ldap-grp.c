@@ -19,7 +19,8 @@
    Boston, MA 02111-1307, USA.
  */
 
-static char rcsId[] = "$Id$";
+static char rcsId[] =
+  "$Id$";
 
 #include "config.h"
 
@@ -59,8 +60,7 @@ static char rcsId[] = "$Id$";
 static ent_context_t *gr_context = NULL;
 #endif
 
-static char *_nss_ldap_no_members[] =
-{NULL};
+static char *_nss_ldap_no_members[] = { NULL };
 
 static NSS_STATUS
 _nss_ldap_parse_gr (LDAP * ld,
@@ -114,11 +114,7 @@ _nss_ldap_parse_gr (LDAP * ld,
     return stat;
 #else
   dn_mems = NULL;
-#ifdef NDS
-  vals = ldap_get_values (ld, e, AT (member));
-#else
   vals = ldap_get_values (ld, e, AT (uniqueMember));
-#endif /* NDS */
   if (vals != NULL)
     {
       char **mem_p, **valiter;
@@ -126,7 +122,7 @@ _nss_ldap_parse_gr (LDAP * ld,
       dn_mems_c = ldap_count_values (vals);
 
       if (bytesleft (buffer, buflen, char *) <
-	    (dn_mems_c + 1) * sizeof (char *))
+	  (dn_mems_c + 1) * sizeof (char *))
 	{
 	  ldap_value_free (vals);
 	  return NSS_TRYAGAIN;
@@ -137,14 +133,17 @@ _nss_ldap_parse_gr (LDAP * ld,
       buflen -= (dn_mems_c + 1) * sizeof (char *);
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
+#if !defined(MSSFU_SCHEMA) && !defined(NDS_SCHEMA)
 	  char *uid;
 	  /*
 	   * Remove optional UID (as in unique identifier)
+	   * only for uniqueMember; member does not have UID
 	   */
 	  if ((uid = strrchr (*valiter, '#')) != NULL)
 	    {
 	      *uid = '\0';
 	    }
+#endif /* NDS_SCHEMA */
 	  stat = _nss_ldap_dn2uid (ld, *valiter, &uid, &buffer, &buflen);
 	  if (stat == NSS_SUCCESS)
 	    {
@@ -177,7 +176,7 @@ _nss_ldap_parse_gr (LDAP * ld,
       else
 	{
 	  if (bytesleft (buffer, buflen, char *) <
-	        (dn_mems_c + uid_mems_c + 1) * sizeof (char *))
+	      (dn_mems_c + uid_mems_c + 1) * sizeof (char *))
 	      return NSS_TRYAGAIN;
 	  align (buffer, buflen, char *);
 	  gr->gr_mem = (char **) buffer;
@@ -196,8 +195,9 @@ _nss_ldap_parse_gr (LDAP * ld,
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(_AIX)
 #ifdef HAVE_NSS_H
-NSS_STATUS _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
-			   long int *size, gid_t ** groupsp, long int limit,
+NSS_STATUS _nss_ldap_initgroups_dyn (const char *user, gid_t group,
+				     long int *start, long int *size,
+				     gid_t ** groupsp, long int limit,
 				     int *errnop);
 
 NSS_STATUS
@@ -431,8 +431,7 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS 
-_nss_ldap_setgrent (void)
+NSS_STATUS _nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -445,8 +444,7 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS 
-_nss_ldap_endgrent (void)
+NSS_STATUS _nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
@@ -482,8 +480,7 @@ _nss_ldap_group_destr (nss_backend_t * gr_context, void *args)
   return _nss_ldap_default_destr (gr_context, args);
 }
 
-static nss_backend_op_t group_ops[] =
-{
+static nss_backend_op_t group_ops[] = {
   _nss_ldap_group_destr,
   _nss_ldap_endgrent_r,
   _nss_ldap_setgrent_r,

@@ -1,6 +1,12 @@
 $Header$
 ===============================================================
 
+165	Luke Howard <lukeh@padl.com>
+
+	* posixMember is a distinguished name, don't pretend it
+	  is a login name
+	* cleaned up code referencing different member syntaxes
+
 164	Luke Howard <lukeh@padl.com>
 
 	* removed IDS_UID code, never worked properly
