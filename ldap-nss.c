@@ -185,7 +185,8 @@ static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw);
 
 #if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
 static int
-_nss_ldap_rebind (LDAP *ld, LDAP_CONST char *url, int request, ber_int_t msgid)
+_nss_ldap_rebind (LDAP * ld, LDAP_CONST char *url, int request,
+		  ber_int_t msgid)
 {
   char *who, *cred;
 
@@ -196,11 +197,11 @@ _nss_ldap_rebind (LDAP *ld, LDAP_CONST char *url, int request, ber_int_t msgid)
     }
   else
     {
-	who = __session.ls_config->ldc_binddn;
-	cred = __session.ls_config->ldc_bindpw;
+      who = __session.ls_config->ldc_binddn;
+      cred = __session.ls_config->ldc_bindpw;
     }
 
-  return ldap_simple_bind_s(ld, who, cred);
+  return ldap_simple_bind_s (ld, who, cred);
 }
 #else
 # if NETSCAPE_API_EXTENSIONS
@@ -208,9 +209,9 @@ static int
 _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		  int freeit, void *arg)
 # else
-static int
-_nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-		  int freeit)
+     static int
+       _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+			 int freeit)
 # endif				/* NETSCAPE_API_EXTENSIONS */
 {
   if (freeit)
@@ -249,7 +250,8 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -271,7 +273,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -1384,8 +1387,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -1869,7 +1871,8 @@ _nss_ldap_assign_passwd (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;

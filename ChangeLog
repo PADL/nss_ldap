@@ -5,6 +5,8 @@ $Header$
 
 	* added support for "referrals" and "restart"
 	  options to ldap.conf
+	* use OpenLDAP 2.x rebind proc with correct
+	  arguments
 	* fixed up RPM Makefiles to build libnss_ldap
 	* added "timelimit" and "bind_timelimit"
 	  directives to ldap.conf
