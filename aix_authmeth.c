@@ -84,6 +84,33 @@ typedef struct ldap_uess_args {
   char *lua__buffer;
 } ldap_uess_args_t; 
 
+static NSS_STATUS uess_get_char(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *arg, int index);
+static NSS_STATUS uess_get_char_ex(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *arg, int index, const char *attribute);
+static NSS_STATUS uess_get_int(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *arg, int index);
+static NSS_STATUS uess_get_pgrp(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *arg, int index);
+static NSS_STATUS uess_get_groupsids(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *arg, int index);
+static NSS_STATUS uess_get_registry(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *arg, int index);
+static NSS_STATUS uess_get_gecos(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *arg, int index);
+static NSS_STATUS uess_get_pwd(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *arg, int index);
+
+/* dispatch table for retrieving UESS attribute from an LDAP entry */
+struct ldap_uess_fn {
+  const char *luf_attribute;
+  NSS_STATUS (*luf_translator)(LDAP *ld, LDAPMessage *e, ldap_uess_args_t *, int);
+} ldap_uess_fn_t;
+
+static struct ldap_uess_fn __uess_fns[] = {
+  { S_GECOS, uess_get_gecos },
+  { S_GROUPSIDS, uess_get_groupsids },
+  { S_HOME, uess_get_char },
+  { S_ID, uess_get_int },
+  { S_PWD, uess_get_pwd },
+  { S_REGISTRY, uess_get_registry },
+  { S_SHELL, uess_get_char },
+  { S_PGRP, uess_get_pgrp },
+  { NULL, NULL }
+};
+
 static void *
 _nss_ldap_open (const char *name, const char *domain,
 		const int mode, char *options)
@@ -302,27 +329,78 @@ static const char *uess2ldapattr(ldap_map_selector_t map, const char *attribute)
   else if (strcmp(attribute, S_GECOS) == 0)
     return ATM(passwd, gecos);
   else if (strcmp(attribute, S_PGRP) == 0)
-    return ATM(group, gidNumber);
+    return ATM(group, cn);
 
   return NULL;
 }
 
-static char *
-do_getgroupsids(const char *user)
+/*
+ * Get primary group name for a user
+ */
+static NSS_STATUS uess_get_pgrp(LDAP *ld, LDAPMessage *e,
+			       ldap_uess_args_t *lua, int i)
+{
+  char **vals;
+  LDAPMessage *res;
+  const char *attrs[2];
+  NSS_STATUS stat;
+  ldap_args_t a;
+
+  vals = ldap_get_values (ld, e, ATM(passwd, gidNumber));
+  if (vals == NULL)
+    return NSS_NOTFOUND;
+
+  LA_INIT (a);
+  LA_TYPE (a) = LA_TYPE_STRING;
+  LA_STRING (a) = vals[0];
+
+  attrs[0] = ATM(group, cn);
+  attrs[1] = NULL;
+
+  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getgrgid, LM_GROUP,
+			     attrs, 1, &res);
+  if (stat != NSS_SUCCESS)
+    {
+      ldap_value_free (vals);
+      return NSS_NOTFOUND;
+    }
+
+  ldap_value_free (vals);
+
+  e = ldap_first_entry (ld, res);
+  if (e == NULL)
+    {
+      ldap_msgfree (res);
+      return NSS_NOTFOUND;
+    }
+
+  stat = uess_get_char(ld, e, lua, i);
+
+  ldap_msgfree (res);
+
+  return stat;
+}
+
+/*
+ * Get groups to which a user belongs 
+ */
+static NSS_STATUS uess_get_groupsids(LDAP *ld, LDAPMessage *e,
+				    ldap_uess_args_t *lua, int i)
 {
   char *p, *q;
   size_t len;
 
-  p = _nss_ldap_getgrset ((char *)user);
+  /* XXX deadlock? */
+  p = _nss_ldap_getgrset ((char *)lua->lua_key);
   if (p == NULL)
-    return NULL;
+    return NSS_NOTFOUND;
 
   len = strlen(p);
   q = malloc(len + 2);
   if (q == NULL)
     {
       errno = ENOMEM;
-      return NULL;
+      return NSS_NOTFOUND;
     }
 
   memcpy(q, p, len + 1);
@@ -337,61 +415,139 @@ do_getgroupsids(const char *user)
 	*p++ = '\0';
     }
 
-  return q;
+  lua->lua_results[i].attr_un.au_char = q;
+
+  return NSS_SUCCESS;
 }
 
 /*
- * Map a GID to a name
+ * Get a mapped UESS string attribute
  */
-static char *
-do_getpgrp(LDAP *ld, LDAPMessage *e)
+static NSS_STATUS uess_get_char(LDAP *ld, LDAPMessage *e,
+				ldap_uess_args_t *lua, int i)
+{
+  const char *attribute;
+
+  attribute = uess2ldapattr(lua->lua_map, lua->lua_attributes[i]);
+  if (attribute == NULL)
+    return NSS_NOTFOUND;
+
+  return uess_get_char_ex(ld, e, lua, i, attribute);
+}
+
+/*
+ * Get a specific LDAP attribute
+ */
+static NSS_STATUS uess_get_char_ex(LDAP *ld, LDAPMessage *e,
+			     ldap_uess_args_t *lua, int i,
+			     const char *attribute)
 {
   char **vals;
-  char *pgrp;
-  LDAPMessage *res;
-  const char *attrs[2];
-  NSS_STATUS stat;
-  ldap_args_t a;
+  attrval_t *av = &lua->lua_results[i];
 
-  vals = ldap_get_values (ld, e, ATM(passwd, gidNumber));
+  vals = ldap_get_values(ld, e, attribute);
   if (vals == NULL)
-    return NULL;
+    return NSS_NOTFOUND;
 
-  LA_INIT (a);
-  LA_TYPE (a) = LA_TYPE_STRING;
-  LA_STRING (a) = vals[0];
-
-  attrs[0] = ATM(group, cn);
-  attrs[1] = NULL;
-
-  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getgrgid, LM_GROUP,
-			     attrs, 1, &res);
-  if (stat != NSS_SUCCESS)
+  if (vals[0] == NULL)
     {
       ldap_value_free (vals);
-      return NULL;
+      return NSS_NOTFOUND;
+    }
+
+  av->attr_un.au_char = strdup (vals[0]);
+  if (av->attr_un.au_char == NULL)
+    {
+      ldap_value_free (vals);
+      return NSS_TRYAGAIN;
     }
 
   ldap_value_free (vals);
+  return NSS_SUCCESS;
+}
 
-  e = ldap_first_entry (ld, res);
-  if (e == NULL)
-    {
-      ldap_msgfree (res);
-      return NULL;
-    }
+/*
+ * Get an encoded crypt password
+ */
+static NSS_STATUS uess_get_pwd(LDAP *ld, LDAPMessage *e,
+			       ldap_uess_args_t *lua, int i)
+{
+  char **vals;
+  attrval_t *av = &lua->lua_results[i];
+  const char *pwd;
+  const char *attribute;
 
-  pgrp = NULL;
+  attribute = uess2ldapattr(lua->lua_map, lua->lua_attributes[i]);
+  if (attribute == NULL)
+    return NSS_NOTFOUND;
 
-  vals = ldap_get_values (ld, e, ATM(group, cn));
+  vals = ldap_get_values(ld, e, attribute);
+  pwd = _nss_ldap_locate_userpassword (vals);
+
+  av->attr_un.au_char = strdup (pwd);
   if (vals != NULL)
+    ldap_value_free (vals);
+
+  return (av->attr_un.au_char == NULL) ? NSS_TRYAGAIN : NSS_SUCCESS;
+}
+
+/*
+ * Get a UESS integer attribute
+ */
+static NSS_STATUS uess_get_int(LDAP *ld, LDAPMessage *e,
+			     ldap_uess_args_t *lua, int i)
+{
+  const char *attribute;
+  char **vals;
+  attrval_t *av = &lua->lua_results[i];
+
+  attribute = uess2ldapattr(lua->lua_map, lua->lua_attributes[i]);
+  if (attribute == NULL)
+    return NSS_NOTFOUND;
+
+  vals = ldap_get_values(ld, e, attribute);
+  if (vals == NULL)
+    return NSS_NOTFOUND;
+
+  if (vals[0] == NULL)
     {
-      if (vals[0] != NULL)
-	pgrp = strdup(vals[0]);
       ldap_value_free (vals);
+      return NSS_NOTFOUND;
     }
 
-  return pgrp;
+  av->attr_un.au_int = atoi(vals[0]);
+  ldap_value_free (vals);
+  return NSS_SUCCESS;
+}
+
+/*
+ * Get the name of this registry
+ */
+static NSS_STATUS uess_get_registry(LDAP *ld, LDAPMessage *e,
+				    ldap_uess_args_t *lua, int i)
+{
+  lua->lua_results[i].attr_un.au_char = strdup("NSS_LDAP");
+  if (lua->lua_results[i].attr_un.au_char == NULL)
+    return NSS_TRYAGAIN;
+
+  return NSS_SUCCESS;
+}
+
+/*
+ * Get the GECOS/cn attribute
+ */
+static NSS_STATUS uess_get_gecos(LDAP *ld, LDAPMessage *e,
+				 ldap_uess_args_t *lua, int i)
+{
+  NSS_STATUS stat;
+
+  stat = uess_get_char(ld, e, lua, i);
+  if (stat == NSS_NOTFOUND)
+    {
+      stat = uess_get_char_ex(ld, e, lua, i, ATM(passwd, cn));
+    }
+
+  return stat; 
 }
 
 static NSS_STATUS
@@ -404,6 +560,7 @@ do_parse_uess_getentry (LDAP *ld, LDAPMessage * e,
   char **vals;
   size_t len;
   const char *attribute;
+  NSS_STATUS stat;
 
   /* If a buffer is supplied, then we are enumerating. */
   if (lua->lua__buffer != NULL)
@@ -458,47 +615,29 @@ do_parse_uess_getentry (LDAP *ld, LDAPMessage * e,
     {
       for (i = 0; i < lua->lua_size; i++)
 	{
+	  int j;
 	  attrval_t *av = &lua->lua_results[i];
 
+	  av->attr_flag = -1;
 	  av->attr_un.au_char = NULL;
 
-	  if (strcmp(lua->lua_attributes[i], S_GROUPSIDS) == 0)
-	    av->attr_un.au_char = do_getgroupsids(lua->lua_key);
-	  else if (strcmp(lua->lua_attributes[i], S_REGISTRY) == 0)
-	    av->attr_un.au_char = strdup("NSS_LDAP");
-	  else if (strcmp(lua->lua_attributes[i], S_PGRP) == 0)
-	    av->attr_un.au_char = do_getpgrp(ld, e);
-	  else
+	  for (j = 0; __uess_fns[i].luf_attribute != NULL; j++)
 	    {
-	      attribute = uess2ldapattr(lua->lua_map, lua->lua_attributes[0]);
-	      if (attribute == NULL)
+	      if (strcmp(__uess_fns[i].luf_attribute, lua->lua_attributes[i]) == 0)
 		{
-		  av->attr_flag = 1;
-		  continue;
+		  stat = (__uess_fns[i].luf_translator)(ld, e, lua, i);
+		  switch (stat)
+		    {
+		      case NSS_SUCCESS:
+			av->attr_flag = 0;
+			break;
+		      case NSS_TRYAGAIN:
+			return NSS_TRYAGAIN;
+			break;
+		      default:
+			break;
+		    }
 		}
-
-	      vals = ldap_get_values (ld, e, attribute);
-	      /* special hack for posixAccount gecos property */
-	      if (vals == NULL && strcmp(lua->lua_attributes[i], S_GECOS) == 0)
-		  vals = ldap_get_values (ld, e, ATM (passwd, cn));
-
-	      if (vals == NULL)
-		{
-		  av->attr_flag = 1;
-		  continue;
-		}
-	      if (vals[0] == NULL)
-		{
-		  av->attr_flag = 1;
-		  ldap_value_free (vals);
-		  continue;
-		}
-	      if (strcmp(lua->lua_attributes[i], S_ID) == 0)
-		av->attr_un.au_int = atoi(vals[0]);
-	      else
-		av->attr_un.au_char = strdup(vals[0]);
-
-	      ldap_value_free (vals);
 	    }
 	}
     }

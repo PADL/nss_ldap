@@ -3114,28 +3114,18 @@ _nss_ldap_assign_attrval (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-/*
- * Assign a single value to *valptr, after examining userPassword for
- * a syntactically suitable value. 
- */
-NSS_STATUS
-_nss_ldap_assign_userpassword (LDAP * ld,
-			       LDAPMessage * e,
-			       const char *attr,
-			       char **valptr, char **buffer, size_t * buflen)
+const char *
+_nss_ldap_locate_userpassword (char **vals)
 {
-  char **vals;
-  char **valiter;
-  char *pwd = NULL;
-  int vallen;
 #ifndef AT_OC_MAP
   static char *__crypt_token = "{CRYPT}";
   static size_t __crypt_token_length = sizeof ("{CRYPT}") - 1;
 #endif /* AT_OC_MAP */
   const char *token = NULL;
   size_t token_length = 0;
+  char **valiter;
+  const char *pwd = NULL;
 
-  debug ("==> _nss_ldap_assign_userpassword");
 #ifdef AT_OC_MAP
   if (__config != NULL)
     {
@@ -3158,7 +3148,6 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   token_length = __crypt_token_length;
 #endif /* AT_OC_MAP */
 
-  vals = ldap_get_values (ld, e, (char *) attr);
   if (vals != NULL)
     {
       for (valiter = vals; *valiter != NULL; valiter++)
@@ -3177,13 +3166,31 @@ _nss_ldap_assign_userpassword (LDAP * ld,
     }
 
   if (pwd == NULL)
-    {
       pwd = "x";
-    }
   else
-    {
       pwd += token_length;
-    }
+
+  return pwd;
+}
+
+/*
+ * Assign a single value to *valptr, after examining userPassword for
+ * a syntactically suitable value. 
+ */
+NSS_STATUS
+_nss_ldap_assign_userpassword (LDAP * ld,
+			       LDAPMessage * e,
+			       const char *attr,
+			       char **valptr, char **buffer, size_t * buflen)
+{
+  char **vals;
+  const char *pwd;
+  int vallen;
+
+  debug ("==> _nss_ldap_assign_userpassword");
+
+  vals = ldap_get_values (ld, e, (char *) attr);
+  pwd = _nss_ldap_locate_userpassword (vals);
 
   vallen = strlen (pwd);
 
@@ -3211,6 +3218,7 @@ _nss_ldap_assign_userpassword (LDAP * ld,
     }
 
   debug ("<== _nss_ldap_assign_userpassword");
+
   return NSS_SUCCESS;
 }
 
