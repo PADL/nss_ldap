@@ -26,7 +26,8 @@
 
 #ifdef AT_OC_MAP
 /* max number of attributes per object class */
-#define ATTRTAB_SIZE	15
+#define ATTRTAB_SIZE	16
+#define ATTRBUF_SIZE    (ATTRTAB_SIZE * 64)
 #endif /* AT_OC_MAP */
 
 /**

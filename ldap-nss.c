@@ -62,13 +62,10 @@ static char rcsId[] =
 #else
 #ifdef HAVE_DB_185_H
 #include <db_185.h>
-#define DN2UID_CACHE
 #elif defined(HAVE_DB1_DB_H)
 #include <db1/db.h>
-#define DN2UID_CACHE
 #elif defined(HAVE_DB_H)
 #include <db.h>
-#define DN2UID_CACHE
 #endif /* HAVE_DB1_DB_H */
 #endif /* HAVE_DB3_DB_H */
 #endif /* AT_OC_MAP */
@@ -280,9 +277,8 @@ static int
 do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 	   int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-     static int
-       do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-		  int freeit)
+static int
+do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
 #endif
 {
   if (freeit)
@@ -321,8 +317,7 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -347,8 +342,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -1880,8 +1874,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2300,11 +2293,14 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   char **valiter;
   char *pwd = NULL;
   int vallen;
+#ifndef AT_OC_MAP
   static char *__crypt_token = "{CRYPT}";
   static size_t __crypt_token_length = sizeof ("{CRYPT}") - 1;
-  const char *token = __crypt_token;
-  size_t token_length = __crypt_token_length;
+#endif /* AT_OC_MAP */
+  const char *token = NULL;
+  size_t token_length = 0;
 
+  debug ("==> _nss_ldap_assign_userpassword");
 #ifdef AT_OC_MAP
   if (__config != NULL)
     {
@@ -2319,11 +2315,12 @@ _nss_ldap_assign_userpassword (LDAP * ld,
 	  token_length = sizeof ("CRYPT$") - 1;
 	  break;
 	case LU_OTHER_PASSWORD:
-	  return _nss_ldap_assign_attrval (ld, e, attr, valptr, buffer,
-					   buflen);
 	  break;
 	}
     }
+#else
+  token = __crypt_token;
+  token_length = __crypt_token_length;
 #endif /* AT_OC_MAP */
 
   vals = ldap_get_values (ld, e, (char *) attr);
@@ -2331,7 +2328,12 @@ _nss_ldap_assign_userpassword (LDAP * ld,
     {
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
+#ifdef AT_OC_MAP
+	  if (token_length == 0 ||
+	      strncasecmp (*valiter, token, token_length) == 0)
+#else
 	  if (strncasecmp (*valiter, token, token_length) == 0)
+#endif /* AT_OC_MAP */
 	    {
 	      pwd = *valiter;
 	      break;
@@ -2356,6 +2358,7 @@ _nss_ldap_assign_userpassword (LDAP * ld,
 	{
 	  ldap_value_free (vals);
 	}
+      debug ("<== _nss_ldap_assign_userpassword");
       return NSS_TRYAGAIN;
     }
 
@@ -2372,11 +2375,11 @@ _nss_ldap_assign_userpassword (LDAP * ld,
       ldap_value_free (vals);
     }
 
+  debug ("<== _nss_ldap_assign_userpassword");
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -2514,7 +2517,6 @@ _nss_ldap_atmap_get (ldap_config_t * config,
     }
 
   *attribute = (char *) val.data;
-
   return NSS_SUCCESS;
 }
 
