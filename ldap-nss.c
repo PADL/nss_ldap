@@ -182,15 +182,36 @@ static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw);
 /*
  * Rebind functions.
  */
-#if NETSCAPE_API_EXTENSIONS
+
+#if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+static int
+_nss_ldap_rebind (LDAP *ld, LDAP_CONST char *url, int request, ber_int_t msgid)
+{
+  char *who, *cred;
+
+  if (geteuid () == 0 && __session.ls_config->ldc_rootbinddn)
+    {
+      who = __session.ls_config->ldc_rootbinddn;
+      cred = __session.ls_config->ldc_rootbindpw;
+    }
+  else
+    {
+	who = __session.ls_config->ldc_binddn;
+	cred = __session.ls_config->ldc_bindpw;
+    }
+
+  return ldap_simple_bind_s(ld, who, cred);
+}
+#else
+# if NETSCAPE_API_EXTENSIONS
 static int
 _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		  int freeit, void *arg)
-#else
+# else
 static int
 _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		  int freeit)
-#endif				/* NETSCAPE_API_EXTENSIONS */
+# endif				/* NETSCAPE_API_EXTENSIONS */
 {
   if (freeit)
     {
@@ -219,6 +240,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 
   return LDAP_SUCCESS;
 }
+#endif
 
 #ifdef SUN_NSS
 /*
