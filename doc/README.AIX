@@ -83,7 +83,8 @@ NB: As of January 2002, PADL have added preliminary support for the
 authentication interfaces. Really, pam_ldap should be ported to AIX
 as an authentication-only module. But you can certainly give this
 a try. Note that we have not tested it due to not having access to
-an AIX box, so the standard disclaimers apply.
+an AIX box, so the standard disclaimers apply. You will need to
+configure with --enable-proxy-auth.
 
 Enjoy.
 
