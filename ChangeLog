@@ -1,6 +1,8 @@
 $Header$
 ===============================================================
 
+199	Luke Howard <lukeh@padl.com>
+
 198	 Luke Howard <lukeh@padl.com>
 
 	* BUG#108: fix potential buffer overflow in dnsconfig.c
