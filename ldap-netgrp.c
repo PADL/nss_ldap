@@ -157,7 +157,7 @@ _nss_ldap_parse_netgr (void *vresultp, char *buffer, size_t buflen)
 
   /* The netgroup either doesn't exist or is empty. */
   if (cp == NULL)
-      return NSS_STATUS_RETURN;
+      return NSS_RETURN;
 
   /* First skip leading spaces. */
   while (isspace (*cp))
@@ -186,26 +186,26 @@ _nss_ldap_parse_netgr (void *vresultp, char *buffer, size_t buflen)
 
     	    return NSS_SUCCESS;
 	      }
-      return result->first ? NSS_NOTFOUND : NSS_STATUS_RETURN;
+      return result->first ? NSS_NOTFOUND : NSS_RETURN;
     }
 
   /* Match host name. */
   host = ++cp;
   while (*cp != ',')
    if (*cp++ == '\0')
-     return result->first ? NSS_NOTFOUND : NSS_STATUS_RETURN;
+     return result->first ? NSS_NOTFOUND : NSS_RETURN;
   
   /* Match user name. */
   user = ++cp;
   while (*cp != ',')
    if (*cp++ == '\0')
-     return result->first ? NSS_NOTFOUND : NSS_STATUS_RETURN;
+     return result->first ? NSS_NOTFOUND : NSS_RETURN;
   
   /* Match domain name. */
   domain = ++cp;
   while (*cp != ')')
    if (*cp++ == '\0')
-     return result->first ? NSS_NOTFOUND : NSS_STATUS_RETURN;
+     return result->first ? NSS_NOTFOUND : NSS_RETURN;
   ++cp;
 
   /* When we got here we have found an entry.  Before we can copy it
