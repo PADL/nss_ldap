@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.71	Luke Howard <lukeh@padl.com>
+
+	* removed -DDEBUG as default build flag
+
 2.70	Luke Howard <lukeh@padl.com>
 
 	* put /usr/ucblib back into linker search path for
