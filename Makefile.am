@@ -24,6 +24,7 @@ if GLIBC
 	-rm -f $(DESTDIR)$(libdir)/$(NSS_LDAP_LIBC_VERSIONED)
 	$(INSTALL_PROGRAM) -o root -g root nss_ldap.so $(DESTDIR)$(libdir)/$(NSS_LDAP_LIBC_VERSIONED)
 	(cd $(DESTDIR)$(libdir); ln -sf $(NSS_LDAP_LIBC_VERSIONED) $(NSS_LDAP_NSS_VERSIONED))
+	$(mkinstalldirs) $(DESTDIR)/usr$(libdir)
 	(cd $(DESTDIR)/usr$(libdir); ln -sf ../..$(libdir)/$(NSS_LDAP_NSS_VERSIONED) .)
 else
 	$(INSTALL_PROGRAM) -o root -g root nss_ldap.so $(DESTDIR)$(libdir)/nss_ldap.so.1
