@@ -713,7 +713,7 @@ do_open (void)
    * another connection. Under no circumstances do we
    * wish to use the same connection, or to send an
    * unbind PDU over the parents connection, as that
-   * will wreak all sorts of havoc or ineffiencies,
+   * will wreak all sorts of havoc or inefficiencies,
    * respectively.
    */
   if (__pthread_atfork == NULL)
