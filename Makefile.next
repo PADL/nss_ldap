@@ -69,7 +69,7 @@ SRCS=	ldap-nss.c \
 OBJS=${SRCS:.c=.o}
 LIB=lib${MODULE}.a
 # uncomment NSFLAGS if you are using the Netscape SDK
-#NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
+#NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
 # uncomment BSDFLAGS if you are building this as part of the BIND IRS
 BSDFLAGS=-DIRS_NSS -DDEBUG_LUKEH -DDEBUG
 BIND=../bind/src

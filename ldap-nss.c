@@ -74,11 +74,11 @@ static NSS_STATUS do_open(void);
 /*
  * Rebind functions.
  */
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 static int _nss_ldap_rebind(LDAP *ld, char **whop, char **credp, int *methodp, int freeit, void *arg)
 #else
 static int _nss_ldap_rebind(LDAP *ld, char **whop, char **credp, int *methodp, int freeit)
-#endif /* NETSCAPE_SDK */
+#endif /* LDAP_VERSION3_API */
 {
 	if (freeit)
 		{
@@ -232,7 +232,7 @@ static NSS_STATUS do_open(void)
 
 	while (1)
 		{
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 		debug("==> ldap_init");
 		__session.ls_conn = ldap_init(cfg->ldc_host, cfg->ldc_port);
 		debug("<== ldap_init");
@@ -240,7 +240,7 @@ static NSS_STATUS do_open(void)
 		debug("==> ldap_open");
 		__session.ls_conn = ldap_open(cfg->ldc_host, cfg->ldc_port);
 		debug("<== ldap_open");
-#endif /* NETSCAPE_SDK */
+#endif /* LDAP_VERSION3_API */
 		if (__session.ls_conn != NULL || cfg->ldc_next == cfg)
 			{
 			break;
@@ -254,26 +254,26 @@ static NSS_STATUS do_open(void)
 		return NSS_UNAVAIL;
 		}
 
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 	if (_nss_ldap_ltf_thread_init(__session.ls_conn) != NSS_SUCCESS)
 		{
 		do_close();
 		debug("<== do_open");
 		return NSS_UNAVAIL;
 		}
-#endif /* NETSCAPE_SDK */
+#endif /* LDAP_VERSION3_API */
 
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 	ldap_set_rebind_proc(__session.ls_conn, _nss_ldap_rebind, NULL);
 #else
 	ldap_set_rebind_proc(__session.ls_conn, _nss_ldap_rebind);
-#endif /* NETSCAPE_SDK */
+#endif /* LDAP_VERSION3_API */
 
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 	ldap_set_option(__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION, &cfg->ldc_version);
 #else
 	__session.ls_conn->ld_version = cfg->ldc_version;
-#endif /* NETSCAPE_SDK */
+#endif /* LDAP_VERSION3_API */
 
 	if (ldap_simple_bind_s(__session.ls_conn, cfg->ldc_binddn, cfg->ldc_bindpw) != LDAP_SUCCESS)
 		{
@@ -425,7 +425,7 @@ LDAPMessage *_nss_ldap_lookup(
 			}
 		}
 
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 	ldap_set_option(__session.ls_conn, LDAP_OPT_SIZELIMIT, (void *)&sizelimit);
 #else
 	__session.ls_conn->ld_sizelimit = sizelimit;

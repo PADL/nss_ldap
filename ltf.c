@@ -20,7 +20,7 @@
 
 static char rcsId[] = "$Id$";
 
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 
 #include <stdlib.h>
 #include <string.h>
@@ -297,5 +297,5 @@ NSS_STATUS _nss_ldap_ltf_thread_init(LDAP *ld)
 	return ltf_tsd_setup();
 }
 #endif /* GNU_NSS */
-#endif /* NETSCAPE_SDK */
+#endif /* LDAP_VERSION3_API */
 

@@ -309,7 +309,7 @@ typedef nss_status_t NSS_STATUS;
 
 typedef NSS_STATUS (*parser_t)(LDAP *, LDAPMessage *, ldap_state_t *, void *, char *, size_t);
 
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 /*
  * Netscape's libldap is threadsafe, but we use a lock before it is initialized 
  */
@@ -331,7 +331,7 @@ typedef struct ldap_error ldap_error_t;
 #define nss_libldap_lock()		__nss_lock()
 #define nss_libldap_unlock()		__nss_unlock()
 
-#endif /* NETSCAPE_SDK */
+#endif /* LDAP_VERSION3_API */
 
 #ifdef SUN_NSS
 /* paranoia - maybe we do need to lock it */

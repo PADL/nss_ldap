@@ -86,7 +86,7 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 		 * multivalued RDNs (as they're essentially mandated
 		 * for services)
 		 */
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 		/*
 		 * use ldap_explode_rdn() API, as it's cleaner than
 		 * strtok(). This code has not been tested!
@@ -157,7 +157,7 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 			if (r != NULL)
 				r = NULL;
 			}
-#endif /* NETSCAPE_SDK */
+#endif /* LDAP_VERSION3_API */
 		}
 
 	/*
@@ -183,7 +183,7 @@ NSS_STATUS _nss_ldap_getrdnvalue(
 			}
 		}
 
-#ifdef NETSCAPE_SDK
+#ifdef LDAP_VERSION3_API
 	ldap_memfree(dn);
 #else
 	free(dn);

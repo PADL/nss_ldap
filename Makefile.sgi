@@ -65,7 +65,7 @@ SRCS=	ldap-nss.c \
 OBJS=${SRCS:.c=.o}
 LIB=lib${MODULE}.so.1
 # uncomment NSFLAGS if you are using the Netscape SDK
-NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
+NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module
 GNUFLAGS=-DDL_NSS -DIRIX_5 
 INCDIRS=-I.

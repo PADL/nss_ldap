@@ -68,7 +68,7 @@ OBJS=${SRCS:.c=.o}
 LIB=${MODULE}.so.1
 
 # uncomment NSFLAGS if you are using the Netscape SDK
-NSFLAGS=-I/usr/local/ldapsdk/include -DNETSCAPE_SDK
+NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
 
 # uncomment this SUNFLAGS if you're building under Solaris 2.5 
 #SUNFLAGS=-DSUN_NSS -D_REENTRANT
