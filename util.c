@@ -583,7 +583,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
   if (fp == NULL)
     {
-      free (result);
       return NSS_UNAVAIL;
     }
 
@@ -847,7 +846,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
    */
   if (stat != NSS_SUCCESS)
     {
-      free (result);
       return stat;
     }
 
@@ -867,7 +865,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	      /* fix in nss_ldap-127: check for enough buffer space */
 	      if (buflen < (size_t) (len + 1))
 		{
-		  free (result);
 		  return NSS_UNAVAIL;
 		}
 
@@ -892,7 +889,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 #endif
     )
     {
-      free (result);
       return NSS_NOTFOUND;
     }
 
