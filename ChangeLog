@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+211	Luke Howard <lukeh@padl.com>
+
+	* do AT_OC_MAP cache initialization at config init
+
 210	Luke Howard <lukeh@padl.com>
 
 	* initialize DBT structures

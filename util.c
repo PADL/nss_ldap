@@ -563,9 +563,13 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   return NSS_SUCCESS;
 }
 
-void
+NSS_STATUS
 _nss_ldap_init_config (ldap_config_t * result)
 {
+#ifdef AT_OC_MAP
+  int i;
+#endif
+
   memset (result, 0, sizeof(*result));
 
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
@@ -606,16 +610,21 @@ _nss_ldap_init_config (ldap_config_t * result)
 #ifdef CONFIGURE_KRB5_CCNAME
   result->ldc_krb5_ccname = NULL;
 #endif /* CONFIGURE_KRB5_CCNAME */
+
 #ifdef AT_OC_MAP
-  result->ldc_maps[MAP_ATTRIBUTE] = NULL;
-  result->ldc_maps[MAP_OBJECTCLASS] = NULL;
-  result->ldc_maps[MAP_OVERRIDE] = NULL;
-  result->ldc_maps[MAP_DEFAULT] = NULL;
-  result->ldc_password_type = LU_RFC2307_USERPASSWORD;
-  result->ldc_shadow_type = LS_RFC2307_SHADOW;
+  for (i = 0; i <= MAP_MAX; i++)
+    {
+      result->ldc_maps[i] = _nss_hash_open();
+      if (result->ldc_maps[i] == NULL)
+	{
+	  return NSS_UNAVAIL;
+	}
+    }
 #endif /* AT_OC_MAP */
 
   result->ldc_next = result;
+
+  return NSS_SUCCESS;
 }
 
 NSS_STATUS
@@ -635,7 +644,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
   buffer += sizeof (ldap_config_t);
   buflen -= sizeof (ldap_config_t);
 
-  _nss_ldap_init_config (result);
+  stat = _nss_ldap_init_config (result);
+  if (stat != NSS_SUCCESS)
+    {
+      return NSS_SUCCESS;
+    }
 
   fp = fopen (NSS_LDAP_PATH_CONF, "r");
   if (fp == NULL)

@@ -3140,15 +3140,7 @@ _nss_ldap_map_put (ldap_config_t * config, ldap_map_type_t type,
     }
 
   map = &config->ldc_maps[type];
-
-  if (*map == NULL)
-    {
-      *map = (DB *) _nss_hash_open ();
-      if (*map == NULL)
-	{
-	  return NSS_TRYAGAIN;
-	}
-    }
+  assert(*map != NULL);
 
   vadup = strdup (value);
   if (vadup == NULL)
@@ -3243,6 +3235,7 @@ _nss_ldap_map_get (ldap_config_t * config, ldap_map_type_t type,
     }
 
   map = config->ldc_maps[type];
+  assert(map != NULL);
 
   memset (&key, 0, sizeof(key));
   key.data = (void *) rfc2307attribute;
