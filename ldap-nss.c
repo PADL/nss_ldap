@@ -296,7 +296,8 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -318,7 +319,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -1345,12 +1347,25 @@ do_result (ent_context_t * ctx, int all)
 {
   int rc = LDAP_UNAVAILABLE;
   NSS_STATUS stat = NSS_TRYAGAIN;
+  struct timeval tv, *tvp;
 
   debug ("==> do_result");
+
+  if (__session.ls_config->ldc_timelimit == LDAP_NO_LIMIT)
+    {
+      tvp = NULL;
+    }
+  else
+    {
+      tv.tv_sec = __session.ls_config->ldc_timelimit;
+      tv.tv_usec = 0;
+      tvp = &tv;
+    }
+
   do
     {
       rc =
-	ldap_result (__session.ls_conn, ctx->ec_msgid, all, NULL,
+	ldap_result (__session.ls_conn, ctx->ec_msgid, all, tvp,
 		     &ctx->ec_res);
       switch (rc)
 	{
@@ -1475,10 +1490,26 @@ do_with_reconnect (const char *base, int scope,
 	case LDAP_TIMELIMIT_EXCEEDED:
 	  stat = NSS_SUCCESS;
 	  break;
+	case LDAP_NO_SUCH_ATTRIBUTE:
+	case LDAP_UNDEFINED_TYPE:
+	case LDAP_INAPPROPRIATE_MATCHING:
+	case LDAP_CONSTRAINT_VIOLATION:
+	case LDAP_TYPE_OR_VALUE_EXISTS:
+	case LDAP_INVALID_SYNTAX:
+	case LDAP_NO_SUCH_OBJECT:
+	case LDAP_ALIAS_PROBLEM:
+	case LDAP_INVALID_DN_SYNTAX:
+	case LDAP_IS_LEAF:
+	case LDAP_ALIAS_DEREF_PROBLEM:
+	  stat = NSS_NOTFOUND;
+	  break;
 	case LDAP_SERVER_DOWN:
 	case LDAP_TIMEOUT:
 	case LDAP_UNAVAILABLE:
 	case LDAP_BUSY:
+#ifdef LDAP_CONNECT_ERROR
+	case LDAP_CONNECT_ERROR:
+#endif /* LDAP_CONNECT_ERROR */
 	  do_close ();
 	  stat = NSS_TRYAGAIN;
 	  ++tries;
@@ -1527,7 +1558,7 @@ do_search_s (const char *base, int scope,
 	     LDAPMessage ** res)
 {
   int rc;
-  struct timeval tv;
+  struct timeval tv, *tvp;
 
   debug ("==> do_search_s");
 
@@ -1538,11 +1569,19 @@ do_search_s (const char *base, int scope,
   __session.ls_conn->ld_sizelimit = sizelimit;
 #endif /* LDAP_OPT_SIZELIMIT */
 
-  tv.tv_sec = __session.ls_config->ldc_timelimit;
-  tv.tv_usec = 0;
+  if (__session.ls_config->ldc_timelimit == LDAP_NO_LIMIT)
+    {
+      tvp = NULL;
+    }
+  else
+    {
+      tv.tv_sec = __session.ls_config->ldc_timelimit;
+      tv.tv_usec = 0;
+      tvp = &tv;
+    }
 
   rc = ldap_search_st (__session.ls_conn, base, scope, filter,
-		       (char **) attrs, 0, &tv, res);
+		       (char **) attrs, 0, tvp, res);
 
   if (rc == LDAP_SUCCESS)
     {
@@ -1825,7 +1864,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2356,7 +2396,8 @@ _nss_ldap_assign_authpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
