@@ -138,7 +138,12 @@ NSS_LDAP_DEFINE_LOCK (__lock);
 static char __configbuf[NSS_LDAP_CONFIG_BUFSIZ];
 static ldap_config_t *__config = NULL;
 
+#ifdef HAVE_SIGACTION
+static struct sigaction __stored_handler;
+static int __sigaction_retval = -1;
+#else
 static void (*__sigpipe_handler) (int) = SIG_DFL;
+#endif /* HAVE_SIGACTION */
 
 /*
  * Global LDAP session.
@@ -490,6 +495,20 @@ do_atfork_setup (void)
 void
 _nss_ldap_enter (void)
 {
+
+#ifdef HAVE_SIGACTION
+  struct sigaction new_handler;
+
+  memset(&new_handler, 0, sizeof(new_handler));
+#if 0
+  /* XXX need to test for sa_sigaction, not on all platforms */
+  new_handler.sa_sigaction = NULL;
+#endif
+  new_handler.sa_handler = SIG_IGN;
+  sigemptyset(&new_handler.sa_mask);
+  new_handler.sa_flags = 0;
+#endif  /* HAVE_SIGACTION */
+
   debug ("==> _nss_ldap_enter");
 
   NSS_LDAP_LOCK (__lock);
@@ -497,13 +516,22 @@ _nss_ldap_enter (void)
   /*
    * Patch for Debian Bug 130006:
    * ignore SIGPIPE for all LDAP operations.
+   * 
+   * The following bug was reintroduced in nss_ldap-213 and is fixed here:
+   * http://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=84344
+   *
+   * See:
+   * http://www.gnu.org/software/libc/manual/html_node/Signal-and-Sigaction.html
+   * for more details.
    */
-#if defined(HAVE_SIGSET)
+#ifdef HAVE_SIGACTION
+  __sigaction_retval = sigaction (SIGPIPE, &new_handler, &__stored_handler);
+#elif defined(HAVE_SIGSET)
   __sigpipe_handler = sigset (SIGPIPE, SIG_IGN);
 #else
   __sigpipe_handler = signal (SIGPIPE, SIG_IGN);
 #endif /* HAVE_SIGSET */
-
+    
   debug ("<== _nss_ldap_enter");
 }
 
@@ -515,17 +543,19 @@ _nss_ldap_leave (void)
 {
   debug ("==> _nss_ldap_leave");
 
-  /*
-   * Restore signal handler for SIGPIPE.
-   */
+#ifdef HAVE_SIGACTION
+  if (__sigaction_retval == 0)
+    (void) sigaction (SIGPIPE, &__stored_handler, NULL);
+#else
   if (__sigpipe_handler != SIG_ERR && __sigpipe_handler != SIG_IGN)
     {
-#ifdef HAVE_SIGSET
+# ifdef HAVE_SIGSET
       (void) sigset (SIGPIPE, __sigpipe_handler);
-#else
+# else
       (void) signal (SIGPIPE, __sigpipe_handler);
-# endif				/* HAVE_SIGSET */
+# endif	  /* HAVE_SIGSET */
     }
+#endif    /* HAVE_SIGACTION */
 
   NSS_LDAP_UNLOCK (__lock);
 

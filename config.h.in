@@ -117,6 +117,9 @@
 /* Define if you have the res_search function.  */
 #undef HAVE_RES_SEARCH
 
+/* Define if you have the sigaction function.  */
+#undef HAVE_SIGACTION
+
 /* Define if you have the sigset function.  */
 #undef HAVE_SIGSET
 

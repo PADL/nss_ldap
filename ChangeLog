@@ -7,6 +7,8 @@ $Id$
 	* fix for BUG#170: _nss_ldap_getgroupsbymember_r fails
 	  to return all groups when NSCD is running and
 	  attribute mapping is enabled on Solaris
+	* fix for BUG#173: reinstate use of sigaction()
+	  (XXX what is the correct fix here?)
 
 218	Luke Howard <lukeh@padl.com>
 

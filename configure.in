@@ -149,6 +149,7 @@ AC_CHECK_LIB(resolv, main)
 AC_CHECK_LIB(nsl, main)
 
 AC_CHECK_FUNCS(strtok_r)
+AC_CHECK_FUNCS(sigaction)
 AC_CHECK_FUNCS(sigset)
 AC_CHECK_FUNCS(res_search)
 AC_CHECK_FUNCS(dn_expand)
