@@ -154,6 +154,10 @@ _nss_ldap_parse_gr (LDAP * ld,
   stat =
     _nss_ldap_assign_attrvals (ld, e, AT (memberUid), NULL, &uid_mems,
 			       &buffer, &buflen, &uid_mems_c);
+
+  if (stat == NSS_TRYAGAIN)
+    return NSS_TRYAGAIN;
+
   if (stat != NSS_SUCCESS)
     uid_mems = NULL;
 

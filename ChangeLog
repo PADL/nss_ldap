@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+184	Luke Howard <lukeh@padl.com>
+
+	* return NSS_TRYAGAIN if no buffer space in ldap-grp.c
+
 183	Luke Howard <lukeh@padl.com>
 
 	* return error strings in AIX authentication routine
