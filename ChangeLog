@@ -1,6 +1,11 @@
 $Header$
 ===============================================================
 
+169	Luke Howard <lukeh@padl.com>
+
+	* fixed typo in ldap-service.c; prefix filters now
+	  with _nss_ldap
+
 168	Luke Howard <lukeh@padl.com>
 
 	* initialize old_handler to SIG_DFL

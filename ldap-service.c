@@ -209,7 +209,7 @@ _nss_ldap_getservbyname_r (nss_backend_t * be, void *args)
 				&NSS_ARGS (args)->erange,
 				(NSS_ARGS (args)->key.serv.proto == NULL) ?
 				_nss_ldap_filt_getservbyname :
-				filt_getservbynameproto, LM_SERVICES,
+				_nss_ldap_filt_getservbynameproto, LM_SERVICES,
 				_nss_ldap_parse_serv);
 
   if (status == NSS_SUCCESS)
@@ -258,7 +258,7 @@ _nss_ldap_getservbyport_r (nss_backend_t * be, void *args)
 				&NSS_ARGS (args)->erange,
 				(NSS_ARGS (args)->key.serv.proto == NULL) ?
 				_nss_ldap_filt_getservbyport :
-				filt_getservbyportproto, LM_SERVICES,
+				_nss_ldap_filt_getservbyportproto, LM_SERVICES,
 				_nss_ldap_parse_serv);
 
   if (status == NSS_SUCCESS)
