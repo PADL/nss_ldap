@@ -111,7 +111,7 @@
 #define LDAP_NSS_BUFLEN_GROUP	(NSS_BUFSIZ + (LDAP_NSS_NGROUPS * (sizeof (char *) + LOGNAME_MAX))) 
 #else
 #define LDAP_NSS_BUFLEN_GROUP	NSS_BUFSIZ
-#endif /* LDAP_NSS_NGROUPS > 256 */
+#endif /* LDAP_NSS_NGROUPS > 64 */
 
 #define LDAP_NSS_BUFLEN_DEFAULT	0
 
