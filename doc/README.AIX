@@ -6,6 +6,8 @@ Quick notes for using nss_ldap on AIX
 
 The C library on AIX includes the IRS library which can also found in the
 BIND 8.x distribution. Of course, IBM did some things The Other Way(tm)...
+You can alo find related documentation at:
+  <URI:http://www.padl.com/Articles/Buildingnss_ldaponAIX4.3..html>
 
 2. Compilation
 --------------
@@ -14,22 +16,31 @@ I'm assuming you have successfully installed OpenLDAP 2.x or one of the
 Netscape LDAP client libraries. I haven't tested it with IBM's LDAP
 libraries. 
 
-I'm using AIX 4.3.3. It may work with 4.[12]. It won't work with 3.x. I
-see no reason why it shouldn't work with 5.x.
+I'm using AIX 4.3.3. It may work with 4.[12]. It won't work with 3.x.
+It is going to work on 5.x.
 
 You need to ensure that bos.adt.syscalls has been installed for -lsys
 and -lcsys to work as the /lib/syscalls.exp file (this is found
 on the Kernel Extensions developer kit). [Kyle_Chapman@G1.com]
 
-Run "configure" and "make" as usual. If everything went OK, you will get two
+Run "configure" and "make" as usual. As of nss_ldap-196, it is no
+longer necessary to specify --enable-proxy-auth if you want to use
+the AIX authentication functionality; it is enabled by default.
+
+The /etc/ldap.conf is already used by the LDAP client from
+IBM SecureWay, so use
+
+  --with-ldap-conf-file=/etc/nss_ldap.conf
+
+to avoid confusion.  If everything went OK, you will get two
 objects: nss_ldap.so and NSS_LDAP.
 
 3. Installation
 ---------------
 
 Copy nss_ldap.so to /usr/lib/netsvc/dynload (create the directory if it does
-not exist), and copy NSS_LDAP to /usr/lib/security. Now that wasn't
-difficult...
+not exist), and copy NSS_LDAP to /usr/lib/security. ("make install" will
+do this for you.)
 
 4. Configuration
 ----------------
@@ -46,20 +57,49 @@ ng_pvtinit failed: Function not implemented (ng_pvtinit)" in the system
 logs. That's ugly, but harmless.
 
 Now, the interesting part: users and groups. Have I said that IBM did it The
-Other Way(tm)? Ok, add the following to /usr/lib/security/methods.cfg:
+Other Way(tm)? Ok, add the following stanza to /lib/security/methods.cfg:
 
 LDAP:
 	program = /usr/lib/security/NSS_LDAP
 
-After that, edit /etc/security/user. Change the "SYSTEM" attribute of the
-"default" entry to "compat OR NSSLDAP", i.e:
+If you are running AIX version which is less than 4.3.3 you will have
+to add the stanza to /etc/security/login.cfg.  In case of version
+4.3.3 you will have to add the same stanza to both files. Make sure
+you comment out existing references to LDAP, which are for IBM's
+SecureWay implementation.
 
-default:
-	[... lots of attributes...]
-	SYSTEM = "compat OR LDAP"
+Use chuser(8) to edit /etc/security/user. Change the "SYSTEM"
+attribute of the "default" entry to "compat OR LDAP", i.e.:
+
+# chuser SYSTEM="compat or LDAP" default
+
+if you want to use the LDAP authentication system wide.
+Alternatively, you can enable it on a per-user basis:
+
+# chuser SYSTEM="compat or LDAP" username
 
 After that you should be able to use getpwnam() and friends to get the
-information from the LDAP server.
+information from the LDAP server.  If you want to allow users to
+change their passwords using the standard passwd(1) command, you will
+have to change the registry attribute as well:
+
+# chuser registry=LDAP username
+
+(This is pointless right now as there is no support for password
+changing in nss_ldap.)
+
+NB:  The registry attribute is used to fetch/modify all the other user
+attributes which are not supported by the LDAP.  In particular the
+chuser(8) will fail to operate properly.  However, it is possible to
+use the "-R" option to specify the registry on which the command
+should operate.  For example, to change back to the normal files based
+authentication and identification:
+
+# chuser -R files SYSTEM=compat registry=files default
+
+NB:  Users should exist in the /etc/passwd file.  That doesn't seem to
+be necessary, but many strange things can happen depending on the AIX
+version running.  YMMV.
 
 5. What's missing
 -----------------
@@ -74,4 +114,5 @@ Enjoy.
 
 Gabor Gombas <gombasg@inf.elte.hu>
 Luke Howard <dev@padl.com>
+Dejan Muhamedagic <dejan.muhamedagic@at.ibm.com>
 
