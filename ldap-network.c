@@ -146,6 +146,7 @@ static NSS_STATUS _nss_ldap_getnetbyname_r(nss_backend_t *be, void *args)
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
+		&NSS_ARGS(args)->erange,
 		filt_getnetbyname,
 		(const char **)net_attributes,
 		_nss_ldap_parse_net);
@@ -159,7 +160,7 @@ static NSS_STATUS _nss_ldap_getnetbyname_r(nss_backend_t *be, void *args)
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_getnetbyname_r(const char *name, struct netent *result,
-				char *buffer, size_t buflen, int *herrnop)
+				char *buffer, size_t buflen, int *errnop, int *herrnop)
 {
 	NSS_STATUS status;
 	ldap_args_t a;
@@ -172,6 +173,7 @@ NSS_STATUS _nss_ldap_getnetbyname_r(const char *name, struct netent *result,
 		result,
 		buffer,
 		buflen,
+		errnop,
 		filt_getnetbyname,
 		(const char **)net_attributes,
 		_nss_ldap_parse_net);
@@ -187,7 +189,7 @@ NSS_STATUS _nss_ldap_getnetbyname_r(const char *name, struct netent *result,
 static NSS_STATUS _nss_ldap_getnetbyaddr_r(nss_backend_t *be, void *args)
 #else
 NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent *result,
-				char *buffer, size_t buflen, int *herrnop)
+				char *buffer, size_t buflen, int *errnop, int *herrnop)
 #endif
 {
 	struct in_addr in;
@@ -212,9 +214,9 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 		{
 #ifdef SUN_NSS
 		retval = _nss_ldap_getbyname(&a, NSS_ARGS(args)->buf.result, NSS_ARGS(args)->buf.buffer,
-			 NSS_ARGS(args)->buf.buflen,
+			 NSS_ARGS(args)->buf.buflen, &NSS_ARGS(args)->erange,
 #else
-		retval = _nss_ldap_getbyname(&a, result, buffer, buflen,
+		retval = _nss_ldap_getbyname(&a, result, buffer, buflen, errnop,
 #endif
 			filt_getnetbyaddr, (const char **)net_attributes, _nss_ldap_parse_net);
 
@@ -245,13 +247,6 @@ NSS_STATUS _nss_ldap_getnetbyaddr_r(unsigned long addr, int type, struct netent 
 				NSS_ARGS(args)->returnval = NULL;
 				MAP_H_ERRNO(retval, NSS_ARGS(args)->h_errno);
 #else				
-				if (retval == NSS_TRYAGAIN)
-# if 1
-# warning errno not reentrant?
-					errno = EAGAIN;
-# else
-					__set_errno(EAGAIN);
-# endif
 				MAP_H_ERRNO(retval, *herrnop);
 #endif
 				return retval;
@@ -305,6 +300,7 @@ static NSS_STATUS _nss_ldap_getnetent_r(nss_backend_t *net_context, void *args)
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
+		&NSS_ARGS(args)->erange,
 		filt_getnetent,
 		(const char **)net_attributes,
 		_nss_ldap_parse_net);
@@ -315,7 +311,7 @@ static NSS_STATUS _nss_ldap_getnetent_r(nss_backend_t *net_context, void *args)
 	return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_getnetent_r(struct netent *result, char *buffer, size_t buflen, int *herrnop)
+NSS_STATUS _nss_ldap_getnetent_r(struct netent *result, char *buffer, size_t buflen, int *errnop, int *herrnop)
 {
 	NSS_STATUS status;
 
@@ -324,6 +320,7 @@ NSS_STATUS _nss_ldap_getnetent_r(struct netent *result, char *buffer, size_t buf
 		result,
 		buffer,
 		buflen,
+		errnop,
 		filt_getnetent,
 		(const char **)net_attributes,
 		_nss_ldap_parse_net);

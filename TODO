@@ -1,7 +1,6 @@
 
-Please contact Luke Howard <lukeh@padl.com> if you can help. 
-
-People with spare time and experience need only apply. :-)
+Please contact PADL Software Development Support <dev@padl.com>
+if you wish to contribute.
 
 
 TESTING
@@ -113,7 +112,8 @@ Resource assignments are suggested only.
 - fix Makefiles to build under glibc. Makefile.sun, Makefile.gnu, Makefile.bsd
   + Configure.
 
-- add support for DHCP and coldstart configuration
+- add support for DHCP and coldstart configuration. Coldstart should
+  update /etc/ldap.conf (/etc/ns/ldap.conf?) as in Solaris 8.
 
 
 $Id$

@@ -24,6 +24,7 @@
 #define _LDAP_NSS_LDAP_LDAP_NSS_H
 
 #ifdef GNU_NSS
+#include <errno.h>
 #include <pthread.h>
 #endif /* GNU_NSS */
 
@@ -88,7 +89,11 @@
 
 #ifdef GNU_NSS
 # if !defined(TESTING) && !defined(DL_NSS)
-# include <libc-lock.h>
+#  if (__GLIBC__ == 2) && (__GLIBC_MINOR__ > 0)
+#   include <bits/libc-lock.h>
+#  else
+#   include <libc-lock.h>
+#  endif
 # endif
 #endif
 
@@ -380,6 +385,7 @@ NSS_STATUS _nss_ldap_getent(
 	void *result, /* IN/OUT */
 	char *buffer, /* IN */
 	size_t buflen, /* IN */
+	int *errnop, /* OUT */
 	const char *filterprot, /* IN */
 	const char **attrs, /* IN */
 	parser_t parser /* IN */);
@@ -390,6 +396,7 @@ NSS_STATUS _nss_ldap_getbyname(
 	void *result, /* IN/OUT */
 	char *buffer, /* IN */
 	size_t buflen, /* IN */
+	int *errnop, /* OUT */
 	const char *filterprot, /* IN */
 	const char **attrs, /* IN */
 	parser_t parser /* IN */);

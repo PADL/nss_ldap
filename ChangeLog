@@ -1,7 +1,28 @@
 $Id$
 ===============================================================
 
-2.51	Luke Howared <lukeh@padl.com>
+2.55	Luke Howard <lukeh@padl.com> [planned]
+
+	* merged in glibc-2.1 branch
+
+2.54.6	Luke Howard <lukeh@padl.com>
+
+	* misc fixes.
+
+2.54.5	Luke Howard <lukeh@padl.com>
+
+	* misc fixes.
+
+2.54.4	Luke Howard <lukeh@padl.com>
+
+	* glibc-2.1 patches from bcollins@debian.org
+
+2.54.3	Luke Howard <lukeh@padl.com>
+
+	* glibc-2.1 support. (Recall #93)
+	* set erange correctly on Solaris (related to above)
+
+2.51	Luke Howaed <lukeh@padl.com>
 
 	* added rebind function
 
@@ -29,9 +50,9 @@ $Id$
 
 	* fixed potential crasher in dnsconfig.c
 	* LDAP session is now persistent for performance reasons.
-     Removed references to the session anywhere outside
-     ldap-nss.c. The process ID is cached and the session
-     reopened after a fork().
+	  Removed references to the session anywhere outside
+	  ldap-nss.c. The process ID is cached and the session
+	  reopened after a fork().
 
 2.39	Luke Howard <lukeh@xedoc.com>
 

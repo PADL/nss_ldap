@@ -103,9 +103,10 @@ NSS_STATUS _nss_ldap_getgrnam_r(
 	const char *name,
 	struct group *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
-	LOOKUP_NAME(name, result, buffer, buflen, filt_getgrnam, gr_attributes, _nss_ldap_parse_gr);
+	LOOKUP_NAME(name, result, buffer, buflen, errnop, filt_getgrnam, gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getgrnam_r(nss_backend_t *be, void *args)
@@ -119,9 +120,10 @@ NSS_STATUS _nss_ldap_getgrgid_r(
 	gid_t gid,
 	struct group *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
-	LOOKUP_NUMBER(gid, result, buffer, buflen, filt_getgrgid, gr_attributes, _nss_ldap_parse_gr);
+	LOOKUP_NUMBER(gid, result, buffer, buflen, errnop, filt_getgrgid, gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getgrgid_r(nss_backend_t *be, void *args)
@@ -158,9 +160,10 @@ static NSS_STATUS _nss_ldap_endgrent_r(nss_backend_t *gr_context, void *args)
 NSS_STATUS _nss_ldap_getgrent_r(
 	struct group *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
-	LOOKUP_GETENT(gr_context, result, buffer, buflen, filt_getgrent, gr_attributes, _nss_ldap_parse_gr);
+	LOOKUP_GETENT(gr_context, result, buffer, buflen, errnop, filt_getgrent, gr_attributes, _nss_ldap_parse_gr);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getgrent_r(nss_backend_t *gr_context,

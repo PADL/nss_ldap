@@ -79,7 +79,6 @@ static INLINE NSS_STATUS _nss_ldap_assign_emptystring(
 	return NSS_SUCCESS;
 }
 
-
 static NSS_STATUS _nss_ldap_parse_pw(
 	LDAP *ld,
 	LDAPMessage *e,
@@ -163,9 +162,10 @@ NSS_STATUS _nss_ldap_getpwnam_r(
 	const char *name,
 	struct passwd *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
-	LOOKUP_NAME(name, result, buffer, buflen, filt_getpwnam, pw_attributes, _nss_ldap_parse_pw);
+	LOOKUP_NAME(name, result, buffer, buflen, errnop, filt_getpwnam, pw_attributes, _nss_ldap_parse_pw);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getpwnam_r(nss_backend_t *be, void *args)
@@ -179,9 +179,10 @@ NSS_STATUS _nss_ldap_getpwuid_r(
 	uid_t uid,
 	struct passwd *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
-	LOOKUP_NUMBER(uid, result, buffer, buflen, filt_getpwuid, pw_attributes, _nss_ldap_parse_pw);
+	LOOKUP_NUMBER(uid, result, buffer, buflen, errnop, filt_getpwuid, pw_attributes, _nss_ldap_parse_pw);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getpwuid_r(nss_backend_t *be, void *args)
@@ -218,9 +219,10 @@ static NSS_STATUS _nss_ldap_endpwent_r(nss_backend_t *be, void *args)
 NSS_STATUS _nss_ldap_getpwent_r(
 	struct passwd *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
-	LOOKUP_GETENT(pw_context, result, buffer, buflen, filt_getpwent, pw_attributes, _nss_ldap_parse_pw);
+	LOOKUP_GETENT(pw_context, result, buffer, buflen, errnop, filt_getpwent, pw_attributes, _nss_ldap_parse_pw);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getpwent_r(nss_backend_t *be, void *args)

@@ -257,6 +257,7 @@ static NSS_STATUS _nss_ldap_gethostbyname_r(nss_backend_t *be, void *args)
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
+		&NSS_ARGS(args)->erange,
 		filt_gethostbyname,
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);
@@ -270,7 +271,7 @@ static NSS_STATUS _nss_ldap_gethostbyname_r(nss_backend_t *be, void *args)
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_gethostbyname_r(const char *name, struct hostent *result,
-				char *buffer, size_t buflen, int *h_errnop)
+				char *buffer, size_t buflen, int *errnop, int *h_errnop)
 {
 	NSS_STATUS status;
 	ldap_args_t a;
@@ -283,6 +284,7 @@ NSS_STATUS _nss_ldap_gethostbyname_r(const char *name, struct hostent *result,
 		result,
 		buffer,
 		buflen,
+		errnop,
 		filt_gethostbyname,
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);
@@ -309,6 +311,7 @@ static NSS_STATUS _nss_ldap_gethostbyaddr_r(nss_backend_t *be, void *args)
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
+		&NSS_ARGS(args)->erange,
 		filt_gethostbyaddr,
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);
@@ -323,7 +326,7 @@ static NSS_STATUS _nss_ldap_gethostbyaddr_r(nss_backend_t *be, void *args)
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_gethostbyaddr_r(struct in_addr *addr, int len, int type,
 				struct hostent *result, char *buffer,
-				size_t buflen, int *h_errnop)
+				size_t buflen, int *errnop, int *h_errnop)
 {
 	NSS_STATUS status;
 	ldap_args_t a;
@@ -341,6 +344,7 @@ NSS_STATUS _nss_ldap_gethostbyaddr_r(struct in_addr *addr, int len, int type,
 		result,
 		buffer,
 		buflen,
+		errnop,
 		filt_gethostbyaddr,
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);
@@ -381,6 +385,7 @@ static NSS_STATUS _nss_ldap_gethostent_r(nss_backend_t *hosts_context, void *arg
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
+		&NSS_ARGS(args)->erange,
 		filt_gethostent,
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);
@@ -393,7 +398,7 @@ static NSS_STATUS _nss_ldap_gethostent_r(nss_backend_t *hosts_context, void *arg
 	return status;
 }
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_gethostent_r(struct hostent *result, char *buffer, size_t buflen, int *h_errnop)
+NSS_STATUS _nss_ldap_gethostent_r(struct hostent *result, char *buffer, size_t buflen, int *errnop, int *h_errnop)
 {
 	NSS_STATUS status;
 
@@ -402,6 +407,7 @@ NSS_STATUS _nss_ldap_gethostent_r(struct hostent *result, char *buffer, size_t b
 		result,
 		buffer,
 		buflen,
+		errnop,
 		filt_gethostent,
 		(const char **)host_attributes,
 		_nss_ldap_parse_host);

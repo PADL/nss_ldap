@@ -103,9 +103,10 @@ NSS_STATUS _nss_ldap_getspnam_r(
 	const char *name,
 	struct spwd *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
-	LOOKUP_NAME(name, result, buffer, buflen, filt_getspnam, sp_attributes, _nss_ldap_parse_sp);
+	LOOKUP_NAME(name, result, buffer, buflen, errnop, filt_getspnam, sp_attributes, _nss_ldap_parse_sp);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getspnam_r(nss_backend_t *be, void *args)
@@ -140,9 +141,10 @@ static NSS_STATUS _nss_ldap_endspent_r(nss_backend_t *sp_context, void *args)
 NSS_STATUS _nss_ldap_getspent_r(
 	struct spwd *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
-	LOOKUP_GETENT(sp_context, result, buffer, buflen, filt_getspent, sp_attributes, _nss_ldap_parse_sp);
+	LOOKUP_GETENT(sp_context, result, buffer, buflen, errnop, filt_getspent, sp_attributes, _nss_ldap_parse_sp);
 }
 #elif defined(SUN_NSS)
 static NSS_STATUS _nss_ldap_getspent_r(nss_backend_t *sp_context, void *args)

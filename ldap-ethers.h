@@ -85,12 +85,12 @@ nss_backend_t *_nss_ldap_ethers_constr(const char *db_name,
 #elif defined(GNU_NSS)
 /* for the record */
 NSS_STATUS _nss_ldap_gethostton_r (const char *name, struct ether *eth,
-                       char *buffer, size_t buflen);
+                       char *buffer, size_t buflen, int *errnop);
 NSS_STATUS _nss_ldap_getntohost_r (struct ether_addr *addr, struct ether *eth,
-                       char *buffer, size_t buflen);
+                       char *buffer, size_t buflen, int *errnop);
 NSS_STATUS _nss_ldap_endetherent (void);
 NSS_STATUS _nss_ldap_setetherent (void);
-NSS_STATUS _nss_ldap_getetherent_r (struct ether *result, char *buffer, size_t buflen);
+NSS_STATUS _nss_ldap_getetherent_r (struct ether *result, char *buffer, size_t buflen, int *errnop);
 #endif
 
 

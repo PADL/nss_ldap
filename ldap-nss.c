@@ -429,7 +429,7 @@ LDAPMessage *_nss_ldap_lookup(
 	ldap_set_option(__session.ls_conn, LDAP_OPT_SIZELIMIT, (void *)&sizelimit);
 #else
 	__session.ls_conn->ld_sizelimit = sizelimit;
-#endif
+#endif /* LDAP_VERSION3_API */
 
 do_retry:
 	lstatus = ldap_search_s(__session.ls_conn,
@@ -473,6 +473,7 @@ NSS_STATUS _nss_ldap_getent(
 	void *result,
 	char *buffer,
 	size_t buflen,
+	int *errnop,
 	const char *filterprot,
 	const char **attrs,
 	parser_t parser)
@@ -542,6 +543,15 @@ NSS_STATUS _nss_ldap_getent(
 
 	nss_context_unlock();
 
+	if (stat == NSS_TRYAGAIN)
+		{
+#ifdef SUN_NSS
+		errno = ERANGE;
+		*errnop = 1; /* this is really erange */
+#else
+		*errnop = ERANGE;
+#endif /* SUN_NSS */
+		}
 	return stat;
 }
 
@@ -554,6 +564,7 @@ NSS_STATUS _nss_ldap_getbyname(
 	void *result,
 	char *buffer,
 	size_t buflen,
+	int *errnop,
 	const char *filterprot,
 	const char **attrs,
 	parser_t parser)
@@ -593,6 +604,16 @@ NSS_STATUS _nss_ldap_getbyname(
 	ldap_msgfree(res);
 
 	nss_context_unlock();
+
+	if (stat == NSS_TRYAGAIN)
+		{
+#ifdef SUN_NSS
+		errno = ERANGE;
+		*errnop = 1; /* this is really erange */
+#else
+		*errnop = ERANGE;
+#endif /* SUN_NSS */
+		}
 
 	return stat;
 }

@@ -108,9 +108,9 @@ static NSS_STATUS _nss_ldap_getrpcbyname_r(nss_backend_t *be, void *args)
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_getrpcbyname_r(const char *name, struct rpcent *result,
-				char *buffer, size_t buflen)
+				char *buffer, size_t buflen, int *errnop)
 {
-	LOOKUP_NAME(name, result, buffer, buflen, filt_getrpcbyname, rpc_attributes, _nss_ldap_parse_rpc);
+	LOOKUP_NAME(name, result, buffer, buflen, errnop, filt_getrpcbyname, rpc_attributes, _nss_ldap_parse_rpc);
 }
 #endif
 
@@ -121,9 +121,9 @@ static NSS_STATUS _nss_ldap_getrpcbynumber_r(nss_backend_t *be, void *args)
 }
 #elif defined(GNU_NSS)
 NSS_STATUS _nss_ldap_getrpcbynumber_r(int number, struct rpcent *result,
-				char *buffer, size_t buflen)
+				char *buffer, size_t buflen, int *errnop)
 {
-	LOOKUP_NUMBER(number, result, buffer, buflen, filt_getrpcbynumber, rpc_attributes, _nss_ldap_parse_rpc);
+	LOOKUP_NUMBER(number, result, buffer, buflen, errnop, filt_getrpcbynumber, rpc_attributes, _nss_ldap_parse_rpc);
 }
 #endif
 
@@ -155,9 +155,9 @@ static NSS_STATUS _nss_ldap_getrpcent_r(nss_backend_t *rpc_context, void *args)
 	LOOKUP_GETENT(args, rpc_context, filt_getrpcent, rpc_attributes, _nss_ldap_parse_rpc);
 }
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_getrpcent_r(struct rpcent *result, char *buffer, size_t buflen)
+NSS_STATUS _nss_ldap_getrpcent_r(struct rpcent *result, char *buffer, size_t buflen, int *errnop)
 {
-	LOOKUP_GETENT(rpc_context, result, buffer, buflen, filt_getrpcent, rpc_attributes, _nss_ldap_parse_rpc);
+	LOOKUP_GETENT(rpc_context, result, buffer, buflen, errnop, filt_getrpcent, rpc_attributes, _nss_ldap_parse_rpc);
 }
 #endif
 

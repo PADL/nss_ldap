@@ -21,10 +21,6 @@
 # write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 # Boston, MA 02111-1307, USA.
 
-#
-# $Id$
-#
-
 MODULE=nss_ldap
 HDRS=	\
 	ldap-alias.h \
@@ -68,7 +64,6 @@ SRCS=	ldap-nss.c \
 	dnsconfig.c
 
 OBJS=${SRCS:.c=.o}
-LIB=${MODULE}.so.1
 
 # uncomment NSFLAGS if you are using the Netscape SDK (or Mozilla)
 NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API 
@@ -76,6 +71,9 @@ NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module
 GNUFLAGS=-DGNU_NSS -DWEIRD_GETPWENT -DHAVE_SNPRINTF -D_REENTRANT
 LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
+
+SOLIB=lib${MODULE}.so.${NSSLIBVER}
+NSSLIB=lib${MODULE}-${LIBCVERS}.so
 
 LIBDIRS=-L.
 
@@ -91,22 +89,24 @@ CC=gcc
 COMPILERFLAGS=${GCCFLAGS}
 
 LD=gcc
-GNULDFLAGS=-shared -Wl,-soname,libnss_ldap.so.1
+GNULDFLAGS=-shared -Wl,-soname,${SOLIB}
 LDFLAGS=${GNULDFLAGS}
 
 CFLAGS=-DLDAP_REFERRALS ${DEBUGFLAGS} ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
 
 all: ${MODULE}
 
+# This symlink is purely to keep RC happy.
 ${MODULE}: ${OBJS}
-	${LD} ${LIBDIRS} ${LDFLAGS} -o ${LIB} ${OBJS} ${LIBS}
+	${LD} ${LIBDIRS} ${LDFLAGS} -o ${NSSLIB} ${OBJS} ${LIBS}
+	-ln -sf ${NSSLIB} ${MODULE}.so.1
 
 install: install_lib install_conf
 
 install_lib:
-	cp ${LIB} /lib/libnss_ldap-${LIBCVERS}.so
-	ln -sf libnss_ldap-${LIBCVERS}.so /lib/libnss_ldap.so.1
-	ln -sf /lib/libnss_ldap.so.1 /usr/lib/libnss_ldap.so;true
+	install -m 644 -o root -g root ${NSSLIB} /lib/$(NSSLIB)
+	ln -s $(NSSLIB) /lib/$(SOLIB)
+	ln -s /lib/$(NSSLIB) /usr/lib/$(MODULE).so
 
 install_conf:
 	cp nsswitch.ldap /etc/nsswitch.ldap
@@ -115,7 +115,7 @@ install_conf:
 clean:
 	rm -f ${OBJS} ${LIB} core
 
-TESTCC=gcc ${PDOFLAGS} -g -D_REENTRANT -DNSS_GNU -DWEIRD_GETPWENT
+TESTCC=gcc -g -D_REENTRANT -DNSS_GNU -DWEIRD_GETPWENT
 
 test:
 	-${TESTCC} ${CFLAGS} -o  testpw testpw.c
@@ -124,9 +124,10 @@ test:
 	-${TESTCC} -o testgr testgr.c
 #	-${TESTCC} -o testpw3 testpw3.c
 
-test.pl:
-	cp /etc/nsswitch.conf /etc/nsswitch.conf.ldaptest
-	cp nsswitch.test /etc/nsswitch.conf
-	perl ldaptest.pl
-	mv /etc/nsswitch.conf.ldaptest /etc/nsswitch.conf
-
+# this is bad...
+#test.pl:
+#	cp /etc/nsswitch.conf /etc/nsswitch.conf.ldaptest
+#	cp nsswitch.test /etc/nsswitch.conf
+#	perl ldaptest.pl
+#	mv /etc/nsswitch.conf.ldaptest /etc/nsswitch.conf
+#

@@ -86,9 +86,9 @@ static NSS_STATUS _nss_ldap_parse_alias(
 }
 
 NSS_STATUS _nss_ldap_getaliasbyname_r(const char *name, struct aliasent *result,
-				char *buffer, size_t buflen)
+				char *buffer, size_t buflen, int *errnop)
 {
-	LOOKUP_NAME(name, result, buffer, buflen, filt_getaliasbyname, alias_attributes, _nss_ldap_parse_alias);
+	LOOKUP_NAME(name, result, buffer, buflen, errnop, filt_getaliasbyname, alias_attributes, _nss_ldap_parse_alias);
 }
 
 NSS_STATUS _nss_ldap_setaliasent_r(void)
@@ -101,9 +101,9 @@ NSS_STATUS _nss_ldap_endaliasent_r(void)
 	LOOKUP_ENDENT(alias_context);
 }
 
-NSS_STATUS _nss_ldap_getaliasent_r(struct aliasent *result, char *buffer, size_t buflen)
+NSS_STATUS _nss_ldap_getaliasent_r(struct aliasent *result, char *buffer, size_t buflen, int *errnop)
 {
-	LOOKUP_GETENT(alias_context, result, buffer, buflen, filt_getaliasent, alias_attributes, _nss_ldap_parse_alias);
+	LOOKUP_GETENT(alias_context, result, buffer, buflen, errnop, filt_getaliasent, alias_attributes, _nss_ldap_parse_alias);
 }
 
 #endif /* GNU_NSS */

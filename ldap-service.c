@@ -195,6 +195,7 @@ static NSS_STATUS _nss_ldap_getservbyname_r(nss_backend_t *be, void *args)
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
+		&NSS_ARGS(args)->erange,
 		(NSS_ARGS(args)->key.serv.proto == NULL) ?
 			filt_getservbyname : filt_getservbynameproto,
 		(const char **)serv_attributes,
@@ -211,7 +212,8 @@ NSS_STATUS _nss_ldap_getservbyname_r(
 	const char *proto,
 	struct servent *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
 	ldap_args_t a;
 
@@ -220,7 +222,7 @@ NSS_STATUS _nss_ldap_getservbyname_r(
 	LA_TYPE(a) = (proto == NULL) ? LA_TYPE_STRING : LA_TYPE_STRING_AND_STRING;
 	LA_STRING2(a) = proto;
 
-	return _nss_ldap_getbyname(&a, result, buffer, buflen,
+	return _nss_ldap_getbyname(&a, result, buffer, buflen, errnop,
 		((proto == NULL) ? filt_getservbyname : filt_getservbynameproto),
 		(const char **)serv_attributes,
 		_nss_ldap_parse_serv);
@@ -243,6 +245,7 @@ static NSS_STATUS _nss_ldap_getservbyport_r(nss_backend_t *be, void *args)
 		NSS_ARGS(args)->buf.result,
 		NSS_ARGS(args)->buf.buffer,
 		NSS_ARGS(args)->buf.buflen,
+		&NSS_ARGS(args)->erange,
 		(NSS_ARGS(args)->key.serv.proto == NULL) ?
 			filt_getservbyport : filt_getservbyportproto,
 			(const char **)serv_attributes,
@@ -259,7 +262,8 @@ NSS_STATUS _nss_ldap_getservbyport_r(
 	const char *proto,
 	struct servent *result,
 	char *buffer,
-	size_t buflen)
+	size_t buflen,
+	int *errnop)
 {
 	ldap_args_t a;
 
@@ -267,7 +271,7 @@ NSS_STATUS _nss_ldap_getservbyport_r(
 	LA_NUMBER(a) = htons(port);
 	LA_TYPE(a) = (proto == NULL) ? LA_TYPE_NUMBER : LA_TYPE_NUMBER_AND_STRING;
 	LA_STRING2(a) = proto;
-	return _nss_ldap_getbyname(&a, result, buffer, buflen,
+	return _nss_ldap_getbyname(&a, result, buffer, buflen, errnop,
 		(proto == NULL) ? filt_getservbyport : filt_getservbyportproto,
 		(const char **)serv_attributes,
 		_nss_ldap_parse_serv);
@@ -302,9 +306,9 @@ static NSS_STATUS _nss_ldap_getservent_r(nss_backend_t *serv_context, void *args
 	LOOKUP_GETENT(args, serv_context, filt_getservent, serv_attributes, _nss_ldap_parse_serv);	
 }
 #elif defined(GNU_NSS)
-NSS_STATUS _nss_ldap_getservent_r(struct servent *result, char *buffer, size_t buflen)
+NSS_STATUS _nss_ldap_getservent_r(struct servent *result, char *buffer, size_t buflen, int *errnop)
 {
-	LOOKUP_GETENT(serv_context, result, buffer, buflen, filt_getservent, serv_attributes, _nss_ldap_parse_serv);
+	LOOKUP_GETENT(serv_context, result, buffer, buflen, errnop, filt_getservent, serv_attributes, _nss_ldap_parse_serv);
 }
 #endif
 
