@@ -785,7 +785,7 @@ do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
   debug ("==> do_innetgr_nested netgroup=%s assertion=%s",
 	 li_args->lia_netgroup, nested);
 
-  if (li_args->lia_depth > LDAP_NSS_MAXNETGR_DEPTH)
+  if (li_args->lia_depth >= LDAP_NSS_MAXNETGR_DEPTH)
     {
       debug ("<== do_innetgr_nested: maximum depth exceeded");
       return NSS_NOTFOUND;
@@ -806,6 +806,8 @@ do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
   stat = _nss_ldap_getent_ex (&a, &ctx, (void *) li_args, NULL, 0,
 			      &li_args->lia_erange, _nss_ldap_filt_innetgr,
 			      LM_NETGROUP, NULL, do_parse_innetgr);
+
+  li_args->lia_depth--;
 
   _nss_ldap_ent_context_release (ctx);
 
