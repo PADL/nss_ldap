@@ -4,7 +4,7 @@ Version:   2.75
 Release:   1
 Source:    ftp://ftp.padl.com/pub/%{name}-%{version}.tar.gz
 URL:       http://www.padl.com/
-Copyright: GPL
+Copyright: GLPL
 Group: Libraries
 BuildRoot: /tmp/rpm-%{name}-root
 

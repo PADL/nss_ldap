@@ -88,7 +88,7 @@ LIBDIRS=-L/usr/local/lib -R/usr/ucblib
 #LIBS=-lldap_pic -llber_pic -lnsl
 # uncomment this if you're linking against Sun or Netscape's libldap.so
 # or using UMich libldap/liblber compiled into one library
-LIBS=-lldap -lnsl
+LIBS=-lldap -lnsl -lresolv
 
 # uncomment this if you're using gcc
 GCCFLAGS=-O -g -Wall -fPIC

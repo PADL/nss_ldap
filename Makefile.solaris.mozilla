@@ -72,7 +72,7 @@ NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API -DNETSCAPE_API_EXTENSIO
 SUNFLAGS=-DSUN_NSS -D_REENTRANT -DHAVE_SNPRINTF -D__EXTENSIONS__
 INCDIRS=
 LIBDIRS=-L/usr/local/ldapsdk/lib
-LIBS=-lldapssl30
+LIBS=-lldapssl30 -lnsl -lresolv
 
 # uncomment this if you're using gcc
 GCCFLAGS=-O -g -Wall -fPIC $(PDOFLAGS)
