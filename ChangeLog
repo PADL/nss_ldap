@@ -3,6 +3,7 @@ $Header$
 
 202	Luke Howard <lukeh@padl.com>
 
+	* getsockname() fixes from Howard Chu
 	* configuration parser crasher fix
 
 201	Luke Howard <lukeh@padl.com>

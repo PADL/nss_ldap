@@ -648,8 +648,8 @@ do_close_no_unbind (void)
     {
       struct sockaddr sockname;
       struct sockaddr peername;
-      int socknamelen;
-      int peernamelen;
+      int socknamelen = sizeof(sockname);
+      int peernamelen = sizeof(peername);
 
       /*
        * Important to perform comparison "family-aware" to not count
