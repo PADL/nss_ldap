@@ -1501,7 +1501,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
-					 _nss_ldap_sasl_interact, defaults);
+					 do_sasl_interact, defaults);
       ber_memfree (defaults);
 
 # ifdef CONFIGURE_KRB5_CCNAME
