@@ -181,6 +181,10 @@ Specifies the search scope (subtree, one level or base object). The
 default scope is subtree; base scope is almost never useful for
 nameservice lookups.
 .TP
+.B deref <never|searching|finding|always>
+Specifies the policy for dereferencing aliases. The default policy is
+to never dereference aliases.
+.TP
 .B timelimit <timelimit>
 Specifies the time limit (in seconds) to use when performing searches. A value
 of zero (0), which is the default, is to wait indefinitely for
