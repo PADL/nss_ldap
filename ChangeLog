@@ -6,6 +6,8 @@ $Id$
 	* /etc/nss_ldap.secret -> /etc/ldap.secret (sorry,
 	  Doug!)
 	* deleted crypt-mechanism code. Junk.
+	* fixed call to _nss_ldap_read() after changing
+	  prototypes in nss_ldap-88
 
 97	Luke Howard <lukeh@padl.com>
 

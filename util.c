@@ -157,9 +157,11 @@ _nss_ldap_dn2uid (LDAP * ld,
 #endif /* DN2UID_CACHE */
 	  const char *attrs[] =
 	  {"uid", NULL};
-	  LDAPMessage *res = _nss_ldap_read (dn, attrs);
-	  status = NSS_NOTFOUND;
-	  if (res != NULL)
+	  LDAPMessage *res;
+
+          status = NSS_NOTFOUND;
+
+	  if (_nss_ldap_read(dn, attrs, &res) == NSS_SUCCESS)
 	    {
 	      LDAPMessage *e = ldap_first_entry (ld, res);
 	      if (e != NULL)
