@@ -4,6 +4,7 @@ $Header$
 133	Luke Howard <lukeh@padl.com>
 
 	* make /usr/lib directory in Makefile.am
+	* new spec file from Joe Little
 
 132	Luke Howard <lukeh@padl.com>
 
