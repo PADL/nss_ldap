@@ -1412,7 +1412,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
 	  if (sd->lsd_base[len - 1] == ',')
 	    {
 	      /* is relative */
-	      snprintf (sdBase, sizeof (sdBase), "%s,%s", sd->lsd_base,
+	      snprintf (sdBase, sizeof (sdBase), "%s%s", sd->lsd_base,
 			__session.ls_config->ldc_base);
 	      base = sdBase;
 	    }
@@ -1491,7 +1491,7 @@ _nss_ldap_search (const ldap_args_t * args,
 	  if (sd->lsd_base[len - 1] == ',')
 	    {
 	      /* is relative */
-	      snprintf (sdBase, sizeof (sdBase), "%s,%s", sd->lsd_base,
+	      snprintf (sdBase, sizeof (sdBase), "%s%s", sd->lsd_base,
 			__session.ls_config->ldc_base);
 	      base = sdBase;
 	    }

@@ -4,6 +4,8 @@ $Header$
 135	Luke Howard <lukeh@padl.com>
 
 	* merged ldap.conf
+	* fixed bug in concatenating relative search
+	  bases in ldap-nss.c (profile support)
 
 134	Luke Howard <lukeh@padl.com>
 
