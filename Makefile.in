@@ -111,7 +111,7 @@ config.sub configure configure.in install-sh missing mkinstalldirs
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
-TAR = gtar
+TAR = tar
 GZIP_ENV = --best
 DEP_FILES =  .deps/dnsconfig.P .deps/globals.P .deps/irs-nss.P \
 .deps/ldap-alias.P .deps/ldap-bp.P .deps/ldap-ethers.P .deps/ldap-grp.P \
