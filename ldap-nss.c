@@ -65,6 +65,7 @@ static char rcsId[] =
  * If things don't link because ldap_ld_free() isn't defined,
  * then try undefining this. I think it is exported on
  * Linux but not Solaris with Netscape's C SDK.
+ *
  */
 #define HAVE_LDAP_LD_FREE
 
@@ -167,6 +168,13 @@ static NSS_STATUS
 do_with_reconnect (const char *base, int scope,
 		   const char *filter, const char **attrs, int sizelimit,
 		   void *private, search_func_t func);
+
+/*
+ * Do a bind with a defined timeout
+ */
+int
+do_bind (LDAP *ld, const char *dn, const char *pw);
+
 
 /*
  * Rebind functions.
@@ -594,7 +602,7 @@ do_open (void)
    */
   if (euid == 0 && cfg->ldc_rootbinddn != NULL)
     {
-      if (ldap_simple_bind_s
+      if (do_bind
 	  (__session.ls_conn, cfg->ldc_rootbinddn,
 	   cfg->ldc_rootbindpw) != LDAP_SUCCESS)
 	{
@@ -605,7 +613,7 @@ do_open (void)
     }
   else
     {
-      if (ldap_simple_bind_s
+      if (do_bind
 	  (__session.ls_conn, cfg->ldc_binddn,
 	   cfg->ldc_bindpw) != LDAP_SUCCESS)
 	{
@@ -627,6 +635,44 @@ do_open (void)
   debug ("<== do_open");
 
   return NSS_SUCCESS;
+}
+
+static int
+do_bind (LDAP * ld,
+	  const char * dn,
+	  const char * pw)
+{
+  int rc;
+  int msgid;
+  struct timeval tv;
+  LDAPMessage *result;
+    
+  debug("==> do_bind");
+  msgid = ldap_simple_bind (ld, dn, pw);
+
+#ifdef BIND_TIMEOUT
+  tv.tv_sec = BIND_TIMEOUT;
+#else
+  tv.tv_sec = 30;
+#endif    
+  tv.tv_usec = 0;
+    
+  rc = ldap_result(ld, msgid, 0, &tv, &result);
+  if (rc > 0)
+    {
+      debug("<== do_bind");
+      return ldap_result2error(ld, result, 1);
+    }
+
+    /* took too long */
+  if (rc == 0)
+    {
+      ldap_abandon(ld, msgid);
+    }
+    
+  debug("<== do_bind");
+
+  return -1;
 }
 
 /*
@@ -1607,4 +1653,5 @@ NSS_STATUS _nss_ldap_oc_check (LDAP *ld,
 
   return ret;
 }
+
 

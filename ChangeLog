@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+110	Luke Howrad <lukeh@padl.com>
+
+	* patch from Phlilip Liu for async binds
+
 109	Luke Howard <lukeh@padl.com>
 
 	* omit socket check for -DSSL; it doesn't work
