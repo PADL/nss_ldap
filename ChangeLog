@@ -3,8 +3,8 @@ $Header$
 
 195	Luke Howard <lukeh@padl.com>
 
-	* fix BUG#98: large groups buffer wraparound
-	  with rfc2307bis
+	* fixed BUG#98: large groups cause buffer length
+	  wraparound with rfc2307bis
 
 194	Luke Howard <lukeh@padl.com>
 
