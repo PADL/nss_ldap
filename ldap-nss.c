@@ -217,6 +217,7 @@ do_open (void)
 
   euid = geteuid ();
   pid = getpid ();
+
 #ifdef DEBUG
   syslog (LOG_DEBUG,
      "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
@@ -798,6 +799,7 @@ _nss_ldap_getent (ent_context_t * ctx,
 	  nss_context_unlock ();
 	  return stat;
 	}
+      stat = NSS_NOTFOUND;
 
       ctx->ec_res = res;
       ctx->ec_last = ldap_first_entry (__session.ls_conn, ctx->ec_res);
@@ -871,6 +873,12 @@ _nss_ldap_getbyname (ldap_args_t * args,
       nss_context_unlock ();
       return stat;
     }
+
+  /*
+   * Reset stat. Otherwise we might just return NSS_SUCCESS
+   * for no entries which could be a huge security hole.
+   */
+  stat = NSS_NOTFOUND;
 
   /*
    * we pass this along for the benefit of the services parser,
