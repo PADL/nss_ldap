@@ -8,7 +8,7 @@
 #
 
 # If the host and base aren't here, then the DNS RR
-# ldap.tcp.<defaultdomain>. will be resolved. <defaultdomain>
+# _ldap._tcp.<defaultdomain>. will be resolved. <defaultdomain>
 # will be mapped to a distinguished name and the target host
 # will be used as the server.
 
