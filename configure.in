@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 146)
+AM_INIT_AUTOMAKE(nss_ldap, 147)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -117,7 +117,7 @@ if test "$need_pthread" = "true"; then
   AC_CHECK_LIB(pthread, main)
 fi
 
-AC_CHECK_FUNCS(ldap_init ldapssl_client_init ldap_start_tls_s ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free ldap_ld_free ldap_explode_rdn)
+AC_CHECK_FUNCS(ldap_init ldapssl_client_init ldap_start_tls_s ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free ldap_ld_free ldap_explode_rdn ldap_set_option)
 AC_CHECK_FUNCS(gethostbyname_r)
 
 if test "$ac_cv_func_gethostbyname_r" = "yes"; then

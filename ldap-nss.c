@@ -771,7 +771,7 @@ do_open (void)
   ldap_set_option (__session.ls_conn, LDAP_X_OPT_CONNECT_TIMEOUT, &timeout);
 #endif /* LDAP_X_OPT_CONNECT_TIMEOUT */
 
-#ifdef LDAP_OPT_REFERRALS
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_REFERRALS)
   ldap_set_option (__session.ls_conn, LDAP_OPT_REFERRALS,
 		   cfg->ldc_referrals ? LDAP_OPT_ON : LDAP_OPT_OFF);
 #endif

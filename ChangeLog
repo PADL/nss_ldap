@@ -1,6 +1,12 @@
 $Header$
 ===============================================================
 
+147	Luke Howard <lukeh@padl.com>
+
+	* check for ldap_set_option(), as LDAP_OPT_REFERRALS
+	  is defined for OpenLDAP 1.x but without the
+	  ldap_set_option() function
+
 146	Luke Howard <lukeh@padl.com>
 
 	* mass reindentation, GNU style
