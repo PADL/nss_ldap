@@ -1,6 +1,13 @@
 $Header$
 ===============================================================
 
+186	Luke Howard <lukeh@padl.com>
+
+	* integrated patch for Debian Bug report #140854,
+	  where nss_ldap could in some cases close a
+	  descriptor it did not own. Patch was provided
+	  by Luca Filipozzi.
+
 185	Luke Howard <lukeh@padl.com>
 
 	* updated copyrights

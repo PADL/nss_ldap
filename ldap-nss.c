@@ -179,7 +179,7 @@ static void do_close_no_unbind (void);
 /*
  * Disable keepalive on a LDAP connection's socket.
  */
-static void do_set_sockopts (LDAP * ld);
+static void do_set_sockopts (void);
 
 /*
  * TLS routines: set global SSL session options.
@@ -505,7 +505,7 @@ _nss_ldap_leave (void)
 }
 
 static void
-do_set_sockopts (LDAP * ld)
+do_set_sockopts (void)
 {
 /*
  * Netscape SSL-enabled LDAP library does not
@@ -516,9 +516,9 @@ do_set_sockopts (LDAP * ld)
 
   debug ("==> do_set_sockopts");
 #if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
-  if (ldap_get_option (ld, LDAP_OPT_DESC, &sd) == 0)
+  if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
 #else
-  if ((sd = ld->ld_sb.sb_sd) > 0)
+  if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_OPT_DESC */
     {
       int off = 0;
@@ -639,8 +639,8 @@ do_close_no_unbind (void)
 	  closeSocket = 0;
 #endif /* HAVE_LDAP_LD_FREE */
 	}
-#endif /* HAVE_LDAPSSL_CLIENT_INIT */
     }
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
 
 #ifdef HAVE_LDAP_LD_FREE
 
@@ -651,7 +651,7 @@ do_close_no_unbind (void)
 #endif /* OPENLDAP 2.x */
 
 #else
-  if (closeSocket == 0)
+  if (closeSocket)
     close (sd);
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
   (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
@@ -1102,7 +1102,7 @@ do_open (void)
 	}
     }
 
-  do_set_sockopts (__session.ls_conn);
+  do_set_sockopts ();
 
   __session.ls_config = cfg;
 
