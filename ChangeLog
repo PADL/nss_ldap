@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+95	Luke Howard <lukeh@padl.com>
+
+	* disable SO_KEEPALIVE on socket rather than blocking
+	  SIGPIPE. Need to figure out the right way to do this.
+
 94	Luke Howard <lukeh@padl.com>
 
 	* committed some changes for the parent/child close
