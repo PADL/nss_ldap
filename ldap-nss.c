@@ -685,7 +685,7 @@ do_close_no_unbind (void)
 	      return;
 	    }
 	  break;
-#endif
+#endif /* INET6 */
 	case AF_UNIX:
 	  if (strcmp
 	      (((struct sockaddr_un *) &sockname)->sun_path,
@@ -704,6 +704,7 @@ do_close_no_unbind (void)
 	      debug ("<== do_close_no_unbind (socket data differs)");
 	      return;
 	    }
+	  break;
 	}
       if (getpeername (sd, &peername, &peernamelen) != 0)
 	{
@@ -757,7 +758,7 @@ do_close_no_unbind (void)
 	      return;
 	    }
 	  break;
-#endif
+#endif /* INET6 */
 	case AF_UNIX:
 	  if (strcmp
 	      (((struct sockaddr_un *) &peername)->sun_path,
@@ -776,6 +777,7 @@ do_close_no_unbind (void)
 	      debug ("<== do_close_no_unbind (peer data differs)");
 	      return;
 	    }
+	  break;
 	}
     }
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
