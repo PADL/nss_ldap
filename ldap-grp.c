@@ -73,6 +73,7 @@ typedef struct ldap_initgroups_args
   char *grplist;
   size_t listlen;
   int depth;
+  struct name_list *known_groups;
 }
 ldap_initgroups_args_t;
 #else
@@ -81,6 +82,7 @@ typedef struct ldap_initgroups_args
 {
   struct nss_groupsbymem *gbm;
   int depth;
+  struct name_list *known_groups;
 }
 ldap_initgroups_args_t;
 # else
@@ -92,6 +94,7 @@ typedef struct ldap_initgroups_args
   gid_t **groups;
   long int limit;
   int depth;
+  struct name_list *known_groups;
 }
 ldap_initgroups_args_t;
 # endif
@@ -282,7 +285,9 @@ do_parse_group_members (LDAP * ld,
 			size_t * pGroupMembersCount,
 			size_t * pGroupMembersBufferSize,
 			int *pGroupMembersBufferIsMalloced,
-			char **buffer, size_t * buflen, int *depth)
+			char **buffer, size_t * buflen,
+			int *depth,
+			struct name_list **pKnownGroups) /* traversed groups */
 {
   NSS_STATUS stat = NSS_SUCCESS;
   char **dnValues = NULL;
@@ -308,6 +313,26 @@ do_parse_group_members (LDAP * ld,
     }
 
   i = *pGroupMembersCount;	/* index of next member */
+
+  groupdn = ldap_get_dn (ld, e);
+  if (groupdn == NULL)
+    {
+      stat = NSS_NOTFOUND;
+      goto out;
+    }
+
+  if (_nss_ldap_namelist_find (*pKnownGroups, groupdn))
+    {
+      stat = NSS_NOTFOUND;
+      goto out;
+    }
+
+  /* store group DN for nested group loop detection */
+  stat = _nss_ldap_namelist_push (pKnownGroups, groupdn);
+  if (stat != NSS_SUCCESS)
+    {
+      goto out;
+    }
 
   do
     {
@@ -399,14 +424,14 @@ do_parse_group_members (LDAP * ld,
 		      continue;
 		    }
 
-		  /* is nested group */
 		  (*depth)++;
 		  parseStat =
 		    do_parse_group_members (ld, ldap_first_entry (ld, res),
 					    &groupMembers, &i,
 					    pGroupMembersBufferSize,
 					    pGroupMembersBufferIsMalloced,
-					    buffer, buflen, depth);
+					    buffer, buflen, depth,
+					    pKnownGroups);
 		  (*depth)--;
 
 		  if (parseStat == NSS_TRYAGAIN)
@@ -471,16 +496,6 @@ do_parse_group_members (LDAP * ld,
 		  res = NULL;
 		}
 
-	      if (groupdn == NULL)
-		{
-		  groupdn = ldap_get_dn (ld, e);
-		  if (groupdn == NULL)
-		    {
-		      stat = NSS_NOTFOUND;
-		      goto out;
-		    }
-		}
-
 	      stat = _nss_ldap_read (groupdn, uniquemember_attrs, &res);
 	      if (stat != NSS_SUCCESS)
 		goto out;
@@ -505,7 +520,7 @@ out:
     free (groupdn);
 #endif
 
-  *pGroupMembers = groupMembers;
+//  *pGroupMembers = groupMembers;
   *pGroupMembersCount = i;
 
   return stat;
@@ -565,6 +580,7 @@ _nss_ldap_parse_gr (LDAP * ld,
   char *groupMembersBuffer[LDAP_NSS_MAXGR_BUFSIZ];
   int groupMembersBufferIsMalloced;
   int depth;
+  struct name_list *knownGroups = NULL;
 #endif /* RFC2307BIS */
 
   stat =
@@ -606,11 +622,12 @@ _nss_ldap_parse_gr (LDAP * ld,
   stat = do_parse_group_members (ld, e, &groupMembers, &groupMembersCount,
 				 &groupMembersBufferSize,
 				 &groupMembersBufferIsMalloced, &buffer,
-				 &buflen, &depth);
+				 &buflen, &depth, &knownGroups);
   if (stat != NSS_SUCCESS)
     {
       if (groupMembersBufferIsMalloced)
 	free (groupMembers);
+      _nss_ldap_namelist_destroy (&knownGroups);
       return stat;
     }
 
@@ -619,6 +636,7 @@ _nss_ldap_parse_gr (LDAP * ld,
 
   if (groupMembersBufferIsMalloced)
     free (groupMembers);
+  _nss_ldap_namelist_destroy (&knownGroups);
 
   if (stat != NSS_SUCCESS)
     return stat;
@@ -779,6 +797,9 @@ ng_chase (LDAP * ld, const char *dn, ldap_initgroups_args_t * lia)
   if (lia->depth > LDAP_NSS_MAXGR_DEPTH)
     return NSS_NOTFOUND;
 
+  if (_nss_ldap_namelist_find (lia->known_groups, dn))
+    return NSS_NOTFOUND;
+
   LA_INIT (a);
 
   gidnumber_attrs[0] = ATM (group, gidNumber);
@@ -796,6 +817,11 @@ ng_chase (LDAP * ld, const char *dn, ldap_initgroups_args_t * lia)
   stat = _nss_ldap_getent_ex (&a, &ctx, lia, NULL, 0,
 			      &erange, _nss_ldap_filt_getgroupsbydn,
 			      LM_GROUP, gidnumber_attrs, do_parse_initgroups);
+
+  if (stat == NSS_SUCCESS)
+    {
+      stat = _nss_ldap_namelist_push (&lia->known_groups, dn);
+    }
 
   _nss_ldap_ent_context_release (ctx);
   free (ctx);
@@ -868,6 +894,7 @@ char *_nss_ldap_getgrset (char *user)
   lia.limit = limit;
 #endif /* HAVE_USERSEC_H */
   lia.depth = 0;
+  lia.known_groups = NULL;
 
   _nss_ldap_enter ();
 
@@ -944,6 +971,11 @@ char *_nss_ldap_getgrset (char *user)
     }
 #endif /* RFC2307BIS */
 
+  _nss_ldap_namelist_destroy (&lia.known_groups);
+  _nss_ldap_ent_context_release (ctx);
+  free (ctx);
+  _nss_ldap_leave ();
+
   /*
    * We return NSS_NOTFOUND to force the parser to be called
    * for as many entries (i.e. groups) as exist, for all
@@ -955,19 +987,12 @@ char *_nss_ldap_getgrset (char *user)
       if (erange)
 	errno = ERANGE;
 #endif /* HAVE_NSS_H */
-      _nss_ldap_ent_context_release (ctx);
-      free (ctx);
-      _nss_ldap_leave ();
 #ifndef HAVE_USERSEC_H
       return stat;
 #else
       return NULL;
-#endif
+#endif /* HAVE_USERSEC_H */
     }
-
-  _nss_ldap_ent_context_release (ctx);
-  free (ctx);
-  _nss_ldap_leave ();
 
 #ifdef HAVE_NSS_H
   return NSS_SUCCESS;
