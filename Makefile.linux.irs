@@ -22,8 +22,7 @@
 # $Id$
 #
 
-MODULE=nss_ldap
-PLATFORM=nextstep
+MODULE=libnss_ldap
 HDRS=	\
 	ldap-alias.h \
 	ldap-ethers.h \
@@ -69,7 +68,7 @@ SRCS=	ldap-nss.c \
 	globals.c
 
 OBJS=${SRCS:.c=.o}
-LIB=lib${MODULE}.so
+LIB=${MODULE}.so
 # uncomment NSFLAGS if you are using the Netscape SDK
 NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API -DNETSCAPE_API_EXTENSIONS -DRFC2307BIS -DSSL
 # uncomment BSDFLAGS if you are building this as part of the BIND IRS

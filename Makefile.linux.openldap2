@@ -25,7 +25,7 @@
 # $Id$
 #
 
-MODULE=nss_ldap
+MODULE=libnss_ldap
 HDRS=	\
 	ldap-alias.h \
 	ldap-ethers.h \
@@ -76,8 +76,8 @@ NSFLAGS=-I/usr/local/include -DLDAP_VERSION3_API -DRFC2307BIS
 GNUFLAGS=-DGNU_NSS -DHAVE_SNPRINTF -D_REENTRANT
 LIBCVERS= `ls /lib/libc-*.so | tail -1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
 
-SOLIB=lib$(MODULE).so.$(NSSLIBVER)
-NSSLIB=lib$(MODULE)-$(LIBCVERS).so
+SOLIB=$(MODULE).so.$(NSSLIBVER)
+NSSLIB=$(MODULE)-$(LIBCVERS).so
 NSSLIBVER=$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 
 LIBDIRS=-L.
