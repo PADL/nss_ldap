@@ -289,8 +289,7 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -312,8 +311,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -579,6 +577,7 @@ do_open (void)
        * close the session after an idle timeout.
        */
       time_t current_time;
+      void (*old_handler) (int sig);
 #ifndef HAVE_LDAPSSL_CLIENT_INIT
       /*
        * Otherwise we can hand back this process' global
@@ -591,8 +590,13 @@ do_open (void)
        * ought not to block SIGPIPE elsewhere, but at least this is
        * the entry point where connections get woken up.
        *
+       * This doesn't work with the Netscape SDK because they
+       * don't give us the real socket, it seems, and thus 
+       * getpeername() fails; probably the socket is instead a
+       * handle to an internal SSL connection.
+       *
        * Also: this may not be necessary now that keepaliave is
-       * disabled (the signal code that is). 
+       * disabled (the signal code that is).  
        *
        * The W2K client library sends an ICMP echo to the server to
        * check it is up. Perhaps we shold do the same.
@@ -606,7 +610,6 @@ do_open (void)
       if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_OPT_DESC */
 	{
-	  void (*old_handler) (int sig);
 	  size_t len;
 
 #ifdef HAVE_SIGSET
@@ -643,7 +646,9 @@ do_open (void)
 
       /*  
        * Patch from Steven Barrus <sbarrus@eng.utah.edu> to
-       * close the session after an idle timeout.
+       * close the session after an idle timeout. We ignore
+       * SIGPIPE before calling do_close() to prevent nscd
+       * dying on Solaris.
        */
       if (__session.ls_config->ldc_idle_timelimit)
 	{
@@ -652,8 +657,27 @@ do_open (void)
 	      (__session.ls_timestamp +
 	       __session.ls_config->ldc_idle_timelimit) < current_time)
 	    {
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
+#ifdef HAVE_SIGSET
+	      old_handler = sigset (SIGPIPE, SIG_IGN);
+#else
+	      old_handler = signal (SIGPIPE, SIG_IGN);
+#endif /* HAVE_SIGSET */
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
+
 	      debug ("idle_timelimit reached");
 	      do_close ();
+
+	      if (old_handler != SIG_ERR && old_handler != SIG_IGN)
+		{
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
+#ifdef HAVE_SIGSET
+		  (void) sigset (SIGPIPE, old_handler);
+#else
+		  (void) signal (SIGPIPE, old_handler);
+#endif /* HAVE_SIGSET */
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
+		}
 	    }
 	}
 
@@ -1709,8 +1733,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2239,8 +2262,7 @@ _nss_ldap_assign_authpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;

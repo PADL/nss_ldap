@@ -50,7 +50,7 @@ extern const char **_nss_ldap_attrtab[];
 #define AT_description            "description"
 #define AT_member                 "member"
 #ifdef MSSFU_SCHEMA
-#define AT_uniqueMember           "member"
+#define AT_uniqueMember           "posixMember"
 #else
 #define AT_uniqueMember           "uniqueMember"
 #endif /* MSSFU_SCHEMA */
