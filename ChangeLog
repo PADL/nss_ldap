@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+139	Luke Howard <lukeh@padl.com>
+
+	* updated INSTALL file with boilerplate 
+
 138	Luke Howard <lukeh@padl.com>
 
 	* close config file FILE * if out of buffer space
