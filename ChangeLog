@@ -1,11 +1,14 @@
 $Header$
 ===============================================================
 
+131	Luke Howard <lukeh@padl.com>
+
+	* created files for automake happiness
+
 130	Luke Howard <lukeh@padl.com>
 
 	* fixed typo preventing build with Netscape
 	  client library
-	* created files for automake happiness
 
 129	Luke Howard <lukeh@padl.com>
 
