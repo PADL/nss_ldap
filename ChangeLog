@@ -1,6 +1,14 @@
 $Id$
 ===============================================================
 
+2.45	Luke Howard <lukeh@xedoc.com>
+
+	* added #include <stdlib.h> to globals.c
+
+2.44	Luke Howard <lukeh@xedoc.com>
+
+	* NULL search base allowed (omit basedn from config file)
+
 2.42	Luke Howard <lukeh@xedoc.com>
 
 	* fixed potential crasher in dnsconfig.c

@@ -23,6 +23,8 @@
 #elif defined(GNU_NSS)
 #include <pthread.h>
 #endif
+
+#include <stdlib.h>
 #include <lber.h>
 #include <ldap.h>
 

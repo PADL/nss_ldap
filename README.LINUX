@@ -1,26 +1,5 @@
 LDAP NAMESERVICE SWITCH LIBRARY
-Linux developer's version 0.0.3
-
-This is Linux developer's version 0.0.1, based on version 0.2.30 of Luke
-Howard's nss_ldap, an LDAP module for NSS (Nameservice Switch) compatable
-libraries. This version was compiled against glibc version 2.0.7, on a
-RedHat 5.0 system. 
-
-WARNING WARNING WARNING
-this is a development project, calling it alpha code would be generous.  
-[Thanks, Greg :-)]
-When (not if) this thing hoses your box, you have nobody to blame but
-yourself.
-
-This project falls under the GNU General Library Public License.
-
-Please read the included README, from the original distribution.
-
-CURRENT STATUS
-All of the pw(password) gr(groups) serv(services) proto(protocols)
-net(networks) and host(hosts) have been tested and appear to work.
-Your milage may vary.
-
+Linux notes from Greg <greg@rage.net>
 
 INSTALLING
 Install a working ldap server.
@@ -40,13 +19,8 @@ A perl test script has been included. To perform the tests, run
 make -f Makefile.linux test.pl
 This test script will replace your system's nsswitch.conf file while
 the test is running. It's recomended not to use this in a production
-environment (in case you missed the big warnings above!).
+environment.
 
 REPORTING BUGS
-Our online bug system is located at http://www.rage.net/gnats/ . Please
-report any bugs you may have here. Feel free to also post patches.
+Please report bugs to nss_ldap@roach.xedoc.com.au.
 
-
-CONTACT INFO
-Contact me via email at greg@rage.net
-Our LDAP website is at http://www.rage.net/ldap/

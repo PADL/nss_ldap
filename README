@@ -21,7 +21,8 @@ The source code is distributed under the GNU General Library Public Licence
 Platforms this has been built under:
 
 	o Linux 2.0 (tested by Greg and Luke)
-	o Solaris 2.4 and 2.6 (tested by Luke)
+	o Solaris 2.4 and 2.6 (tested by Luke) It should work under
+	  Solaris 7 as the NSS ABI hasn't changed according to Sun.
 	o NEXTSTEP 4.2 (part tested; does it matter?)
 
 Platforms this ought to be tested under:
@@ -34,154 +35,22 @@ To install, pick a makefile and type make. You'll need to fiddle around
 a bit...
 
 You need to ensure libnss_ldap.so.1 (or nss_ldap.so.1, for Solaris) is in
-/usr/lib. Under IRIX, you'll need to set _RLD_LIST to
+/usr/lib.
+
+Under IRIX, you'll need to set _RLD_LIST to
 
 	libnss_ldap.so:libldap.so:DEFAULT
 
-(Netscape's SDK has libldap.so if you don't want to build your own.)
+IRIX 6.5 has native LDAP support in nsd so you don't need this.
 
-Makefile.bsd			- ???
-Makefile.gnu			- GNU makefile, never used
-Makefile.linux			- up to date, UMich libldap
-Makefile.linux.mozilla		- up to date, Mozilla libldap
-Makefile.next			- ??? should work
-Makefile.osf			- out of date
-Makefile.sgi			- out of date
-Makefile.solaris		- up to date 
+You can build a position independent LDAP client library by compiling
+-fPIC and linking with -shared, or downloading the Mozilla or Netscape
+LDAP SDKs.
+
 --
 Luke Howard
-Xedoc Software Development Inc.
-lukeh@xedoc.com
+PADL Software
+lukeh@padl.com
 
-
-Subject:      Re: Documentation for IRS in BIND 8.x
-From:         Paul Vixie <paul@vix.com>
-Date:         1997/06/26
-Message-ID:   <g3radp5avm.fsf@wisdom.home.vix.com>
-Newsgroups:   comp.protocols.dns.bind
-_[More Headers]_
-
-
-Ooops.  I forgot to check in the man page for irs.conf(5).  Here's one:
-
-IRS.CONF(5)                 BSD Programmer's Manual                IRS.CONF(5)
-
-NAME
-     irs.conf - Information Retrieval System configuration file
-
-SYNOPSIS
-     irs.conf
-
-DESCRIPTION
-     The irs(3) functions are a set of routines in the C library which provide
-     access to various system maps.  The maps that irs currently controls are
-     the following: passwd, group, services, protocols, hosts, networks and
-     netgroup.  When a program first calls a function that accesses one of
-     these maps, the irs configuration file is read, and the source of each
-     map is determined for the life of the process.
-
-     If this file does not exist, the irs routines default to using local
-     sources for all information, with the exception of the host and networks
-     maps, which use the Domain Name System (DNS).
-
-     Each record in the file consists of one line.  A record consists of a
-     map-name, an access-method and possibly a (comma delimited) set of op-
-     tions, separated by tabs or spaces.  Blank lines, and text between a #
-     and a newline are ignored.
-
-     Available maps:
-
-           Map name        Information in map
-           =========       ==================================
-           passwd          User authentication information
-           group           User group membership information
-           services        Network services directory
-           protocols       Network protocols directory
-           hosts           Network hosts directory
-           networks        Network "network names" directory
-           netgroup        Network "host groups" directory
-
-     Available access methods:
-
-           Access method   Description
-           =============   =================================================
-           local           Use a local file, usually in /etc
-           dns             Use the domain name service (includes hesiod)
-           nis             Use the Sun-compatible Network Information Service
-
-     Available options:
-
-           Option          Description
-           ========        ================================================
-           continue        don't stop searching if you can't find something
-           merge           don't stop searching if you CAN find something
-
-     The continue option creates ``union namespaces'' whereby subsequent ac-
-     cess methods of the same map type can be tried if a name cannot be found
-     using earlier access methods.  This can be quite confusing in the case of
-     host names, since the name to address and address to name mappings can be
-     visibly asymmetric even though the data used by any given access method
-     is entirely consistent.  This behavior is, therefore, not the default.
-
-     The merge option only affects lookups in the groups map.  If set, subse-
-     quent access methods will be tried in order to cause local users to ap-
-     pear in NIS (or other remote) groups in addition to the local groups.
-
-EXAMPLE
-           # Get password entries from local file, or failing that, NIS
-           passwd          local   continue
-           passwd          nis
-
-           # Build group membership from both local file, and NIS.
-           group           local   continue,merge
-           group           nis
-
-           # Services comes from just the local file.
-           services        local
-
-           protocols       local
-
-           # Hosts comes first from DNS, failing that, the local file
-           hosts           dns     continue
-           hosts           local
-
-           networks        local
-
-           netgroup        local
-
-NOTES
-     If a local user needs to be in the local host's ``wheel'' group but not
-     in every host's ``wheel'' group, put them in the local host's /etc/group
-     ``wheel'' entry and set up the ``groups'' portion of your /etc/irs.conf
-     file as:
-
-           group   local   continue,merge
-           group   nis
-
-     The dns access method is only supported for the ``hosts'' and
-     ``networks'' maps.  The other maps fall under the control of Hesiod, and
-     have not been well tested.
-
-     NIS takes a long time to time out.  Especially for hosts if you use the
-     -d option to your server's ``ypserv'' daemon.
-
-     It is important that the irs.conf file contain an entry for each map.  If
-     a map is not mentioned in the irs.conf file, all queries to that map will
-     fail.
-
-FILES
-     /etc/irs.conf      The file irs.conf resides in /etc.
-
-SEE ALSO
-     groups(5),  hosts(5),  netgroup(5),  networks(5),  passwd(5),
-     protocols(5),  services(5)
-
- BSDI                           August 8, 1996                               2
-
--- 
-Paul Vixie
-La Honda, CA
-<_paul@vix.com_>			"Many NANOG members have been around
-pacbell!vixie!paul		 longer than most." --Jim Fleming
 
 
