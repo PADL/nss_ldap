@@ -25,6 +25,7 @@ static char rcsId[] = "$Id$";
 #endif
 
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <lber.h>

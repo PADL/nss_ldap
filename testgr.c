@@ -47,6 +47,8 @@ scan_group()
 			dump(g);
         }
 
+        endgrent();
+
 		printf("==> getgrnam(qmail)\n");
 		g = getgrnam("qmail");
 		if (g != NULL) dump(g);
@@ -55,5 +57,4 @@ scan_group()
 		g = getgrnam("testgroup");
 		if (g != NULL) dump(g);
 
-        endgrent();
 }

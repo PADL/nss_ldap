@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.47  Luke Howard <lukeh@xedoc.com>
+
+	* RFC2052BIS (_ldap._tcp) support
+
 2.45	Luke Howard <lukeh@xedoc.com>
 
 	* added #include <stdlib.h> to globals.c

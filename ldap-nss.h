@@ -28,12 +28,12 @@
 #endif /* GNU_NSS */
 
 #ifdef DEBUG
-#ifdef SUN_NSS
+#ifdef DEBUG_SYSLOG
 #include <syslog.h>
 #define debug(str) syslog(LOG_DEBUG, "nss_ldap - thread %u  - %s", thr_self(), str)
 #else
-#define debug(str) fprintf(stderr,"%s\n",str)
-#endif /* SUN_NSS */
+#define debug(str) fprintf(stderr, "%s\n", str)
+#endif /* DEBUG_SYSLOG */
 #else
 #define debug(str)
 #endif /* DEBUG */

@@ -13,7 +13,7 @@ Insert this:
 passwd:     files nis ldap
 group:      files nis ldap
 
-or something similar to /etc/nsswitch.conf.
+or something similar in /etc/nsswitch.conf.
 
 The source code is distributed under the GNU General Library Public Licence
 (see COPYING.LIB). 

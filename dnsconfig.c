@@ -53,7 +53,7 @@
 
 /*
  * Support DNS SRV records. I look up the SRV record for
- * ldap.tcp.gnu.org.
+ * _ldap._tcp.gnu.org.
  * and build the DN DC=gnu,DC=org.
  * Thanks to Assar & co for resolve.[ch].
  */

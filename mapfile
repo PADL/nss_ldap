@@ -12,7 +12,7 @@ nss_ldap.so.1 {
 		_nss_ldap_protocols_constr;
 		_nss_ldap_passwd_constr;
 		_nss_ldap_rpc_constr;
-		_nss_ldap_service_constr;
+		_nss_ldap_services_constr;
 		_nss_ldap_shadow_constr;
 	local:
 		*;
