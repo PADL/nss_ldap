@@ -317,7 +317,8 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS
+_nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
@@ -342,7 +343,8 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS
+_nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -1874,7 +1876,8 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS
+_nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2379,7 +2382,8 @@ _nss_ldap_assign_userpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS
+_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;
@@ -2436,6 +2440,7 @@ _nss_ldap_atmap_put (ldap_config_t * config,
 {
   DBT key, val;
   int rc;
+  char *attrdup;
 
   if (config->ldc_at_map == NULL)
     {
@@ -2445,6 +2450,10 @@ _nss_ldap_atmap_put (ldap_config_t * config,
 	  return NSS_TRYAGAIN;
 	}
     }
+
+  attrdup = strdup (attribute);
+  if (attrdup == NULL)
+    return NSS_TRYAGAIN;
 
   if (strcmp (rfc2307attribute, "userPassword") == 0)
     {
@@ -2458,8 +2467,10 @@ _nss_ldap_atmap_put (ldap_config_t * config,
 
   key.data = (void *) rfc2307attribute;
   key.size = strlen (rfc2307attribute);
-  val.data = (void *) attribute;
-  val.size = strlen (attribute) + 1;
+
+  val.data = (void *) &attrdup;
+  val.size = sizeof (attrdup);
+
   rc =
     (((DB *) (config->ldc_at_map))->put) ((DB *) config->ldc_at_map, &key,
 					  &val, 0);
@@ -2473,6 +2484,7 @@ _nss_ldap_ocmap_put (ldap_config_t * config,
 {
   DBT key, val;
   int rc;
+  char *ocdup;
 
   if (config->ldc_oc_map == NULL)
     {
@@ -2483,10 +2495,14 @@ _nss_ldap_ocmap_put (ldap_config_t * config,
 	}
     }
 
+  ocdup = strdup (objectclass);
+  if (ocdup == NULL)
+    return NSS_TRYAGAIN;
+
   key.data = (void *) rfc2307objectclass;
   key.size = strlen (rfc2307objectclass);
-  val.data = (void *) objectclass;
-  val.size = strlen (objectclass) + 1;
+  val.data = (void *) &ocdup;
+  val.size = sizeof (ocdup);
   rc =
     (((DB *) (config->ldc_oc_map))->put) ((DB *) config->ldc_oc_map, &key,
 					  &val, 0);
@@ -2516,7 +2532,7 @@ _nss_ldap_atmap_get (ldap_config_t * config,
       return NSS_NOTFOUND;
     }
 
-  *attribute = (char *) val.data;
+  *attribute = *((char **) val.data);
   return NSS_SUCCESS;
 }
 
@@ -2542,7 +2558,7 @@ _nss_ldap_ocmap_get (ldap_config_t * config,
       return NSS_NOTFOUND;
     }
 
-  *objectclass = (char *) val.data;
+  *objectclass = *((char **) val.data);
 
   return NSS_SUCCESS;
 }

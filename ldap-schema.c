@@ -49,20 +49,6 @@ static char rcsId[] =
 #include <ldap.h>
 #endif
 
-#ifdef AT_OC_MAP
-#ifdef HAVE_DB3_DB_185_H
-#include <db3/db_185.h>
-#else
-#ifdef HAVE_DB_185_H
-#include <db_185.h>
-#elif defined(HAVE_DB1_DB_H)
-#include <db1/db.h>
-#elif defined(HAVE_DB_H)
-#include <db.h>
-#endif /* HAVE_DB1_DB_H */
-#endif /* HAVE_DB3_DB_H */
-#endif /* AT_OC_MAP */
-
 #ifndef HAVE_SNPRINTF
 #include "snprintf.h"
 #endif /* HAVE_SNPRINTF */
@@ -257,30 +243,6 @@ static void init_ethers_attributes (const char ***ethers_attrs);
 static void init_bp_attributes (const char ***bp_attrs);
 static void init_alias_attributes (const char ***alias_attrs);
 static void init_netgrp_attributes (const char ***netgrp_attrs);
-static NSS_STATUS setattr (DBT * bufferp, const char **attrp,
-			   const char *attrtype);
-
-/* a hack as dbopen(3) returns a static pointer */
-static NSS_STATUS
-setattr (DBT * bufferp, const char **attrp, const char *attrtype)
-{
-  size_t len = strlen (attrtype);
-
-  if (bufferp->size < len + 1)
-    {
-      *attrp = NULL;
-      return NSS_TRYAGAIN;
-    }
-
-  *attrp = bufferp->data;
-
-  memcpy ((char *) *attrp, attrtype, len + 1);
-
-  bufferp->size -= len + 1;
-  bufferp->data += len + 1;
-
-  return NSS_SUCCESS;
-}
 
 /**
  * attribute table initialization routines
@@ -308,181 +270,168 @@ _nss_ldap_init_attributes (const char ***attrtab)
 void
 init_pwd_attributes (const char ***pwd_attrs)
 {
-  static const char *__pwd_attrs[ATTRTAB_SIZE];
-  static char __pwd_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __pwd_attr_buf, sizeof (__pwd_attr_buf) };
+  static const char *__pwd_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__pwd_attrs[0], AT (uid));
-  setattr (&buffer, &__pwd_attrs[1], AT (userPassword));
-  setattr (&buffer, &__pwd_attrs[2], AT (uidNumber));
-  setattr (&buffer, &__pwd_attrs[3], AT (gidNumber));
-  setattr (&buffer, &__pwd_attrs[4], AT (cn));
-  setattr (&buffer, &__pwd_attrs[5], AT (homeDirectory));
-  setattr (&buffer, &__pwd_attrs[6], AT (loginShell));
-  setattr (&buffer, &__pwd_attrs[7], AT (gecos));
-  setattr (&buffer, &__pwd_attrs[8], AT (description));
-  setattr (&buffer, &__pwd_attrs[9], AT (objectClass));
-  __pwd_attrs[10] = NULL;
   (*pwd_attrs) = __pwd_attrs;
+
+  (*pwd_attrs)[0] = AT (uid);
+  (*pwd_attrs)[1] = AT (userPassword);
+  (*pwd_attrs)[2] = AT (uidNumber);
+  (*pwd_attrs)[3] = AT (gidNumber);
+  (*pwd_attrs)[4] = AT (cn);
+  (*pwd_attrs)[5] = AT (homeDirectory);
+  (*pwd_attrs)[6] = AT (loginShell);
+  (*pwd_attrs)[7] = AT (gecos);
+  (*pwd_attrs)[8] = AT (description);
+  (*pwd_attrs)[9] = AT (objectClass);
+  (*pwd_attrs)[10] = NULL;
 }
 
 void
 init_sp_attributes (const char ***sp_attrs)
 {
-  static const char *__sp_attrs[ATTRTAB_SIZE];
-  static char __sp_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __sp_attr_buf, sizeof (__sp_attr_buf) };
+  static const char *__sp_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__sp_attrs[0], AT (uid));
-  setattr (&buffer, &__sp_attrs[1], AT (userPassword));
-  setattr (&buffer, &__sp_attrs[2], AT (shadowLastChange));
-  setattr (&buffer, &__sp_attrs[3], AT (shadowMax));
-  setattr (&buffer, &__sp_attrs[4], AT (shadowMin));
-  setattr (&buffer, &__sp_attrs[5], AT (shadowWarning));
-  setattr (&buffer, &__sp_attrs[6], AT (shadowInactive));
-  setattr (&buffer, &__sp_attrs[7], AT (shadowExpire));
-  __sp_attrs[8] = NULL;
   (*sp_attrs) = __sp_attrs;
+
+  (*sp_attrs)[0] = (char *) AT (uid);
+  (*sp_attrs)[1] = (char *) AT (userPassword);
+  (*sp_attrs)[2] = (char *) AT (shadowLastChange);
+  (*sp_attrs)[3] = (char *) AT (shadowMax);
+  (*sp_attrs)[4] = (char *) AT (shadowMin);
+  (*sp_attrs)[5] = (char *) AT (shadowWarning);
+  (*sp_attrs)[6] = (char *) AT (shadowInactive);
+  (*sp_attrs)[7] = (char *) AT (shadowExpire);
+  (*sp_attrs)[8] = NULL;
 }
 
 void
 init_grp_attributes (const char ***grp_attrs)
 {
-  static const char *__grp_attrs[ATTRTAB_SIZE];
-  static char __grp_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __grp_attr_buf, sizeof (__grp_attr_buf) };
+  int i = 0;
+  static const char *__grp_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__grp_attrs[0], AT (cn));
-  setattr (&buffer, &__grp_attrs[1], AT (userPassword));
-  setattr (&buffer, &__grp_attrs[2], AT (memberUid));
-  setattr (&buffer, &__grp_attrs[3], AT (gidNumber));
-#ifdef RFC2307BIS
-  setattr (&buffer, &__grp_attrs[4], AT (uniqueMember));
-  __grp_attrs[5] = NULL;
-#else
-  __grp_attrs[4] = NULL;
-#endif /* RFC2307BIS */
   (*grp_attrs) = __grp_attrs;
+
+  (*grp_attrs)[i++] = (char *) AT (cn);
+  (*grp_attrs)[i++] = (char *) AT (userPassword);
+  (*grp_attrs)[i++] = (char *) AT (memberUid);
+#ifdef RFC2307BIS
+  (*grp_attrs)[i++] = (char *) AT (uniqueMember);
+#endif /* RFC2307BIS */
+  (*grp_attrs)[i++] = (char *) AT (gidNumber);
+  (*grp_attrs)[i] = NULL;
 }
 
 void
 init_hosts_attributes (const char ***hosts_attrs)
 {
-  static const char *__hosts_attrs[ATTRTAB_SIZE];
-  static char __hosts_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __hosts_attr_buf, sizeof (__hosts_attr_buf) };
+  static const char *__hosts_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__hosts_attrs[0], AT (cn));
-  setattr (&buffer, &__hosts_attrs[1], AT (ipHostNumber));
-  __hosts_attrs[2] = NULL;
   (*hosts_attrs) = __hosts_attrs;
+
+  (*hosts_attrs)[0] = (char *) AT (cn);
+  (*hosts_attrs)[1] = (char *) AT (ipHostNumber);
+  (*hosts_attrs)[2] = NULL;
 }
 
 void
 init_services_attributes (const char ***services_attrs)
 {
-  static const char *__services_attrs[ATTRTAB_SIZE];
-  static char __services_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __services_attr_buf, sizeof (__services_attr_buf) };
+  static const char *__services_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__services_attrs[0], AT (cn));
-  setattr (&buffer, &__services_attrs[1], AT (ipServicePort));
-  setattr (&buffer, &__services_attrs[2], AT (ipServiceProtocol));
-  __services_attrs[3] = NULL;
   (*services_attrs) = __services_attrs;
+
+  (*services_attrs)[0] = AT (cn);
+  (*services_attrs)[1] = AT (ipServicePort);
+  (*services_attrs)[2] = AT (ipServiceProtocol);
+  (*services_attrs)[3] = NULL;
 }
 
 void
 init_network_attributes (const char ***network_attrs)
 {
-  static const char *__network_attrs[ATTRTAB_SIZE];
-  static char __network_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __network_attr_buf, sizeof (__network_attr_buf) };
+  static const char *__network_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__network_attrs[0], AT (cn));
-  setattr (&buffer, &__network_attrs[1], AT (ipNetworkNumber));
-  setattr (&buffer, &__network_attrs[2], AT (ipNetmaskNumber));
-  __network_attrs[3] = NULL;
   (*network_attrs) = __network_attrs;
+
+  (*network_attrs)[0] = AT (cn);
+  (*network_attrs)[1] = AT (ipNetworkNumber);
+  (*network_attrs)[2] = AT (ipNetmaskNumber);
+  (*network_attrs)[3] = NULL;
 }
 
 void
 init_proto_attributes (const char ***proto_attrs)
 {
-  static const char *__proto_attrs[ATTRTAB_SIZE];
-  static char __proto_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __proto_attr_buf, sizeof (__proto_attr_buf) };
+  static const char *__proto_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__proto_attrs[0], AT (cn));
-  setattr (&buffer, &__proto_attrs[1], AT (ipProtocolNumber));
-  __proto_attrs[2] = NULL;
   (*proto_attrs) = __proto_attrs;
+
+  (*proto_attrs)[0] = AT (cn);
+  (*proto_attrs)[1] = AT (ipProtocolNumber);
+  (*proto_attrs)[2] = NULL;
 }
 
 void
 init_rpc_attributes (const char ***rpc_attrs)
 {
-  static const char *__rpc_attrs[ATTRTAB_SIZE];
-  static char __rpc_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __rpc_attr_buf, sizeof (__rpc_attr_buf) };
+  static const char *__rpc_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__rpc_attrs[0], AT (cn));
-  setattr (&buffer, &__rpc_attrs[1], AT (oncRpcNumber));
-  __rpc_attrs[2] = NULL;
   (*rpc_attrs) = __rpc_attrs;
+
+  (*rpc_attrs)[0] = AT (cn);
+  (*rpc_attrs)[1] = AT (oncRpcNumber);
+  (*rpc_attrs)[2] = NULL;
 }
 
 void
 init_ethers_attributes (const char ***ethers_attrs)
 {
-  static const char *__ethers_attrs[ATTRTAB_SIZE];
-  static char __ethers_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __ethers_attr_buf, sizeof (__ethers_attr_buf) };
+  static const char *__ethers_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__ethers_attrs[0], AT (cn));
-  setattr (&buffer, &__ethers_attrs[1], AT (macAddress));
-  __ethers_attrs[2] = NULL;
   (*ethers_attrs) = __ethers_attrs;
+
+  (*ethers_attrs)[0] = AT (cn);
+  (*ethers_attrs)[1] = AT (macAddress);
+  (*ethers_attrs)[2] = NULL;
 }
 
 void
 init_bp_attributes (const char ***bp_attrs)
 {
-  static const char *__bp_attrs[ATTRTAB_SIZE];
-  static char __bp_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __bp_attr_buf, sizeof (__bp_attr_buf) };
+  static const char *__bp_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__bp_attrs[0], AT (cn));
-  setattr (&buffer, &__bp_attrs[1], AT (bootParameter));
-  __bp_attrs[2] = NULL;
   (*bp_attrs) = __bp_attrs;
+
+  (*bp_attrs)[0] = AT (cn);
+  (*bp_attrs)[1] = AT (bootParameter);
+  (*bp_attrs)[2] = NULL;
 }
 
 void
 init_alias_attributes (const char ***alias_attrs)
 {
-  static const char *__alias_attrs[ATTRTAB_SIZE];
-  static char __alias_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __alias_attr_buf, sizeof (__alias_attr_buf) };
+  static const char *__alias_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__alias_attrs[0], AT (cn));
-  setattr (&buffer, &__alias_attrs[1], AT (rfc822MailMember));
-  __alias_attrs[2] = NULL;
   (*alias_attrs) = __alias_attrs;
+
+  (*alias_attrs)[0] = AT (cn);
+  (*alias_attrs)[1] = AT (rfc822MailMember);
+  (*alias_attrs)[2] = NULL;
 }
 
 void
 init_netgrp_attributes (const char ***netgrp_attrs)
 {
-  static const char *__netgrp_attrs[ATTRTAB_SIZE];
-  static char __netgrp_attr_buf[ATTRBUF_SIZE];
-  DBT buffer = { __netgrp_attr_buf, sizeof (__netgrp_attr_buf) };
+  static const char *__netgrp_attrs[ATTRTAB_SIZE + 1];
 
-  setattr (&buffer, &__netgrp_attrs[0], AT (cn));
-  setattr (&buffer, &__netgrp_attrs[1], AT (nisNetgroupTriple));
-  setattr (&buffer, &__netgrp_attrs[2], AT (memberNisNetgroup));
-  __netgrp_attrs[3] = NULL;
   (*netgrp_attrs) = __netgrp_attrs;
+
+  (*netgrp_attrs)[0] = AT (cn);
+  (*netgrp_attrs)[1] = AT (nisNetgroupTriple);
+  (*netgrp_attrs)[2] = AT (memberNisNetgroup);
+  (*netgrp_attrs)[3] = NULL;
 }
 
 #else /* AT_OC_MAP */
@@ -531,6 +480,7 @@ static const char *ethers_attributes[] = { AT (cn), AT (macAddress), NULL };
 static const char *bp_attributes[] = { AT (cn), AT (bootParameter), NULL };
 
 static const char *alias_attributes[] =
+
   { AT (cn), AT (rfc822MailMember), NULL };
 
 static const char *netgrp_attributes[] =

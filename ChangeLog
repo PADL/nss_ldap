@@ -1,18 +1,19 @@
 $Header$
 ===============================================================
 
+172	Luke Howard <lukeh@padl.com>
+
+	* fixed schema mapping bug by storing a copy of the
+	  mapped schema in the Berkeley DB rather than the
+	  element itself. Because the DB library returns
+	  static storage, this was causing problems where
+	  the schema mapping calls were used to build the
+	  attribute table in ldap-schema.c.
+
 171	Luke Howard <lukeh@padl.com>
 
 	* added ldap.conf stanza for AIX
-	* fixed schema mapping bug. This needs to be addressed
-	  properly later. The DB library returns a static pointer
-	  whenever a key is looked up, so that AT() and OC()
-	  macros cannot be used reentrantly. For the moment
-	  this only affects the attribute table setup in
-	  ldap-schema.c, but it should be fixed properly as
-	  non-reentrant code is a problem. The present 
-	  workaround is, in ldap-schema.c, to make a static
-	  copy of each mapped attribute.
+	* workaround for schema mapping bug.
 
 170	Luke Howard <lukeh@padl.com>
 
