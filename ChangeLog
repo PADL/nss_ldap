@@ -1,6 +1,10 @@
 $Header$
 ===============================================================
 
+185	Luke Howard <lukeh@padl.com>
+
+	* updated copyrights
+
 184	Luke Howard <lukeh@padl.com>
 
 	* return NSS_TRYAGAIN if no buffer space in ldap-grp.c
