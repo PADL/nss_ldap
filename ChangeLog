@@ -4,6 +4,7 @@ $Header$
 210	Luke Howard <lukeh@padl.com>
 
 	* initialize DBT structures
+	* fix SASL crasher
 
 209	Luke Howard <lukeh@padl.com>
 
