@@ -6,6 +6,7 @@ $Id$
 	* fix deadlock in _nss_ldap_getentry()
 	* support more AIX usersec attributes
 	* more AIX porting fixes
+	* support Heimdal as well as MIT Kerberos
 
 221	Luke Howard <lukeh@padl.com>
 

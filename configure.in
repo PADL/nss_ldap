@@ -144,7 +144,7 @@ AC_CHECK_HEADERS(sasl.h sasl/sasl.h)
 AC_CHECK_HEADERS(strings.h)
 AC_CHECK_HEADERS(gssldap.h)
 AC_CHECK_HEADERS(gsssasl.h)
-AC_CHECK_HEADERS(gssapi/gssapi_krb5.h)
+AC_CHECK_HEADERS(gssapi/gssapi_krb5.h gssapi.h)
 
 AC_CHECK_LIB(resolv, main)
 AC_CHECK_LIB(nsl, main)
