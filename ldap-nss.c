@@ -552,7 +552,6 @@ do_retry:
     case LDAP_UNAVAILABLE:
     case LDAP_BUSY:
       do_close ();
-      do_close ();
       if (retry || do_open () != NSS_SUCCESS)
 	{
 	  res = NULL;
