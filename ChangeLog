@@ -3,6 +3,8 @@ $Header$
 
 125	Luke Howard <lukeh@padl.com>
 
+	* fixed up Linux Makefiles to build libnss_ldap
+
 124	Luke Howard <lukeh@padl.com>
 
 	* patch from nalin@redhat.com for StartTLS
