@@ -85,16 +85,17 @@ static DB *__cache = NULL;
 
 #ifdef HAVE_THREAD_H
 static mutex_t __cache_mutex = DEFAULTMUTEX;
-# define cache_lock()	mutex_lock(&__cache_mutex)
-# define cache_unlock()	mutex_unlock(&__cache_mutex)
-#elif defined(GLIBC)
-static pthread_mutex_t __cache_mutex = PTHREAD_MUTEX_INITIALIZER;
-# define cache_lock()	__libc_lock_lock(__cache_mutex)
-# define cache_unlock()	__libc_lock_unlock(__cache_mutex)
+# define cache_lock()      mutex_lock(&__cache_mutex)
+# define cache_unlock()    mutex_unlock(&__cache_mutex)
 #elif defined(HAVE_PTHREAD_H)
 static pthread_mutex_t __cache_mutex = PTHREAD_MUTEX_INITIALIZER;
-# define cache_lock()	pthread_mutex_lock(&__cache_mutex)
-# define cache_unlock()	pthread_mutex_unlock(&__cache_mutex)
+# if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+#  define cache_lock()     __libc_lock_lock(__cache_mutex)
+#  define cache_unlock()   __libc_lock_unlock(__cache_mutex)
+# else
+#  define cache_lock()     pthread_mutex_lock(&__cache_mutex)
+#  define cache_unlock()   pthread_mutex_unlock(&__cache_mutex)
+# endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
 #else
 # define cache_lock()
 # define cache_unlock()

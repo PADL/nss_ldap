@@ -77,6 +77,8 @@ static int ltf_get_errno (void);
  */
 static void *ltf_mutex_alloc ();
 static void ltf_mutex_free ();
+static int ltf_mutex_lock ();
+static int ltf_mutex_unlock ();
 static void ltf_set_ld_error ();
 static int ltf_get_ld_error ();
 static void ltf_set_errno ();
@@ -91,10 +93,10 @@ _nss_ldap_ltf_thread_init (LDAP * ld)
 
   /* set mutex pointers */
   memset (&tfns, '\0', sizeof (struct ldap_thread_fns));
-  tfns.ltf_mutex_alloc = (void *(*)(void)) ltf_mutex_alloc;
-  tfns.ltf_mutex_free = (void (*)(void *)) ltf_mutex_free;
-  tfns.ltf_mutex_lock = (int (*)(void *)) pthread_mutex_lock;
-  tfns.ltf_mutex_unlock = (int (*)(void *)) pthread_mutex_unlock;
+  tfns.ltf_mutex_alloc = ltf_mutex_alloc;
+  tfns.ltf_mutex_free = ltf_mutex_free;
+  tfns.ltf_mutex_lock = ltf_mutex_lock;
+  tfns.ltf_mutex_unlock = ltf_mutex_unlock;
   tfns.ltf_get_errno = ltf_get_errno;
   tfns.ltf_set_errno = ltf_set_errno;
   tfns.ltf_get_lderrno = ltf_get_ld_error;
@@ -128,11 +130,39 @@ ltf_mutex_free (void *mutexp)
   pthread_mutex_destroy ((pthread_mutex_t *) mutexp);
 }
 
+static int
+ltf_mutex_lock (void *mutexp)
+{
+#if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  return __libc_lock(*(pthread_mutex_t *)mutexp);
+#else
+  return pthread_mutex_lock((pthread_mutex_t *)mutexp);
+#endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
+}
+
+static int
+ltf_mutex_unlock (void *mutexp)
+{
+#if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  return __libc_unlock(*(pthread_mutex_t *)mutexp);
+#else
+  return pthread_mutex_unlock((pthread_mutex_t *)mutexp);
+#endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
+}
+
 static NSS_STATUS
 ltf_tsd_setup (void)
 {
   void *tsd;
 
+#if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  if (__libc_key_create (&key, free) != 0)
+    {
+      return NSS_UNAVAIL;
+    }
+  tsd = (void *) calloc (1, sizeof (struct ldap_error));
+  __libc_setspecific (key, tsd);
+#else
   if (pthread_key_create (&key, free) != 0)
     {
       return NSS_UNAVAIL;
@@ -144,6 +174,7 @@ ltf_tsd_setup (void)
     }
   tsd = (void *) calloc (1, sizeof (struct ldap_error));
   pthread_setspecific (key, tsd);
+#endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
 
   return NSS_SUCCESS;
 }
@@ -153,17 +184,20 @@ ltf_set_ld_error (int err, char *matched, char *errmsg, void *dummy)
 {
   struct ldap_error *le;
 
+#if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  le = __libc_getspecific (key);
+#else
   le = pthread_getspecific (key);
+#endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
+
   le->le_errno = err;
+
   if (le->le_matched != NULL)
-    {
       ldap_memfree (le->le_matched);
-    }
   le->le_matched = matched;
+
   if (le->le_errmsg != NULL)
-    {
       ldap_memfree (le->le_errmsg);
-    }
   le->le_errmsg = errmsg;
 }
 
@@ -172,15 +206,20 @@ ltf_get_ld_error (char **matched, char **errmsg, void *dummy)
 {
   struct ldap_error *le;
 
+#if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  le = __libc_getspecific (key);
+#else
   le = pthread_getspecific (key);
+#endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
+  if (le == NULL)
+      return LDAP_LOCAL_ERROR;
+
   if (matched != NULL)
-    {
       *matched = le->le_matched;
-    }
+
   if (errmsg != NULL)
-    {
       *errmsg = le->le_errmsg;
-    }
+
   return (le->le_errno);
 }
 

@@ -88,15 +88,42 @@ static ldap_config_t *__config = NULL;
  */
 static ldap_session_t __session = { NULL, NULL };
 
+#if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+static pthread_once_t __once = PTHREAD_ONCE_INIT;
+#else
 /* 
  * Process ID that opened the session.
  */
 static pid_t __pid = -1;
+#endif 
 static uid_t __euid = -1;
 
 #ifdef HAVE_LDAPSSL_CLIENT_INIT
 static int __ssl_initialized = 0;
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
+
+#if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+/*
+ * Prepare for fork(); lock mutex.
+ */
+static void do_atfork_prepare (void);
+
+/*
+ * Forked in parent, unlock mutex.
+ */
+static void do_atfork_parent (void);
+
+/*
+ * Forked in child; close LDAP socket, unlock mutex.
+ */
+static void do_atfork_child (void);
+
+/*
+ * Install handlers for atfork, called once.
+ */
+static void do_atfork_setup (void);
+#endif
+
 /*
  * Close the global session, sending an unbind.
  */
@@ -281,6 +308,47 @@ _nss_ldap_default_constr (nss_ldap_backend_t * be)
 }
 #endif /* HAVE_NSSWITCH_H */
 
+#if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+static void
+do_atfork_prepare (void)
+{
+  debug ("==> do_atfork_prepare");
+  nss_lock();
+  debug ("<== do_atfork_prepare");
+}
+
+static void
+do_atfork_parent (void)
+{
+  debug ("==> do_atfork_parent");
+  nss_unlock();
+  debug ("<== do_atfork_parent");
+}
+
+static void
+do_atfork_child (void)
+{
+  debug ("==> do_atfork_child");
+  do_close_no_unbind();
+  nss_unlock();
+  debug ("<== do_atfork_child");
+}
+
+static void
+do_atfork_setup (void)
+{
+  debug ("==> do_atfork_setup");
+
+#ifdef HAVE_PTHREAD_ATFORK
+  (void) pthread_atfork(do_atfork_prepare, do_atfork_parent, do_atfork_child);
+#elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  (void) __libc_atfork(do_atfork_prepare, do_atfork_parent, do_atfork_child);
+#endif
+
+  debug ("<== do_atfork_setup");
+}
+#endif
+
 /*
  * Closes connection to the LDAP server.
  * This assumes that we have exclusive access to __session.ls_conn,
@@ -406,29 +474,41 @@ static NSS_STATUS
 do_open (void)
 {
   ldap_config_t *cfg = NULL;
-  pid_t pid;
   uid_t euid;
+#if !defined(HAVE_PTHREAD_ATFORK) && !defined(HAVE_LIBC_LOCK_H) && !defined(HAVE_BITS_LIBC_LOCK_H)
+  pid_t pid;
+#endif 
 #ifdef LDAP_X_OPT_CONNECT_TIMEOUT
   int timeout;
 #endif
 
   debug ("==> do_open");
 
-  euid = geteuid ();
+#if !defined(HAVE_PTHREAD_ATFORK) && !defined(HAVE_LIBC_LOCK_H) && !defined(HAVE_BITS_LIBC_LOCK_H)
   pid = getpid ();
+#endif
+
+  euid = geteuid ();
 
 #ifdef DEBUG
+#if defined(HAVE_PTHREAD_ATFORK) || defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  syslog (LOG_DEBUG,
+	  "nss_ldap: __session.ls_conn=%p, __euid=%i, euid=%i", __session.ls_conn, __euid, euid);
+#else
   syslog (LOG_DEBUG,
 	  "nss_ldap: __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
 	  __session.ls_conn, __pid, pid, __euid, euid);
+#endif 
 #endif /* DEBUG */
 
-
+#if !defined(HAVE_PTHREAD_ATFORK) && !defined(HAVE_LIBC_LOCK_H) && !defined(HAVE_BITS_LIBC_LOCK_H)
   if (__pid != pid)
     {
       do_close_no_unbind ();
     }
-  else if (__euid != euid && (__euid == 0 || euid == 0))
+  else
+#endif
+  if (__euid != euid && (__euid == 0 || euid == 0))
     {
       /*
        * If we've changed user ids, close the session so we can
@@ -510,7 +590,18 @@ do_open (void)
 	}
     }
 
+#ifdef HAVE_PTHREAD_ATFORK
+  if (pthread_once(&__once, do_atfork_setup) != 0)
+    {
+      debug ("<== do_open");
+      return NSS_UNAVAIL;
+    }
+#elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
+  __libc_once(__once, do_atfork_setup);
+#else
   __pid = pid;
+#endif
+
   __euid = euid;
   __session.ls_config = NULL;
 

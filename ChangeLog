@@ -1,6 +1,16 @@
 $Header$
 ===============================================================
 
+138	Luke Howard <lukeh@padl.com>
+
+	* cleaned up usage of libc-lock.h weak aliases
+	  to pthreads API; use in ltf.c also
+	* use __libc_atfork() or pthread_atfork() to
+	  close off connection on fork, rather than
+	  checking PIDs; this is expensive and breaks
+	  on Linux where each thread may have a 
+	  different PID.
+
 137	Gabor Gombas <gombasg@inf.elte.hu>
 
 	* build nss_ldap as a loadable module on AIX

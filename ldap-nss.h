@@ -27,6 +27,13 @@
 #include <malloc.h>
 #endif
 
+/* for glibc, use weak aliases to pthreads functions */
+#ifdef HAVE_LIBC_LOCK_H
+#include <libc-lock.h>
+#elif defined(HAVE_BITS_LIBC_LOCK_H)
+#include <bits/libc-lock.h>
+#endif
+
 #include <errno.h>
 
 #ifdef __STDC__
@@ -118,14 +125,6 @@ debug (char *fmt, ...)
 
 /* worst case */
 #define bytesleft(ptr, blen)    (blen - alignof(char *) + 1)
-
-#ifdef HAVE_NSS_H
-# if (__GLIBC__ == 2) && (__GLIBC_MINOR__ > 0)
-#  include <bits/libc-lock.h>
-# else
-#  include <libc-lock.h>
-# endif
-#endif
 
 /* selectors for different maps */
 enum ldap_map_selector
@@ -373,7 +372,7 @@ typedef enum nss_status NSS_STATUS;
 #ifdef HAVE_THREAD_H
 # define nss_lock()		mutex_lock(&_nss_ldap_lock)
 # define nss_unlock()		mutex_unlock(&_nss_ldap_lock)
-#elif defined(__GLIBC__)
+#elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
 # define nss_lock()		__libc_lock_lock(_nss_ldap_lock)
 # define nss_unlock()		__libc_lock_unlock(_nss_ldap_lock)
 #elif defined(HAVE_PTHREAD_H)

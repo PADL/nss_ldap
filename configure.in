@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 137)
+AM_INIT_AUTOMAKE(nss_ldap, 138)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -68,8 +68,9 @@ AC_CHECK_HEADERS(db_185.h)
 AC_CHECK_HEADERS(alignof.h)
 AC_CHECK_HEADERS(rpc/rpcent.h)
 AC_CHECK_HEADERS(sys/byteorder.h)
+AC_CHECK_HEADERS(libc-lock.h)
+AC_CHECK_HEADERS(bits/libc-lock.h)
 
-dnl AC_CHECK_LIB(pthread, main)
 AC_CHECK_LIB(resolv, main)
 AC_CHECK_LIB(nsl, main)
 
@@ -80,6 +81,7 @@ AC_CHECK_FUNCS(dn_expand)
 AC_CHECK_FUNCS(snprintf)
 AC_CHECK_FUNCS(gethostbyname)
 AC_CHECK_FUNCS(nsdispatch)
+AC_CHECK_FUNCS(pthread_atfork)
 
 dnl check which ldap library we have
 if test -z "$with_ldap_lib"; then

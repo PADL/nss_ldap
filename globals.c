@@ -39,7 +39,7 @@ static char rcsId[] = "$Id$";
 mutex_t _nss_ldap_lock = DEFAULTMUTEX;
 #elif defined(HAVE_PTHREAD_H)
 pthread_mutex_t _nss_ldap_lock = PTHREAD_MUTEX_INITIALIZER;
-#endif
+#endif /* HAVE_THREAD_H */
 
 int _nss_ldap_herrno2nssstat_tab[] =
 {

@@ -60,6 +60,9 @@
 /* Define if you have the nsdispatch function.  */
 #undef HAVE_NSDISPATCH
 
+/* Define if you have the pthread_atfork function.  */
+#undef HAVE_PTHREAD_ATFORK
+
 /* Define if you have the res_search function.  */
 #undef HAVE_RES_SEARCH
 
@@ -77,6 +80,9 @@
 
 /* Define if you have the <alignof.h> header file.  */
 #undef HAVE_ALIGNOF_H
+
+/* Define if you have the <bits/libc-lock.h> header file.  */
+#undef HAVE_BITS_LIBC_LOCK_H
 
 /* Define if you have the <ctype.h> header file.  */
 #undef HAVE_CTYPE_H
@@ -101,6 +107,9 @@
 
 /* Define if you have the <ldap_ssl.h> header file.  */
 #undef HAVE_LDAP_SSL_H
+
+/* Define if you have the <libc-lock.h> header file.  */
+#undef HAVE_LIBC_LOCK_H
 
 /* Define if you have the <malloc.h> header file.  */
 #undef HAVE_MALLOC_H
