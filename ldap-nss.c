@@ -1505,9 +1505,12 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 			    LDAP_SASL_GSSAPI);
 #else
 # ifdef CONFIGURE_KRB5_CCNAME
+# ifndef CONFIGURE_KRB5_CCNAME_GSSAPI
       char tmpbuf[256];
       static char envbuf[256];
-      char *ccname, *oldccname;
+# endif
+      char *ccname;
+      const char *oldccname;
       int retval;
 # endif				/* CONFIGURE_KRB5_CCNAME */
 
