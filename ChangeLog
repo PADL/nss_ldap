@@ -5,6 +5,8 @@ $Header$
 
 	* preliminary support for authPassword attribute
 	* updated COPYING
+	* patch from Szymon Juraszczyk to suppot
+	  _nss_ldap_initgroups_dyn prototype
 
 144	Luke Howard <lukeh@padl.com>
 

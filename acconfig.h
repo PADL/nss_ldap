@@ -16,3 +16,6 @@
 /* define to enable debug code */
 #undef DEBUG
 
+/* define to enable authPassword checking code */
+#undef AUTHPASSWORD
+

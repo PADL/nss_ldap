@@ -2060,13 +2060,10 @@ _nss_ldap_assign_authpassword (LDAP * ld,
 
   if (pwd == NULL)
     {
-      pwd = "x";
-    }
-  else
-    {
-      pwd += (sizeof ("CRYPT$") - 1);
+      return NSS_NOTFOUND;
     }
 
+  pwd += (sizeof ("CRYPT$") - 1);
   vallen = strlen (pwd);
 
   if (*buflen < (size_t) (vallen + 1))

@@ -86,9 +86,19 @@ _nss_ldap_parse_gr (LDAP * ld,
   if (stat != NSS_SUCCESS)
     return stat;
 
+#ifdef AUTHPASSWORD
+	stat = _nss_ldap_assign_authpassword(ld, e, AT(authPassword), &gr->gr_passwd, &buffer, &buflen);
+	if (stat == NSS_NOTFOUND)
+	{
+         stat =
+	    _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &gr->gr_passwd,
+			     &buffer, &buflen);
+	}
+#else
   stat =
     _nss_ldap_assign_userpassword (ld, e, AT (userPassword), &gr->gr_passwd,
 			     &buffer, &buflen);
+#endif /* AUTHPASSWORD */
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -186,8 +196,8 @@ static NSS_STATUS
 _nss_ldap_getgroupsbymember_r (nss_backend_t * be, void *args)
 #elif defined(HAVE_NSS_H)
   NSS_STATUS
-_nss_ldap_initgroups (const char *user, gid_t group, long int *start,
-		      long int *size, gid_t * groups, long int limit,
+_nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
+		      long int *size, gid_t ** groupsp, long int limit,
 		      int *errnop)
 #elif defined(_AIX)
      char *_nss_ldap_getgrset (char *user)
@@ -208,6 +218,8 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
   size_t listlen;
 #endif /* _AIX */
 
+  gid_t *groups = *groupsp;
+    
   LA_INIT (a);
 #if defined(HAVE_NSS_H) || defined(_AIX)
   LA_STRING (a) = user;
@@ -326,6 +338,7 @@ _nss_ldap_initgroups (const char *user, gid_t group, long int *start,
 		      *errnop = ENOMEM;
 		      return NSS_TRYAGAIN;
 		    }
+		  *groupsp = groups;
 		  *size *= 2;
 		}
 	      /* weed out duplicates: is this really our responsibility? */
