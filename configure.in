@@ -48,7 +48,7 @@ solaris*) if test "$ac_cv_prog_gcc" = yes; then
 hpux*) if test "$ac_cv_prog_gcc" = yes; then
     nss_ldap_so_LD="/bin/ld"
   fi
-  nss_ldap_so_LDFLAGS="-b -dynamic -G `cat \$(srcdir)/exports.hpux`"
+  nss_ldap_so_LDFLAGS="-b -dynamic -G `cat exports.hpux`"
   CPPFLAGS="$CPPFLAGS -I."
   TARGET_OS=HPUX ;;
 linux*) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic -Wl,--version-script,\$(srcdir)/exports.linux" ;;
