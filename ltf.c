@@ -21,7 +21,7 @@
 
 static char rcsId[] = "$Id$";
 
-#ifdef NETSCAPE_API_EXTENSIONS
+#if defined(NETSCAPE_API_EXTENSIONS) && !defined(HAVE_LDAP_THREAD_FNS)
 
 #include <stdlib.h>
 #include <string.h>

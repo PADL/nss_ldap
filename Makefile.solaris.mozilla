@@ -103,7 +103,7 @@ CFLAGS=$(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFL
 all: $(MODULE)
 
 $(MODULE): $(OBJS)
-	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(LIB) $(OBJS) $(LIBS)
+	$(LD) $(LIBDIRS) $(LDFLAGS) -o /tmp/$(LIB) $(OBJS) $(LIBS)
 
 install:
 	cp $(LIB) /usr/lib/

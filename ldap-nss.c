@@ -554,7 +554,7 @@ do_open (void)
       return NSS_UNAVAIL;
     }
 
-#ifdef NETSCAPE_API_EXTENSIONS
+#if defined(NETSCAPE_API_EXTENSIONS) && !defined(HAVE_LDAP_THREAD_FNS)
   if (_nss_ldap_ltf_thread_init (__session.ls_conn) != NSS_SUCCESS)
     {
       do_close ();
