@@ -1,6 +1,4 @@
 #ident $Id$
-# Mapfile for Solaris. This lets us control which symbols
-# get exported. Someone should do the same for glibc.
 nss_ldap.so.1 {
 	global:
 		# Published NSS service module interfaces

@@ -36,9 +36,9 @@ static NSS_STATUS _nss_ldap_getaliasbyname_r (nss_backend_t * be,
 					      void *fakeargs);
 static NSS_STATUS _nss_ldap_getaliasent_r (nss_backend_t * be,
 					   void *fakeargs);
-static NSS_STATUS _nss_ldap_setaliasent_r (nss_backend_t * be,
+static NSS_STATUS _nss_ldap_setaliasent (nss_backend_t * be,
 					   void *fakeargs);
-static NSS_STATUS _nss_ldap_endaliasent_r (nss_backend_t * be,
+static NSS_STATUS _nss_ldap_endaliasent (nss_backend_t * be,
 					   void *fakeargs);
 
 nss_backend_t *_nss_ldap_alias_constr (const char *db_name,

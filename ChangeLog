@@ -6,6 +6,7 @@ $Header$
 	* HP-UX port
 	* BUG#111: incorrect debugging statement in
 	  _nss_ldap_enter()
+	* export required symbols only on Linux
 
 198	 Luke Howard <lukeh@padl.com>
 

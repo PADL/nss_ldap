@@ -44,13 +44,14 @@ aix*) if test "$ac_cv_prog_gcc" = "yes"; then
 solaris*) if test "$ac_cv_prog_gcc" = yes; then
     nss_ldap_so_LD="/usr/ccs/bin/ld"
   fi
-  nss_ldap_so_LDFLAGS="-Bdynamic -M $(srcdir)/exports.solaris -G" ;;
+  nss_ldap_so_LDFLAGS="-Bdynamic -M \$(srcdir)/exports.solaris -G" ;;
 hpux*) if test "$ac_cv_prog_gcc" = yes; then
     nss_ldap_so_LD="/bin/ld"
   fi
   nss_ldap_so_LDFLAGS="-b -dynamic -G"
   CPPFLAGS="$CPPFLAGS -I."
   TARGET_OS=HPUX ;;
+linux*) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic -Wl,--version-script,\$(srcdir)/exports.linux" ;;
 *) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic" ;;
 esac
 

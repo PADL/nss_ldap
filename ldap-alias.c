@@ -92,12 +92,12 @@ _nss_ldap_getaliasbyname_r (const char *name, struct aliasent * result,
 	       _nss_ldap_parse_alias);
 }
 
-NSS_STATUS _nss_ldap_setaliasent_r (void)
+NSS_STATUS _nss_ldap_setaliasent (void)
 {
   LOOKUP_SETENT (alias_context);
 }
 
-NSS_STATUS _nss_ldap_endaliasent_r (void)
+NSS_STATUS _nss_ldap_endaliasent (void)
 {
   LOOKUP_ENDENT (alias_context);
 }
