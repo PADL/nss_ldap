@@ -107,18 +107,11 @@
 	LA_TYPE(a) = LA_TYPE_STRING; \
 	s = _nss_ldap_getbyname(&a, &pvt->result, pvt->buffer, sizeof(pvt->buffer), &errno, filter, \
 		(const char **)attributes, parser); \
-	switch (s) { \
-		case NSS_NOTFOUND: \
-			errno = ENOENT; \
-			return NULL; \
-		case NSS_UNAVAIL: \
-			errno = EAGAIN; \
-			return NULL; \
-		case NSS_SUCCESS: \
-			return &pvt->result; \
-		case NSS_TRYAGAIN: \
-			return NULL; \
-	}
+	if (s != NSS_SUCCESS) { \
+		MAP_ERRNO(s, errno); \
+		return NULL; \
+	} \
+	return &pvt->result;
 #define LOOKUP_NUMBER(number, this, filter, attributes, parser) \
 	ldap_args_t a; \
 	struct pvt *pvt = (struct pvt *)this->private; \
@@ -128,36 +121,22 @@
 	LA_TYPE(a) = LA_TYPE_NUMBER; \
 	s = _nss_ldap_getbyname(&a, &pvt->result, pvt->buffer, sizeof(pvt->buffer), &errno, filter, \
 		(const char **)attributes, parser); \
-	switch (s) { \
-		case NSS_NOTFOUND: \
-			errno = ENOENT; \
-			return NULL; \
-		case NSS_UNAVAIL: \
-			errno = EAGAIN; \
-			return NULL; \
-		case NSS_SUCCESS: \
-			return &pvt->result; \
-		case NSS_TRYAGAIN: \
-			return NULL; \
-	}
+	if (s != NSS_SUCCESS) { \
+		MAP_ERRNO(s, errno); \
+		return NULL; \
+	} \
+	return &pvt->result;
 #define LOOKUP_GETENT(this, filter, attributes, parser) \
 	struct pvt *pvt = (struct pvt *)this->private; \
 	NSS_STATUS s; \
 	s = _nss_ldap_getent(&pvt->state, &pvt->result, pvt->buffer, \
 		sizeof(pvt->buffer), &errno, filter, \
 		(const char **)attributes, parser); \
-	switch (s) { \
-		case NSS_NOTFOUND: \
-			errno = ENOENT; \
-			return NULL; \
-		case NSS_UNAVAIL: \
-			errno = EAGAIN; \
-			return NULL; \
-		case NSS_SUCCESS: \
-			return &pvt->result; \
-		case NSS_TRYAGAIN: \
-			return NULL; \
-	}
+	if (s != NSS_SUCCESS) { \
+		MAP_ERRNO(s, errno); \
+		return NULL; \
+	} \
+	return &pvt->result;
 #endif
 
 #if defined(IRS_NSS)

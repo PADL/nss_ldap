@@ -31,6 +31,7 @@
  * GNU nameservice switch modules.
  */
 
+#include <irs.h>
 #include <irs_p.h>
 
 extern struct irs_gr *irs_ldap_gr __P ((struct irs_acc *));
@@ -65,12 +66,16 @@ extern struct irs_acc *irs_ldap_acc __P ((const char *));
 #define NSS_LINELEN_SHADOW      NSS_BUFSIZ
 #define NSS_LINELEN_BOOTPARAMS  NSS_BUFSIZ
 
+#ifndef NSS_BUFLEN_GROUP /* defined on Linux */
 #define NSS_BUFLEN_GROUP        (NSS_LINELEN_GROUP + 200 * sizeof (char *))
+#endif /* NSS_BUFLEN_GROUP */
 #define NSS_BUFLEN_HOSTS        \
         (NSS_LINELEN_HOSTS + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
 #define NSS_BUFLEN_NETGROUP     (MAXHOSTNAMELEN * 2 + LOGNAME_MAX + 3)
 #define NSS_BUFLEN_NETWORKS     NSS_LINELEN_NETWORKS
+#ifndef NSS_BUFLEN_PASSWD /* defined on Linux */
 #define NSS_BUFLEN_PASSWD       NSS_LINELEN_PASSWD
+#endif /* NSS_BUFLEN_PASSWD */
 #define NSS_BUFLEN_PROTOCOLS    NSS_LINELEN_PROTOCOLS
 #define NSS_BUFLEN_RPC          NSS_LINELEN_RPC
 #define NSS_BUFLEN_SERVICES     NSS_LINELEN_SERVICES

@@ -26,7 +26,7 @@
 
 #include "ldap-schema.h"
 
-#ifdef GNU_NSS
+#if defined(GNU_NSS) || defined(IRS_NSS)
 #include <errno.h>
 #include <pthread.h>
 #endif /* GNU_NSS */
@@ -305,8 +305,8 @@ typedef nss_status_t NSS_STATUS;
 #endif /* */
 #elif defined(IRS_NSS)
 /* XXX no mutex support */
-#define __nss_lock()		pthread_lock(&_nss_ldap_lock)
-#define __nss_unlock()		pthread_unlock(&_nss_ldap_lock)
+#define __nss_lock()		pthread_mutex_lock(&_nss_ldap_lock)
+#define __nss_unlock()		pthread_mutex_unlock(&_nss_ldap_lock)
 #else
 #define __nss_lock()		mutex_lock(&_nss_ldap_lock)
 #define __nss_unlock()		mutex_unlock(&_nss_ldap_lock)

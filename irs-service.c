@@ -60,9 +60,9 @@ sv_byname (struct irs_sv *this, const char *name, const char *proto)
 			 (const char **) serv_attributes,
 			 _nss_ldap_parse_serv);
 
-  if (s == NSS_NOTFOUND || s == NSS_UNAVAIL)
+  if (s != NSS_SUCCESS)
     {
-      errno = ENOENT;
+      MAP_ERRNO(s, errno);
       return NULL;
     }
   return &pvt->result;
@@ -88,9 +88,9 @@ sv_byport (struct irs_sv *this, int port, const char *proto)
 			 (const char **) serv_attributes,
 			 _nss_ldap_parse_serv);
 
-  if (s == NSS_NOTFOUND || s == NSS_UNAVAIL)
+  if (s != NSS_SUCCESS)
     {
-      errno = ENOENT;
+      MAP_ERRNO(s, errno);
       return NULL;
     }
   return &pvt->result;

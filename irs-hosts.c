@@ -69,18 +69,6 @@ ho_byname (struct irs_ho *this, const char *name)
 			   (const char **) host_attributes,
 			   _nss_ldap_parse_host);
 
-  switch (s) {
-	case NSS_NOTFOUND:
-		errno = ENOENT;
-		return NULL;
-	case NSS_UNAVAIL:
-		errno = EAGAIN;
-		return NULL;
-	case NSS_SUCCESS:
-		return &pvt->result;
-	case NSS_TRYAGAIN:
-		return NULL; 
-  }
   if (s != NSS_SUCCESS)
     {
       MAP_H_ERRNO (s, h_errno);
@@ -122,6 +110,7 @@ ho_byaddr (struct irs_ho *this, const void *addr, int len, int af)
 			   &pvt->result,
 			   pvt->buffer,
 			   sizeof (pvt->buffer),
+			   &errno,
 			   filt_gethostbyaddr,
 			   (const char **) host_attributes,
 			   _nss_ldap_parse_host);
@@ -150,6 +139,7 @@ ho_next (struct irs_ho *this)
 			&pvt->result,
 			pvt->buffer,
 			sizeof (pvt->buffer),
+			&errno,
 			filt_gethostent,
 			(const char **) host_attributes,
 			_nss_ldap_parse_host);

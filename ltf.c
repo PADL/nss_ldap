@@ -28,7 +28,7 @@ static char rcsId[] = "$Id$";
 #include <lber.h>
 #include <ldap.h>
 
-#ifdef GNU_NSS
+#if defined(GNU_NSS) || defined(IRS_NSS)
 #include <nss.h>
 #include <stdio.h>
 #include <malloc.h>
@@ -53,7 +53,7 @@ static int ltf_get_ld_error (char **matched, char **errmsg, void *dummy);
 static void ltf_set_errno (int err);
 static int ltf_get_errno (void);
 
-#ifdef GNU_NSS
+#if defined(GNU_NSS) || defined(IRS_NSS)
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 
  * The contents of this file are subject to the Netscape Public License

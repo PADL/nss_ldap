@@ -67,15 +67,15 @@ SRCS=	ldap-nss.c \
 	globals.c
 
 OBJS=${SRCS:.c=.o}
-LIB=lib${MODULE}.a
+LIB=lib${MODULE}.so
 # uncomment NSFLAGS if you are using the Netscape SDK
-#NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
+NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API -DNETSCAPE_API_EXTENSIONS -DRFC2307BIS -DSSL
 # uncomment BSDFLAGS if you are building this as part of the BIND IRS
 BSDFLAGS=-DIRS_NSS 
 BIND=../../../src/bind/src
-INCDIRS=-I/usr/local/include -I. -I${BIND}/port/next/include -I${BIND}/include -I${BIND}/lib/irs -I${BIND}/port/${PLATFORM}/include
-LIBDIRS=-L/usr/local/lib
-LIBS=/usr/local/lib/libldap.a /usr/local/lib/liblber.a
+INCDIRS=-I/usr/local/include -I. -I${BIND}/port/linux/include -I${BIND}/include -I${BIND}/lib/irs -I${BIND}/port/${PLATFORM}/include
+LIBDIRS=-L/usr/local/ldapsdk/lib
+LIBS=-lldapssl30
 WARNINGS =  -Wwrite-strings \
 	-Wpointer-arith -Wcast-qual -Wcast-align \
 	-Wtraditional -Wstrict-prototypes -Wmissing-prototypes \
@@ -91,8 +91,7 @@ CFLAGS= -DLDAP_REFERRALS ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPIL
 all: ${MODULE} install
 
 ${MODULE}: ${OBJS}
-	libtool -o ${LIB} ${OBJS} ${LIBDIRS} ${LIBS}
-#	gcc -shared -o ${LIB} -Wl,-soname,${LIB} ${OBJS} ${LIBDIRS} ${LIBS}
+	gcc -shared -o ${LIB} -Wl,-soname,${LIB} ${OBJS} ${LIBDIRS} ${LIBS}
 
 install:
 
