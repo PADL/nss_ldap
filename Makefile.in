@@ -96,7 +96,7 @@ nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c \
 	util.c globals.c ltf.c snprintf.c resolve.c dnsconfig.c \
-	irs-nss.c aix_authmeth.c
+	irs-nss.c sasl.c aix_authmeth.c
 
 
 NSS_LDAP_LDFLAGS = -enss_ldap_initialize -lsys -lcsys -lc
@@ -120,7 +120,7 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 am_NSS_LDAP_OBJECTS =  ldap-nss.o ldap-grp.o ldap-pwd.o ldap-schema.o \
 util.o globals.o ltf.o snprintf.o resolve.o dnsconfig.o irs-nss.o \
-aix_authmeth.o
+sasl.o aix_authmeth.o
 NSS_LDAP_OBJECTS =  $(am_NSS_LDAP_OBJECTS)
 NSS_LDAP_LDADD = $(LDADD)
 NSS_LDAP_DEPENDENCIES = 

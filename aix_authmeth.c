@@ -43,6 +43,7 @@ struct passwd *pw_byname (struct irs_pw *, const char *);
 struct passwd *pw_byuid (struct irs_pw *, uid_t);
 void pw_close (struct irs_pw *);
 
+/* from ldap-grp.c */
 char *_nss_ldap_getgrset (char *user);
 
 static void *
@@ -198,13 +199,8 @@ nss_ldap_initialize (struct secmethod_table *meths)
   /* Authentication methods */
 #ifdef PROXY_AUTH
   meths->method_authenticate = _nss_ldap_authenticate;
-#else
-  meths->method_authenticate = NULL;
 #endif
-
   meths->method_getpasswd = _nss_ldap_getpasswd;
-  meths->method_chpass = NULL;
-  meths->method_passwordexpired = NULL;
 
   return AUTH_SUCCESS;
 }

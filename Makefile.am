@@ -21,7 +21,7 @@ nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-schema.c \
 	util.c globals.c ltf.c snprintf.c resolve.c dnsconfig.c \
-	irs-nss.c aix_authmeth.c
+	irs-nss.c sasl.c aix_authmeth.c
 
 NSS_LDAP_LDFLAGS = -enss_ldap_initialize -lsys -lcsys -lc
 

@@ -3,15 +3,22 @@ $Header$
 
 178	Luke Howard <lukeh@padl.com>
 
-	* added simple authentication support for AIX
-	* cleaned up SASL patch to not break if Cyrus
-	  SASL is not installed
-	* cleaned up IBM patch to not break building
-	  on platforms other than AIX
+	* patch from Gabor Gombas for AIX support
+	* Makefile.am: sasl.o needed by NSS_LDAP
+	* aix_authmeth.c: method_passwordexpired is
+	  really method_passwdexpired; but since the struct
+	  was bzero()ed no need to set it to NULL
+	* configure.in: support both gcc and xlc_r
+	* exports.aix: sv_byport was not exported
+	* ldap-grp.c: getgrset() returned group names instead of
+	  gid numbers
 
 177	Luke Howard <lukeh@padl.com>
 
 	* patch for building on AIX from IBM
+	* added simple authentication support for AIX
+	* cleaned up SASL patch to not break if Cyrus
+	  SASL is not installed
 
 176	Luke Howard <lukeh@padl.com>
 

@@ -227,7 +227,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   LDAPMessage *res, *e;
 #ifdef _AIX
   char *grplist = NULL;
-  size_t listlen;
+  size_t listlen = 0;
 #endif /* _AIX */
 
 #ifdef HAVE_NSS_H
@@ -292,7 +292,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
        e != NULL; e = _nss_ldap_next_entry (e))
     {
 #ifdef _AIX
-      char **values = _nss_ldap_get_values (e, AT (cn));
+      char **values = _nss_ldap_get_values (e, AT (gidNumber));
       if (values != NULL)
 	{
 	  size_t l = strlen (values[0]);
@@ -381,8 +381,8 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
   return NSS_SUCCESS;
 #elif defined(_AIX)
   /* Strip last comma and terminate the string */
-  if (grplist)
-    grplist[listlen] = '\0';
+  if (grplist && listlen)
+    grplist[listlen - 1] = '\0';
   return grplist;
 #else
   /* yes, NSS_NOTFOUND is the successful errno code. see nss_dbdefs.h */
