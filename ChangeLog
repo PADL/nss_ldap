@@ -3,9 +3,12 @@ $Header$
 
 198	 Luke Howard <lukeh@padl.com>
 
-	* fix potential buffer overflow in dnsconfig.c
+	* BUG#108: fix potential buffer overflow in dnsconfig.c
 	  (could be triggered if no flat file configuration
-	  for nss_ldap and large DNS SRV data for domain)
+	  for nss_ldap and large DNS SRV data for domain;
+	  because nss_ldap in SRV mode trusts DNS we do
+	  not believe this to be exploitable to elevate
+	  privilege in the default configuration)
 	* do not malloc() configuration structure; use 
 	  buffer
 
