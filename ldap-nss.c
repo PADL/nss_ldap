@@ -1739,7 +1739,7 @@ do_triple_permutations (const char *machine, const char *user,
 #define APPEND_TRIPLE(_buffer, _buflen, _machine, _user, _domain) do { \
 		APPEND_CONSTANT_STRING((_buffer), (_buflen), "("); \
 		APPEND_STRING((_buffer), (_buflen), AT_NISNETGROUPTRIPLE); \
-		APPEND_CONSTANT_STRING((_buffer), (_buflen), "=("); \
+		APPEND_CONSTANT_STRING((_buffer), (_buflen), "=\\("); \
 		if ((_machine) != NULL) \
 		{ \
 			APPEND_STRING((_buffer), (_buflen), (_machine)); \
@@ -1754,7 +1754,7 @@ do_triple_permutations (const char *machine, const char *user,
 		{ \
 			APPEND_STRING((_buffer), (_buflen), (_domain)); \
 		} \
-		APPEND_CONSTANT_STRING((_buffer), (_buflen), "))"); \
+		APPEND_CONSTANT_STRING((_buffer), (_buflen), "\\))"); \
 	} while (0)
 
   APPEND_CONSTANT_STRING (bufptr, buflen, "(&(objectclass=");
