@@ -69,7 +69,7 @@ NSS_STATUS _nss_ldap_dn2uid (
 #define NSS_LDAP_KEY_SSL	"ssl"
 #define NSS_LDAP_KEY_SSLPATH	"sslpath"
 #define NSS_LDAP_PATH_CONF	"/etc/ldap.conf"
-#define NSS_LDAP_PATH_ROOTPASSWD	"/etc/nss_ldap.secret"
+#define NSS_LDAP_PATH_ROOTPASSWD	"/etc/ldap.secret"
 
 /*
  * There are a number of means of obtaining configuration information.

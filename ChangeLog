@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+98	Luke Howard <lukeh@padl.com>
+
+	* /etc/nss_ldap.secret -> /etc/ldap.secret (sorry,
+	  Doug!)
+
 97	Luke Howard <lukeh@padl.com>
 
 	* #ifndef HAVE_LDAP_LD_FREE, still call ldap_unbind(),
