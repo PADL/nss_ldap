@@ -396,7 +396,7 @@ static NSS_STATUS
 _nss_ldap_gethostent_r (nss_backend_t * hosts_context, void *args)
 {
   NSS_STATUS status = _nss_ldap_getent (
-					 ((nss_ldap_backend_t *)
+					 &((nss_ldap_backend_t *)
 					  hosts_context)->state,
 					 NSS_ARGS (args)->buf.result,
 					 NSS_ARGS (args)->buf.buffer,
@@ -420,7 +420,7 @@ _nss_ldap_gethostent_r (struct hostent * result, char *buffer, size_t buflen,
 {
   NSS_STATUS status;
 
-  status = _nss_ldap_getent (hosts_context,
+  status = _nss_ldap_getent (&hosts_context,
 			     result,
 			     buffer,
 			     buflen,

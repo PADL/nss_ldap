@@ -1566,3 +1566,32 @@ _nss_ldap_assign_passwd (LDAP * ld,
 
   return NSS_SUCCESS;
 }
+
+NSS_STATUS _nss_ldap_oc_check (LDAP *ld,
+                                LDAPMessage * e,
+                                const char * oc)
+{
+  char **vals, **valiter;
+  NSS_STATUS ret = NSS_NOTFOUND;
+
+  vals = ldap_get_values(ld, e, "objectClass");
+  if (vals != NULL)
+    {
+      for (valiter = vals; *valiter != NULL; valiter++)
+	{
+	  if (strcasecmp (*valiter, oc) == 0)
+	    {
+	      ret = NSS_SUCCESS;
+	      break;
+	    }
+	}
+    }
+
+  if (vals != NULL)
+    {
+      ldap_value_free (vals);
+    }
+
+  return ret;
+}
+

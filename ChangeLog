@@ -1,9 +1,21 @@
 $Id$
 ===============================================================
 
+106.1	Luke Howard <lukeh@padl.com>
+
+	* if user is a shadowAccount, then don't return password
+	  in getpwent(), getpwuid() or getpwnam()
+	* incorporated patch (from Doug Nazar):
+	* allow getgrent() to be called without setgrent();
+	  note arguments to _nss_ldap_getent() have changed.
+	* return NSS_NOTFOUND instead of NSS_UNAVAIL at the
+	  end of a search
+	* initialize len for getpeername()
+
 105	Luke Howard <lukeh@padl.com>
 
-	* patch for deadlock under Solaris, thanks Dave.
+	* incorporated patch for deadlock under Solaris (from
+	  Dave Begley)
 
 104	Luke Howard <lukeh@padl.com>
 

@@ -133,7 +133,7 @@ ho_next (struct irs_ho *this)
   struct pvt *pvt = (struct pvt *) this->private;
   NSS_STATUS s;
 
-  s = _nss_ldap_getent (pvt->state,
+  s = _nss_ldap_getent (&pvt->state,
 			&pvt->result,
 			pvt->buffer,
 			sizeof (pvt->buffer),

@@ -460,4 +460,8 @@ NSS_STATUS _nss_ldap_assign_passwd (LDAP * ld,	/* IN */
 				    char **buffer,	/* IN/OUT */
 				    size_t * buflen);	/* IN/OUT */
 
+NSS_STATUS _nss_ldap_oc_check (LDAP *ld,
+				LDAPMessage * e,
+				const char * oc);
+
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

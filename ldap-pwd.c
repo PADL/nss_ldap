@@ -99,11 +99,25 @@ _nss_ldap_parse_pw (LDAP * ld,
   char *at;
 #endif /* IDS_UID */
 
-  stat =
-    _nss_ldap_assign_passwd (ld, e, AT (userPassword), &pw->pw_passwd,
+  if (_nss_ldap_oc_check(ld, e, "shadowAccount") == NSS_SUCCESS)
+    {
+	/* don't include password for shadowAccount */
+	if (buflen < 3)
+	   return NSS_TRYAGAIN;
+	
+	pw->pw_passwd = buffer;
+	strcpy(buffer, "x");
+	buffer += 2;
+	buflen -= 2;
+    }
+  else
+    {
+         stat =
+	    _nss_ldap_assign_passwd (ld, e, AT (userPassword), &pw->pw_passwd,
 			     &buffer, &buflen);
-  if (stat != NSS_SUCCESS)
-    return stat;
+	 if (stat != NSS_SUCCESS)
+	    return stat;
+     }
 
 #ifdef IDS_UID
   if ((at = strchr (pw->pw_passwd, '@')) != NULL)
