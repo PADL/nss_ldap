@@ -7,7 +7,7 @@ Quick notes for using nss_ldap on AIX
 The C library on AIX includes the IRS library which can also found in the
 BIND 8.x distribution. Of course, IBM did some things The Other Way(tm)...
 You can alo find related documentation at:
-  <URI:http://www.padl.com/Articles/Buildingnss_ldaponAIX4.3..html>
+  <URI:http://www.padl.com/Articles/nss_ldaponAIX.html>
 
 2. Compilation
 --------------
