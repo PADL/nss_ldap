@@ -5,7 +5,6 @@ $Id$
 
 	* patch for deadlock under Solaris, thanks Dave.
 
-
 104	Luke Howard <lukeh@padl.com>
 
 	* new spec file
@@ -25,6 +24,7 @@ $Id$
 
 100	Luke Howard <lukeh@padl.com>
 
+	* support for asynchronous search API!
 	* added some contributors
 	* notes about ldap_ld_free()
 	* merged in ChangeLog
