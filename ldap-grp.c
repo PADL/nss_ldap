@@ -94,8 +94,7 @@ ldap_initgroups_args_t;
 
 #ifdef RFC2307BIS
 static NSS_STATUS
-ng_chase (LDAP *ld, const char *dn,
-	  ldap_initgroups_args_t *lia);
+ng_chase (LDAP * ld, const char *dn, ldap_initgroups_args_t * lia);
 
 /* 
  * Expand group members, including nested groups
@@ -500,7 +499,7 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
     {
       NSS_STATUS stat;
 
-#ifndef HAVE_NSSWITCH_H /* XXX not yet implemented for Solaris */
+#ifndef HAVE_NSSWITCH_H		/* XXX not yet implemented for Solaris */
       lia->depth++;
 #endif
       stat = ng_chase (ld, groupdn, lia);
@@ -518,40 +517,39 @@ do_parse_initgroups (LDAP * ld, LDAPMessage * e,
 
 #ifdef RFC2307BIS
 static NSS_STATUS
-ng_chase (LDAP *ld, const char *dn,
-	  ldap_initgroups_args_t *lia)
+ng_chase (LDAP * ld, const char *dn, ldap_initgroups_args_t * lia)
 {
-	ldap_args_t a;
-	NSS_STATUS stat;
-	ent_context_t *ctx = NULL;
-	const char *gidnumber_attrs[2];
-	int erange;
+  ldap_args_t a;
+  NSS_STATUS stat;
+  ent_context_t *ctx = NULL;
+  const char *gidnumber_attrs[2];
+  int erange;
 
-	if (lia->depth > LDAP_NSS_MAXGR_DEPTH)
-		return NSS_NOTFOUND;
+  if (lia->depth > LDAP_NSS_MAXGR_DEPTH)
+    return NSS_NOTFOUND;
 
-	LA_INIT (a);
+  LA_INIT (a);
 
-	gidnumber_attrs[0] = ATM(group, gidNumber);
-	gidnumber_attrs[1] = NULL;
+  gidnumber_attrs[0] = ATM (group, gidNumber);
+  gidnumber_attrs[1] = NULL;
 
-	LA_INIT (a);
-	LA_STRING (a) = dn;
-	LA_TYPE (a) = LA_TYPE_STRING;
+  LA_INIT (a);
+  LA_STRING (a) = dn;
+  LA_TYPE (a) = LA_TYPE_STRING;
 
-	if (_nss_ldap_ent_context_init_locked(&ctx) == NULL) {
-		return NSS_UNAVAIL;
-	}
+  if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
 
-	stat = _nss_ldap_getent_ex(&a, &ctx, lia, NULL, 0,
-		&erange, _nss_ldap_filt_getgroupsbydn,
-		LM_GROUP, gidnumber_attrs,
-		do_parse_initgroups);
+  stat = _nss_ldap_getent_ex (&a, &ctx, lia, NULL, 0,
+			      &erange, _nss_ldap_filt_getgroupsbydn,
+			      LM_GROUP, gidnumber_attrs, do_parse_initgroups);
 
-	_nss_ldap_ent_context_release (ctx);
-	free (ctx);
+  _nss_ldap_ent_context_release (ctx);
+  free (ctx);
 
-	return stat;
+  return stat;
 }
 #endif /* RFC2307BIS */
 
@@ -774,7 +772,8 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS _nss_ldap_setgrent (void)
+NSS_STATUS
+_nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -787,7 +786,8 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS _nss_ldap_endgrent (void)
+NSS_STATUS
+_nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
