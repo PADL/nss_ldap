@@ -224,15 +224,13 @@ do_with_reconnect (const char *base, int scope,
  */
 static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw);
 
-
 /*
  * Rebind functions.
  */
 
 #if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
 static int
-_nss_ldap_rebind (LDAP * ld, LDAP_CONST char *url, int request,
-		  ber_int_t msgid)
+do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 {
   char *who, *cred;
 
@@ -252,12 +250,12 @@ _nss_ldap_rebind (LDAP * ld, LDAP_CONST char *url, int request,
 #else
 #if LDAP_SET_REBIND_PROC_ARGS == 3
 static int
-_nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-		  int freeit, void *arg)
+do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+	   int freeit, void *arg)
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
      static int
-       _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
-			 int freeit)
+       do_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
+		  int freeit)
 #endif
 {
   if (freeit)
@@ -296,15 +294,17 @@ _nss_ldap_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
  * table for the switch. Thus, it's safe to grab the mutex from this
  * function.
  */
-NSS_STATUS
-_nss_ldap_default_destr (nss_backend_t * be, void *args)
+NSS_STATUS _nss_ldap_default_destr (nss_backend_t * be, void *args)
 {
   debug ("==> _nss_ldap_default_destr");
 
   if ((((nss_ldap_backend_t *) be)->state) != NULL)
     {
-      _nss_ldap_ent_context_free ((ent_context_t **)
-				  (&((nss_ldap_backend_t *) be)->state));
+      nss_lock ();
+      _nss_ldap_ent_context_release ((((nss_ldap_backend_t *) be)->state));
+      free ((((nss_ldap_backend_t *) be)->state));
+      ((nss_ldap_backend_t *) be)->state = NULL;
+      nss_unlock ();
     }
 
   /* Ditch the backend. */
@@ -319,8 +319,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
  * This is the default "constructor" which gets called from each 
  * constructor, in the NSS dispatch table.
  */
-NSS_STATUS
-_nss_ldap_default_constr (nss_ldap_backend_t * be)
+NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be)
 {
   debug ("==> _nss_ldap_default_constr");
 
@@ -817,9 +816,9 @@ do_open (void)
 #endif /* LDAP_OPT_THREAD_FN_PTRS */
 
 #if LDAP_SET_REBIND_PROC_ARGS == 3
-  ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind, NULL);
+  ldap_set_rebind_proc (__session.ls_conn, do_rebind, NULL);
 #elif LDAP_SET_REBIND_PROC_ARGS == 2
-  ldap_set_rebind_proc (__session.ls_conn, _nss_ldap_rebind);
+  ldap_set_rebind_proc (__session.ls_conn, do_rebind);
 #endif
 
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_PROTOCOL_VERSION)
@@ -1175,13 +1174,13 @@ _nss_ldap_ent_context_init (ent_context_t ** pctx)
  * we require the caller to acquire the lock.
  */
 void
-_nss_ldap_ent_context_zero (ent_context_t * ctx)
+_nss_ldap_ent_context_release (ent_context_t * ctx)
 {
-  debug ("==> _nss_ldap_ent_context_zero");
+  debug ("==> _nss_ldap_ent_context_release");
 
   if (ctx == NULL)
     {
-      debug ("<== _nss_ldap_ent_context_zero");
+      debug ("<== _nss_ldap_ent_context_release");
       return;
     }
 
@@ -1202,31 +1201,7 @@ _nss_ldap_ent_context_zero (ent_context_t * ctx)
 
   LS_INIT (ctx->ec_state);
 
-  debug ("<== _nss_ldap_ent_context_zero");
-
-  return;
-}
-
-/*
- * Frees an enumeration context. This is presently
- * only used on Solaris.
- */
-void
-_nss_ldap_ent_context_free (ent_context_t ** ctx)
-{
-  debug ("==> _nss_ldap_ent_context_free");
-
-  /*
-   * acquire the lock as _nss_ldap_ent_context_zero()
-   * no longer does so.
-   */
-  nss_lock ();
-  _nss_ldap_ent_context_zero (*ctx);
-  free (*ctx);
-  *ctx = NULL;
-  nss_unlock ();
-
-  debug ("<== _nss_ldap_ent_context_free");
+  debug ("<== _nss_ldap_ent_context_release");
 
   return;
 }
@@ -1535,9 +1510,11 @@ do_with_reconnect (const char *base, int scope,
       break;
     case NSS_SUCCESS:
       if (tries)
-	syslog (LOG_ERR,
-		"nss_ldap: reconnected to LDAP server after %d attempt(s)",
-		tries);
+	{
+	  syslog (LOG_ERR,
+		  "nss_ldap: reconnected to LDAP server after %d attempt(s)",
+		  tries);}
+      time (&__session.ls_timestamp);
       break;
     default:
       break;
@@ -1583,11 +1560,6 @@ do_search_s (const char *base, int scope,
   rc = ldap_search_st (__session.ls_conn, base, scope, filter,
 		       (char **) attrs, 0, tvp, res);
 
-  if (rc == LDAP_SUCCESS)
-    {
-      time (&__session.ls_timestamp);
-    }
-
   debug ("<== do_search_s");
 
   return rc;
@@ -1631,7 +1603,6 @@ do_search (const char *base, int scope,
   else
     {
       rc = LDAP_SUCCESS;
-      time (&__session.ls_timestamp);
     }
 
   debug ("<== do_search");
@@ -1864,8 +1835,7 @@ _nss_ldap_next_entry (LDAPMessage * res)
 /*
  * Calls ldap_result() with LDAP_MSG_ONE.
  */
-NSS_STATUS
-_nss_ldap_result (ent_context_t * ctx)
+NSS_STATUS _nss_ldap_result (ent_context_t * ctx)
 {
   return do_result (ctx, LDAP_MSG_ONE);
 }
@@ -2125,7 +2095,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
 
   stat = do_parse_s (&ctx, result, buffer, buflen, errnop, parser);
 
-  _nss_ldap_ent_context_zero (&ctx);
+  _nss_ldap_ent_context_release (&ctx);
 
   /* moved unlock here to avoid race condition bug #49 */
   nss_unlock ();
@@ -2396,8 +2366,7 @@ _nss_ldap_assign_authpassword (LDAP * ld,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS
-_nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
+NSS_STATUS _nss_ldap_oc_check (LDAP * ld, LDAPMessage * e, const char *oc)
 {
   char **vals, **valiter;
   NSS_STATUS ret = NSS_NOTFOUND;

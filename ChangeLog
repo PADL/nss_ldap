@@ -3,6 +3,10 @@ $Header$
 
 162	Luke Howard <lukeh@padl.com>
 
+	* removed context_free function, usage confusing
+
+162	Luke Howard <lukeh@padl.com>
+
 	* in reconnect harness, do not treat entry not found
 	  errors as requiring a reconnect
 

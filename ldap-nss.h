@@ -436,16 +436,17 @@ NSS_STATUS _nss_ldap_default_destr (nss_backend_t *, void *);
 /*
  * context management routines.
  * _nss_ldap_default_constr() is called once in the constructor
- * ent_context_init() is called for each getXXent() call
- * ent_context_free() is used to manually free a context
  */
 #ifdef HAVE_NSSWITCH_H
 NSS_STATUS _nss_ldap_default_constr (nss_ldap_backend_t * be);
 #endif
 
+/* 
+ * do_ent_context_init() is called for each getXXent() call
+ * do_ent_context_release() is used to manually free a context
+ */
 ent_context_t *_nss_ldap_ent_context_init (ent_context_t **);
-void _nss_ldap_ent_context_zero (ent_context_t *);
-void _nss_ldap_ent_context_free (ent_context_t **);
+void _nss_ldap_ent_context_release (ent_context_t *);
 
 /*
  * these are helper functions for ldap-grp.c only on Solaris

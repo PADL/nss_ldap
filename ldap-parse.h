@@ -146,7 +146,7 @@
 	return NSS_SUCCESS
 #define LOOKUP_ENDENT(key) \
 	nss_lock(); \
-	_nss_ldap_ent_context_zero(((nss_ldap_backend_t *)key)->state); \
+	_nss_ldap_ent_context_release(((nss_ldap_backend_t *)key)->state); \
 	nss_unlock(); \
 	return NSS_SUCCESS
 
@@ -158,7 +158,7 @@
 	return NSS_SUCCESS
 #define LOOKUP_ENDENT(key) \
 	nss_lock(); \
-	_nss_ldap_ent_context_zero(key); \
+	_nss_ldap_ent_context_release(key); \
 	nss_unlock(); \
 	return NSS_SUCCESS
 
@@ -170,7 +170,7 @@
 #define LOOKUP_ENDENT(this) \
 	struct pvt *pvt = (struct pvt *)this->private; \
 	nss_lock(); \
-	_nss_ldap_ent_context_zero(pvt->state); \
+	_nss_ldap_ent_context_release(pvt->state); \
 	nss_unlock();
 
 #endif /* HAVE_NSSWITCH_H */
