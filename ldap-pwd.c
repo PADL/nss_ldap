@@ -98,11 +98,12 @@ _nss_ldap_parse_pw (
   char *tmp;
 
 #ifdef IDS_UID
-  /* ids-dirnaming drafts endorses uid values like
+  /*
+   * ids-dirnaming drafts endorses uid values like
    * uid=lukeh@padl.com,dc=padl,dc=com. This is bogus IMHO, but...
    */
   char *at;
-#endif
+#endif /* IDS_UID */
 
   stat = _nss_ldap_assign_passwd (ld, e, LDAP_ATTR_PASSWD, &pw->pw_passwd, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
@@ -111,7 +112,7 @@ _nss_ldap_parse_pw (
 #ifdef IDS_UID
   if ((at = strchr (pw->pw_passwd, '@')) != NULL)
     *at = '\0';
-#endif
+#endif /* IDS_UID */
 
   stat = _nss_ldap_assign_attrval (ld, e, LDAP_ATTR_USERNAME, &pw->pw_name, &buffer, &buflen);
   if (stat != NSS_SUCCESS)

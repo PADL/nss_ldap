@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.78	Luke Howard <lukeh@padl.com>
+
+	* removed ldap.conf.ragenet from lineup
+
 2.76	Luke Howard <lukeh@padl.com>
 
 	* added -lresolv to Solaris makefiles
