@@ -149,7 +149,7 @@ static NSS_STATUS _nss_ldap_parse_pw(
 	/* Is this field in POSIX, or even used? */
 	stat = _nss_ldap_assign_attrval(ld, e, LDAP_ATTR_COMMENT, &pw->pw_comment, &buffer, &buflen);
 	if (stat != NSS_SUCCESS)
-		(void) _nss_ldap_assign_emptystring(&pw->pw_comment, &buffer, &buflen);
+		pw->pw_comment = pw->pw_gecos;
 
 	(void) _nss_ldap_assign_emptystring(&pw->pw_age, &buffer, &buflen);
 #endif

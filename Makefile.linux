@@ -64,7 +64,7 @@ SRCS=	ldap-nss.c \
 	resolve.c \
 	dnsconfig.c
 
-OBJS=${SRCS:.c=.o}
+OBJS=$(SRCS:.c=.o)
 
 # uncomment NSFLAGS if you are using the Netscape SDK
 #NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
@@ -72,10 +72,10 @@ OBJS=${SRCS:.c=.o}
 # uncomment GNUFLAGS if you are building a GNU glibc-2.x module
 GNUFLAGS=-DGNU_NSS -DWEIRD_GETPWENT -DHAVE_SNPRINTF -D_REENTRANT
 LIBCVERS= `ls /lib/libc-*.so |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
-NSSLIBVER=${shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/'}
+NSSLIBVER=$(shell ls /lib/libnss_files.so.? | tail -1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
 
-SOLIB=lib${MODULE}.so.${NSSLIBVER}
-NSSLIB=lib${MODULE}-${LIBCVERS}.so
+SOLIB=lib$(MODULE).so.$(NSSLIBVER)
+NSSLIB=lib$(MODULE)-$(LIBCVERS).so
 
 LIBDIRS=-L.
 
@@ -88,41 +88,26 @@ GCCFLAGS=-O -g -Wall -fPIC
 DEBUGFLAGS=-DDEBUG
 
 CC=gcc
-COMPILERFLAGS=${GCCFLAGS}
+COMPILERFLAGS=$(GCCFLAGS)
 
 LD=gcc
-GNULDFLAGS=-shared -Wl,-soname,${SOLIB}
-LDFLAGS=${GNULDFLAGS}
+GNULDFLAGS=-shared -Wl,-soname,$(SOLIB)
+LDFLAGS=$(GNULDFLAGS)
 
-CFLAGS=-DLDAP_REFERRALS ${DEBUGFLAGS} ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
+CFLAGS=-DLDAP_REFERRALS $(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFLAGS) $(INCDIRS)
 
-all: ${MODULE}
+all: $(MODULE)
 
-${MODULE}: ${OBJS}
-	${LD} ${LIBDIRS} ${LDFLAGS} -o ${NSSLIB} ${OBJS} ${LIBS}
+$(MODULE): $(OBJS)
+	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(NSSLIB) $(OBJS) $(LIBS)
 
 install:
-	install -m 644 -o root -g root ${NSSLIB} /lib/$(NSSLIB)
+	install -m 644 -o root -g root $(NSSLIB) /lib/$(NSSLIB)
 	ln -sf $(NSSLIB) /lib/$(SOLIB)
 	ln -sf /lib/$(NSSLIB) /usr/lib/$(MODULE).so
 	cp nsswitch.ldap /etc/nsswitch.ldap
 	cp ldap.conf	/etc/ldap.conf
 
 clean:
-	rm -f ${OBJS} ${NSSLIB} core
+	rm -f $(OBJS) $(NSSLIB) core
 
-TESTCC=gcc ${PDOFLAGS} -g -D_REENTRANT -DNSS_GNU -DWEIRD_GETPWENT /lib/libnss_ldap.so.1
-
-test:
-	-${TESTCC} ${CFLAGS} -o  testpw testpw.c
-	-${TESTCC} ${CFLAGS} -o testpw5 testpw5.c -lthread
-	-${TESTCC} -o testpw2 testpw.c -lthread
-	-${TESTCC} -o testgr testgr.c
-#	-${TESTCC} -o testpw3 testpw3.c
-
-#test.pl:
-#	cp /etc/nsswitch.conf /etc/nsswitch.conf.ldaptest
-#	cp nsswitch.test /etc/nsswitch.conf
-#	perl ldaptest.pl
-#	mv /etc/nsswitch.conf.ldaptest /etc/nsswitch.conf
-#

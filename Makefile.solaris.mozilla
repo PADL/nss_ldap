@@ -111,12 +111,3 @@ install:
 clean:
 	rm -f $(OBJS) $(LIB)
 
-TESTCC=gcc $(PDOFLAGS) -g -D_REENTRANT #/usr/lib/nss_ldap.so.1
-
-test:
-	-$(TESTCC) -o testpw testpw.c
-	-$(TESTCC) -o testpw5 testpw5.c -lthread
-	-$(TESTCC) -o testpw2 testpw.c -lthread
-	-$(TESTCC) -o testgr testgr.c
-	-$(TESTCC) -o testpw3 testpw3.c
-

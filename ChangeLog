@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+2.59	Luke Howard <lukeh@padl.com>
+
+	* pw_comment field defaults to pw_gecos (Solaris only)
+
 2.56	Luke Howard <lukeh@padl.com>
 
 	* fixed Makefile.linux.mozilla NSSLIBVER

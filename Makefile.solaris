@@ -64,8 +64,8 @@ SRCS=	ldap-nss.c \
 	resolve.c \
 	dnsconfig.c
 
-OBJS=${SRCS:.c=.o}
-LIB=${MODULE}.so.1
+OBJS=$(SRCS:.c=.o)
+LIB=$(MODULE).so.1
 
 # uncomment NSFLAGS if you are using the Netscape SDK
 #NSFLAGS=-I/usr/local/ldapsdk/include -DLDAP_VERSION3_API
@@ -90,11 +90,8 @@ LIBDIRS=-L/usr/ucblib -L/usr/local/lib
 # or using UMich libldap/liblber compiled into one library
 LIBS=-lldap -lnsl
 
-# uncomment this if you're using Apple's hacked gcc (egads)
-PDOFLAGS=-nopdolib
-
 # uncomment this if you're using gcc
-GCCFLAGS=-O -g -Wall -fPIC ${PDOFLAGS}
+GCCFLAGS=-O -g -Wall -fPIC
 # don't know about these CFLAGS?
 #SUNCFLAGS=-g -pic
 # these are the flags wcs@sun used
@@ -105,37 +102,28 @@ DEBUGFLAGS=-DDEBUG
 # choose your C compiler
 #CC=/usr/local/opt/SUNWspro/bin/cc
 #CC=cc
-#COMPILERFLAGS=${SUNCFLAGS}
-#LD=${CC}
-#LDFLAGS=${SUNLDFLAGS}
+#COMPILERFLAGS=$(SUNCFLAGS)
+#LD=$(CC)
+#LDFLAGS=$(SUNLDFLAGS)
 
 CC=gcc
-COMPILERFLAGS=${GCCFLAGS}
+COMPILERFLAGS=$(GCCFLAGS)
 
 # These "GNU" flags seem to work OK, with Sun CC too ???
 LD=ld
 GNULDFLAGS=-G -dy -z text
-LDFLAGS=${GNULDFLAGS}
+LDFLAGS=$(GNULDFLAGS)
 
-CFLAGS=-DLDAP_REFERRALS ${DEBUGFLAGS} ${NSFLAGS} ${SUNFLAGS} ${BSDFLAGS} ${GNUFLAGS} ${COMPILERFLAGS} ${INCDIRS}
+CFLAGS=-DLDAP_REFERRALS $(DEBUGFLAGS) $(NSFLAGS) $(SUNFLAGS) $(BSDFLAGS) $(GNUFLAGS) $(COMPILERFLAGS) $(INCDIRS)
 
-all: ${MODULE} 
+all: $(MODULE) 
 
-${MODULE}: ${OBJS}
-	${LD} ${LIBDIRS} ${LDFLAGS} -o ${LIB} ${OBJS} ${LIBS}
+$(MODULE): $(OBJS)
+	$(LD) $(LIBDIRS) $(LDFLAGS) -o $(LIB) $(OBJS) $(LIBS)
 
 install:
-	cp ${LIB} /usr/lib/
+	cp $(LIB) /usr/lib/
 
 clean:
-	rm -f ${OBJS} ${LIB}
-
-TESTCC=gcc ${PDOFLAGS} -g -D_REENTRANT /usr/lib/nss_ldap.so.1
-
-test:
-	-${TESTCC} -o testpw testpw.c
-	-${TESTCC} -o testpw5 testpw5.c -lthread
-	-${TESTCC} -o testpw2 testpw.c -lthread
-	-${TESTCC} -o testgr testgr.c
-	-${TESTCC} -o testpw3 testpw3.c
+	rm -f $(OBJS) $(LIB)
 
