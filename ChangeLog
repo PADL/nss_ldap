@@ -1,9 +1,14 @@
 $Header$
 ===============================================================
 
+194	Luke Howard <lukeh@padl.com>
+
+	* bugfix for Debian Bug report #147553: lack of global
+	  mutex use in initgroups()
+
 193	Luke Howard <lukeh@padl.com>
 
-	* suport for PADL GSS-SASL client library
+	* support for PADL GSS-SASL client library
 
 192	Luke Howard <lukeh@padl.com>
 

@@ -247,15 +247,20 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #endif /* HAVE_NSS_H || _AIX */
   LA_TYPE (a) = LA_TYPE_STRING;
 
+  _nss_ldap_enter ();
+
 #ifdef RFC2307BIS
   /* initialize schema */
   stat = _nss_ldap_init ();
   if (stat != NSS_SUCCESS)
+    {
+      _nss_ldap_leave ();
 #ifndef _AIX
-    return stat;
+      return stat;
 #else
-    return NULL;
+      return NULL;
 #endif /* !_AIX */
+    }
 
   /* lookup the user's DN. XXX: import this filter from somewhere else */
   snprintf (filt, LDAP_FILT_MAXSIZ, "(%s=%s)", AT (uid), "%s");
@@ -296,6 +301,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 
   if (stat != NSS_SUCCESS)
     {
+      _nss_ldap_leave ();
 #ifndef _AIX
       return stat;
 #else
@@ -316,6 +322,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 	    {
 	      ldap_value_free (values);
 	      ldap_msgfree (res);
+	      _nss_ldap_leave ();
 	      return NULL;
 	    }
 	  memcpy (grplist + listlen, values[0], l);
@@ -352,6 +359,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 	  if (gbm->numgids == gbm->maxgids)
 	    {
 	      ldap_msgfree (res);
+	      _nss_ldap_leave ();
 	      return NSS_SUCCESS;
 	    }
 #else
@@ -365,6 +373,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 		    {
 		      ldap_msgfree (res);
 		      *errnop = ENOMEM;
+		      _nss_ldap_leave ();
 		      return NSS_TRYAGAIN;
 		    }
 		  *groupsp = groups;
@@ -382,6 +391,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 	      if (*start == limit)
 		{
 		  ldap_msgfree (res);
+		  _nss_ldap_leave ();
 		  return NSS_SUCCESS;
 		}
 	    }
@@ -390,6 +400,7 @@ _nss_ldap_initgroups_dyn (const char *user, gid_t group, long int *start,
 #endif /* _AIX */
     }
   ldap_msgfree (res);
+  _nss_ldap_leave ();
 
 #ifdef HAVE_NSS_H
   return NSS_SUCCESS;
@@ -441,7 +452,8 @@ _nss_ldap_getgrgid_r (nss_backend_t * be, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS _nss_ldap_setgrent (void)
+NSS_STATUS
+_nss_ldap_setgrent (void)
 {
   LOOKUP_SETENT (gr_context);
 }
@@ -454,7 +466,8 @@ _nss_ldap_setgrent_r (nss_backend_t * gr_context, void *args)
 #endif
 
 #if defined(HAVE_NSS_H)
-NSS_STATUS _nss_ldap_endgrent (void)
+NSS_STATUS
+_nss_ldap_endgrent (void)
 {
   LOOKUP_ENDENT (gr_context);
 }
