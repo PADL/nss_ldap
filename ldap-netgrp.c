@@ -735,28 +735,37 @@ do_parse_innetgr (LDAP * ld, LDAPMessage * e, ldap_state_t * pvt,
 		  void *result, char *buffer, size_t buflen)
 {
   ldap_innetgr_args_t *li_args = (ldap_innetgr_args_t *) result;
+  int count;
   char **values = NULL;
   NSS_STATUS stat = NSS_NOTFOUND;
 
   debug ("==> do_parse_innetgr");
 
   values = _nss_ldap_get_values (e, ATM (netgroup, cn));
-  if (values != NULL)
-    {
-      assert (values[0] != NULL);
+  if (values == NULL)
+      return NSS_NOTFOUND;
 
-      if (strcasecmp (li_args->lia_netgroup, values[0]) == 0)
+  count = ldap_count_values (values);
+
+  while (--count >= 0)
+    {
+      assert (values[count] != NULL);
+
+      if (strcasecmp (li_args->lia_netgroup, values[count]) == 0)
 	{
 	  li_args->lia_netgr_status = NSS_NETGR_FOUND;
 	  stat = NSS_SUCCESS;
 	}
       else
 	{
-	  stat = do_innetgr_nested (li_args, values[0]);
+	  stat = do_innetgr_nested (li_args, values[count]);
 	}
 
-      ldap_value_free (values);
+      if (stat == NSS_SUCCESS)
+	break;
     }
+
+  ldap_value_free (values);
 
   debug ("<== do_parse_innetgr");
 
