@@ -85,7 +85,18 @@ export LDFLAGS LIBS
 ./configure
 make
 
-6. Mailing lists
+6. Solaris, shadowAccount
+-------------------------
+
+Joerg Paysen notes:
+
+> I think its extremly important that you have a
+> /etc/shadow file so that an ObjectClass shadowAccount
+> will be created in the ldap database. My experience is
+> that without shadowAccount nss_ldap does not work on
+> solaris!!
+
+7. Mailing lists
 ----------------
 
 To discuss nss_ldap and related technologies, you may
@@ -98,7 +109,7 @@ and
 Send an electronic mail message with "subscribe" in the
 message body to join the list.
 
-7. Commercial support
+8. Commercial support
 ---------------------
 
 Note that PADL now offer commercial support on a
