@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2004 Luke Howard.
+/* Copyright (C) 1997-2005 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -125,7 +125,7 @@
 
 #ifndef LDAP_FILT_MAXSIZ
 #define LDAP_FILT_MAXSIZ 1024
-#endif /* !LDAP_FILT_MAXSIZE */
+#endif /* !LDAP_FILT_MAXSIZ */
 
 #ifndef LOGNAME_MAX
 #define LOGNAME_MAX 8
@@ -444,7 +444,9 @@ enum ldap_args_types
   LA_TYPE_NUMBER,
   LA_TYPE_STRING_AND_STRING,
   LA_TYPE_NUMBER_AND_STRING,
-  LA_TYPE_TRIPLE
+  LA_TYPE_TRIPLE,
+  LA_TYPE_STRING_LIST_OR,
+  LA_TYPE_STRING_LIST_AND
 };
 
 typedef enum ldap_args_types ldap_args_types_t;
@@ -473,6 +475,7 @@ struct ldap_args
       const char *user;
       const char *domain;
     } la_triple;
+    const char **la_string_list;
   }
   la_arg1;
   union
@@ -493,6 +496,7 @@ typedef struct ldap_args ldap_args_t;
 #define LA_STRING(q)				((q).la_arg1.la_string)
 #define LA_NUMBER(q)				((q).la_arg1.la_number)
 #define LA_TRIPLE(q)				((q).la_arg1.la_triple)
+#define LA_STRING_LIST(q)			((q).la_arg1.la_string_list)
 #define LA_STRING2(q)				((q).la_arg2.la_string)
 
 #include "ldap-parse.h"

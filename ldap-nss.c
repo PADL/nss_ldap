@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2004 Luke Howard.
+/* Copyright (C) 1997-2005 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -1905,7 +1905,6 @@ do_triple_permutations (const char *machine, const char *user,
 #define _APPEND_STRING(_buffer, _buflen, _s, _len) do { \
 		if ((_buflen) < (size_t)((_len) + 1)) \
 		{ \
-			fprintf(stderr, "_buflen->%d _len->%d\n", (_buflen), (_len)); \
 			return NSS_TRYAGAIN; \
 		} \
 		memcpy((_buffer), (_s), (_len)); \
@@ -1957,6 +1956,58 @@ do_triple_permutations (const char *machine, const char *user,
   return NSS_SUCCESS;
 }
 #endif /* HAVE_NSSWITCH_H */
+
+/*
+ * AND or OR a set of filters.
+ */
+static NSS_STATUS
+do_aggregate_filter (const char ** values,
+		     ldap_args_types_t type,
+		     const char *filterprot,
+		     char *bufptr, size_t buflen)
+{
+  NSS_STATUS stat;
+  const char **valueP;
+
+  assert (buflen > sizeof("(|)"));
+
+  bufptr[0] = '(';
+  bufptr[1] = (type == LA_TYPE_STRING_LIST_AND) ? '&' : '|';
+
+  bufptr += 2;
+  buflen -= 2;
+
+  for (valueP = values; *valueP != NULL; valueP++)
+    {
+      size_t len;
+      char filter[LDAP_FILT_MAXSIZ], escapedBuf[LDAP_FILT_MAXSIZ];
+
+      stat = _nss_ldap_escape_string (*valueP, escapedBuf, sizeof(escapedBuf));
+      if (stat != NSS_SUCCESS)
+	return stat;
+
+      snprintf (filter, sizeof(filter), filterprot, escapedBuf);
+      len = strlen (filter);
+
+      if (buflen < len + 1 /* ')' */)
+	  return NSS_TRYAGAIN;
+
+      memcpy(bufptr, filter, len);
+      bufptr[len] = '\0';
+      bufptr += len;
+      buflen -= len;
+    }
+
+  if (buflen < 2)
+    return NSS_TRYAGAIN;
+
+  *bufptr++ = ')';
+  *bufptr++ = '\0';
+
+  buflen -= 2;
+
+  return NSS_SUCCESS;  
+}
 
 /*
  * Do the necessary formatting to create a string filter.
@@ -2029,6 +2080,13 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	    return stat;
 	  break;
 #endif /* HAVE_NSSWITCH_H */
+	case LA_TYPE_STRING_LIST_OR:
+	case LA_TYPE_STRING_LIST_AND:
+	  stat = do_aggregate_filter (args->la_arg1.la_string_list,
+				      args->la_type,
+				      filterprot,
+				      filterBufP, filterSiz);
+	  break;
 	default:
 	  return NSS_UNAVAIL;
 	  break;
