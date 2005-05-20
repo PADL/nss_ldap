@@ -1004,14 +1004,16 @@ char *_nss_ldap_getgrset (char *user)
 #endif /* HAVE_NSS_H */
 #ifdef RFC2307BIS
   char *userdn = NULL;
+#ifndef INITGROUPS_BACKLINK
   LDAPMessage *res, *e;
+  static const char *no_attrs[] = { NULL };
+#endif
 #endif /* RFC2307BIS */
   const char *filter;
   ldap_args_t a;
   NSS_STATUS stat;
   ent_context_t *ctx = NULL;
   const char *gidnumber_attrs[3];
-  static const char *no_attrs[] = { NULL };
 
   LA_INIT (a);
 #if defined(HAVE_NSS_H) || defined(HAVE_USERSEC_H)
