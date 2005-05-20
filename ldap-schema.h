@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2004 Luke Howard.
+/* Copyright (C) 1997-2005 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1999.
 
@@ -58,6 +58,9 @@ extern char _nss_ldap_filt_getgrent[];
 extern char _nss_ldap_filt_getgroupsbymemberanddn[];
 extern char _nss_ldap_filt_getgroupsbydn[];
 #endif /* RFC2307BIS */
+#ifdef INITGROUPS_BACKLINK
+extern char _nss_ldap_filt_getpwnam_groupsbymember[];
+#endif /* INITGROUPS_BACKLINK */
 extern char _nss_ldap_filt_getgroupsbymember[];
 
 /* IP hosts */
@@ -187,6 +190,7 @@ extern char _nss_ldap_filt_innetgr[];
 #define AT_gidNumber              "gidNumber"
 #define AT_memberUid              "memberUid"
 #define AT_uniqueMember           "uniqueMember"
+#define AT_memberOf               "memberOf"
 
 /*
 * ( nisSchema.2.3 NAME 'ipService' SUP top STRUCTURAL

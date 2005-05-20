@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2004 Luke Howard.
+/* Copyright (C) 1997-2005 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 2000.
 
@@ -84,6 +84,9 @@ char _nss_ldap_filt_getgrent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getgroupsbymemberanddn[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getgroupsbydn[LDAP_FILT_MAXSIZ];
 #endif /* RFC2307BIS */
+#ifdef INITGROUPS_BACKLINK
+char _nss_ldap_filt_getpwnam_groupsbymember[LDAP_FILT_MAXSIZ];
+#endif /* INITGROUPS_BACKLINK */
 char _nss_ldap_filt_getgroupsbymember[LDAP_FILT_MAXSIZ];
 
 /* IP hosts */
@@ -171,6 +174,12 @@ _nss_ldap_init_filters ()
 	    "(&(objectclass=%s)(%s=%s))",
 	    OC (posixGroup), AT (uniqueMember), "%s");
 #endif /* RFC2307BIS */
+#ifdef INITGROUPS_BACKLINK
+  snprintf (_nss_ldap_filt_getpwnam_groupsbymember, LDAP_FILT_MAXSIZ,
+	    "(|(&(objectclass=%s)(%s=%s))(&(objectclass=%s)(%s=%s)))",
+	    OC (posixGroup), AT (memberUid), "%s",
+	    OC (posixAccount), ATM (passwd, uid), "%s");
+#endif /* INITGROUPS_BACKLINK */
   snprintf (_nss_ldap_filt_getgroupsbymember, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup), AT (memberUid),
 	    "%s");

@@ -1,4 +1,4 @@
-/* Copyright (C) 2002-2004 Luke Howard.
+/* Copyright (C) 2002-2005 Luke Howard.
    This file is part of the nss_ldap library.
    Linux support contributed by Larry Lile, <llile@dreamworks.com>, 2002.
    Solaris support contributed by Luke Howard, <lukeh@padl.com>, 2004.

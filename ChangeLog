@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+239	Luke Howard <lukeh@padl.com>
+
+	* support for initgroups using backlinks (must enable
+	  at configure time with --enable-initgroups-backlink)
+
 238	Luke Howard <lukeh@padl.com>
 
 	* more manual page updates
