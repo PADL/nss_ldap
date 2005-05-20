@@ -5,6 +5,17 @@ $Id$
 
 	* support for initgroups using backlinks (must enable
 	  at configure time with --enable-initgroups-backlink)
+	* from Peter Marschall <peter@adpm.de>:
+	  revert the deletion of blanks/tabs in ldap.conf that
+	  happened between 235 and 238
+	* from Peter Marschall <peter@adpm.de>:
+	  This patch changes configure.in and Makefile.am so that
+	  ldap.conf gets installed in the place and with the name
+	  that is given to the configure option --with-ldap-conf-file.
+	  In addition to that it fixes a long standing bug in
+	  Makefile.am that tries to install a file before the
+	  destination directory is guaranteed to be created (hunk #3),
+	  and uses $(mkinstalldirs) for AIX (hunk #2).
 
 238	Luke Howard <lukeh@padl.com>
 

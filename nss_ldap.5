@@ -52,7 +52,9 @@ were enabled when the software was built. Specifically, support for
 schema mapping and RFC2307bis (groups with distinguished names as
 members) are optional features that must be explicitly enabled at
 compile time. Other features are enabled in the configuration file,
-described below. Also, some features may be unavailable on certain
+described below. (The location of the configuration file is
+configurable at compile time; the default path is /etc/ldap.conf.)
+Also, some features may be unavailable on certain
 operating systems or with certain LDAP libraries. For more information,
 consult your vendor.
 .SH CONFIGURATION
@@ -61,7 +63,8 @@ nss_ldap
 stores its configuration in the
 .B
 ldap.conf
-file. (It should be noted that some LDAP client libraries, such as
+file, the location of which is configurable at compile time.
+(It should be noted that some LDAP client libraries, such as
 OpenLDAP, also use a configuration file of the same name.
 .B
 nss_ldap
@@ -308,7 +311,8 @@ the backoff parameters are configurable at compile time only.
 Specifies the time (in seconds) after which
 .B
 nss_ldap
-will close connections to the directory server.
+will close connections to the directory server. The default is not to
+time out connections.
 .TP
 .B sasl_authid <authid>
 Specifies the authorization identity to be used when performing SASL

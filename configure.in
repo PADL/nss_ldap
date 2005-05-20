@@ -18,10 +18,19 @@ AC_ARG_ENABLE(configurable-krb5-ccname-env, [  --enable-configurable-krb5-ccname
 AC_ARG_ENABLE(configurable-krb5-ccname-gssapi, [  --enable-configurable-krb5-ccname-gssapi   enable configurable Kerberos V credentials cache name (gssapi method)], [AC_DEFINE(CONFIGURE_KRB5_CCNAME) AC_DEFINE(CONFIGURE_KRB5_CCNAME_GSSAPI)])
 AC_ARG_WITH(ldap-lib, [  --with-ldap-lib=type      select ldap library [auto|netscape5|netscape4|netscape3|umich|openldap]])
 AC_ARG_WITH(ldap-dir, [  --with-ldap-dir=DIR       base directory of LDAP SDK])
-AC_ARG_WITH(ldap-conf-file, [  --with-ldap-conf-file     path to LDAP configuration file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_CONF, "$with_ldap_conf_file")])
-AC_ARG_WITH(ldap-secret-file, [  --with-ldap-secret-file   path to LDAP root secret file], [AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_ROOTPASSWD, "$with_ldap_secret_file")])
+AC_ARG_WITH(ldap-conf-file, [  --with-ldap-conf-file     path to LDAP configuration file],
+	    [ NSS_LDAP_PATH_CONF="$with_ldap_conf_file" ],
+	    [ NSS_LDAP_PATH_CONF="/etc/ldap.conf" ])
+AC_ARG_WITH(ldap-secret-file, [  --with-ldap-secret-file   path to LDAP root secret file],
+	    [ NSS_LDAP_PATH_ROOTPASSWD="$with_ldap_secret_file" ],
+	    [ NSS_LDAP_PATH_ROOTPASSWD="/etc/ldap.secret" ])
 AC_ARG_WITH(gssapi-dir, [  --with-gssapi-dir=DIR     base directory of gssapi SDK])
 AC_ARG_WITH(ngroups, [  --with-ngroups=num        average group size hint, experts only], [AC_DEFINE_UNQUOTED(LDAP_NSS_NGROUPS, $with_ngroups)])
+
+AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_CONF, "$NSS_LDAP_PATH_CONF")
+AC_DEFINE_UNQUOTED(NSS_LDAP_PATH_ROOTPASSWD, "$NSS_LDAP_PATH_ROOTPASSWD")
+AC_SUBST(NSS_LDAP_PATH_CONF)
+AC_SUBST(NSS_LDAP_PATH_ROOTPASSWD)
 
 if test "$ac_cv_prog_gcc" = "yes"; then CFLAGS="$CFLAGS -Wall -fPIC"; fi
 
