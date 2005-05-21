@@ -238,6 +238,7 @@ static NSS_STATUS do_result (ent_context_t * ctx, int all);
 static NSS_STATUS do_filter (const ldap_args_t * args, const char *filterprot,
 			     ldap_service_search_descriptor_t * sd,
 			     char *filter, size_t filterlen,
+			     char **dynamicFilter,
 			     const char **retFilter);
 
 /*
@@ -2014,15 +2015,18 @@ do_aggregate_filter (const char ** values,
  */
 static NSS_STATUS
 do_filter (const ldap_args_t * args, const char *filterprot,
-	   ldap_service_search_descriptor_t * sd, char *userbuf,
-	   size_t userbufSiz, const char **retFilter)
+	   ldap_service_search_descriptor_t * sd, char *userBuf,
+	   size_t userBufSiz,
+	   char **dynamicUserBuf, const char **retFilter)
 {
   char buf1[LDAP_FILT_MAXSIZ], buf2[LDAP_FILT_MAXSIZ];
   char *filterBufP, filterBuf[LDAP_FILT_MAXSIZ];
   size_t filterSiz;
-  NSS_STATUS stat;
+  NSS_STATUS stat = NSS_SUCCESS;
 
   debug ("==> do_filter");
+
+  *dynamicUserBuf = NULL;
 
   if (args != NULL)
     {
@@ -2035,17 +2039,18 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	}
       else
 	{
-	  filterBufP = userbuf;
-	  filterSiz = userbufSiz;
+	  filterBufP = userBuf;
+	  filterSiz = userBufSiz;
 	}
 
       switch (args->la_type)
 	{
 	case LA_TYPE_STRING:
-	  if ((stat =
-	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
-					sizeof (buf1))) != NSS_SUCCESS)
-	    return stat;
+	  stat = _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
+					  sizeof (buf1));
+	  if (stat != NSS_SUCCESS)
+	    break;
+
 	  snprintf (filterBufP, filterSiz, filterprot, buf1);
 	  break;
 	case LA_TYPE_NUMBER:
@@ -2053,44 +2058,73 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 		    args->la_arg1.la_number);
 	  break;
 	case LA_TYPE_STRING_AND_STRING:
-	  if ((stat =
-	       _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
-					sizeof (buf1))) != NSS_SUCCESS
-	      || (stat =
-		  _nss_ldap_escape_string (args->la_arg2.la_string, buf2,
-					   sizeof (buf2)) != NSS_SUCCESS))
-	    return stat;
+	  stat = _nss_ldap_escape_string (args->la_arg1.la_string, buf1,
+					  sizeof (buf1));
+	  if (stat != NSS_SUCCESS)
+	    break;
+
+	  stat = _nss_ldap_escape_string (args->la_arg2.la_string, buf2,
+					  sizeof (buf2));
+	  if (stat != NSS_SUCCESS)
+	    break;
+
 	  snprintf (filterBufP, filterSiz, filterprot, buf1, buf2);
 	  break;
 	case LA_TYPE_NUMBER_AND_STRING:
-	  if ((stat =
-	       _nss_ldap_escape_string (args->la_arg2.la_string, buf1,
-					sizeof (buf1))) != NSS_SUCCESS)
-	    return stat;
+	  stat = _nss_ldap_escape_string (args->la_arg2.la_string, buf1,
+					  sizeof (buf1));
+	  if (stat != NSS_SUCCESS)
+	    break;
+
 	  snprintf (filterBufP, filterSiz, filterprot,
 		    args->la_arg1.la_number, buf1);
 	  break;
 #ifdef HAVE_NSSWITCH_H
 	case LA_TYPE_TRIPLE:
-	  stat = do_triple_permutations (args->la_arg1.la_triple.host,
-					 args->la_arg1.la_triple.user,
-					 args->la_arg1.la_triple.domain,
-					 filterBufP, filterSiz);
-	  if (stat != NSS_SUCCESS)
-	    return stat;
+	  do
+	    {
+	      stat = do_triple_permutations (args->la_arg1.la_triple.host,
+					     args->la_arg1.la_triple.user,
+					     args->la_arg1.la_triple.domain,
+					     filterBufP, filterSiz);
+	      if (stat == NSS_TRYAGAIN)
+		{
+		  filterBufP = *dynamicUserBuf = realloc (*dynamicUserBuf,
+							  2 * filterSiz);
+		  if (filterBufP == NULL)
+		    return NSS_UNAVAIL;
+		  filterSiz *= 2;
+		}
+	    }
+	  while (stat == NSS_TRYAGAIN);
 	  break;
 #endif /* HAVE_NSSWITCH_H */
 	case LA_TYPE_STRING_LIST_OR:
 	case LA_TYPE_STRING_LIST_AND:
-	  stat = do_aggregate_filter (args->la_arg1.la_string_list,
-				      args->la_type,
-				      filterprot,
-				      filterBufP, filterSiz);
+	  do
+	    {
+	      stat = do_aggregate_filter (args->la_arg1.la_string_list,
+					  args->la_type,
+					  filterprot,
+					  filterBufP, filterSiz);
+	      if (stat == NSS_TRYAGAIN)
+		{
+		  filterBufP = *dynamicUserBuf = realloc (*dynamicUserBuf,
+							  2 * filterSiz);
+		  if (filterBufP == NULL)
+		    return NSS_UNAVAIL;
+		  filterSiz *= 2;
+		}
+	    }
+	  while (stat == NSS_TRYAGAIN);
 	  break;
 	default:
 	  return NSS_UNAVAIL;
 	  break;
 	}
+
+      if (stat != NSS_SUCCESS)
+	return stat;
 
       /*
        * This code really needs to be cleaned up.
@@ -2100,25 +2134,47 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  size_t filterBufPLen = strlen (filterBufP);
 
 	  /* remove trailing bracket */
-	  /* ( */
 	  if (filterBufP[filterBufPLen - 1] == ')')
 	    filterBufP[filterBufPLen - 1] = '\0';
 
-	  /* ( */
-	  snprintf (userbuf, userbufSiz, "%s(%s))",
-		    filterBufP, sd->lsd_filter);
+	  if (*dynamicUserBuf != NULL)
+	    {
+	      char *oldDynamicUserBuf = *dynamicUserBuf;
+	      size_t dynamicUserBufSiz;
+
+	      dynamicUserBufSiz = filterBufPLen + strlen (sd->lsd_filter) +
+				  sizeof("())");
+	      *dynamicUserBuf = malloc (dynamicUserBufSiz);
+	      if (*dynamicUserBuf == NULL)
+		{
+		  free (oldDynamicUserBuf);
+		  return NSS_UNAVAIL;
+		}
+
+	      snprintf (*dynamicUserBuf, dynamicUserBufSiz, "%s(%s))",
+			filterBufP, sd->lsd_filter);
+	      free (oldDynamicUserBuf);
+	    }
+	  else
+	    {
+	      snprintf (userBuf, userBufSiz, "%s(%s))",
+			filterBufP, sd->lsd_filter);
+	    }
 	}
 
-      *retFilter = userbuf;
+      if (*dynamicUserBuf != NULL)
+	*retFilter = *dynamicUserBuf;
+      else
+	*retFilter = userBuf;
     }
   else
     {
       /* no arguments, probably an enumeration filter */
       if (sd != NULL && sd->lsd_filter != NULL)
 	{
-	  snprintf (userbuf, userbufSiz, "(&%s(%s))",
+	  snprintf (userBuf, userBufSiz, "(&%s(%s))",
 		    filterprot, sd->lsd_filter);
-	  *retFilter = userbuf;
+	  *retFilter = userBuf;
 	}
       else
 	{
@@ -2730,7 +2786,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
 		    int sizelimit, LDAPMessage ** res)
 {
   char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
-  char filterBuf[LDAP_FILT_MAXSIZ];
+  char filterBuf[LDAP_FILT_MAXSIZ], *dynamicFilterBuf = NULL;
   const char **attrs, *filter;
   int scope;
   NSS_STATUS stat;
@@ -2778,7 +2834,8 @@ next:
     }
 
   stat =
-    do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf), &filter);
+    do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf),
+	       &dynamicFilterBuf, &filter);
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -2786,6 +2843,12 @@ next:
 			    (user_attrs != NULL) ? user_attrs : attrs,
 			    sizelimit, res,
 			    (search_func_t) do_search_s);
+
+  if (dynamicFilterBuf != NULL)
+    {
+      free (dynamicFilterBuf);
+      dynamicFilterBuf = NULL;
+    }
 
   /* If no entry was returned, try the next search descriptor. */
   if (sd != NULL && sd->lsd_next != NULL)
@@ -2817,7 +2880,7 @@ _nss_ldap_search (const ldap_args_t * args,
 		  ldap_service_search_descriptor_t ** csd)
 {
   char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
-  char filterBuf[LDAP_FILT_MAXSIZ];
+  char filterBuf[LDAP_FILT_MAXSIZ], *dynamicFilterBuf = NULL;
   const char **attrs, *filter;
   int scope;
   NSS_STATUS stat;
@@ -2881,7 +2944,8 @@ _nss_ldap_search (const ldap_args_t * args,
     }
 
   stat =
-    do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf), &filter);
+    do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf),
+	       &dynamicFilterBuf, &filter);
   if (stat != NSS_SUCCESS)
     return stat;
 
@@ -2889,6 +2953,9 @@ _nss_ldap_search (const ldap_args_t * args,
 			    (user_attrs != NULL) ? user_attrs : attrs,
 			    sizelimit, msgid,
 			    (search_func_t) do_search);
+
+  if (dynamicFilterBuf != NULL)
+    free (dynamicFilterBuf);
 
   debug ("<== _nss_ldap_search");
 
@@ -2903,7 +2970,7 @@ do_next_page (const ldap_args_t * args,
 	      int sizelimit, int *msgid, struct berval *pCookie)
 {
   char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
-  char filterBuf[LDAP_FILT_MAXSIZ];
+  char filterBuf[LDAP_FILT_MAXSIZ], *dynamicFilterBuf = NULL;
   const char **attrs, *filter;
   int scope;
   NSS_STATUS stat;
@@ -2942,7 +3009,8 @@ do_next_page (const ldap_args_t * args,
     }
 
   stat =
-    do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf), &filter);
+    do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf),
+	       &dynamicFilterBuf, &filter);
   if (stat != NSS_SUCCESS)
     {
       return stat;
@@ -2953,6 +3021,8 @@ do_next_page (const ldap_args_t * args,
 			      pCookie, 0, &serverctrls[0]);
   if (stat != LDAP_SUCCESS)
     {
+      if (dynamicFilterBuf != NULL)
+	free (dynamicFilterBuf);
       return NSS_UNAVAIL;
     }
 
@@ -2961,7 +3031,10 @@ do_next_page (const ldap_args_t * args,
 		     (args == NULL) ? (char *) filterprot : filter,
 		     (char **) attrs, 0, serverctrls, NULL, LDAP_NO_LIMIT,
 		     sizelimit, msgid);
+
   ldap_control_free (serverctrls[0]);
+  if (dynamicFilterBuf != NULL)
+    free (dynamicFilterBuf);
 
   return (*msgid < 0) ? NSS_UNAVAIL : NSS_SUCCESS;
 }
