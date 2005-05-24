@@ -2807,7 +2807,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
   scope = __session.ls_config->ldc_scope;
   attrs = NULL;
 
-  if (args->la_base != NULL)
+  if (args != NULL && args->la_base != NULL)
     {
       sel = LM_NONE;
       base = args->la_base;
@@ -2911,7 +2911,7 @@ _nss_ldap_search (const ldap_args_t * args,
   scope = __session.ls_config->ldc_scope;
   attrs = NULL;
 
-  if (args->la_base != NULL)
+  if (args != NULL && args->la_base != NULL)
     {
       sel = LM_NONE;
       base = args->la_base;
@@ -2999,7 +2999,7 @@ do_next_page (const ldap_args_t * args,
   scope = __session.ls_config->ldc_scope;
   attrs = NULL;
 
-  if (args->la_base != NULL)
+  if (args != NULL && args->la_base != NULL)
     {
       sel = LM_NONE;
       base = args->la_base;

@@ -59,7 +59,7 @@ EXPORTED {
 		_nss_ldap_setautomntent;
 		_nss_ldap_getautomntent_r;
 		_nss_ldap_endautomntent;
-		_nss_ldap_getautomntentbyname_r;
+		_nss_ldap_getautomntbyname_r;
 	local:
 		*;
 };

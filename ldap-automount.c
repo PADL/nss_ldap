@@ -95,6 +95,7 @@ am_context_alloc(ldap_automount_context_t **pContext)
     }
 
   context->lac_dn = NULL;
+  context->lac_state = NULL;
 
   if (_nss_ldap_ent_context_init_locked (&context->lac_state) == NULL)
     {
@@ -148,11 +149,20 @@ NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **private)
 
   _nss_ldap_enter ();
 
+  stat = _nss_ldap_init ();
+  if (stat != NSS_SUCCESS)
+    {
+      am_context_free (&context);
+      _nss_ldap_leave ();
+      debug ("<== _nss_ldap_setautomntent (init failed)");
+      return stat;
+    }
+
   stat = am_context_alloc (&context);
   if (stat != NSS_SUCCESS)
     {
       _nss_ldap_leave ();
-      debug ("<== _nss_ldap_setautomntent");
+      debug ("<== _nss_ldap_setautomntent (context alloc failed)");
       return stat;
     }
 
@@ -166,7 +176,7 @@ NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **private)
     {
       am_context_free (&context);
       _nss_ldap_leave ();
-      debug ("<== _nss_ldap_setautomntent");
+      debug ("<== _nss_ldap_setautomntent (search failed)");
       return stat;
     }
 
@@ -176,7 +186,7 @@ NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **private)
       ldap_msgfree (res);
       am_context_free (&context);
       _nss_ldap_leave ();
-      debug ("<== _nss_ldap_setautomntent");
+      debug ("<== _nss_ldap_setautomntent (search failed)");
       return NSS_NOTFOUND;
     }
 
@@ -186,7 +196,7 @@ NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **private)
       ldap_msgfree (res);
       am_context_free (&context);
       _nss_ldap_leave ();
-      debug ("<== _nss_ldap_setautomntent");
+      debug ("<== _nss_ldap_setautomntent (failed to retrieve DN)");
       return NSS_NOTFOUND;
     }
 
