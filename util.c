@@ -563,6 +563,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
 #ifdef CONFIGURE_KRB5_CCNAME
   result->ldc_krb5_ccname = NULL;
 #endif /* CONFIGURE_KRB5_CCNAME */
+  result->ldc_flags = 0;
 
 #ifdef AT_OC_MAP
   for (i = 0; i <= MAP_MAX; i++)
@@ -879,6 +880,19 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	  do_parse_map_statement (result, v, MAP_DEFAULT);
 	}
 #endif /* AT_OC_MAP */
+#ifdef RFC2307BIS
+      else if (!strcasecmp (k, NSS_LDAP_KEY_INITGROUPS))
+	{
+	  if (!strcasecmp (v, "backlink"))
+	    {
+	      result->ldc_flags |= NSS_LDAP_FLAGS_INITGROUPS_BACKLINK;
+	    }
+	  else
+	    {
+	      result->ldc_flags &= ~(NSS_LDAP_FLAGS_INITGROUPS_BACKLINK);
+	    }
+	}
+#endif /* RFC2307BIS */
       else
 	{
 	  /*

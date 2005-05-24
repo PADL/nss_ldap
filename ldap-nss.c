@@ -4012,4 +4012,12 @@ const char **_nss_ldap_get_attributes (ldap_map_selector_t sel)
   return attrs;
 }
 
+int _nss_ldap_test_config_flag (unsigned int flag)
+{
+  if (__config != NULL && (__config->ldc_flags & flag) != 0)
+    return 1;
+
+  return 0;
+}
+
 /* #include "sldap-compat.c" */

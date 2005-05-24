@@ -3,8 +3,10 @@ $Id$
 
 239	Luke Howard <lukeh@padl.com>
 
-	* support for initgroups using backlinks (must enable
-	  at configure time with --enable-initgroups-backlink)
+	* support for initgroups using backlinks (selectable
+	  at runtime if RFC2307bis support is enabled, using
+	  the nss_initgroups backlink configuration directive)
+	* support for dynamically expanding filter sizes
 	* from Peter Marschall <peter@adpm.de>:
 	  revert the deletion of blanks/tabs in ldap.conf that
 	  happened between 235 and 238

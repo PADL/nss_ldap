@@ -85,6 +85,9 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_LOGDIR		"logdir"
 #define NSS_LDAP_KEY_DEBUG		"debug"
 #define NSS_LDAP_KEY_PAGESIZE		"pagesize"
+#ifdef RFC2307BIS
+#define NSS_LDAP_KEY_INITGROUPS		"nss_initgroups"
+#endif
 
 /*
  * support separate naming contexts for each map 
@@ -105,6 +108,11 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_NSS_BASE_ALIASES		"nss_base_aliases"
 #define NSS_LDAP_KEY_NSS_BASE_NETGROUP		"nss_base_netgroup"
 #define NSS_LDAP_KEY_NSS_BASE_AUTOMOUNT		"nss_base_automount"
+
+/*
+ * Flags that are exposed via _nss_ldap_test_config_flag()
+ */
+#define NSS_LDAP_FLAGS_INITGROUPS_BACKLINK	0x00000001
 
 /*
  * There are a number of means of obtaining configuration information.

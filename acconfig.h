@@ -52,6 +52,3 @@
 /* maximum number of group members in static buffer */
 #define LDAP_NSS_NGROUPS	 64
 
-/* whether to enable initgroups back-link algorithm */
-#undef INITGROUPS_BACKLINK
-

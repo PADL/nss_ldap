@@ -74,6 +74,9 @@ typedef struct ldap_initgroups_args
   size_t listlen;
   int depth;
   struct name_list *known_groups;
+# ifdef RFC2307BIS
+  int backlink;
+# endif
 }
 ldap_initgroups_args_t;
 #else
@@ -83,6 +86,9 @@ typedef struct ldap_initgroups_args
   struct nss_groupsbymem *gbm;
   int depth;
   struct name_list *known_groups;
+# ifdef RFC2307BIS
+  int backlink;
+# endif
 }
 ldap_initgroups_args_t;
 # else
@@ -95,6 +101,9 @@ typedef struct ldap_initgroups_args
   long int limit;
   int depth;
   struct name_list *known_groups;
+# ifdef RFC2307BIS
+  int backlink;
+# endif
 }
 ldap_initgroups_args_t;
 # endif
@@ -770,11 +779,8 @@ do_parse_initgroups_nested (LDAPMessage * e,
   NSS_STATUS stat;
   ldap_initgroups_args_t *lia = (ldap_initgroups_args_t *) result;
 #ifdef RFC2307BIS
-# ifdef INITGROUPS_BACKLINK
   char **values;
-# else
   char *groupdn;
-# endif
 #endif /* RFC2307BIS */
 
   stat = do_parse_initgroups (e, pvt, result, buffer, buflen);
@@ -784,44 +790,46 @@ do_parse_initgroups_nested (LDAPMessage * e,
     }
 
 #ifdef RFC2307BIS
-# ifdef INITGROUPS_BACKLINK
-  /*
-   * Now add the GIDs of any groups of which this group is
-   * a member.
-   */
-  values = _nss_ldap_get_values (e, ATM (group, memberOf));
-  if (values != NULL)
+  if (lia->backlink != 0)
     {
-      NSS_STATUS stat;
+      /*
+       * Now add the GIDs of any groups of which this group is
+       * a member.
+       */
+      values = _nss_ldap_get_values (e, ATM (group, memberOf));
+      if (values != NULL)
+	{
+	  NSS_STATUS stat;
 
-      lia->depth++;
-      stat = ng_chase_backlink ((const char **)values, lia);
-      lia->depth--;
+	  lia->depth++;
+	  stat = ng_chase_backlink ((const char **)values, lia);
+	  lia->depth--;
 
-      ldap_value_free (values);
+	  ldap_value_free (values);
  
-      return stat;
+	  return stat;
+	}
     }
-# else
-  /*
-   * Now add the GIDs of any groups which refer to this group
-   */
-  groupdn = _nss_ldap_get_dn (e);
-  if (groupdn != NULL)
+  else
     {
-      NSS_STATUS stat;
+      /*
+       * Now add the GIDs of any groups which refer to this group
+       */
+      groupdn = _nss_ldap_get_dn (e);
+      if (groupdn != NULL)
+	{
+	  NSS_STATUS stat;
 
-      lia->depth++;
-      stat = ng_chase (groupdn, lia);
-      lia->depth--;
+	  lia->depth++;
+	  stat = ng_chase (groupdn, lia);
+	  lia->depth--;
 #ifdef HAVE_LDAP_MEMFREE
-      ldap_memfree (groupdn);
+	  ldap_memfree (groupdn);
 #else
-      free (groupdn);
+	  free (groupdn);
 #endif
+	}
     }
-
-# endif /* INITGROUPS_BACKLINK */
 #endif /* RFC2307BIS */
 
   return stat;
@@ -871,7 +879,6 @@ ng_chase (const char *dn, ldap_initgroups_args_t * lia)
   return stat;
 }
 
-# ifdef INITGROUPS_BACKLINK
 static NSS_STATUS
 ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
 {
@@ -957,8 +964,6 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
 
   return stat;
 }
-# endif /* INITGROUPS_BACKLINK */
-
 #endif /* RFC2307BIS */
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(HAVE_USERSEC_H)
@@ -1004,16 +1009,15 @@ char *_nss_ldap_getgrset (char *user)
 #endif /* HAVE_NSS_H */
 #ifdef RFC2307BIS
   char *userdn = NULL;
-#ifndef INITGROUPS_BACKLINK
   LDAPMessage *res, *e;
   static const char *no_attrs[] = { NULL };
-#endif
 #endif /* RFC2307BIS */
   const char *filter;
   ldap_args_t a;
   NSS_STATUS stat;
   ent_context_t *ctx = NULL;
   const char *gidnumber_attrs[3];
+  ldap_map_selector_t map = LM_GROUP;
 
   LA_INIT (a);
 #if defined(HAVE_NSS_H) || defined(HAVE_USERSEC_H)
@@ -1056,35 +1060,49 @@ char *_nss_ldap_getgrset (char *user)
     }
 
 #ifdef RFC2307BIS
-# ifdef INITGROUPS_BACKLINK
-  filter = _nss_ldap_filt_getpwnam_groupsbymember;
-  LA_STRING2 (a) = LA_STRING (a);
-  LA_TYPE (a) = LA_TYPE_STRING_AND_STRING;
-# else
-  /* lookup the user's DN. */
-  stat =
-    _nss_ldap_search_s (&a, _nss_ldap_filt_getpwnam, LM_PASSWD,
-			no_attrs, 1, &res);
-  if (stat == NSS_SUCCESS)
+  lia.backlink = _nss_ldap_test_config_flag (NSS_LDAP_FLAGS_INITGROUPS_BACKLINK);
+
+  if (lia.backlink != 0)
     {
-      e = _nss_ldap_first_entry (res);
-      if (e != NULL)
-	{
-	  userdn = _nss_ldap_get_dn (e);
-	}
-      ldap_msgfree (res);
-    }
-  if (userdn != NULL)
-    {
-      LA_STRING2 (a) = userdn;
+      filter = _nss_ldap_filt_getpwnam_groupsbymember;
+      LA_STRING2 (a) = LA_STRING (a);
       LA_TYPE (a) = LA_TYPE_STRING_AND_STRING;
-      filter = _nss_ldap_filt_getgroupsbymemberanddn;
+
+      gidnumber_attrs[0] = ATM (group, gidNumber);
+      gidnumber_attrs[1] = ATM (group, memberOf);
+      gidnumber_attrs[2] = NULL;
+
+      map = LM_PASSWD;
     }
   else
     {
-      filter = _nss_ldap_filt_getgroupsbymember;
+      /* lookup the user's DN. */
+      stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwnam, LM_PASSWD,
+				 no_attrs, 1, &res);
+      if (stat == NSS_SUCCESS)
+	{
+	  e = _nss_ldap_first_entry (res);
+	  if (e != NULL)
+	    {
+	      userdn = _nss_ldap_get_dn (e);
+	    }
+	  ldap_msgfree (res);
+	}
+      if (userdn != NULL)
+	{
+	  LA_STRING2 (a) = userdn;
+	  LA_TYPE (a) = LA_TYPE_STRING_AND_STRING;
+	  filter = _nss_ldap_filt_getgroupsbymemberanddn;
+	}
+      else
+	{
+	  filter = _nss_ldap_filt_getgroupsbymember;
+	}
+
+      gidnumber_attrs[0] = ATM (group, gidNumber);
+      gidnumber_attrs[1] = NULL;
     }
-# endif /* INITGROUPS_BACKLINK */
+
   if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
     {
       debug ("<== " NSS_LDAP_INITGROUPS_FUNCTION " (ent_context_init failed)");
@@ -1099,14 +1117,6 @@ char *_nss_ldap_getgrset (char *user)
   filter = _nss_ldap_filt_getgroupsbymember;
 #endif /* RFC2307BIS */
 
-  gidnumber_attrs[0] = ATM (group, gidNumber);
-#ifdef INITGROUPS_BACKLINK
-  gidnumber_attrs[1] = ATM (group, memberOf);
-  gidnumber_attrs[2] = NULL;
-#else
-  gidnumber_attrs[1] = NULL;
-#endif
-
   stat = _nss_ldap_getent_ex (&a, &ctx, (void *) &lia, NULL, 0,
 #ifdef HAVE_NSS_H
 			      errnop,
@@ -1114,11 +1124,7 @@ char *_nss_ldap_getgrset (char *user)
 			      &erange,
 #endif /* HAVE_NSS_H */
 			      filter,
-#ifdef INITGROUPS_BACKLINK
-			      LM_PASSWD,
-#else
-			      LM_GROUP,
-#endif
+			      map,
 			      gidnumber_attrs,
 			      do_parse_initgroups_nested);
 

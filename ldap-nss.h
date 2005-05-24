@@ -379,6 +379,8 @@ struct ldap_config
    */
   const char **ldc_attrtab[LM_NONE + 1];
 
+  unsigned int ldc_flags;
+
   /* next configuration. loops back onto itself for last entry */
   struct ldap_config *ldc_next;
 };
@@ -892,5 +894,7 @@ typedef struct ldap_proxy_bind_args ldap_proxy_bind_args_t;
 NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password);
 
 NSS_STATUS _nss_ldap_init (void);
+
+int _nss_ldap_test_config_flag (unsigned int flag);
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */
