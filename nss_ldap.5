@@ -413,7 +413,20 @@ If
 .B nss_ldap
 was built without schema mapping support, then this option
 is ignored.
-
+.TP
+.B nss_initgroups backlink
+This option directs the
+.B nss_ldap
+implementation of
+.BR initgroups(3)
+to determine a user's group membership by reading the memberOf
+attribute of their directory entry (and of any nested groups),
+rather than querying on uniqueMember. This may provide increased
+performance with certain directory servers that have peculiar
+indexing configurations.
+If
+.B nss_ldap
+was built without RFC2307bis support, then this option is ignored.
 .SH AUTHOR
 The
 .B nss_ldap
