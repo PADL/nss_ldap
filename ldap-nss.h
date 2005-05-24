@@ -448,7 +448,8 @@ enum ldap_args_types
   LA_TYPE_NUMBER_AND_STRING,
   LA_TYPE_TRIPLE,
   LA_TYPE_STRING_LIST_OR,
-  LA_TYPE_STRING_LIST_AND
+  LA_TYPE_STRING_LIST_AND,
+  LA_TYPE_NONE
 };
 
 typedef enum ldap_args_types ldap_args_types_t;
@@ -485,6 +486,7 @@ struct ldap_args
     const char *la_string;
   }
   la_arg2;
+  const char *la_base; /* override default base */
 };
 
 typedef struct ldap_args ldap_args_t;
@@ -493,6 +495,7 @@ typedef struct ldap_args ldap_args_t;
 						(q).la_type = LA_TYPE_STRING; \
 						(q).la_arg1.la_string = NULL; \
 						(q).la_arg2.la_string = NULL; \
+						(q).la_base = NULL; \
 						} while (0)
 #define LA_TYPE(q)				((q).la_type)
 #define LA_STRING(q)				((q).la_arg1.la_string)
@@ -500,6 +503,7 @@ typedef struct ldap_args ldap_args_t;
 #define LA_TRIPLE(q)				((q).la_arg1.la_triple)
 #define LA_STRING_LIST(q)			((q).la_arg1.la_string_list)
 #define LA_STRING2(q)				((q).la_arg2.la_string)
+#define LA_BASE(q)				((q).la_base)
 
 #include "ldap-parse.h"
 

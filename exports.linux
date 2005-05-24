@@ -56,6 +56,9 @@ EXPORTED {
 		_nss_ldap_setrpcent;
 		_nss_ldap_setservent;
 		_nss_ldap_setspent;
+		_nss_ldap_setautomntent;
+		_nss_ldap_getautomntent_r;
+		_nss_ldap_endautomntent;
 	local:
 		*;
 };

@@ -127,6 +127,10 @@ char _nss_ldap_filt_getspent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getnetgrent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_innetgr[LDAP_FILT_MAXSIZ];
 
+/* automount */
+char _nss_ldap_filt_setautomntent[LDAP_FILT_MAXSIZ];
+char _nss_ldap_filt_getautomntent[LDAP_FILT_MAXSIZ];
+
 /**
  * lookup filter initialization
  */
@@ -259,6 +263,12 @@ _nss_ldap_init_filters ()
             ATM (netgroup, cn), "%s");
   snprintf (_nss_ldap_filt_innetgr, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (memberNisNetgroup), "%s");
+
+  /* automounts */
+  snprintf (_nss_ldap_filt_setautomntent, LDAP_FILT_MAXSIZ,
+	    "(&(objectclass=%s)(%s=%s))", OC (automountMap), AT (automountMapName), "%s");
+  snprintf (_nss_ldap_filt_getautomntent, LDAP_FILT_MAXSIZ,
+	    "(objectclass=%s)", OC (automount));
 }
 
 #ifdef AT_OC_MAP
@@ -483,11 +493,10 @@ init_automount_attributes (const char ***automount_attrs)
 
   (*automount_attrs) = __automount_attrs;
 
-  (*automount_attrs)[0] = ATM (automount, cn);
-  (*automount_attrs)[1] = AT (nisMapEntry);
-  (*automount_attrs)[2] = AT (nisMapName);
-  (*automount_attrs)[3] = ATM (automount, description);
-  (*automount_attrs)[4] = NULL;
+  (*automount_attrs)[0] = AT (automountKey);
+  (*automount_attrs)[1] = AT (automountInformation);
+  (*automount_attrs)[2] = ATM (automount, description);
+  (*automount_attrs)[3] = NULL;
 }
 
 #else /* AT_OC_MAP */
@@ -542,7 +551,7 @@ static const char *netgrp_attributes[] =
   { AT (cn), AT (nisNetgroupTriple), AT (memberNisNetgroup), NULL };
 
 static const char *automount_attributes[] =
-  { AT (cn), AT (nisMapEntry), AT (nisMapName), AT (description), NULL };
+  { AT (automountKey), AT (automountInformation), AT (description), NULL };
 
 void
 _nss_ldap_init_attributes (const char ***attrtab)

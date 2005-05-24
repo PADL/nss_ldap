@@ -2028,7 +2028,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 
   *dynamicUserBuf = NULL;
 
-  if (args != NULL)
+  if (args != NULL && args->la_type != LA_TYPE_NONE)
     {
       /* choose what to use for temporary storage */
 
@@ -2785,7 +2785,8 @@ _nss_ldap_search_s (const ldap_args_t * args,
 		    const char **user_attrs,
 		    int sizelimit, LDAPMessage ** res)
 {
-  char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
+  char sdBase[LDAP_FILT_MAXSIZ];
+  const char *base = NULL;
   char filterBuf[LDAP_FILT_MAXSIZ], *dynamicFilterBuf = NULL;
   const char **attrs, *filter;
   int scope;
@@ -2805,6 +2806,13 @@ _nss_ldap_search_s (const ldap_args_t * args,
   base = __session.ls_config->ldc_base;
   scope = __session.ls_config->ldc_scope;
   attrs = NULL;
+
+  if (args->la_base != NULL)
+    {
+      sel = LM_NONE;
+      base = args->la_base;
+      /* scope = LDAP_SCOPE_ONELEVEL; */
+    }
 
   if (sel < LM_NONE)
     {
@@ -2879,7 +2887,8 @@ _nss_ldap_search (const ldap_args_t * args,
 		  int *msgid,
 		  ldap_service_search_descriptor_t ** csd)
 {
-  char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
+  char sdBase[LDAP_FILT_MAXSIZ];
+  const char *base = NULL;
   char filterBuf[LDAP_FILT_MAXSIZ], *dynamicFilterBuf = NULL;
   const char **attrs, *filter;
   int scope;
@@ -2901,6 +2910,13 @@ _nss_ldap_search (const ldap_args_t * args,
   base = __session.ls_config->ldc_base;
   scope = __session.ls_config->ldc_scope;
   attrs = NULL;
+
+  if (args->la_base != NULL)
+    {
+      sel = LM_NONE;
+      base = args->la_base;
+      /* scope = LDAP_SCOPE_ONELEVEL; */
+    }
 
   if (sel < LM_NONE || *csd != NULL)
     {
@@ -2969,7 +2985,8 @@ do_next_page (const ldap_args_t * args,
 	      ldap_map_selector_t sel,
 	      int sizelimit, int *msgid, struct berval *pCookie)
 {
-  char sdBase[LDAP_FILT_MAXSIZ], *base = NULL;
+  char sdBase[LDAP_FILT_MAXSIZ];
+  const char *base = NULL;
   char filterBuf[LDAP_FILT_MAXSIZ], *dynamicFilterBuf = NULL;
   const char **attrs, *filter;
   int scope;
@@ -2981,6 +2998,13 @@ do_next_page (const ldap_args_t * args,
   base = __session.ls_config->ldc_base;
   scope = __session.ls_config->ldc_scope;
   attrs = NULL;
+
+  if (args->la_base != NULL)
+    {
+      sel = LM_NONE;
+      base = args->la_base;
+      /* scope = LDAP_SCOPE_ONELEVEL; */
+    }
 
   if (sel < LM_NONE)
     {
