@@ -126,6 +126,7 @@ am_context_free(ldap_automount_context_t **pContext)
 #endif
 
   _nss_ldap_ent_context_release (context->lac_state);
+  free (context->lac_state);
 
   memset (context, 0, sizeof (*context));
   free (context);
@@ -247,6 +248,41 @@ NSS_STATUS _nss_ldap_endautomntent(void **private)
   debug ("<== _nss_ldap_endautomntent");
 
   return NSS_SUCCESS;
+}
+
+NSS_STATUS _nss_ldap_getautomntbyname_r(void *private, const char *key,
+					const char **canon_key, const char **value,
+					char *buffer, size_t buflen, int *errnop)
+{
+  NSS_STATUS stat;
+  ldap_automount_context_t *context = (ldap_automount_context_t *)private;
+  ldap_args_t a;
+  char **keyval[2];
+
+  if (context == NULL)
+    return NSS_NOTFOUND;
+
+  LA_INIT (a);
+  LA_TYPE (a) = LA_TYPE_STRING;
+  LA_STRING (a) = key;
+  LA_BASE (a) = context->lac_dn;
+
+  keyval[0] = (char **)canon_key;
+  keyval[1] = (char **)value;
+
+  debug ("==> _nss_ldap_getautomntbyname_r");
+
+  /* we do not acquire lock in this case */
+  stat = _nss_ldap_getbyname (&a,
+			      (void *)keyval,
+			      buffer, buflen, errnop,
+			      _nss_ldap_filt_getautomntbyname,
+			      LM_AUTOMOUNT,
+			      _nss_ldap_parse_automount);
+
+  debug ("<== _nss_ldap_getautomntbyname_r");
+
+  return stat;
 }
 
 #endif /* HAVE_NSS_H */

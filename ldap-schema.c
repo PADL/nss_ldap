@@ -130,6 +130,7 @@ char _nss_ldap_filt_innetgr[LDAP_FILT_MAXSIZ];
 /* automount */
 char _nss_ldap_filt_setautomntent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getautomntent[LDAP_FILT_MAXSIZ];
+char _nss_ldap_filt_getautomntbyname[LDAP_FILT_MAXSIZ];
 
 /**
  * lookup filter initialization
@@ -269,6 +270,8 @@ _nss_ldap_init_filters ()
 	    "(&(objectclass=%s)(%s=%s))", OC (automountMap), AT (automountMapName), "%s");
   snprintf (_nss_ldap_filt_getautomntent, LDAP_FILT_MAXSIZ,
 	    "(objectclass=%s)", OC (automount));
+  snprintf (_nss_ldap_filt_getautomntbyname, LDAP_FILT_MAXSIZ,
+	    "(&(objectclass=%s)(%s=%s))", OC (automount), AT (automountKey), "%s");
 }
 
 #ifdef AT_OC_MAP

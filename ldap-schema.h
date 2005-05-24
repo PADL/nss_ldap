@@ -104,6 +104,7 @@ extern char _nss_ldap_filt_innetgr[];
 /* automounts */
 extern char _nss_ldap_filt_setautomntent[];
 extern char _nss_ldap_filt_getautomntent[];
+extern char _nss_ldap_filt_getautomntbyname[];
 
 #ifdef AT_OC_MAP
 /**
