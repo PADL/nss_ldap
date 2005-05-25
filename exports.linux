@@ -3,6 +3,7 @@ EXPORTED {
 	global:
 		# Published NSS service module interfaces
 		_nss_ldap_endaliasent;
+		_nss_ldap_endautomntent;
 		_nss_ldap_endetherent;
 		_nss_ldap_endgrent;
 		_nss_ldap_endhostent;
@@ -15,6 +16,8 @@ EXPORTED {
 		_nss_ldap_endspent;
 		_nss_ldap_getaliasbyname_r;
 		_nss_ldap_getaliasent_r;
+		_nss_ldap_getautomntbyname_r;
+		_nss_ldap_getautomntent_r;
 		_nss_ldap_getetherent_r;
 		_nss_ldap_getgrent_r;
 		_nss_ldap_getgrgid_r;
@@ -46,6 +49,7 @@ EXPORTED {
 		_nss_ldap_initgroups;
 		_nss_ldap_initgroups_dyn;
 		_nss_ldap_setaliasent;
+		_nss_ldap_setautomntent;
 		_nss_ldap_setetherent;
 		_nss_ldap_setgrent;
 		_nss_ldap_sethostent;
@@ -56,10 +60,6 @@ EXPORTED {
 		_nss_ldap_setrpcent;
 		_nss_ldap_setservent;
 		_nss_ldap_setspent;
-		_nss_ldap_setautomntent;
-		_nss_ldap_getautomntent_r;
-		_nss_ldap_endautomntent;
-		_nss_ldap_getautomntbyname_r;
 	local:
 		*;
 };
