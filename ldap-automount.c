@@ -58,8 +58,6 @@ static char rcsId[] = "$Id$";
 #include <port_after.h>
 #endif
 
-#ifdef HAVE_NSS_H
-
 static NSS_STATUS
 _nss_ldap_parse_automount (LDAPMessage * e,
 			   ldap_state_t * pvt,
@@ -83,6 +81,7 @@ _nss_ldap_parse_automount (LDAPMessage * e,
   return NSS_SUCCESS;
 }
 
+#ifdef HAVE_NSS_H
 static NSS_STATUS
 am_context_alloc(ldap_automount_context_t **pContext)
 {

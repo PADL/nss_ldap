@@ -23,18 +23,22 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_AUTOMOUNT_H
 #define _LDAP_NSS_LDAP_LDAP_AUTOMOUNT_H
 
-#ifdef HAVE_NSS_H
 static NSS_STATUS _nss_ldap_parse_automount (LDAPMessage * e,
 					     ldap_state_t * pvt,
 					     void *result,
 					     char *buffer, size_t buflen);
 
+#ifdef HAVE_NSS_H
+/* Linux only for now */
 struct ldap_automount_context {
+  /* DN of container representing automount map */
   char *lac_dn;
+  /* Enumeration state */
   ent_context_t *lac_state;
 };
 
 typedef struct ldap_automount_context ldap_automount_context_t;
+
 NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **context);
 NSS_STATUS _nss_ldap_getautomntent(void *context, const char **key, const char **value,
 				   char *buffer, size_t buflen, int *errnop);
