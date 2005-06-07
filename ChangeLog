@@ -1,6 +1,13 @@
 $Id$
 ===============================================================
 
+240	Luke Howard <lukeh@padl.com>
+
+	* new API for resolving automounts (requires custom
+	  autofs plugin for Linux at present):
+	  _nss_ldap_setautomntent(), _nss_ldap_getautomntend(),
+	  _nss_ldap_endautomntent(), _nss_ldap_getautomntbyname_r()
+
 239	Luke Howard <lukeh@padl.com>
 
 	* support for initgroups using backlinks (selectable
