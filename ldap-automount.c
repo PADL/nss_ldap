@@ -334,7 +334,7 @@ NSS_STATUS _nss_ldap_getautomntbyname_r(void *private, const char *key,
 					const char **canon_key, const char **value,
 					char *buffer, size_t buflen, int *errnop)
 {
-  NSS_STATUS stat;
+  NSS_STATUS stat = NSS_NOTFOUND;
   ldap_automount_context_t *context = (ldap_automount_context_t *)private;
   ldap_args_t a;
   char **keyval[2];
