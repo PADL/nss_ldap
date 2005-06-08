@@ -47,6 +47,9 @@ NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **context);
 NSS_STATUS _nss_ldap_getautomntent(void *context, const char **key, const char **value,
 				   char *buffer, size_t buflen, int *errnop);
 NSS_STATUS _nss_ldap_endautomntent(void **context);
+NSS_STATUS _nss_ldap_getautomntbyname_r(void *private, const char *key,
+					const char **canon_key, const char **value,
+					char *buffer, size_t buflen, int *errnop);
 
 #endif /* HAVE_NSS_H */
 
