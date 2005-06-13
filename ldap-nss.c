@@ -623,8 +623,8 @@ do_set_sockopts (void)
 #endif /* LDAP_OPT_DESC */
     {
       int off = 0;
-      SOCKLEN_T socknamelen = sizeof (SOCKADDR_STORAGE);
-      SOCKLEN_T peernamelen = sizeof (SOCKADDR_STORAGE);
+      NSS_LDAP_SOCKLEN_T socknamelen = sizeof (NSS_LDAP_SOCKADDR_STORAGE);
+      NSS_LDAP_SOCKLEN_T peernamelen = sizeof (NSS_LDAP_SOCKADDR_STORAGE);
 
       (void) setsockopt (sd, SOL_SOCKET, SO_KEEPALIVE, (void *) &off,
 			 sizeof (off));
@@ -726,10 +726,10 @@ do_close_no_unbind (void)
   if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
 #endif /* LDAP_OPT_DESC */
     {
-      SOCKADDR_STORAGE sockname;
-      SOCKADDR_STORAGE peername;
-      SOCKLEN_T socknamelen = sizeof (sockname);
-      SOCKLEN_T peernamelen = sizeof (peername);
+      NSS_LDAP_SOCKADDR_STORAGE sockname;
+      NSS_LDAP_SOCKADDR_STORAGE peername;
+      NSS_LDAP_SOCKLEN_T socknamelen = sizeof (sockname);
+      NSS_LDAP_SOCKLEN_T peernamelen = sizeof (peername);
 
       /*
        * Important to perform comparison "family-aware" to not count

@@ -388,15 +388,15 @@ struct ldap_config
 typedef struct ldap_config ldap_config_t;
 
 #ifdef HAVE_SOCKLEN_T
-typedef socklen_t SOCKLEN_T;
+typedef socklen_t NSS_LDAP_SOCKLEN_T;
 #else
-typedef int SOCKLEN_T;
+typedef int NSS_LDAP_SOCKLEN_T;
 #endif /* HAVE_SOCKLEN_T */
 
 #if defined(__GLIBC__) && __GLIBC_MINOR__ > 1
-typedef struct sockaddr_storage SOCKADDR_STORAGE;
+typedef struct sockaddr_storage NSS_LDAP_SOCKADDR_STORAGE;
 #else
-typedef struct sockaddr SOCKADDR_STORAGE;
+typedef struct sockaddr NSS_LDAP_SOCKADDR_STORAGE;
 #define ss_family sa_family
 #endif /* __GLIBC__ */
 
@@ -424,8 +424,8 @@ struct ldap_session
   /* has session been connected? */
   ldap_session_state_t ls_state;
   /* keep track of the LDAP sockets */
-  SOCKADDR_STORAGE ls_sockname;
-  SOCKADDR_STORAGE ls_peername;
+  NSS_LDAP_SOCKADDR_STORAGE ls_sockname;
+  NSS_LDAP_SOCKADDR_STORAGE ls_peername;
 };
 
 typedef struct ldap_session ldap_session_t;

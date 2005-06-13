@@ -7,6 +7,7 @@ $Id$
 	  autofs plugin for Linux at present):
 	  _nss_ldap_setautomntent(), _nss_ldap_getautomntend(),
 	  _nss_ldap_endautomntent(), _nss_ldap_getautomntbyname_r()
+	* fix for BUG#200: rename SOCKLEN_T as it conflicts on AIX
 
 239	Luke Howard <lukeh@padl.com>
 
