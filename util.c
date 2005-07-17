@@ -616,7 +616,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
       int len;
       char **t = NULL;
 
-      if (*b == '\n' || *b == '#')
+      if (*b == '\n' || *b == '\r' || *b == '#')
 	continue;
 
       k = b;
@@ -644,8 +644,13 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 
       /* kick off all whitespaces and newline at the end of value */
       /* Bob Guo <bob@mail.ied.ac.cn>, 08.10.2001 */
+
+      /* Also remove \r (CR) to be able to handle files in DOS format (lines
+       * terminated in CR LF).  Alejandro Forero Cuervo
+       * <azul@freaks-unidos.net>, 10-may-2005 */
+
       len = strlen (v) - 1;
-      while (v[len] == ' ' || v[len] == '\t' || v[len] == '\n')
+      while (v[len] == ' ' || v[len] == '\t' || v[len] == '\n' || v[len] == '\r')
 	--len;
       v[++len] = '\0';
 

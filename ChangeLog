@@ -8,6 +8,7 @@ $Id$
 	  _nss_ldap_setautomntent(), _nss_ldap_getautomntend(),
 	  _nss_ldap_endautomntent(), _nss_ldap_getautomntbyname_r()
 	* fix for BUG#200: rename SOCKLEN_T as it conflicts on AIX
+	* fix for BUG#205: accept line feeds in ldap.conf
 	* fix for BUG#211: nss_ldap fails to start TLS on referred
 	  connections
 	* fix for BUG#213: initgroups crash if RFC2307bis undefined
