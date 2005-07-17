@@ -385,6 +385,37 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 
   timelimit = __session.ls_config->ldc_bind_timelimit;
 
+#ifdef HAVE_LDAP_START_TLS_S
+  if (__session.ls_config->ldc_ssl_on == SSL_START_TLS)
+    {
+      int version;
+
+      if (ldap_get_option
+	  (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
+	   &version) == LDAP_OPT_SUCCESS)
+	{
+	  if (version < LDAP_VERSION3)
+	    {
+	      version = LDAP_VERSION3;
+	      ldap_set_option (__session.ls_conn, LDAP_OPT_PROTOCOL_VERSION,
+			       &version);
+	    }
+	}
+
+      debug ("==> start_tls");
+      if (ldap_start_tls_s (__session.ls_conn, NULL, NULL) == LDAP_SUCCESS)
+	{
+	  debug ("TLS startup succeeded");
+	}
+      else
+	{
+	  debug ("TLS startup failed");
+	  return NSS_UNAVAIL;
+	}
+      debug ("<== start_tls");
+    }
+#endif /* HAVE_LDAP_START_TLS_S */
+
   return do_bind (ld, timelimit, who, cred, with_sasl);
 }
 #else
