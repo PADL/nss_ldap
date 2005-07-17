@@ -1115,6 +1115,9 @@ char *_nss_ldap_getgrset (char *user)
     }
 #else
   filter = _nss_ldap_filt_getgroupsbymember;
+
+  gidnumber_attrs[0] = ATM (group, gidNumber);
+  gidnumber_attrs[1] = NULL;
 #endif /* RFC2307BIS */
 
   stat = _nss_ldap_getent_ex (&a, &ctx, (void *) &lia, NULL, 0,
