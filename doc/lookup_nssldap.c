@@ -88,7 +88,7 @@ int lookup_init(const char *mapfmt, int argc, const char *const *argv, void **co
 		return 1;
 	}
 
-	snprintf(buf, sizeof(buf), "/lib/libnss_%s.so.2", NAMESERVICE);
+	snprintf(buf, sizeof(buf), "libnss_%s.so.2", NAMESERVICE);
 
 	context->dlhandle = dlopen(buf, RTLD_NOW | RTLD_LOCAL);
 	if (context->dlhandle == NULL) {
