@@ -16,6 +16,8 @@
  *
  * ----------------------------------------------------------------------- */
 
+#define _GNU_SOURCE
+#include <stdio.h>
 #include <sys/types.h>
 #include <ctype.h>
 #include <string.h>
@@ -184,9 +186,8 @@ static int read_map(const char *root, struct lookup_context *context)
 						     &nss_errno);
 		if (status != NSS_STATUS_SUCCESS)
 			break;
-
 #ifdef CHE_FAIL
-		cache_update(root, key, mapent, age);
+                cache_update(root, key, mapent, age);
 #else
 		cache_update(key, mapent, age);
 #endif
@@ -198,7 +199,7 @@ static int read_map(const char *root, struct lookup_context *context)
 	return 1;
 }
 
-int lookup_ghost(const char *root, int ghost, void *context)
+int lookup_ghost(const char *root, int ghost, time_t now, void *context)
 {
 	struct lookup_context *ctxt = (struct lookup_context *)context;
 	struct mapent_cache *me;
@@ -289,7 +290,7 @@ int lookup_mount(const char *root, const char *name, int name_len, void *context
 		}
 
 #ifdef CHE_FAIL
-		cache_update(root, keys[i], mapent, age);
+                cache_update(root, keys[i], mapent, age);
 #else
 		cache_update(keys[i], mapent, age);
 #endif

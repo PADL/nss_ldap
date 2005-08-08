@@ -12,6 +12,7 @@ $Id$
 	* fix for BUG#211: nss_ldap fails to start TLS on referred
 	  connections
 	* fix for BUG#213: initgroups crash if RFC2307bis undefined
+	* turn down reconnection logging volume
 
 239	Luke Howard <lukeh@padl.com>
 

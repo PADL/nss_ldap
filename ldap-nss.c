@@ -2380,7 +2380,7 @@ do_with_reconnect (const char *base, int scope,
 		  backoff);
 	  (void) sleep (backoff);
 	}
-      else if (tries > 0)
+      else if (tries > 1)
 	{
 	  /* Don't sleep, reconnect immediately. */
 	  syslog (LOG_INFO, "nss_ldap: reconnecting to LDAP server...");
@@ -2430,10 +2430,10 @@ do_with_reconnect (const char *base, int scope,
       stat = NSS_UNAVAIL;
       break;
     case NSS_SUCCESS:
-      if (tries)
+      if (tries > 1)
 	{
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnected to LDAP server after %d attempt(s)",
+		  "nss_ldap: reconnected to LDAP server after %d attempts",
 		  tries);
 	}
       time (&__session.ls_timestamp);
