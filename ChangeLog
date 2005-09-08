@@ -9,6 +9,7 @@ $Id$
 	* new (undocumented) nss_reconnect_tries,
 	  nss_reconnect_sleeptime, nss_reconnect_maxsleeptime,
 	  nss_reconnect_maxconntries directives
+	* reload configuration file if changed
 
 240	Luke Howard <lukeh@padl.com>
 
