@@ -127,6 +127,10 @@
 #define LDAP_FILT_MAXSIZ 1024
 #endif /* !LDAP_FILT_MAXSIZ */
 
+#ifndef LDAPS_PORT
+#define LDAPS_PORT 636
+#endif /* !LDAPS_PORT */
+
 #ifndef LOGNAME_MAX
 #define LOGNAME_MAX 8
 #endif /* LOGNAME_MAX */
@@ -276,6 +280,9 @@ struct ldap_service_search_descriptor
 typedef struct ldap_service_search_descriptor
   ldap_service_search_descriptor_t;
 
+/* maximum number of URIs */
+#define NSS_LDAP_CONFIG_URI_MAX		31
+
 /*
  * linked list of configurations pointing to LDAP servers. The first
  * which has a successful ldap_open() is used. Conceivably the rest
@@ -283,11 +290,9 @@ typedef struct ldap_service_search_descriptor
  */
 struct ldap_config
 {
-  /* URI for a single server */
-  char *ldc_uri;
-  /* space delimited list of servers */
-  char *ldc_host;
-  /* port, expected to be common to all servers */
+  /* NULL terminated list of URIs */
+  char *ldc_uris[NSS_LDAP_CONFIG_URI_MAX + 1];
+  /* default port, if not specified in URI */
   int ldc_port;
   /* base DN, eg. dc=gnu,dc=org */
   char *ldc_base;
@@ -344,6 +349,11 @@ struct ldap_config
   time_t ldc_idle_timelimit;
   /* reconnect policy */
   ldap_reconnect_policy_t ldc_reconnect_pol;
+  int ldc_reconnect_tries;
+  int ldc_reconnect_sleeptime;
+  int ldc_reconnect_maxsleeptime;
+  int ldc_reconnect_maxconntries;
+
   /* sasl security */
   char *ldc_sasl_secprops;
   /* directory for debug files */
@@ -381,8 +391,9 @@ struct ldap_config
 
   unsigned int ldc_flags;
 
-  /* next configuration. loops back onto itself for last entry */
-  struct ldap_config *ldc_next;
+  /* last modification time */
+  time_t ldc_mtime;
+
 };
 
 typedef struct ldap_config ldap_config_t;
@@ -426,6 +437,8 @@ struct ldap_session
   /* keep track of the LDAP sockets */
   NSS_LDAP_SOCKADDR_STORAGE ls_sockname;
   NSS_LDAP_SOCKADDR_STORAGE ls_peername;
+  /* index into ldc_uris: currently connected DSA */
+  int ls_current_uri;
 };
 
 typedef struct ldap_session ldap_session_t;

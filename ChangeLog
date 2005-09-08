@@ -1,11 +1,20 @@
 $Id$
 ===============================================================
 
+241	Luke Howard <lukeh@padl.com>
+
+	* new, more robust reconnection logic
+	* both "host" and "uri" directives can be used in
+	  ldap.conf
+	* new (undocumented) nss_reconnect_tries,
+	  nss_reconnect_sleeptime, nss_reconnect_maxsleeptime,
+	  nss_reconnect_maxconntries directives
+
 240	Luke Howard <lukeh@padl.com>
 
 	* new API for resolving automounts (requires custom
 	  autofs plugin for Linux at present):
-	  _nss_ldap_setautomntent(), _nss_ldap_getautomntend(),
+	  _nss_ldap_setautomntent(), _nss_ldap_getautomntent(),
 	  _nss_ldap_endautomntent(), _nss_ldap_getautomntbyname_r()
 	* fix for BUG#200: rename SOCKLEN_T as it conflicts on AIX
 	* fix for BUG#205: accept line feeds in ldap.conf

@@ -36,6 +36,8 @@
 #include <stdlib.h>
 
 #include <sys/param.h>
+#include <sys/stat.h>
+
 #include <netdb.h>
 #include <syslog.h>
 #include <string.h>
@@ -522,9 +524,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
 
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
   result->ldc_deref = LDAP_DEREF_NEVER;
-  result->ldc_host = NULL;
   result->ldc_base = NULL;
-  result->ldc_port = 0;
   result->ldc_binddn = NULL;
   result->ldc_bindpw = NULL;
   result->ldc_saslid = NULL;
@@ -544,7 +544,6 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_sslpath = NULL;
   result->ldc_referrals = 1;
   result->ldc_restart = 1;
-  result->ldc_uri = NULL;
   result->ldc_tls_checkpeer = -1;
   result->ldc_tls_cacertfile = NULL;
   result->ldc_tls_cacertdir = NULL;
@@ -564,6 +563,10 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_krb5_ccname = NULL;
 #endif /* CONFIGURE_KRB5_CCNAME */
   result->ldc_flags = 0;
+  result->ldc_reconnect_tries = LDAP_NSS_TRIES;
+  result->ldc_reconnect_sleeptime = LDAP_NSS_SLEEPTIME;
+  result->ldc_reconnect_maxsleeptime = LDAP_NSS_MAXSLEEPTIME;
+  result->ldc_reconnect_maxconntries = LDAP_NSS_MAXCONNTRIES;
 
 #ifdef AT_OC_MAP
   for (i = 0; i <= MAP_MAX; i++)
@@ -576,27 +579,119 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
     }
 #endif /* AT_OC_MAP */
 
-  result->ldc_next = result;
-
   return NSS_SUCCESS;
 }
 
 NSS_STATUS
-_nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
+_nss_ldap_add_uri (ldap_config_t *result, const char *uri,
+		   char **buffer, size_t *buflen)
+{
+  /* add a single URI to the list of URIs in the configuration */
+  int i;
+  size_t uri_len;
+
+  debug ("==> _nss_ldap_add_uri");
+
+  for (i = 0; result->ldc_uris[i] != NULL; i++)
+    ;
+
+  if (i == NSS_LDAP_CONFIG_URI_MAX)
+    {
+      debug ("<== _nss_ldap_add_uri: maximum number of URIs exceeded");
+      return NSS_UNAVAIL;
+    }
+
+  assert (i < NSS_LDAP_CONFIG_URI_MAX);
+
+  uri_len = strlen (uri);
+
+  if (*buflen < uri_len + 1)
+    return NSS_TRYAGAIN;
+
+  memcpy (*buffer, uri, uri_len + 1);
+
+  result->ldc_uris[i] = *buffer;
+  result->ldc_uris[i + 1] = NULL;
+
+  *buffer += uri_len + 1;
+  *buflen -= uri_len + 1;
+
+  debug ("<== _nss_ldap_add_uri: added URI %s", uri);
+
+  return NSS_SUCCESS;
+}
+
+static NSS_STATUS
+do_add_uris (ldap_config_t *result, char *uris,
+	     char **buffer, size_t *buflen)
+{
+  /* Add a space separated list of URIs */
+  char *p;
+  NSS_STATUS stat = NSS_SUCCESS;
+
+  for (p = uris; p != NULL; )
+    {
+      char *q = strchr (p, ' ');
+      if (q != NULL)
+	*q = '\0';
+
+      stat = _nss_ldap_add_uri (result, p, buffer, buflen);
+
+      p = (q != NULL) ? ++q : NULL;
+
+      if (stat != NSS_SUCCESS)
+	break;
+    }
+
+  return stat;
+}
+
+static NSS_STATUS
+do_add_hosts (ldap_config_t *result, char *hosts,
+	      char **buffer, size_t *buflen)
+{
+  /* Add a space separated list of hosts */
+  char *p;
+  NSS_STATUS stat = NSS_SUCCESS;
+
+  for (p = hosts; p != NULL; )
+    {
+      char b[NSS_LDAP_CONFIG_BUFSIZ];
+      char *q = strchr (p, ' ');
+
+      if (q != NULL)
+	*q = '\0';
+
+      snprintf (b, sizeof(b), "ldap://%s", p);
+
+      stat = _nss_ldap_add_uri (result, b, buffer, buflen);
+
+      p = (q != NULL) ? ++q : NULL;
+
+      if (stat != NSS_SUCCESS)
+	break;
+    }
+
+  return stat;
+}
+
+NSS_STATUS
+_nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 {
   FILE *fp;
   char b[NSS_LDAP_CONFIG_BUFSIZ];
   NSS_STATUS stat = NSS_SUCCESS;
   ldap_config_t *result;
+  struct stat statbuf;
 
-  if (bytesleft (buffer, buflen, ldap_config_t *) < sizeof (ldap_config_t))
+  if (bytesleft (*buffer, *buflen, ldap_config_t *) < sizeof (ldap_config_t))
     {
       return NSS_TRYAGAIN;
     }
-  align (buffer, buflen, ldap_config_t *);
-  result = *presult = (ldap_config_t *) buffer;
-  buffer += sizeof (ldap_config_t);
-  buflen -= sizeof (ldap_config_t);
+  align (*buffer, *buflen, ldap_config_t *);
+  result = *presult = (ldap_config_t *) *buffer;
+  *buffer += sizeof (ldap_config_t);
+  *buflen -= sizeof (ldap_config_t);
 
   stat = _nss_ldap_init_config (result);
   if (stat != NSS_SUCCESS)
@@ -609,6 +704,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
     {
       return NSS_UNAVAIL;
     }
+
+  if (fstat (fileno (fp), &statbuf) == 0)
+      result->ldc_mtime = statbuf.st_mtime;
+  else
+      result->ldc_mtime = 0;
 
   while (fgets (b, sizeof (b), fp) != NULL)
     {
@@ -654,7 +754,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	--len;
       v[++len] = '\0';
 
-      if (buflen < (size_t) (len + 1))
+      if (*buflen < (size_t) (len + 1))
 	{
 	  stat = NSS_TRYAGAIN;
 	  break;
@@ -662,11 +762,15 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 
       if (!strcasecmp (k, NSS_LDAP_KEY_HOST))
 	{
-	  t = &result->ldc_host;
+	  stat = do_add_hosts (result, v, buffer, buflen);
+	  if (stat != NSS_SUCCESS)
+	    break;
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_URI))
 	{
-	  t = &result->ldc_uri;
+	  stat = do_add_uris (result, v, buffer, buflen);
+	  if (stat != NSS_SUCCESS)
+	    break;
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_BASE))
 	{
@@ -802,6 +906,22 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	      result->ldc_reconnect_pol = LP_RECONNECT_SOFT;
 	    }
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_TRIES))
+	{
+	  result->ldc_reconnect_tries = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_SLEEPTIME))
+	{
+	  result->ldc_reconnect_sleeptime = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_MAXSLEEPTIME))
+	{
+	  result->ldc_reconnect_maxsleeptime = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_MAXCONNTRIES))
+	{
+	  result->ldc_reconnect_maxconntries = atoi (v);
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SASL_SECPROPS))
 	{
 	  t = &result->ldc_sasl_secprops;
@@ -906,8 +1026,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	   * so we can ignore keys we don't understand.
 	   */
 	  stat =
-	    do_searchdescriptorconfig (k, v, len, result->ldc_sds, &buffer,
-				       &buflen);
+	    do_searchdescriptorconfig (k, v, len, result->ldc_sds,
+				       buffer, buflen);
 	  if (stat == NSS_UNAVAIL)
 	    {
 	      break;
@@ -916,11 +1036,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 
       if (t != NULL)
 	{
-	  strncpy (buffer, v, len);
-	  buffer[len] = '\0';
-	  *t = buffer;
-	  buffer += len + 1;
-	  buflen -= len + 1;
+	  strncpy (*buffer, v, len);
+	  (*buffer)[len] = '\0';
+	  *t = *buffer;
+	  *buffer += len + 1;
+	  *buflen -= len + 1;
 	}
     }
 
@@ -945,16 +1065,16 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	      if (len > 0 && b[len - 1] == '\n')
 		len--;
 
-	      if (buflen < (size_t) (len + 1))
+	      if (*buflen < (size_t) (len + 1))
 		{
 		  return NSS_UNAVAIL;
 		}
 
-	      strncpy (buffer, b, len);
-	      buffer[len] = '\0';
-	      result->ldc_rootbindpw = buffer;
-	      buffer += len + 1;
-	      buflen -= len + 1;
+	      strncpy (*buffer, b, len);
+	      *buffer[len] = '\0';
+	      result->ldc_rootbindpw = *buffer;
+	      *buffer += len + 1;
+	      *buflen -= len + 1;
 	    }
 	  fclose (fp);
 	}
@@ -964,25 +1084,21 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char *buffer, size_t buflen)
 	}
     }
 
-  if (result->ldc_host == NULL
-#ifdef HAVE_LDAP_INITIALIZE
-      && result->ldc_uri == NULL
-#endif
-    )
-    {
-      return NSS_NOTFOUND;
-    }
-
   if (result->ldc_port == 0)
     {
-#ifdef LDAPS_PORT
       if (result->ldc_ssl_on == SSL_LDAPS)
 	{
 	  result->ldc_port = LDAPS_PORT;
 	}
       else
-#endif /* SSL */
-	result->ldc_port = LDAP_PORT;
+	{
+	  result->ldc_port = LDAP_PORT;
+	}
+    }
+
+  if (result->ldc_uris[0] == NULL)
+    {
+      stat = NSS_NOTFOUND;
     }
 
   return stat;
@@ -1286,5 +1402,27 @@ _nss_ldap_namelist_find (struct name_list *head, const char *netgroup)
   debug ("<== _nss_ldap_namelist_find");
 
   return found;
+}
+
+NSS_STATUS _nss_ldap_validateconfig (ldap_config_t *config)
+{
+  struct stat statbuf;
+
+  if (config == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
+
+  if (config->ldc_mtime == 0)
+    {
+      return NSS_SUCCESS;
+    }
+
+  if (stat (NSS_LDAP_PATH_CONF, &statbuf) == 0)
+    {
+      return (statbuf.st_mtime > config->ldc_mtime) ? NSS_TRYAGAIN : NSS_SUCCESS;
+    }
+
+  return NSS_SUCCESS;
 }
 

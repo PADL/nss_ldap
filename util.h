@@ -89,6 +89,12 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_INITGROUPS		"nss_initgroups"
 #endif
 
+/* more reconnect policy fine-tuning */
+#define NSS_LDAP_KEY_RECONNECT_TRIES		"nss_reconnect_tries"
+#define NSS_LDAP_KEY_RECONNECT_SLEEPTIME	"nss_reconnect_sleeptime"
+#define NSS_LDAP_KEY_RECONNECT_MAXSLEEPTIME	"nss_reconnect_maxsleeptime"
+#define NSS_LDAP_KEY_RECONNECT_MAXCONNTRIES	"nss_reconnect_maxconntries"
+
 /*
  * support separate naming contexts for each map 
  * eventually this will support the syntax defined in
@@ -128,9 +134,8 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
  */
 
 NSS_STATUS _nss_ldap_init_config (ldap_config_t *);
-
-NSS_STATUS _nss_ldap_readconfig (ldap_config_t ** result,
-				 char *buf, size_t buflen);
+NSS_STATUS _nss_ldap_readconfig (ldap_config_t ** result, char **buffer, size_t *buflen);
+NSS_STATUS _nss_ldap_validateconfig (ldap_config_t *config);
 
 /*
  * Escape '*' in a string for use as a filter
@@ -205,5 +210,9 @@ NSS_STATUS _nss_ldap_namelist_push (struct name_list **head, const char *name);
 void _nss_ldap_namelist_pop (struct name_list **head);
 int _nss_ldap_namelist_find (struct name_list *head, const char *netgroup);
 void _nss_ldap_namelist_destroy (struct name_list **head);
+
+NSS_STATUS
+_nss_ldap_add_uri (ldap_config_t *result, const char *uri,
+		   char **buffer, size_t *buflen);
 
 #endif /* _LDAP_NSS_LDAP_UTIL_H */

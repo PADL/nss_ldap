@@ -59,6 +59,7 @@ static char rcsId[] =
 #include "resolve.h"
 #include "dnsconfig.h"
 
+
 /* map gnu.org into DC=gnu,DC=org */
 NSS_STATUS
 _nss_ldap_getdnsdn (char *src_domain,
@@ -130,14 +131,14 @@ _nss_ldap_getdnsdn (char *src_domain,
 }
 
 NSS_STATUS
-_nss_ldap_readconfigfromdns (ldap_config_t ** presult,
-			     char *buffer, size_t buflen)
+_nss_ldap_mergeconfigfromdns (ldap_config_t * result,
+			      char **buffer, size_t *buflen)
 {
   NSS_STATUS stat = NSS_SUCCESS;
   struct dns_reply *r;
   struct resource_record *rr;
   char domain[MAXHOSTNAMELEN + 1];
-  ldap_config_t *result = NULL;
+  char uribuf[NSS_BUFSIZ];
 
   if ((_res.options & RES_INIT) == 0 && res_init () == -1)
     {
@@ -157,58 +158,15 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
     {
       if (rr->type == T_SRV)
 	{
-	  int len;
-	  ldap_config_t *last = result;
+	  snprintf (uribuf, sizeof(uribuf), "ldap%s:%s:%d",
+	    (rr->u.srv->port == LDAPS_PORT) ? "s" : "",
+	    rr->u.srv->target,
+	    rr->u.srv->port);
 
-	  if (bytesleft (buffer, buflen, ldap_config_t *) <
-	      sizeof (ldap_config_t))
-	    {
-	      dns_free_data (r);
-	      return NSS_TRYAGAIN;
-	    }
-	  align (buffer, buflen, ldap_config_t *);
-	  result = (ldap_config_t *) buffer;
-	  buffer += sizeof (ldap_config_t);
-	  buflen -= sizeof (ldap_config_t);
-	  _nss_ldap_init_config (result);
-	  if (last != NULL)
-	    {
-	      last->ldc_next = result;
-	    }
-	  else
-	    {
-	      *presult = result;
-	    }
-
-	  len = strlen (rr->u.srv->target);
-	  if (buflen < (size_t) (len + 1))
-	    {
-	      dns_free_data (r);
-	      return NSS_TRYAGAIN;
-	    }
-	  /* Server Host */
-	  memcpy (buffer, rr->u.srv->target, len + 1);
-	  result->ldc_host = buffer;
-	  buffer += len + 1;
-	  buflen -= len + 1;
-
-	  /* Port */
-	  result->ldc_port = rr->u.srv->port;
-#ifdef LDAPS_PORT
-	  /* Hack: if the port is the registered SSL port, enable SSL. */
-	  if (result->ldc_port == LDAPS_PORT)
-	    {
-	      result->ldc_ssl_on = SSL_LDAPS;
-	    }
-#endif /* SSL */
-
-	  /* DN */
-	  stat = _nss_ldap_getdnsdn (_res.defdname,
-				     &result->ldc_base, &buffer, &buflen);
+	  stat = _nss_ldap_add_uri (result, uribuf, buffer, buflen);
 	  if (stat != NSS_SUCCESS)
 	    {
-	      dns_free_data (r);
-	      return stat;
+	      break;
 	    }
 	}
     }
@@ -216,5 +174,12 @@ _nss_ldap_readconfigfromdns (ldap_config_t ** presult,
   dns_free_data (r);
   stat = NSS_SUCCESS;
 
+  if (result->ldc_base == NULL)
+    {
+      stat = _nss_ldap_getdnsdn (_res.defdname, &result->ldc_base,
+				 buffer, buflen);
+    }
+
   return stat;
 }
+
