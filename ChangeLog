@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+242	Luke Howard <lukeh@padl.com>
+
+	* fixes for compiling on Solaris 10
+
 241	Luke Howard <lukeh@padl.com>
 
 	* new, more robust reconnection logic
