@@ -81,14 +81,14 @@ static char rcsId[] =
 
 #ifdef HAVE_NSSWITCH_H
 #ifdef HAVE_ETHER_ATON
-extern struct ether_addr *ether_aton (char *s);
+extern struct ether_addr *ether_aton (const char *s);
 #else
-static struct ether_addr *ether_aton (char *s);
+static struct ether_addr *ether_aton (const char *s);
 #endif /* HAVE_ETHER_ATON */
 #ifdef HAVE_ETHER_NTOA
-extern char *ether_ntoa (struct ether_addr *e);
+extern char *ether_ntoa (const struct ether_addr *e);
 #else
-static char *ether_ntoa (struct ether_addr *e);
+static char *ether_ntoa (const struct ether_addr *e);
 #endif /* HAVE_ETHER_NTOA */
 #endif /* HAVE_NSSWITCH_H */
 
@@ -316,7 +316,7 @@ _nss_ldap_ethers_constr (const char *db_name,
 #ifdef HAVE_NSSWITCH_H
 
 #ifndef HAVE_ETHER_ATON
-static struct ether_addr *ether_aton (char *s)
+static struct ether_addr *ether_aton (const char *s)
 {
 	static struct ether_addr ep;
 	register int i;
@@ -335,7 +335,7 @@ static struct ether_addr *ether_aton (char *s)
 
 #ifndef HAVE_ETHER_NTOA
 #define EI(i)	(unsigned int)(e->ether_addr_octet[(i)])
-static char *ether_ntoa (struct ether_addr *e)
+static char *ether_ntoa (const struct ether_addr *e)
 {
 	static char s[18];
 
