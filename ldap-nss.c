@@ -435,29 +435,13 @@ do_rebind (LDAP * ld, char **whop, char **credp, int *methodp, int freeit)
   if (geteuid () == 0 && __session.ls_config->ldc_rootbinddn)
     {
       *whop = strdup (__session.ls_config->ldc_rootbinddn);
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
-      with_sasl = __session.ls_config->ldc_rootusesasl;
-      if (with_sasl && __session.ls_config->ldc_rootsaslid)
-	{
-	  *credp = __session.ls_config->ldc_rootsaslid;
-	}
-      else
-#endif
-      if (__session.ls_config->ldc_rootbindpw)
+      if (__session.ls_config->ldc_rootbindpw != NULL)
 	*credp = strdup (__session.ls_config->ldc_rootbindpw);
     }
   else
     {
       if (__session.ls_config->ldc_binddn != NULL)
 	*whop = strdup (__session.ls_config->ldc_binddn);
-#if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
-      with_sasl = __session.ls_config->ldc_usesasl;
-      if (with_sasl && __session.ls_config->ldc_saslid)
-	{
-	  *credp = __session.ls_config->ldc_saslid;
-	}
-      else
-#endif
       if (__session.ls_config->ldc_bindpw != NULL)
 	*credp = strdup (__session.ls_config->ldc_bindpw);
     }
