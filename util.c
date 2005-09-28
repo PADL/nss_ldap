@@ -1071,7 +1071,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 		}
 
 	      strncpy (*buffer, b, len);
-	      *buffer[len] = '\0';
+	      (*buffer)[len] = '\0';
 	      result->ldc_rootbindpw = *buffer;
 	      *buffer += len + 1;
 	      *buflen -= len + 1;
