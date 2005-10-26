@@ -195,7 +195,8 @@ debug (char *fmt, ...)
 				} while (0)
 
 /* worst case */
-#define bytesleft(ptr, blen, TYPE)    (blen - alignof(TYPE) + 1)
+#define bytesleft(ptr, blen, TYPE)    ( (blen < alignof(TYPE)) ? \
+                                            0 : (blen - alignof(TYPE) + 1))
 
 /* selectors for different maps */
 enum ldap_map_selector

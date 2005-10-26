@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+244	Luke Howard <lukeh@padl.com>
+
+	* patch from Ralf Haferkamp <rhafer@suse.de>:
+	  enusre bytesleft macro does not return values < 0
+	* include <sys/param.h> in ldap-nss.c
+
 243	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#225: invalid pointer dereferencing when

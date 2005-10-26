@@ -46,6 +46,7 @@ static char rcsId[] =
 #include <fcntl.h>
 #include <sys/time.h>
 #include <sys/socket.h>
+#include <sys/param.h>
 #ifdef HAVE_SYS_UN_H
 #include <sys/un.h>
 #endif
