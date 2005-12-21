@@ -969,6 +969,11 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
 
   ldaps = (strncasecmp (uri, "ldaps://", sizeof ("ldaps://") - 1) == 0);
   p = strchr (uri, ':');
+  /* we should be looking for the second instance to find the port number */
+  if (p != NULL)
+    {
+      p = strchr (p, ':');
+    }
 
 #ifdef HAVE_LDAP_INITIALIZE
   if (p == NULL &&
@@ -987,6 +992,7 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
     }
 
   uri += sizeof ("ldap://") - 1;
+  p = strchr (uri, ':');
 
   if (p != NULL)
     {
@@ -1230,10 +1236,12 @@ do_init (void)
    */
   if (cfg->ldc_ssl_on == SSL_LDAPS)
     {
+      int rc = 0;
       if (__ssl_initialized == 0
-	  && ldapssl_client_init (cfg->ldc_sslpath, NULL) != LDAP_SUCCESS)
+	  && (rc = ldapssl_client_init (cfg->ldc_sslpath, NULL)) != LDAP_SUCCESS)
 	{
-	  break;
+          debug ("<== do_init (ldapssl_client_init failed with rc = %d)", rc);
+	  return NSS_UNAVAIL;
 	}
       __ssl_initialized = 1;
     }
@@ -3875,7 +3883,7 @@ do_proxy_rebind (LDAP * ld, char **whop, char **credp, int *methodp,
 		 int freeit)
 #endif
 {
-#if LDAP_SET_REBIND_PROC_ARGS == 3 */
+#if LDAP_SET_REBIND_PROC_ARGS == 3
   ldap_proxy_bind_args_t *who = (ldap_proxy_bind_args_t *) arg;
 #else
   ldap_proxy_bind_args_t *who = &__proxy_args;
