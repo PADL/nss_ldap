@@ -5,6 +5,8 @@ $Id$
 
 	* patch from Dean Michaels <dean@interdynamix.com>:
 	  build with Netscape 5 library on Solaris
+	* patch from Ralf Haferkamp <rhafer@suse.de>:
+	  manual page fix to bind_policy
 
 244	Luke Howard <lukeh@padl.com>
 
