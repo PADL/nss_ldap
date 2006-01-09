@@ -7,6 +7,11 @@ $Id$
 	  build with Netscape 5 library on Solaris
 	* patch from Ralf Haferkamp <rhafer@suse.de>:
 	  manual page fix to bind_policy
+	* add nss_initgroups_ignoreusers parameter to ldap.conf,
+	  returns NOTFOUND if nss_ldap's initgroups() is called
+	  for users (comma separated)
+	* try to deal with systems that have headers for both
+	  versions of the SASL library installed
 
 244	Luke Howard <lukeh@padl.com>
 

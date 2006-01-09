@@ -1029,6 +1029,12 @@ char *_nss_ldap_getgrset (char *user)
 
   debug ("==> " NSS_LDAP_INITGROUPS_FUNCTION " (user=%s)", LA_STRING (a) );
 
+#ifdef INITGROUPS_ROOT_ONLY
+  /* XXX performance hack for old versions of KDE only */
+  if ((getuid() != 0) && (geteuid() != 0))
+    return NSS_STATUS_NOTFOUND;
+#endif
+
 #ifdef HAVE_USERSEC_H
   lia.grplist = NULL;
   lia.listlen = 0;
@@ -1058,6 +1064,9 @@ char *_nss_ldap_getgrset (char *user)
       return stat;
 # endif				/* !HAVE_USERSEC_H */
     }
+
+  if (_nss_ldap_test_initgroups_ignoreuser (user))
+    return NSS_STATUS_NOTFOUND;
 
 #ifdef RFC2307BIS
   lia.backlink = _nss_ldap_test_config_flag (NSS_LDAP_FLAGS_INITGROUPS_BACKLINK);

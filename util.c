@@ -410,6 +410,71 @@ do_parse_map_statement (ldap_config_t * cfg,
 }
 #endif /* AT_OC_MAP */
 
+/* parse a comma-separated list */
+static NSS_STATUS
+do_parse_list (char *values, char ***valptr,
+	       char **pbuffer, size_t *pbuflen)
+{
+  char *s, **p;
+#ifdef HAVE_STRTOK_R
+  char *tok_r;
+#endif
+  int valcount;
+
+  int buflen = *pbuflen;
+  char *buffer = *pbuffer;
+
+  /* comma separated list of values to ignore on initgroups() */
+  for (valcount = 1, s = values; *s != '\0'; s++)
+    {
+      if (*s == ',')
+	valcount++;
+    }
+
+  if (bytesleft (buffer, buflen, char *) < (valcount + 1) * sizeof (char *))
+    {
+      return NSS_UNAVAIL;
+    }
+
+  align (buffer, buflen, char *);
+  p = *valptr = (char **) buffer;
+
+  buffer += (valcount + 1) * sizeof (char *);
+  buflen -= (valcount + 1) * sizeof (char *);
+
+#ifdef HAVE_STRTOK_R
+  for (s = strtok_r(values, ",", &tok_r); s != NULL;
+       s = strtok_r(NULL, ",", &tok_r))
+#else
+  for (s = strtok(values, ","); s != NULL; s = strtok(NULL, ","))
+#endif
+    {
+      int vallen;
+      char *elt = NULL;
+
+      vallen = strlen (s);
+      if (buflen < (size_t) (vallen + 1))
+        {
+	  return NSS_UNAVAIL;
+	}
+
+      /* copy this value into the next block of buffer space */
+      elt = buffer;
+      buffer += vallen + 1;
+      buflen -= vallen + 1;
+
+      strncpy (elt, s, vallen);
+      elt[vallen] = '\0';
+      *p++ = elt;
+    }
+
+  *p = NULL;
+  *pbuffer = buffer;
+  *pbuflen = buflen;
+
+  return NSS_SUCCESS;
+}
+
 static NSS_STATUS
 do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 			   ldap_service_search_descriptor_t ** result,
@@ -491,7 +556,8 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 
   align (*buffer, *buflen, ldap_service_search_descriptor_t);
 
-  for (cur = *t; cur && cur->lsd_next; cur = cur->lsd_next);
+  for (cur = *t; cur && cur->lsd_next; cur = cur->lsd_next)
+    ;
   if (!cur)
     {
       *t = (ldap_service_search_descriptor_t *) * buffer;
@@ -567,6 +633,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_reconnect_sleeptime = LDAP_NSS_SLEEPTIME;
   result->ldc_reconnect_maxsleeptime = LDAP_NSS_MAXSLEEPTIME;
   result->ldc_reconnect_maxconntries = LDAP_NSS_MAXCONNTRIES;
+  result->ldc_initgroups_ignoreusers = NULL;
 
 #ifdef AT_OC_MAP
   for (i = 0; i <= MAP_MAX; i++)
@@ -1018,6 +1085,15 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	    }
 	}
 #endif /* RFC2307BIS */
+      else if (!strcasecmp (k, NSS_LDAP_KEY_INITGROUPS_IGNOREUSERS))
+	{
+	  stat = do_parse_list (v, &result->ldc_initgroups_ignoreusers,
+				buffer, buflen);
+	  if (stat == NSS_UNAVAIL)
+	    {
+	      break;
+	    }
+	}
       else
 	{
 	  /*

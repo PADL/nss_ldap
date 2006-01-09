@@ -268,6 +268,7 @@ fi
 
 AC_CHECK_LIB(gssldap, ldap_gss_bind,[LIBS="-lgssldap $LIBS"],,$LIBS)
 
+AC_CHECK_FUNCS(sasl_auxprop_request)
 AC_CHECK_FUNCS(ldap_init ldap_get_lderrno ldap_parse_result ldap_memfree ldap_controls_free)
 AC_CHECK_FUNCS(ldap_ld_free ldap_explode_rdn ldap_set_option ldap_get_option)
 AC_CHECK_FUNCS(ldap_sasl_interactive_bind_s ldap_initialize)

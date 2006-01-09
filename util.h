@@ -88,6 +88,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #ifdef RFC2307BIS
 #define NSS_LDAP_KEY_INITGROUPS		"nss_initgroups"
 #endif
+#define NSS_LDAP_KEY_INITGROUPS_IGNOREUSERS	"nss_initgroups_ignoreusers"
 
 /* more reconnect policy fine-tuning */
 #define NSS_LDAP_KEY_RECONNECT_TRIES		"nss_reconnect_tries"

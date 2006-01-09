@@ -395,6 +395,7 @@ struct ldap_config
   /* last modification time */
   time_t ldc_mtime;
 
+  char **ldc_initgroups_ignoreusers;
 };
 
 typedef struct ldap_config ldap_config_t;
@@ -914,5 +915,6 @@ NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password);
 NSS_STATUS _nss_ldap_init (void);
 
 int _nss_ldap_test_config_flag (unsigned int flag);
+int _nss_ldap_test_initgroups_ignoreuser (const char *user);
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

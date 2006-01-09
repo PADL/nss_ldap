@@ -66,7 +66,9 @@ static char rcsId[] =
 #ifdef HAVE_GSSSASL_H
 #include <gsssasl.h>
 #endif
-#ifdef HAVE_SASL_SASL_H
+
+/* Try to handle systems with both SASL libraries installed */
+#if defined(HAVE_SASL_SASL_H) && defined(HAVE_SASL_AUXPROP_REQUEST)
 #include <sasl/sasl.h>
 #elif defined(HAVE_SASL_H)
 #include <sasl.h>
@@ -4081,3 +4083,23 @@ _nss_ldap_test_config_flag (unsigned int flag)
 
   return 0;
 }
+
+int _nss_ldap_test_initgroups_ignoreuser (const char *user)
+{
+  char **p;
+
+  if (__config == NULL)
+    return 0;
+
+  if (__config->ldc_initgroups_ignoreusers == NULL)
+    return 0;
+
+  for (p = __config->ldc_initgroups_ignoreusers; *p != NULL; p++)
+    {
+      if (strcmp (*p, user) == 0)
+	return 1;
+    }
+
+  return 0;
+}
+

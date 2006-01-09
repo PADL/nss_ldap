@@ -225,6 +225,9 @@
 /* Define to 1 if you have the <rpc/rpcent.h> header file. */
 #undef HAVE_RPC_RPCENT_H
 
+/* Define to 1 if you have the `sasl_auxprop_request' function. */
+#undef HAVE_SASL_AUXPROP_REQUEST
+
 /* Define to 1 if you have the <sasl.h> header file. */
 #undef HAVE_SASL_H
 
