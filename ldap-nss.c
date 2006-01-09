@@ -1292,6 +1292,7 @@ do_open (void)
 #ifdef LDAP_X_OPT_CONNECT_TIMEOUT
   int timeout;
 #endif
+  int rc;
 
   debug ("==> do_open");
 
@@ -1477,9 +1478,9 @@ do_open (void)
       bindarg = cfg->ldc_rootbindpw;
 #endif
 
-      stat = do_map_error (do_bind (__session.ls_conn,
-				    cfg->ldc_bind_timelimit,
-				    cfg->ldc_rootbinddn, bindarg, usesasl));
+      rc = do_bind (__session.ls_conn,
+		    cfg->ldc_bind_timelimit,
+		    cfg->ldc_rootbinddn, bindarg, usesasl);
     }
   else
     {
@@ -1491,14 +1492,20 @@ do_open (void)
       bindarg = cfg->ldc_bindpw;
 #endif
 
-      stat = do_map_error (do_bind (__session.ls_conn,
-				    cfg->ldc_bind_timelimit,
-				    cfg->ldc_binddn,
-				    cfg->ldc_bindpw, usesasl));
+      rc = do_bind (__session.ls_conn,
+		    cfg->ldc_bind_timelimit,
+		    cfg->ldc_binddn,
+		    cfg->ldc_bindpw, usesasl);
     }
 
-  if (stat != NSS_SUCCESS)
+  if (rc != LDAP_SUCCESS)
     {
+      /* log actual LDAP error code */
+      syslog (LOG_INFO,
+	      "nss_ldap: failed to bind to LDAP server %s: %s",
+	      cfg->ldc_uris[__session.ls_current_uri],
+	      ldap_err2string (rc));
+      stat = do_map_error (rc);
       debug ("<== do_open (failed to bind to DSA");
     }
   else
@@ -1506,6 +1513,7 @@ do_open (void)
       do_set_sockopts ();
       time (&__session.ls_timestamp);
       __session.ls_state = LS_CONNECTED_TO_DSA;
+      stat = NSS_SUCCESS;
       debug ("<== do_open (session connected to DSA)");
     }
 

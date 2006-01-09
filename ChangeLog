@@ -12,7 +12,7 @@ $Id$
 	  for users (comma separated)
 	* try to deal with systems that have headers for both
 	  versions of the SASL library installed
-	* better logging of reconnections
+	* better logging of failed connections and reconnections
 
 244	Luke Howard <lukeh@padl.com>
 
