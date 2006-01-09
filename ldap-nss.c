@@ -2362,7 +2362,7 @@ do_with_reconnect (const char *base, int scope,
 		   void *private, search_func_t search_func)
 {
   int rc = LDAP_UNAVAILABLE, tries = 0, backoff = 0;
-  int hard = 1, start_uri = 0;
+  int hard = 1, start_uri = 0, log = 0;
   NSS_STATUS stat = NSS_UNAVAIL;
   int maxtries;
 
@@ -2406,6 +2406,8 @@ do_with_reconnect (const char *base, int scope,
 	    }
 	  if (stat != NSS_UNAVAIL)
 	    break;
+
+	  log++;
 
 	  /* test in case config file could not be read */
 	  if (__session.ls_config != NULL)
@@ -2451,13 +2453,19 @@ do_with_reconnect (const char *base, int scope,
       stat = NSS_UNAVAIL;
       break;
     case NSS_SUCCESS:
-      if (tries > 1)
+      if (log)
 	{
 	  char *uri = __session.ls_config->ldc_uris[__session.ls_current_uri];
 
-	  syslog (LOG_INFO,
-		  "nss_ldap: reconnected to LDAP server %s after %d attempts",
-		  (uri != NULL) ? uri : "(null)", tries);
+	  if (uri == NULL)
+	    uri = "(null)";
+
+	  if (tries)
+	    syslog (LOG_INFO,
+	      "nss_ldap: reconnected to LDAP server %s after %d attempt%s",
+	      uri, tries, (tries == 1) ? "" : "s");
+	  else
+	    syslog (LOG_INFO, "nss_ldap: reconnected to LDAP server %s", uri);
 	}
       time (&__session.ls_timestamp);
       break;
