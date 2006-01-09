@@ -321,6 +321,7 @@ do_map_error (int rc)
     case LDAP_CONNECT_ERROR:
 #endif /* LDAP_CONNECT_ERROR */
     case LDAP_LOCAL_ERROR:
+    case LDAP_INVALID_CREDENTIALS:
     default:
       stat = NSS_UNAVAIL;
       break;
@@ -1632,8 +1633,6 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
   struct timeval tv;
   LDAPMessage *result;
 
-  debug ("==> do_bind");
-
   /*
    * set timelimit in ld for select() call in ldap_pvt_connect() 
    * function implemented in libldap2's os-ip.c
@@ -1739,10 +1738,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
 					 do_sasl_interact, (void *) pw);
-      syslog (LOG_INFO,
-	      "nss_ldap: ldap_sasl_interactive_bind_s returned %d (%s)", rc,
-	      ldap_err2string (rc));
-
+      
 # ifdef CONFIGURE_KRB5_CCNAME
       /* Restore default Kerberos ticket cache. */
       if (oldccname != NULL)
