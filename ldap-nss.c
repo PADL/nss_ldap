@@ -2449,9 +2449,11 @@ do_with_reconnect (const char *base, int scope,
     case NSS_SUCCESS:
       if (tries > 1)
 	{
+	  char *uri = __session.ls_config->ldc_uris[__session.ls_current_uri];
+
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnected to LDAP server after %d attempts",
-		  tries);
+		  "nss_ldap: reconnected to LDAP server %s after %d attempts",
+		  (uri != NULL) ? uri : "(null)", tries);
 	}
       time (&__session.ls_timestamp);
       break;
