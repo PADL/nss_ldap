@@ -201,8 +201,9 @@ static void do_set_sockopts (void);
 /*
  * TLS routines: set global SSL session options.
  */
-#if defined HAVE_LDAP_START_TLS_S || (defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS))
+#if defined(HAVE_LDAP_START_TLS_S) || defined(HAVE_LDAP_START_TLS) || (defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS))
 static int do_ssl_options (ldap_config_t * cfg);
+static int do_start_tls (ldap_session_t * session);
 #endif
 
 /*
@@ -401,8 +402,7 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 	    }
 	}
 
-      debug ("==> start_tls");
-      if (start_tls (&__session) == LDAP_SUCCESS)
+      if (do_start_tls (&__session) == LDAP_SUCCESS)
 	{
 	  debug ("TLS startup succeeded");
 	}
@@ -411,7 +411,6 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 	  debug ("TLS startup failed");
 	  return NSS_UNAVAIL;
 	}
-      debug ("<== start_tls");
     }
 #endif /* HAVE_LDAP_START_TLS_S */
 
@@ -1199,21 +1198,24 @@ do_init (void)
 
 #if defined(HAVE_LDAP_START_TLS_S) || defined(HAVE_LDAP_START_TLS)
 static int
-do_start_tls (ldap_session_t *session)
+do_start_tls (ldap_session_t * session)
 {
+  int rc;
 #ifdef HAVE_LDAP_START_TLS
-  int msgid, rc;
+  int msgid;
   struct timeval tv, *timeout;
-  LDAPMessage *res;
+  LDAPMessage *res = NULL;
+
+  debug ("==> do_start_tls");
 
   rc = ldap_start_tls (session->ls_conn, NULL, NULL, &msgid);
   if (rc != LDAP_SUCCESS)
     {
+      debug ("<== do_start_tls (ldap_start_tls failed: %s)", ldap_err2string (rc));
       return rc;
     }
 
-  res = NULL;
-  if (session->ls_config->ldc_bind_timelimit == 0)
+  if (session->ls_config->ldc_bind_timelimit == LDAP_NO_LIMIT)
     {
       timeout = NULL;
     }
@@ -1224,36 +1226,41 @@ do_start_tls (ldap_session_t *session)
       timeout = &tv;
     }
 
-
   rc = ldap_result (session->ls_conn, msgid, 1, timeout, &res);
-  if (rc < 0)
-      if (msgid < 0)
-	{
+  if (rc == -1)
+    {
 #if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
-	  if (ldap_get_option (ld, LDAP_OPT_ERROR_NUMBER, &rc) !=
-	      LDAP_SUCCESS)
-	    {
-	      rc = LDAP_UNAVAILABLE;
-	    }
-#else
-	  rc = ld->ld_errno;
-#endif /* LDAP_OPT_ERROR_NUMBER */
-	  debug ("<== do_bind");
-
-	  return rc;
+      if (ldap_get_option (session->ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+	{
+	  rc = LDAP_UNAVAILABLE;
 	}
-    {
-    }
-  rc = ldap_result2error (session->ls_conn, res, 1);
-  if (rc != LDAP_SUCCESS)
-    {
+#else
+      rc = ld->ld_errno;
+#endif /* LDAP_OPT_ERROR_NUMBER */
+
+      debug ("<== do_start_tls (ldap_start_tls failed: %s)", ldap_err2string (rc));
       return rc;
     }
 
-  return ldap_install_tls (session->ls_conn);
+  rc = ldap_result2error (session->ls_conn, res, 1);
+  if (rc != LDAP_SUCCESS)
+    {
+      debug ("<== do_start_tls (ldap_result2error failed: %s)", ldap_err2string (rc));
+      return rc;
+    }
+
+  rc = ldap_install_tls (session->ls_conn);
 #else
-  return ldap_start_tls_s (session->ls_conn, NULL, NULL);
-#endif
+  rc = ldap_start_tls_s (session->ls_conn, NULL, NULL);
+#endif /* HAVE_LDAP_START_TLS */
+
+  if (rc != LDAP_SUCCESS)
+    {
+      debug ("<== do_start_tls (start TLS failed: %s)", ldap_err2string(rc));
+      return rc;
+    }
+
+  return LDAP_SUCCESS;
 }
 #endif
 
@@ -3155,7 +3162,7 @@ _nss_ldap_getent_ex (ldap_args_t * args,
 
   debug ("==> _nss_ldap_getent_ex");
 
-  if (*ctx == NULL || (*ctx)->ec_msgid == -1)
+  if (*ctx == NULL || (*ctx)->ec_msgid < 0)
     {
       /*
        * implicitly call setent() if this is the first time
