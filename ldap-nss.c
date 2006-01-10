@@ -676,20 +676,84 @@ do_set_sockopts (void)
 static void
 do_close (void)
 {
+  int sd = -1;
+
   debug ("==> do_close");
 
   if (__session.ls_conn != NULL)
     {
-#ifdef DEBUG
-      syslog (LOG_DEBUG, "nss_ldap: closing connection %p",
-	      __session.ls_conn);
+#if defined(DEBUG) || defined(DEBUG_SOCKETS)
+# if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
+      ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
+# else
+      sd = __session.ls_conn->ld_sb.sb_sd;
+# endif /* LDAP_OPT_DESC */
+      syslog (LOG_INFO, "nss_ldap: closing connection %p fd %d",
+	      __session.ls_conn, sd);
 #endif /* DEBUG */
+
       ldap_unbind (__session.ls_conn);
       __session.ls_conn = NULL;
       __session.ls_state = LS_UNINITIALIZED;
     }
 
   debug ("<== do_close");
+}
+
+static int
+do_sockaddr_isequal (NSS_LDAP_SOCKADDR_STORAGE *_s1,
+		     NSS_LDAP_SOCKLEN_T _slen1,
+		     NSS_LDAP_SOCKADDR_STORAGE *_s2,
+		     NSS_LDAP_SOCKLEN_T _slen2)
+{
+  int ret;
+
+  if (_s1->ss_family != _s2->ss_family)
+    return 0;
+
+  if (_slen1 != _slen2)
+    return 0;
+
+  ret = 0;
+
+  switch (_s1->ss_family)
+    {
+      case AF_INET:
+	{
+	  struct sockaddr_in *s1 = (struct sockaddr_in *) _s1;
+	  struct sockaddr_in *s2 = (struct sockaddr_in *) _s2;
+
+	  ret = (s1->sin_port == s2->sin_port &&
+		 memcmp (&s1->sin_addr, &s2->sin_addr, sizeof(struct in_addr) == 0));
+	  break;
+	}
+      case AF_UNIX:
+	{
+	  struct sockaddr_un *s1 = (struct sockaddr_un *) _s1;
+	  struct sockaddr_un *s2 = (struct sockaddr_un *) _s2;
+
+	  ret = (memcmp (s1->sun_path, s2->sun_path,
+			 _slen1 - sizeof (_s1->ss_family)) == 0);
+	  break;
+	}
+#ifdef INET6
+      case AF_INET6:
+	{
+	  struct sockaddr_in6 *s1 = (struct sockaddr_in6 *) _s1;
+	  struct sockaddr_in6 *s2 = (struct sockaddr_in6 *) _s2;
+
+	  ret = (s1->sin_port == s2->sin_port &&
+		 memcmp (&s1->sin_addr, &s2->sin_addr, sizeof(struct in6_addr) == 0) &&
+		 s1->sni6_scope_id == s2->sin6_scope_id);
+	  break;
+	}
+#endif
+      default:
+	ret = (memcmp (_s1, _s2, _slen1) == 0);
+	break;
+    }
+
+  return ret;
 }
 
 /*
@@ -712,6 +776,7 @@ do_close_no_unbind (void)
 #ifndef HAVE_LDAP_LD_FREE
   int bogusSd = -1;
 #endif /* HAVE_LDAP_LD_FREE */
+  int closeSd = 1;
 
   debug ("==> do_close_no_unbind");
 
@@ -721,11 +786,6 @@ do_close_no_unbind (void)
       debug ("<== do_close_no_unbind (connection was not open)");
       return;
     }
-
-#ifdef DEBUG
-  syslog (LOG_DEBUG, "nss_ldap: closing connection (no unbind) %p",
-	  __session.ls_conn);
-#endif /* DEBUG */
 
   /*
    * Before freeing the LDAP context or closing the socket descriptor, we
@@ -745,181 +805,44 @@ do_close_no_unbind (void)
       NSS_LDAP_SOCKLEN_T socknamelen = sizeof (sockname);
       NSS_LDAP_SOCKLEN_T peernamelen = sizeof (peername);
 
-      /*
-       * Important to perform comparison "family-aware" to not count
-       * sin_zero padding as significant.
-       */
-      if (getsockname (sd, (struct sockaddr *) &sockname, &socknamelen) != 0)
+      if (getsockname (sd, (struct sockaddr *) &sockname, &socknamelen) != 0 ||
+          getpeername (sd, (struct sockaddr *) &peername, &peernamelen) != 0)
 	{
-	  __session.ls_conn = NULL;
-	  __session.ls_state = LS_UNINITIALIZED;
-	  debug ("<== do_close_no_unbind (could not get socket name)");
-	  return;
+	  closeSd = 0;
 	}
-      if (sockname.ss_family != __session.ls_sockname.ss_family)
+      else
 	{
-	  __session.ls_conn = NULL;
-	  __session.ls_state = LS_UNINITIALIZED;
-	  debug ("<== do_close_no_unbind (socket family differs)");
-	  return;
-	}
-      switch (sockname.ss_family)
-	{
-	case AF_INET:
-	  if (((struct sockaddr_in *) &sockname)->sin_port !=
-	      ((struct sockaddr_in *) &__session.ls_sockname)->sin_port)
+	  closeSd = do_sockaddr_isequal (&__session.ls_sockname,
+					 socknamelen,
+					 &sockname,
+					 socknamelen);
+	  if (closeSd)
 	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (socket port differs)");
-	      return;
+	      closeSd = do_sockaddr_isequal (&__session.ls_peername,
+					     peernamelen,
+					     &peername,
+					     peernamelen);
 	    }
-	  if (memcmp
-	      (&((struct sockaddr_in *) &sockname)->sin_addr,
-	       &((struct sockaddr_in *) &__session.ls_sockname)->sin_addr,
-	       sizeof (struct in_addr)) != 0)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (socket address differs)");
-	      return;
-	    }
-	  break;
-#ifdef INET6
-	case AF_INET6:
-	  if (((struct sockaddr_in6 *) &sockname)->sin6_port !=
-	      ((struct sockaddr_in6 *) &__session.ls_sockname)->sin6_port)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (socket port differs)");
-	      return;
-	    }
-	  if (memcmp
-	      (&((struct sockaddr_in6 *) &sockname)->sin6_addr,
-	       &((struct sockaddr_in6 *) &__session.ls_sockname)->sin6_addr,
-	       sizeof (struct in6_addr)) != 0)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (socket address differs)");
-	      return;
-	    }
-	  if (((struct sockaddr_in6 *) &sockname)->sin6_scope_id !=
-	      ((struct sockaddr_in6 *) &__session.ls_sockname)->sin6_scope_id)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (socket scope ID differs)");
-	      return;
-	    }
-	  break;
-#endif /* INET6 */
-	case AF_UNIX:
-	  if (memcmp
-	      (((struct sockaddr_un *) &sockname)->sun_path,
-	       ((struct sockaddr_un *) &__session.ls_sockname)->sun_path,
-	       socknamelen - sizeof (sockname.ss_family)) != 0)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (socket path differs)");
-	      return;
-	    }
-	  break;
-	default:
-	  if (memcmp (&sockname, &__session.ls_sockname, socknamelen) != 0)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (socket data differs)");
-	      return;
-	    }
-	  break;
-	}
-      if (getpeername (sd, (struct sockaddr *) &peername, &peernamelen) != 0)
-	{
-	  __session.ls_conn = NULL;
-	  __session.ls_state = LS_UNINITIALIZED;
-	  debug ("<== do_close_no_unbind (could not get peer name)");
-	  return;
-	}
-      switch (peername.ss_family)
-	{
-	case AF_INET:
-	  if (((struct sockaddr_in *) &peername)->sin_port !=
-	      ((struct sockaddr_in *) &__session.ls_peername)->sin_port)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (peer port differs)");
-	      return;
-	    }
-	  if (memcmp
-	      (&((struct sockaddr_in *) &peername)->sin_addr,
-	       &((struct sockaddr_in *) &__session.ls_peername)->sin_addr,
-	       sizeof (struct in_addr)) != 0)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (peer address differs)");
-	      return;
-	    }
-	  break;
-#ifdef INET6
-	case AF_INET6:
-	  if (((struct sockaddr_in6 *) &peername)->sin6_port !=
-	      ((struct sockaddr_in6 *) &__session.ls_peername)->sin6_port)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (peer port differs)");
-	      return;
-	    }
-	  if (memcmp
-	      (&((struct sockaddr_in6 *) &peername)->sin6_addr,
-	       &((struct sockaddr_in6 *) &__session.ls_peername)->sin6_addr,
-	       sizeof (struct in6_addr)) != 0)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (peer address differs)");
-	      return;
-	    }
-	  if (((struct sockaddr_in6 *) &peername)->sin6_scope_id !=
-	      ((struct sockaddr_in6 *) &__session.ls_peername)->sin6_scope_id)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (peer scope ID differs)");
-	      return;
-	    }
-	  break;
-#endif /* INET6 */
-	case AF_UNIX:
-	  if (memcmp
-	      (((struct sockaddr_un *) &peername)->sun_path,
-	       ((struct sockaddr_un *) &__session.ls_peername)->sun_path,
-	       peernamelen - sizeof (peername.ss_family)) != 0)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (peer path differs)");
-	      return;
-	    }
-	  break;
-	default:
-	  if (memcmp (&peername, &__session.ls_peername, peernamelen) != 0)
-	    {
-	      __session.ls_conn = NULL;
-	      __session.ls_state = LS_UNINITIALIZED;
-	      debug ("<== do_close_no_unbind (peer data differs)");
-	      return;
-	    }
-	  break;
 	}
     }
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
+
+#if defined(DEBUG) || defined(DEBUG_SOCKETS)
+  syslog (LOG_INFO, "nss_ldap: %sclosing connection (no unbind) %p fd %d",
+	  closeSd ? "" : "not", __session.ls_conn, sd);
+#endif /* DEBUG */
+
+  if (closeSd == 0)
+    {
+      sd = -1; /* don't want to really close the socket */
+#ifdef HAVE_LDAP_LD_FREE
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
+      (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
+#else
+      __session.ls_conn->ld_sb.sb_sd = -1;
+#endif /* LDAP_OPT_DESC */
+#endif /* HAVE_LDAP_LD_FREE */
+    }
 
 #ifdef HAVE_LDAP_LD_FREE
 
@@ -931,7 +854,7 @@ do_close_no_unbind (void)
 
 #else
 #ifndef HAVE_LDAPSSL_CLIENT_INIT
-  if (sd > 0)
+  if (sd != -1)
     close (sd);
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
@@ -1507,6 +1430,7 @@ do_open (void)
 	      cfg->ldc_uris[__session.ls_current_uri],
 	      ldap_err2string (rc));
       stat = do_map_error (rc);
+      do_close ();
       debug ("<== do_open (failed to bind to DSA");
     }
   else

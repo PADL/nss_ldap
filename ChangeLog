@@ -3,16 +3,20 @@ $Id$
 
 245	Luke Howard <lukeh@padl.com>
 
-	* patch from Dean Michaels <dean@interdynamix.com>:
-	  build with Netscape 5 library on Solaris
-	* patch from Ralf Haferkamp <rhafer@suse.de>:
-	  manual page fix to bind_policy
+	* don't leak LDAP connection if do_bind() failed or
+	  descriptor owner had changed. If do_bind() failed the
+	  underlying descriptor would also be leaked, causing a
+	  large number of sockets to be consumed during failover
 	* add nss_initgroups_ignoreusers parameter to ldap.conf,
 	  returns NOTFOUND if nss_ldap's initgroups() is called
 	  for users (comma separated)
 	* try to deal with systems that have headers for both
 	  versions of the SASL library installed
 	* better logging of failed connections and reconnections
+	* patch from Dean Michaels <dean@interdynamix.com>:
+	  build with Netscape 5 library on Solaris
+	* patch from Ralf Haferkamp <rhafer@suse.de>:
+	  manual page fix to bind_policy
 
 244	Luke Howard <lukeh@padl.com>
 
