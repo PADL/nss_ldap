@@ -676,7 +676,9 @@ do_set_sockopts (void)
 static void
 do_close (void)
 {
+#if defined(DEBUG) || defined(DEBUG_SOCKETS)
   int sd = -1;
+#endif
 
   debug ("==> do_close");
 

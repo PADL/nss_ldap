@@ -18,8 +18,9 @@
 #include <stdio.h>
 #include <pwd.h>
 #include <sys/types.h>
-
-#include <dlfcn.h>		/* why? */
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 
 void test_passwd (void);
 void scan_passwd (void);
@@ -36,9 +37,9 @@ main (int argc, char **argv)
   int i;
 #ifdef HAVE_PTHREAD_H
   pthread_t tids[MAX_THREADS];
+#endif
+#endif
   pid_t pid;
-#endif
-#endif
   ARGC = argc;
   ARGV = argv;
 
