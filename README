@@ -106,10 +106,7 @@ glibc 2.1, not glibc 2.0. They _may_ work with glibc 2.0. YMMV.
 Compiling with -DRFC2307BIS adds rfc2307bis support, which at the
 moment just gets you support for groups with distinguished name
 members (instead of login names). A posixGroup can thus have the
-both memberUid and uniqueMember attributes. This support makes
-uses of the Berkeley DB library to cache DN to login name mappings;
-if you don't want to use this or don't have libdb, then you need
-to undefine DN2UID_CACHE in util.c. 
+both memberUid and uniqueMember attributes.
 
 5. Building under FreeBSD
 -------------------------

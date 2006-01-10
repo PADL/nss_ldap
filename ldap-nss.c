@@ -402,7 +402,7 @@ do_rebind (LDAP * ld, LDAP_CONST char *url, int request, ber_int_t msgid)
 	}
 
       debug ("==> start_tls");
-      if (ldap_start_tls_s (__session.ls_conn, NULL, NULL) == LDAP_SUCCESS)
+      if (start_tls (&__session) == LDAP_SUCCESS)
 	{
 	  debug ("TLS startup succeeded");
 	}
@@ -1197,6 +1197,66 @@ do_init (void)
   return NSS_SUCCESS;
 }
 
+#if defined(HAVE_LDAP_START_TLS_S) || defined(HAVE_LDAP_START_TLS)
+static int
+do_start_tls (ldap_session_t *session)
+{
+#ifdef HAVE_LDAP_START_TLS
+  int msgid, rc;
+  struct timeval tv, *timeout;
+  LDAPMessage *res;
+
+  rc = ldap_start_tls (session->ls_conn, NULL, NULL, &msgid);
+  if (rc != LDAP_SUCCESS)
+    {
+      return rc;
+    }
+
+  res = NULL;
+  if (session->ls_config->ldc_bind_timelimit == 0)
+    {
+      timeout = NULL;
+    }
+  else
+    {
+      tv.tv_sec = session->ls_config->ldc_bind_timelimit;
+      tv.tv_usec = 0;
+      timeout = &tv;
+    }
+
+
+  rc = ldap_result (session->ls_conn, msgid, 1, timeout, &res);
+  if (rc < 0)
+      if (msgid < 0)
+	{
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
+	  if (ldap_get_option (ld, LDAP_OPT_ERROR_NUMBER, &rc) !=
+	      LDAP_SUCCESS)
+	    {
+	      rc = LDAP_UNAVAILABLE;
+	    }
+#else
+	  rc = ld->ld_errno;
+#endif /* LDAP_OPT_ERROR_NUMBER */
+	  debug ("<== do_bind");
+
+	  return rc;
+	}
+    {
+    }
+  rc = ldap_result2error (session->ls_conn, res, 1);
+  if (rc != LDAP_SUCCESS)
+    {
+      return rc;
+    }
+
+  return ldap_install_tls (session->ls_conn);
+#else
+  return ldap_start_tls_s (session->ls_conn, NULL, NULL);
+#endif
+}
+#endif
+
 /*
  * Opens connection to an LDAP server - should only be called from search
  * API. Other API that just needs access to configuration and schema should
@@ -1303,7 +1363,7 @@ do_open (void)
 		   cfg->ldc_restart ? LDAP_OPT_ON : LDAP_OPT_OFF);
 #endif
 
-#ifdef HAVE_LDAP_START_TLS_S
+#if defined(HAVE_LDAP_START_TLS_S) || defined(HAVE_LDAP_START_TLS)
   if (cfg->ldc_ssl_on == SSL_START_TLS)
     {
       int version;
@@ -1328,7 +1388,7 @@ do_open (void)
 	  return NSS_UNAVAIL;
 	}
 
-      stat = do_map_error (ldap_start_tls_s (__session.ls_conn, NULL, NULL));
+      stat = do_map_error (do_start_tls (&__session));
       if (stat == NSS_SUCCESS)
 	{
 	  debug (":== do_open (TLS startup succeeded)");
@@ -1341,7 +1401,7 @@ do_open (void)
 	}
     }
   else
-#endif /* HAVE_LDAP_START_TLS_S */
+#endif /* HAVE_LDAP_START_TLS_S || HAVE_LDAP_START_TLS */
 
     /*
      * If SSL is desired, then enable it.

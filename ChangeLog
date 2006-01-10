@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+246	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#222: use asynchronous start TLS if
+	  available, using bind_timeout value
+
 245	Luke Howard <lukeh@padl.com>
 
 	* don't leak LDAP connection if do_bind() failed or

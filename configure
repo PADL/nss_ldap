@@ -4431,7 +4431,7 @@ fi
 done
 
 if test "$enable_ssl" \!= "no"; then
-  for ac_func in ldapssl_client_init ldap_start_tls_s ldap_pvt_tls_set_option
+  for ac_func in ldapssl_client_init ldap_start_tls_s ldap_pvt_tls_set_option ldap_start_tls
 do
 echo $ac_n "checking for $ac_func""... $ac_c" 1>&6
 echo "configure:4438: checking for $ac_func" >&5
