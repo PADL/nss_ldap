@@ -1065,7 +1065,7 @@ char *_nss_ldap_getgrset (char *user)
 # endif				/* !HAVE_USERSEC_H */
     }
 
-  if (_nss_ldap_test_initgroups_ignoreuser (user))
+  if (_nss_ldap_test_initgroups_ignoreuser (LA_STRING (a)))
     return NSS_STATUS_NOTFOUND;
 
 #ifdef RFC2307BIS

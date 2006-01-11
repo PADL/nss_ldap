@@ -9,6 +9,7 @@ $Id$
 	  userPassword if not present
 	* patch from Ralf Haferkamp <rhafer@suse.de>:
 	  compile fix for IPv6
+	* compile for Solaris
 
 245	Luke Howard <lukeh@padl.com>
 
