@@ -84,7 +84,7 @@ _nss_ldap_parse_rpc (LDAPMessage * e,
   NSS_STATUS stat;
 
   stat =
-    _nss_ldap_getrdnvalue (e, ATM (rpc, cn), &rpc->r_name, &buffer,
+    _nss_ldap_getrdnvalue (e, ATM (LM_RPC, cn), &rpc->r_name, &buffer,
                            &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -98,7 +98,7 @@ _nss_ldap_parse_rpc (LDAPMessage * e,
   rpc->r_number = atol (number);
 
   stat =
-    _nss_ldap_assign_attrvals (e, ATM (rpc, cn), rpc->r_name,
+    _nss_ldap_assign_attrvals (e, ATM (LM_RPC, cn), rpc->r_name,
                                &rpc->r_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

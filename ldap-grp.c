@@ -312,7 +312,7 @@ do_parse_group_members (LDAPMessage * e,
   int start, end = 0;
   char *groupdn = NULL;
 
-  uniquemember_attr = ATM (group, uniqueMember);
+  uniquemember_attr = ATM (LM_GROUP, uniqueMember);
 
   uniquemember_attrs[0] = uniquemember_attr;
   uniquemember_attrs[1] = NULL;
@@ -361,7 +361,7 @@ do_parse_group_members (LDAPMessage * e,
 	  groupMembersCount += ldap_count_values (dnValues);
 	}
 
-      uidValues = _nss_ldap_get_values (e, ATM (group, memberUid));
+      uidValues = _nss_ldap_get_values (e, ATM (LM_GROUP, memberUid));
       if (uidValues != NULL)
 	{
 	  groupMembersCount += ldap_count_values (uidValues);
@@ -595,7 +595,7 @@ _nss_ldap_parse_gr (LDAPMessage * e,
 #endif /* RFC2307BIS */
 
   stat =
-    _nss_ldap_assign_attrval (e, ATM (group, gidNumber), &gid, &buffer,
+    _nss_ldap_assign_attrval (e, ATM (LM_GROUP, gidNumber), &gid, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -606,20 +606,20 @@ _nss_ldap_parse_gr (LDAPMessage * e,
 							      10);
 
   stat =
-    _nss_ldap_getrdnvalue (e, ATM (group, cn), &gr->gr_name, &buffer,
+    _nss_ldap_getrdnvalue (e, ATM (LM_GROUP, cn), &gr->gr_name, &buffer,
 			   &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_userpassword (e, ATM (group, userPassword),
+    _nss_ldap_assign_userpassword (e, ATM (LM_GROUP, userPassword),
 				   &gr->gr_passwd, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
 #ifndef RFC2307BIS
   stat =
-    _nss_ldap_assign_attrvals (e, ATM (group, memberUid), NULL,
+    _nss_ldap_assign_attrvals (e, ATM (LM_GROUP, memberUid), NULL,
 			       &gr->gr_mem, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -671,7 +671,7 @@ do_parse_initgroups (LDAPMessage * e,
   gid_t gid;
   ldap_initgroups_args_t *lia = (ldap_initgroups_args_t *) result;
 
-  values = _nss_ldap_get_values (e, ATM (group, gidNumber));
+  values = _nss_ldap_get_values (e, ATM (LM_GROUP, gidNumber));
   if (values == NULL)
     {
       /* invalid group; skip it */
@@ -796,7 +796,7 @@ do_parse_initgroups_nested (LDAPMessage * e,
        * Now add the GIDs of any groups of which this group is
        * a member.
        */
-      values = _nss_ldap_get_values (e, ATM (group, memberOf));
+      values = _nss_ldap_get_values (e, ATM (LM_GROUP, memberOf));
       if (values != NULL)
 	{
 	  NSS_STATUS stat;
@@ -851,7 +851,7 @@ ng_chase (const char *dn, ldap_initgroups_args_t * lia)
   if (_nss_ldap_namelist_find (lia->known_groups, dn))
     return NSS_NOTFOUND;
 
-  gidnumber_attrs[0] = ATM (group, gidNumber);
+  gidnumber_attrs[0] = ATM (LM_GROUP, gidNumber);
   gidnumber_attrs[1] = NULL;
 
   LA_INIT (a);
@@ -923,8 +923,8 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
       return NSS_NOTFOUND;
     }
 
-  gidnumber_attrs[0] = ATM (group, gidNumber);
-  gidnumber_attrs[1] = ATM (group, memberOf);
+  gidnumber_attrs[0] = ATM (LM_GROUP, gidNumber);
+  gidnumber_attrs[1] = ATM (LM_GROUP, memberOf);
   gidnumber_attrs[2] = NULL;
 
   LA_INIT (a);
@@ -1077,8 +1077,8 @@ char *_nss_ldap_getgrset (char *user)
       LA_STRING2 (a) = LA_STRING (a);
       LA_TYPE (a) = LA_TYPE_STRING_AND_STRING;
 
-      gidnumber_attrs[0] = ATM (group, gidNumber);
-      gidnumber_attrs[1] = ATM (group, memberOf);
+      gidnumber_attrs[0] = ATM (LM_GROUP, gidNumber);
+      gidnumber_attrs[1] = ATM (LM_GROUP, memberOf);
       gidnumber_attrs[2] = NULL;
 
       map = LM_PASSWD;
@@ -1108,7 +1108,7 @@ char *_nss_ldap_getgrset (char *user)
 	  filter = _nss_ldap_filt_getgroupsbymember;
 	}
 
-      gidnumber_attrs[0] = ATM (group, gidNumber);
+      gidnumber_attrs[0] = ATM (LM_GROUP, gidNumber);
       gidnumber_attrs[1] = NULL;
     }
 
@@ -1125,7 +1125,7 @@ char *_nss_ldap_getgrset (char *user)
 #else
   filter = _nss_ldap_filt_getgroupsbymember;
 
-  gidnumber_attrs[0] = ATM (group, gidNumber);
+  gidnumber_attrs[0] = ATM (LM_GROUP, gidNumber);
   gidnumber_attrs[1] = NULL;
 #endif /* RFC2307BIS */
 

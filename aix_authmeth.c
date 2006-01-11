@@ -325,40 +325,40 @@ static const char *
 uess2ldapattr (ldap_map_selector_t map, const char *attribute)
 {
   if (strcmp (attribute, "username") == 0)
-    return ATM (passwd, uid);
+    return ATM (LM_PASSWD, uid);
   else if (strcmp (attribute, "groupname") == 0)
-    return ATM (group, cn);
+    return ATM (LM_GROUP, cn);
   else if (strcmp (attribute, S_ID) == 0)
     {
       if (map == LM_PASSWD)
-	return ATM (passwd, uidNumber);
+	return ATM (LM_PASSWD, uidNumber);
       else
-	return ATM (group, gidNumber);
+	return ATM (LM_GROUP, gidNumber);
     }
   else if (strcmp (attribute, S_PWD) == 0)
-    return ATM (passwd, userPassword);
+    return ATM (LM_PASSWD, userPassword);
   else if (strcmp (attribute, S_HOME) == 0)
-    return ATM (passwd, homeDirectory);
+    return ATM (LM_PASSWD, homeDirectory);
   else if (strcmp (attribute, S_SHELL) == 0)
-    return ATM (passwd, loginShell);
+    return ATM (LM_PASSWD, loginShell);
   else if (strcmp (attribute, S_GECOS) == 0)
-    return ATM (passwd, gecos);
+    return ATM (LM_PASSWD, gecos);
   else if (strcmp (attribute, SEC_PASSWD) == 0)
-    return ATM (shadow, userPassword);
+    return ATM (LM_SHADOW, userPassword);
   else if (strcmp (attribute, SEC_LASTUP) == 0)
-    return ATM (shadow, shadowLastChange);
+    return ATM (LM_SHADOW, shadowLastChange);
   else if (strcmp (attribute, S_MAXAGE) == 0)
-    return ATM (shadow, shadowMax);
+    return ATM (LM_SHADOW, shadowMax);
   else if (strcmp (attribute, S_MINAGE) == 0)
-    return ATM (shadow, shadowMin);
+    return ATM (LM_SHADOW, shadowMin);
   else if (strcmp (attribute, S_MAXEXPIRED) == 0)
-    return ATM (shadow, shadowExpire);
+    return ATM (LM_SHADOW, shadowExpire);
   else if (strcmp (attribute, S_PWDWARNTIME) == 0)
-    return ATM (shadow, shadowWarning);
+    return ATM (LM_SHADOW, shadowWarning);
   else if (strcmp (attribute, S_PGRP) == 0)
-    return ATM (group, cn);
+    return ATM (LM_GROUP, cn);
   else if (strcmp (attribute, S_USERS) == 0)
-    return ATM (group, memberUid);
+    return ATM (LM_GROUP, memberUid);
 
   return NULL;
 }
@@ -375,7 +375,7 @@ uess_get_pgrp (LDAPMessage * e, ldap_uess_args_t * lua, int i)
   NSS_STATUS stat;
   ldap_args_t a;
 
-  vals = _nss_ldap_get_values (e, ATM (passwd, gidNumber));
+  vals = _nss_ldap_get_values (e, ATM (LM_PASSWD, gidNumber));
   if (vals == NULL)
     return NSS_NOTFOUND;
 
@@ -383,7 +383,7 @@ uess_get_pgrp (LDAPMessage * e, ldap_uess_args_t * lua, int i)
   LA_TYPE (a) = LA_TYPE_NUMBER;
   LA_NUMBER (a) = atol(vals[0]);
 
-  attrs[0] = ATM (group, cn);
+  attrs[0] = ATM (LM_GROUP, cn);
   attrs[1] = NULL;
 
   stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getgrgid, LM_GROUP,
@@ -559,7 +559,7 @@ uess_get_gecos (LDAPMessage * e, ldap_uess_args_t * lua, int i)
   stat = uess_get_char (e, lua, i);
   if (stat == NSS_NOTFOUND)
     {
-      stat = uess_get_char_ex (e, lua, i, ATM (passwd, cn));
+      stat = uess_get_char_ex (e, lua, i, ATM (LM_PASSWD, cn));
     }
 
   return stat;
@@ -840,7 +840,7 @@ uess_get_pwuid(const char *user, uid_t *uid)
   LA_TYPE (a) = LA_TYPE_STRING;
   LA_STRING (a) = user;
 
-  attrs[0] = ATM (passwd, uidNumber);
+  attrs[0] = ATM (LM_PASSWD, uidNumber);
   attrs[1] = NULL;
 
   stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwuid, LM_PASSWD,

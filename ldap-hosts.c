@@ -116,13 +116,13 @@ _nss_ldap_parse_host (LDAPMessage * e,
 
   *addressbuf = *buffer = '\0';
 
-  stat = _nss_ldap_assign_attrval (e, ATM (hosts, cn), &host->h_name,
+  stat = _nss_ldap_assign_attrval (e, ATM (LM_HOSTS, cn), &host->h_name,
 				   &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_attrvals (e, ATM (hosts, cn), host->h_name,
+    _nss_ldap_assign_attrvals (e, ATM (LM_HOSTS, cn), host->h_name,
                                &host->h_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

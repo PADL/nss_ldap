@@ -634,7 +634,7 @@ do_parse_innetgr (LDAPMessage * e, ldap_state_t * pvt,
 
   debug ("==> do_parse_innetgr");
 
-  values = _nss_ldap_get_values (e, ATM (netgroup, cn));
+  values = _nss_ldap_get_values (e, ATM (LM_NETGROUP, cn));
   if (values == NULL)
       return NSS_NOTFOUND;
 

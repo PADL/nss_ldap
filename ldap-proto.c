@@ -77,7 +77,7 @@ _nss_ldap_parse_proto (LDAPMessage * e,
   NSS_STATUS stat;
 
   stat =
-    _nss_ldap_getrdnvalue (e, ATM (protocols, cn), &proto->p_name,
+    _nss_ldap_getrdnvalue (e, ATM (LM_PROTOCOLS, cn), &proto->p_name,
                            &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -91,7 +91,7 @@ _nss_ldap_parse_proto (LDAPMessage * e,
   proto->p_proto = atoi (number);
 
   stat =
-    _nss_ldap_assign_attrvals (e, ATM (protocols, cn), proto->p_name,
+    _nss_ldap_assign_attrvals (e, ATM (LM_PROTOCOLS, cn), proto->p_name,
 			       &proto->p_aliases, &buffer, &buflen, NULL);
   if (stat != NSS_SUCCESS)
     return stat;

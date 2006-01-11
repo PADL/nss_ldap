@@ -188,8 +188,8 @@ _nss_ldap_dn2uid (const char *dn, char **uid, char **buffer, size_t * buflen,
       const char *attrs[4];
       LDAPMessage *res;
 
-      attrs[0] = ATM (passwd, uid);
-      attrs[1] = ATM (group, uniqueMember);
+      attrs[0] = ATM (LM_PASSWD, uid);
+      attrs[1] = ATM (LM_GROUP, uniqueMember);
       attrs[2] = AT (objectClass);
       attrs[3] = NULL;
 
@@ -207,7 +207,7 @@ _nss_ldap_dn2uid (const char *dn, char **uid, char **buffer, size_t * buflen,
 		}
 
 	      stat =
-		_nss_ldap_assign_attrval (e, ATM (passwd, uid), uid,
+		_nss_ldap_assign_attrval (e, ATM (LM_PASSWD, uid), uid,
 					  buffer, buflen);
 	      if (stat == NSS_SUCCESS)
 		dn2uid_cache_put (dn, *uid);
@@ -396,6 +396,7 @@ do_parse_map_statement (ldap_config_t * cfg,
 			const char *statement, ldap_map_type_t type)
 {
   char *key, *val;
+  ldap_map_selector_t sel = LM_NONE;
 
   key = (char *) statement;
   val = key;
@@ -406,7 +407,18 @@ do_parse_map_statement (ldap_config_t * cfg,
   while (*val == ' ' || *val == '\t')
     val++;
 
-  return _nss_ldap_map_put (cfg, type, key, val);
+  {
+    char *p = strchr (key, ':');
+
+    if (p != NULL)
+      {
+	sel = _nss_ldap_str2selector (key);
+	*p = '\0';
+	key = ++p;
+      }
+  }
+
+  return _nss_ldap_map_put (cfg, sel, type, key, val);
 }
 #endif /* AT_OC_MAP */
 
@@ -480,33 +492,33 @@ _nss_ldap_str2selector (const char *key)
 {
   ldap_map_selector_t sel;
 
-  if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
+  if (!strcasecmp (key, MP_passwd))
     sel = LM_PASSWD;
-  if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SHADOW))
+  if (!strcasecmp (key, MP_shadow))
     sel = LM_SHADOW;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_GROUP))
+  else if (!strcasecmp (key, MP_group))
     sel = LM_GROUP;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_HOSTS))
+  else if (!strcasecmp (key, MP_hosts))
     sel = LM_HOSTS;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SERVICES))
+  else if (!strcasecmp (key, MP_services))
     sel = LM_SERVICES;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETWORKS))
+  else if (!strcasecmp (key, MP_networks))
     sel = LM_NETWORKS;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PROTOCOLS))
+  else if (!strcasecmp (key, MP_protocols))
     sel = LM_PROTOCOLS;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_RPC))
+  else if (!strcasecmp (key, MP_rpc))
     sel = LM_RPC;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_ETHERS))
+  else if (!strcasecmp (key, MP_ethers))
     sel = LM_ETHERS;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETMASKS))
+  else if (!strcasecmp (key, MP_netmasks))
     sel = LM_NETMASKS;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_BOOTPARAMS))
+  else if (!strcasecmp (key, MP_bootparams))
     sel = LM_BOOTPARAMS;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_ALIASES))
+  else if (!strcasecmp (key, MP_aliases))
     sel = LM_ALIASES;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETGROUP))
+  else if (!strcasecmp (key, MP_netgroup))
     sel = LM_NETGROUP;
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_AUTOMOUNT))
+  else if (!strcasecmp (key, MP_automount))
     sel = LM_AUTOMOUNT;
   else
     sel = LM_NONE;
@@ -529,7 +541,11 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   filter = NULL;
   scope = -1;
 
-  sel = _nss_ldap_str2selector (key);
+  if (strncasecmp (key, NSS_LDAP_KEY_NSS_BASE_PREFIX,
+		   NSS_LDAP_KEY_NSS_BASE_PREFIX_LEN) != 0)
+    return NSS_SUCCESS;
+
+  sel = _nss_ldap_str2selector (&key[NSS_LDAP_KEY_NSS_BASE_PREFIX_LEN]);
   t = (sel < LM_NONE) ? &result[sel] : NULL;
 
   if (t == NULL)
@@ -597,7 +613,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
 {
 #ifdef AT_OC_MAP
-  int i;
+  int i, j;
 #endif
 
   memset (result, 0, sizeof (*result));
@@ -650,12 +666,13 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_initgroups_ignoreusers = NULL;
 
 #ifdef AT_OC_MAP
-  for (i = 0; i <= MAP_MAX; i++)
+  for (i = 0; i <= LM_NONE; i++)
     {
-      result->ldc_maps[i] = _nss_ldap_db_open ();
-      if (result->ldc_maps[i] == NULL)
+      for (j = 0; j <= MAP_MAX; j++)
 	{
-	  return NSS_UNAVAIL;
+	  result->ldc_maps[i][j] = _nss_ldap_db_open ();
+	  if (result->ldc_maps[i][j] == NULL)
+	    return NSS_UNAVAIL;
 	}
     }
 #endif /* AT_OC_MAP */

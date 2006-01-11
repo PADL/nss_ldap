@@ -72,13 +72,13 @@ _nss_ldap_parse_sp (LDAPMessage * e,
   char *tmp = NULL;
 
   stat =
-    _nss_ldap_assign_userpassword (e, ATM (shadow, userPassword),
+    _nss_ldap_assign_userpassword (e, ATM (LM_SHADOW, userPassword),
                                    &sp->sp_pwdp, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
 
   stat =
-    _nss_ldap_assign_attrval (e, ATM (shadow, uid), &sp->sp_namp, &buffer,
+    _nss_ldap_assign_attrval (e, ATM (LM_SHADOW, uid), &sp->sp_namp, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
     return stat;

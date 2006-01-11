@@ -101,20 +101,8 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
  * eventually this will support the syntax defined in
  * the DUAConfigProfile searchDescriptor attribute
  */
-#define NSS_LDAP_KEY_NSS_BASE_PASSWD		"nss_base_passwd"
-#define NSS_LDAP_KEY_NSS_BASE_SHADOW		"nss_base_shadow"
-#define NSS_LDAP_KEY_NSS_BASE_GROUP		"nss_base_group"
-#define NSS_LDAP_KEY_NSS_BASE_HOSTS		"nss_base_hosts"
-#define NSS_LDAP_KEY_NSS_BASE_SERVICES		"nss_base_services"
-#define NSS_LDAP_KEY_NSS_BASE_NETWORKS		"nss_base_networks"
-#define NSS_LDAP_KEY_NSS_BASE_PROTOCOLS		"nss_base_protocols"
-#define NSS_LDAP_KEY_NSS_BASE_RPC		"nss_base_rpc"
-#define NSS_LDAP_KEY_NSS_BASE_ETHERS		"nss_base_ethers"
-#define NSS_LDAP_KEY_NSS_BASE_NETMASKS		"nss_base_netmasks"
-#define NSS_LDAP_KEY_NSS_BASE_BOOTPARAMS	"nss_base_bootparams"
-#define NSS_LDAP_KEY_NSS_BASE_ALIASES		"nss_base_aliases"
-#define NSS_LDAP_KEY_NSS_BASE_NETGROUP		"nss_base_netgroup"
-#define NSS_LDAP_KEY_NSS_BASE_AUTOMOUNT		"nss_base_automount"
+#define NSS_LDAP_KEY_NSS_BASE_PREFIX		"nss_base_"
+#define NSS_LDAP_KEY_NSS_BASE_PREFIX_LEN	( sizeof(NSS_LDAP_KEY_NSS_BASE_PREFIX) - 1 )
 
 /*
  * Flags that are exposed via _nss_ldap_test_config_flag()

@@ -125,7 +125,7 @@ __ns_ldap_getMappedObjectClass(const char *service, const char *objectClass)
 }
 
 static ns_ldap_return_code
-__ns_ldap_map_error(NSS_STATUS error)
+__ns_ldap_mapError(NSS_STATUS error)
 {
 	ns_ldap_return_code code;
 
@@ -149,7 +149,7 @@ __ns_ldap_map_error(NSS_STATUS error)
 }
 
 static NSS_STATUS
-__ns_ldap_map_error_detail(ns_ldap_error_t **errorp)
+__ns_ldap_mapErrorDetail(ns_ldap_error_t **errorp)
 {
 	char *m = NULL;
 	char *s = NULL;
@@ -236,14 +236,14 @@ do_parse_innetgr (LDAPMessage * e, ldap_state_t * pvt,
 # endif 
 
 typedef struct ns_ldap_cookie {
+	ldap_map_selector_t sel;
+	int ret;
 	int erange;
 	ns_ldap_result_t *result;
-	ns_ldap_return_code ret;
+	ns_ldap_entry_t *entry;
 	int (*callback)(const ns_ldap_entry_t *entry, const void *userdata);
 	const void *userdata;
 } ns_ldap_cookie_t;
-
-//ns_ldap_return_code
 
 ns_ldap_return_code
 __ns_ldap_freeAttr(ns_ldap_attr_t **pattr)
@@ -313,8 +313,39 @@ __ns_ldap_freeResult(ns_ldap_result_t **presult)
 	return NS_LDAP_SUCCESS;
 }
 
+ns_ldap_return_code
+__ns_ldap_parseAttr(ns_ldap_cookie_t *cookie, LDAPMessage *entry, const char *attribute, ns_ldap_attr_t **pattr)
+{
+	ns_ldap_attr_t *attr;
+	const char *unmappedAttribute;
+
+	attr = (ns_ldap_attr_t *)malloc(sizeof(*attr));
+	if (attr == NULL) {
+		return NS_LDAP_MEMORY;
+	}
+
+#ifdef AT_OC_MAP
+	unmappedAttribute = _nss_ldap_unmap_at(cookie->sel, attribute);
+#else
+	unmappedAttribute = attribute;
+#endif
+
+	attr->attrname = strdup(unmappedAttribute);
+	if (attr->attrname == NULL) {
+		__ns_ldap_freeAttr(&attr);
+		return NS_LDAP_MEMORY;
+	}
+
+	attr->attrvalue = _nss_ldap_get_values(entry, attr->attrname);
+	attr->value_count = (attr->attrvalue != NULL) ? ldap_count_values(attr->attrvalue) : 0;
+
+	*pattr = attr;
+
+	return NS_LDAP_SUCCESS;
+}
+
 NSS_STATUS
-__ns_ldap_listParser(LDAPMessage *entry, ldap_state_t *state,
+__ns_ldap_parseEntry(LDAPMessage *entry, ldap_state_t *state,
 	void *result, char *buffer, size_t buflen)
 {
 	ns_ldap_cookie_t *cookie = (ns_ldap_cookie_t *)result;
@@ -334,29 +365,28 @@ __ns_ldap_list(
 	int (*callback)(const ns_ldap_entry_t *entry, const void *userdata),
 	const void *userdata)
 {
-	ns_ldap_return_code ret;
 	ns_ldap_cookie_t cookie;
-	ldap_map_selector_t sel;
 	ldap_args_t a;
 	ent_context_t *ctx = NULL;
 	NSS_STATUS stat;
 
-	sel = _nss_ldap_str2selector(service);
-
 	LA_INIT (a);
 	LA_TYPE (a) = LA_TYPE_STRING;
 
+	cookie.sel = _nss_ldap_str2selector(service);
+	cookie.ret = -1;
 	cookie.erange = 0;
 	cookie.result = NULL;
+	cookie.entry = NULL;
 	cookie.callback = callback;
 	cookie.userdata = userdata;
 
 	_nss_ldap_enter();
 	stat = _nss_ldap_getent_ex(&a, &ctx, (void *)&cookie, NULL, 0,
-			&cookie.erange, filter, sel, attribute, __ns_ldap_listParser);
+			&cookie.erange, filter, sel, attribute, __ns_ldap_parseEntry);
 	_nss_ldap_leave();
 
-	return ret;
+	return (cookie.ret < 0) ? __ns_ldap_mapError(stat) : cookie.ret;
 }
 
 #endif /* HAVE_NSSWITCH_H */

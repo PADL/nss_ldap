@@ -104,14 +104,14 @@ _nss_ldap_parse_pw (LDAPMessage * e,
   else
     {
       stat =
-	_nss_ldap_assign_userpassword (e, ATM (passwd, userPassword),
+	_nss_ldap_assign_userpassword (e, ATM (LM_PASSWD, userPassword),
 				       &pw->pw_passwd, &buffer, &buflen);
       if (stat != NSS_SUCCESS)
 	return stat;
     }
 
   stat =
-    _nss_ldap_assign_attrval (e, ATM (passwd, uid), &pw->pw_name, &buffer,
+    _nss_ldap_assign_attrval (e, ATM (LM_PASSWD, uid), &pw->pw_name, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -127,7 +127,7 @@ _nss_ldap_parse_pw (LDAPMessage * e,
   tmp = tmpbuf;
   tmplen = sizeof (tmpbuf);
   stat =
-    _nss_ldap_assign_attrval (e, ATM (passwd, gidNumber), &gid, &tmp,
+    _nss_ldap_assign_attrval (e, ATM (LM_PASSWD, gidNumber), &gid, &tmp,
                               &tmplen);
   if (stat != NSS_SUCCESS)
     return stat;
@@ -140,7 +140,7 @@ _nss_ldap_parse_pw (LDAPMessage * e,
     {
       pw->pw_gecos = NULL;
       stat =
-	_nss_ldap_assign_attrval (e, ATM (passwd, cn), &pw->pw_gecos,
+	_nss_ldap_assign_attrval (e, ATM (LM_PASSWD, cn), &pw->pw_gecos,
                                   &buffer, &buflen);
       if (stat != NSS_SUCCESS)
 	return stat;
@@ -160,7 +160,7 @@ _nss_ldap_parse_pw (LDAPMessage * e,
 
 #ifdef HAVE_NSSWITCH_H
   stat =
-    _nss_ldap_assign_attrval (e, ATM (passwd, description),
+    _nss_ldap_assign_attrval (e, ATM (LM_PASSWD, description),
                               &pw->pw_comment, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     {

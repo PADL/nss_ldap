@@ -66,7 +66,7 @@ _nss_ldap_parse_alias (LDAPMessage * e,
   NSS_STATUS stat;
 
   stat =
-    _nss_ldap_getrdnvalue (e, ATM (aliases, cn), &alias->alias_name,
+    _nss_ldap_getrdnvalue (e, ATM (LM_ALIASES, cn), &alias->alias_name,
                            &buffer, &buflen);
   if (stat != NSS_SUCCESS)
     return stat;
