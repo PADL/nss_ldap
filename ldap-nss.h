@@ -916,5 +916,6 @@ NSS_STATUS _nss_ldap_init (void);
 
 int _nss_ldap_test_config_flag (unsigned int flag);
 int _nss_ldap_test_initgroups_ignoreuser (const char *user);
+int _nss_ldap_get_ld_errno (char **m, char **s);
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

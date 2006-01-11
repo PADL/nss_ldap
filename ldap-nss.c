@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2005 Luke Howard.
+/* Copyright (C) 1997-2006 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -4091,7 +4091,8 @@ _nss_ldap_test_config_flag (unsigned int flag)
   return 0;
 }
 
-int _nss_ldap_test_initgroups_ignoreuser (const char *user)
+int
+_nss_ldap_test_initgroups_ignoreuser (const char *user)
 {
   char **p;
 
@@ -4109,4 +4110,52 @@ int _nss_ldap_test_initgroups_ignoreuser (const char *user)
 
   return 0;
 }
+
+int
+_nss_ldap_get_ld_errno (char **m, char **s)
+{
+#ifdef HAVE_LDAP_GET_OPTION
+  int rc;
+#endif
+  int lderrno;
+
+  if (__session.ls_conn == NULL)
+    {
+      return LDAP_UNAVAILABLE;
+    }
+
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
+  /* is this needed? */
+  rc = ldap_get_option (__session.ls_conn, LDAP_OPT_ERROR_NUMBER, &lderrno);
+  if (rc != LDAP_SUCCESS)
+    return rc;
+#else
+  lderrno = ld->ld_errno;
+#endif
+
+  if (s != NULL)
+    {
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_STRING)
+      rc = ldap_get_option (__session.ls_conn, LDAP_OPT_ERROR_STRING, s);
+      if (rc != LDAP_SUCCESS)
+	return rc;
+#else
+      *s = ld->ld_error;
+#endif
+    }
+
+  if (m != NULL)
+    {
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_MATCHED_DN)
+      rc = ldap_get_option (__session.ls_conn, LDAP_OPT_MATCHED_DN, m);
+      if (rc != LDAP_SUCCESS)
+	return rc;
+#else
+      *m = ld->ld_matched;
+#endif
+    }
+
+  return lderrno;
+}
+
 

@@ -475,6 +475,45 @@ do_parse_list (char *values, char ***valptr,
   return NSS_SUCCESS;
 }
 
+ldap_map_selector_t
+_nss_ldap_str2selector (const char *key)
+{
+  ldap_map_selector_t sel;
+
+  if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
+    sel = LM_PASSWD;
+  if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SHADOW))
+    sel = LM_SHADOW;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_GROUP))
+    sel = LM_GROUP;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_HOSTS))
+    sel = LM_HOSTS;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SERVICES))
+    sel = LM_SERVICES;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETWORKS))
+    sel = LM_NETWORKS;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PROTOCOLS))
+    sel = LM_PROTOCOLS;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_RPC))
+    sel = LM_RPC;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_ETHERS))
+    sel = LM_ETHERS;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETMASKS))
+    sel = LM_NETMASKS;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_BOOTPARAMS))
+    sel = LM_BOOTPARAMS;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_ALIASES))
+    sel = LM_ALIASES;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETGROUP))
+    sel = LM_NETGROUP;
+  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_AUTOMOUNT))
+    sel = LM_AUTOMOUNT;
+  else
+    sel = LM_NONE;
+
+  return sel;
+}
+
 static NSS_STATUS
 do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 			   ldap_service_search_descriptor_t ** result,
@@ -484,39 +523,14 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
   char *base;
   char *filter, *s;
   int scope;
+  ldap_map_selector_t sel;
 
   t = NULL;
   filter = NULL;
   scope = -1;
 
-  if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PASSWD))
-    t = &result[LM_PASSWD];
-  if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SHADOW))
-    t = &result[LM_SHADOW];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_GROUP))
-    t = &result[LM_GROUP];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_HOSTS))
-    t = &result[LM_HOSTS];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_SERVICES))
-    t = &result[LM_SERVICES];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETWORKS))
-    t = &result[LM_NETWORKS];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_PROTOCOLS))
-    t = &result[LM_PROTOCOLS];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_RPC))
-    t = &result[LM_RPC];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_ETHERS))
-    t = &result[LM_ETHERS];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETMASKS))
-    t = &result[LM_NETMASKS];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_BOOTPARAMS))
-    t = &result[LM_BOOTPARAMS];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_ALIASES))
-    t = &result[LM_ALIASES];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_NETGROUP))
-    t = &result[LM_NETGROUP];
-  else if (!strcasecmp (key, NSS_LDAP_KEY_NSS_BASE_AUTOMOUNT))
-    t = &result[LM_AUTOMOUNT];
+  sel = _nss_ldap_str2selector (key);
+  t = (sel < LM_NONE) ? &result[sel] : NULL;
 
   if (t == NULL)
     return NSS_SUCCESS;

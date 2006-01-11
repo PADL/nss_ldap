@@ -216,4 +216,7 @@ NSS_STATUS
 _nss_ldap_add_uri (ldap_config_t *result, const char *uri,
 		   char **buffer, size_t *buflen);
 
+ldap_map_selector_t
+_nss_ldap_str2selector (const char *key);
+
 #endif /* _LDAP_NSS_LDAP_UTIL_H */
