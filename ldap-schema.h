@@ -23,10 +23,8 @@
 #ifndef _LDAP_NSS_LDAP_LDAP_SCHEMA_H
 #define _LDAP_NSS_LDAP_LDAP_SCHEMA_H
 
-#ifdef AT_OC_MAP
 /* max number of attributes per object class */
 #define ATTRTAB_SIZE	15
-#endif /* AT_OC_MAP */
 
 /**
  * function to initialize global lookup filters.
@@ -106,7 +104,6 @@ extern char _nss_ldap_filt_setautomntent[];
 extern char _nss_ldap_filt_getautomntent[];
 extern char _nss_ldap_filt_getautomntbyname[];
 
-#ifdef AT_OC_MAP
 /**
  * Initialize attribute vector table indexed by map
  * selector (eg. LM_PASSWD) relative to an "ldap_config"
@@ -121,15 +118,6 @@ extern char _nss_ldap_filt_getautomntbyname[];
 #define ATM(map, at)             _nss_ldap_map_at(map, AT##_##at)
 #define DF(at)                   _nss_ldap_map_df(at)
 #define OV(at)                   _nss_ldap_map_ov(at)
-
-#else /* AT_OC_MAP */
-#define OC(oc)                    OC##_##oc
-#define AT(at)                    AT##_##at
-#define ATM(map, at)              AT##_##at
-#define DF(at)                    NULL
-#define OV(at)                    NULL
-
-#endif /* AT_OC_MAP */
 
 /**
  * Common attributes, not from RFC 2307.

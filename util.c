@@ -65,12 +65,10 @@ static NSS_STATUS do_getrdnvalue (const char *dn,
 				  char **rval, char **buffer,
 				  size_t * buflen);
 
-#ifdef AT_OC_MAP
 
 static NSS_STATUS do_parse_map_statement (ldap_config_t * cfg,
 					  const char *statement,
 					  ldap_map_type_t type);
-#endif /* AT_OC_MAP */
 
 static NSS_STATUS do_searchdescriptorconfig (const char *key,
 					     const char *value,
@@ -390,7 +388,6 @@ do_getrdnvalue (const char *dn,
   return NSS_NOTFOUND;
 }
 
-#ifdef AT_OC_MAP
 static NSS_STATUS
 do_parse_map_statement (ldap_config_t * cfg,
 			const char *statement, ldap_map_type_t type)
@@ -420,7 +417,6 @@ do_parse_map_statement (ldap_config_t * cfg,
 
   return _nss_ldap_map_put (cfg, sel, type, key, val);
 }
-#endif /* AT_OC_MAP */
 
 /* parse a comma-separated list */
 static NSS_STATUS
@@ -612,9 +608,7 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
 
 NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
 {
-#ifdef AT_OC_MAP
   int i, j;
-#endif
 
   memset (result, 0, sizeof (*result));
 
@@ -665,7 +659,6 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_reconnect_maxconntries = LDAP_NSS_MAXCONNTRIES;
   result->ldc_initgroups_ignoreusers = NULL;
 
-#ifdef AT_OC_MAP
   for (i = 0; i <= LM_NONE; i++)
     {
       for (j = 0; j <= MAP_MAX; j++)
@@ -675,7 +668,6 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
 	    return NSS_UNAVAIL;
 	}
     }
-#endif /* AT_OC_MAP */
 
   return NSS_SUCCESS;
 }
@@ -1081,7 +1073,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  t = &result->ldc_tls_randfile;
 	}
-#ifdef AT_OC_MAP
       else if (!strncasecmp (k, NSS_LDAP_KEY_MAP_ATTRIBUTE,
 			     strlen (NSS_LDAP_KEY_MAP_ATTRIBUTE)))
 	{
@@ -1102,7 +1093,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  do_parse_map_statement (result, v, MAP_DEFAULT);
 	}
-#endif /* AT_OC_MAP */
 #ifdef RFC2307BIS
       else if (!strcasecmp (k, NSS_LDAP_KEY_INITGROUPS))
 	{
@@ -1256,8 +1246,6 @@ _nss_ldap_escape_string (const char *str, char *buf, size_t buflen)
   return ret;
 }
 
-#if defined(RFC2307BIS) || defined(AT_OC_MAP)
-
 /* XXX just a linked list for now */
 
 struct ldap_dictionary
@@ -1402,8 +1390,6 @@ _nss_ldap_db_put (void *db, const ldap_datum_t * key,
 
   return NSS_SUCCESS;
 }
-
-#endif /* RFC2307BIS || AT_OC_MAP */
 
 /*
  * Add a nested netgroup or group to the namelist

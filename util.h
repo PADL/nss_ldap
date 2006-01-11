@@ -48,12 +48,10 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 			     int *pIsNestedGroup, LDAPMessage ** pRes);
 #endif /* RFC2307BIS */
 
-#ifdef AT_OC_MAP
 #define NSS_LDAP_KEY_MAP_ATTRIBUTE      "nss_map_attribute"
 #define NSS_LDAP_KEY_MAP_OBJECTCLASS    "nss_map_objectclass"
 #define NSS_LDAP_KEY_SET_OVERRIDE       "nss_override_attribute_value"
 #define NSS_LDAP_KEY_SET_DEFAULT        "nss_default_attribute_value"
-#endif /* AT_OC_MAP */
 
 #define NSS_LDAP_CONFIG_BUFSIZ		4096
 #define NSS_LDAP_KEY_HOST		"host"
@@ -171,7 +169,6 @@ NSS_STATUS _nss_ldap_escape_string (const char *str,
 	} while (0)
 #endif /* HAVE_IRS_H */
 
-#if defined(RFC2307BIS) || defined(AT_OC_MAP)
 struct ldap_datum
 {
   void *data;
@@ -191,7 +188,6 @@ NSS_STATUS _nss_ldap_db_put (void *db, const ldap_datum_t * key,
 			     const ldap_datum_t * value);
 NSS_STATUS _nss_ldap_db_get (void *db, const ldap_datum_t * key,
 			     ldap_datum_t * value);
-#endif /* RFC2307BIS || AT_OC_MAP */
 
 /* Routines for managing namelists */
 

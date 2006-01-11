@@ -3390,7 +3390,6 @@ _nss_ldap_assign_attrval (LDAPMessage * e,
 {
   char **vals;
   int vallen;
-#ifdef AT_OC_MAP
   const char *ovr, *def;
 
   ovr = OV (attr);
@@ -3412,7 +3411,6 @@ _nss_ldap_assign_attrval (LDAPMessage * e,
 
       return NSS_SUCCESS;
     }
-#endif /* AT_OC_MAP */
 
   if (__session.ls_conn == NULL)
     {
@@ -3421,7 +3419,6 @@ _nss_ldap_assign_attrval (LDAPMessage * e,
 
   vals = ldap_get_values (__session.ls_conn, e, (char *) attr);
   if (vals == NULL)
-#ifdef AT_OC_MAP
     {
       def = DF (attr);
       if (def != NULL)
@@ -3447,9 +3444,6 @@ _nss_ldap_assign_attrval (LDAPMessage * e,
 	  return NSS_NOTFOUND;
 	}
     }
-#else
-    return NSS_NOTFOUND;
-#endif /* AT_OC_MAP */
 
   vallen = strlen (*vals);
   if (*buflen < (size_t) (vallen + 1))
@@ -3474,16 +3468,11 @@ _nss_ldap_assign_attrval (LDAPMessage * e,
 const char *
 _nss_ldap_locate_userpassword (char **vals)
 {
-#ifndef AT_OC_MAP
-  static char *__crypt_token = "{CRYPT}";
-  static size_t __crypt_token_length = sizeof ("{CRYPT}") - 1;
-#endif /* AT_OC_MAP */
   const char *token = NULL;
   size_t token_length = 0;
   char **valiter;
   const char *pwd = NULL;
 
-#ifdef AT_OC_MAP
   if (__config != NULL)
     {
       switch (__config->ldc_password_type)
@@ -3500,21 +3489,13 @@ _nss_ldap_locate_userpassword (char **vals)
 	  break;
 	}
     }
-#else
-  token = __crypt_token;
-  token_length = __crypt_token_length;
-#endif /* AT_OC_MAP */
 
   if (vals != NULL)
     {
       for (valiter = vals; *valiter != NULL; valiter++)
 	{
-#ifdef AT_OC_MAP
 	  if (token_length == 0 ||
 	      strncasecmp (*valiter, token, token_length) == 0)
-#else
-	  if (strncasecmp (*valiter, token, token_length) == 0)
-#endif /* AT_OC_MAP */
 	    {
 	      pwd = *valiter;
 	      break;
@@ -3614,8 +3595,6 @@ _nss_ldap_oc_check (LDAPMessage * e, const char *oc)
 
   return ret;
 }
-
-#ifdef AT_OC_MAP
 
 #ifdef HAVE_SHADOW_H
 int
@@ -3927,7 +3906,6 @@ _nss_ldap_map_get (ldap_config_t * config, ldap_map_type_t type,
 
   return stat;
 }
-#endif /* AT_OC_MAP */
 
 /*
  * Proxy bind support for AIX. Very simple, but should do

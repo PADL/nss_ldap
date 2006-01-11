@@ -10,6 +10,7 @@ $Id$
 	* patch from Ralf Haferkamp <rhafer@suse.de>:
 	  compile fix for IPv6
 	* compile for Solaris
+	* schema mapping is always enabled
 
 245	Luke Howard <lukeh@padl.com>
 

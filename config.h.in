@@ -12,9 +12,6 @@
 /* define to enable debug code */
 #undef DEBUG
 
-/* define to enable attribute/objectclass mapping */
-#undef AT_OC_MAP
-
 /* define to enable paged results control */
 #undef PAGE_RESULTS
 

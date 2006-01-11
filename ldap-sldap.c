@@ -95,11 +95,7 @@ __ns_ldap_getMappedAttributes(const char *service, const char *attribute)
 {
 	const char *mapped;
 
-#ifdef AT_OC_MAP
-	mapped = _nss_ldap_map_at(service, attribute);
-#else
-	mapped = attribute;
-#endif
+	mapped = _nss_ldap_map_at(_nss_ldap_str2selector(service), attribute);
 	if (mapped == NULL) {
 		return NULL;
 	}
@@ -112,11 +108,7 @@ __ns_ldap_getMappedObjectClass(const char *service, const char *objectClass)
 {
 	const char *mapped;
 
-#ifdef AT_OC_MAP
 	mapped = _nss_ldap_map_oc(objectClass);
-#else
-	mapped = objectClass;
-#endif
 	if (mapped == NULL) {
 		return NULL;
 	}
@@ -324,11 +316,7 @@ __ns_ldap_parseAttr(ns_ldap_cookie_t *cookie, LDAPMessage *entry, const char *at
 		return NS_LDAP_MEMORY;
 	}
 
-#ifdef AT_OC_MAP
 	unmappedAttribute = _nss_ldap_unmap_at(cookie->sel, attribute);
-#else
-	unmappedAttribute = attribute;
-#endif
 
 	attr->attrname = strdup(unmappedAttribute);
 	if (attr->attrname == NULL) {
@@ -383,7 +371,7 @@ __ns_ldap_list(
 
 	_nss_ldap_enter();
 	stat = _nss_ldap_getent_ex(&a, &ctx, (void *)&cookie, NULL, 0,
-			&cookie.erange, filter, sel, attribute, __ns_ldap_parseEntry);
+		&cookie.erange, filter, cookie.sel, attribute, __ns_ldap_parseEntry);
 	_nss_ldap_leave();
 
 	return (cookie.ret < 0) ? __ns_ldap_mapError(stat) : cookie.ret;

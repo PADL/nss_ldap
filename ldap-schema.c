@@ -274,7 +274,6 @@ _nss_ldap_init_filters ()
 	    "(&(objectclass=%s)(%s=%s))", OC (automount), AT (automountKey), "%s");
 }
 
-#ifdef AT_OC_MAP
 static void init_pwd_attributes (const char ***pwd_attrs);
 static void init_sp_attributes (const char ***sp_attrs);
 static void init_grp_attributes (const char ***grp_attrs);
@@ -502,78 +501,3 @@ init_automount_attributes (const char ***automount_attrs)
   (*automount_attrs)[3] = NULL;
 }
 
-#else /* AT_OC_MAP */
-
-static const char *pwd_attributes[] = { AT (uid), AT (userPassword),
-  AT (uidNumber), AT (gidNumber),
-  AT (cn), AT (homeDirectory),
-  AT (loginShell), AT (gecos),
-  AT (description), AT (objectClass),
-  NULL
-};
-
-static const char *sp_attributes[] = { AT (uid), AT (userPassword),
-  AT (shadowLastChange), AT (shadowMax),
-  AT (shadowMin), AT (shadowWarning),
-  AT (shadowInactive), AT (shadowExpire),
-  NULL
-};
-
-static const char *grp_attributes[] = { AT (cn), AT (userPassword),
-  AT (memberUid),
-#ifdef RFC2307BIS
-  AT (uniqueMember),
-#endif				/* RFC2307BIS */
-  AT (gidNumber), NULL
-};
-
-static const char *hosts_attributes[] = { AT (cn), AT (ipHostNumber), NULL };
-
-static const char *services_attributes[] = { AT (cn), AT (ipServicePort),
-  AT (ipServiceProtocol), NULL
-};
-
-static const char *network_attributes[] = { AT (cn), AT (ipNetworkNumber),
-  NULL
-};
-
-static const char *proto_attributes[] = { AT (cn), AT (ipProtocolNumber),
-  NULL
-};
-
-static const char *rpc_attributes[] = { AT (cn), AT (oncRpcNumber), NULL };
-
-static const char *ethers_attributes[] = { AT (cn), AT (macAddress), NULL };
-
-static const char *bp_attributes[] = { AT (cn), AT (bootParameter), NULL };
-
-static const char *alias_attributes[] =
-  { AT (cn), AT (rfc822MailMember), NULL };
-
-static const char *netgrp_attributes[] =
-  { AT (cn), AT (nisNetgroupTriple), AT (memberNisNetgroup), NULL };
-
-static const char *automount_attributes[] =
-  { AT (automountKey), AT (automountInformation), AT (description), NULL };
-
-void
-_nss_ldap_init_attributes (const char ***attrtab)
-{
-  attrtab[LM_PASSWD] = pwd_attributes;
-  attrtab[LM_SHADOW] = sp_attributes;
-  attrtab[LM_GROUP] = grp_attributes;
-  attrtab[LM_HOSTS] = hosts_attributes;
-  attrtab[LM_SERVICES] = services_attributes;
-  attrtab[LM_NETWORKS] = network_attributes;
-  attrtab[LM_PROTOCOLS] = proto_attributes;
-  attrtab[LM_RPC] = rpc_attributes;
-  attrtab[LM_ETHERS] = ethers_attributes;
-  attrtab[LM_NETMASKS] = network_attributes;
-  attrtab[LM_BOOTPARAMS] = bp_attributes;
-  attrtab[LM_ALIASES] = alias_attributes;
-  attrtab[LM_NETGROUP] = netgrp_attributes;
-  attrtab[LM_AUTOMOUNT] = automount_attributes;
-  attrtab[LM_NONE] = NULL;
-}
-
-#endif /* AT_OC_MAP */

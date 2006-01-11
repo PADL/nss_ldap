@@ -220,7 +220,6 @@ enum ldap_map_selector
 
 typedef enum ldap_map_selector ldap_map_selector_t;
 
-#ifdef AT_OC_MAP
 enum ldap_userpassword_selector
 {
   LU_RFC2307_USERPASSWORD,
@@ -242,7 +241,6 @@ typedef enum ldap_shadow_selector ldap_shadow_selector_t;
 #ifndef UF_DONT_EXPIRE_PASSWD
 #define UF_DONT_EXPIRE_PASSWD 0x10000
 #endif
-#endif /* AT_OC_MAP */
 
 enum ldap_ssl_options
 {
@@ -368,7 +366,6 @@ struct ldap_config
   /* krb5 ccache name */
   char *ldc_krb5_ccname;
 #endif /* CONFIGURE_KRB5_CCNAME */
-#ifdef AT_OC_MAP
   /*
    * attribute/objectclass maps relative to this config
    */
@@ -383,7 +380,6 @@ struct ldap_config
    * Use active directory time offsets?
    */
   ldap_shadow_selector_t ldc_shadow_type;
-#endif				/* AT_OC_MAP */
 
   /* 
    * attribute table for ldap search requensts
@@ -861,15 +857,14 @@ NSS_STATUS _nss_ldap_assign_userpassword (LDAPMessage * e,	/* IN */
 
 NSS_STATUS _nss_ldap_oc_check (LDAPMessage * e, const char *oc);
 
-#if defined(AT_OC_MAP) && defined(HAVE_SHADOW_H)
+#if defined(HAVE_SHADOW_H)
 int _nss_ldap_shadow_date(const char *val);
 void _nss_ldap_shadow_handle_flag(struct spwd *sp);
 #else
 #define _nss_ldap_shadow_date(_v)		atol((_v))
 #define _nss_ldap_shadow_handle_flag(_sp)	do { /* nothing */ } while (0)
-#endif /* AT_OC_MAP */
+#endif /* HAVE_SHADOW_H */
 
-#ifdef AT_OC_MAP
 NSS_STATUS _nss_ldap_map_put (ldap_config_t * config,
                               ldap_map_selector_t sel,
                               ldap_map_type_t map,
@@ -914,8 +909,6 @@ const char *_nss_ldap_unmap_oc (const char *pChar);
 
 const char *_nss_ldap_map_ov (const char *pChar);
 const char *_nss_ldap_map_df (const char *pChar);
-
-#endif /* AT_OC_MAP */
 
 /*
  * Proxy bind support for AIX.
