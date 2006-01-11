@@ -1032,7 +1032,7 @@ char *_nss_ldap_getgrset (char *user)
 #ifdef INITGROUPS_ROOT_ONLY
   /* XXX performance hack for old versions of KDE only */
   if ((getuid() != 0) && (geteuid() != 0))
-    return NSS_STATUS_NOTFOUND;
+    return NSS_NOTFOUND;
 #endif
 
 #ifdef HAVE_USERSEC_H
@@ -1066,7 +1066,7 @@ char *_nss_ldap_getgrset (char *user)
     }
 
   if (_nss_ldap_test_initgroups_ignoreuser (LA_STRING (a)))
-    return NSS_STATUS_NOTFOUND;
+    return NSS_NOTFOUND;
 
 #ifdef RFC2307BIS
   lia.backlink = _nss_ldap_test_config_flag (NSS_LDAP_FLAGS_INITGROUPS_BACKLINK);
