@@ -3878,8 +3878,9 @@ _nss_ldap_dfmap_get (ldap_config_t * config,
 }
 
 NSS_STATUS
-_nss_ldap_map_get (ldap_config_t * config, ldap_map_type_t type,
+_nss_ldap_map_get (ldap_config_t * config,
 		   ldap_map_selector_t sel,
+		   ldap_map_type_t type,
 		   const char *rfc2307attribute, const char **value)
 {
   ldap_datum_t key, val;
