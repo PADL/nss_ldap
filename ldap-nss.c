@@ -743,9 +743,9 @@ do_sockaddr_isequal (NSS_LDAP_SOCKADDR_STORAGE *_s1,
 	  struct sockaddr_in6 *s1 = (struct sockaddr_in6 *) _s1;
 	  struct sockaddr_in6 *s2 = (struct sockaddr_in6 *) _s2;
 
-	  ret = (s1->sin_port == s2->sin_port &&
-		 memcmp (&s1->sin_addr, &s2->sin_addr, sizeof(struct in6_addr) == 0) &&
-		 s1->sni6_scope_id == s2->sin6_scope_id);
+	  ret = (s1->sin6_port == s2->sin6_port &&
+		 memcmp (&s1->sin6_addr, &s2->sin6_addr, sizeof(struct in6_addr) == 0) &&
+		 s1->sin6_scope_id == s2->sin6_scope_id);
 	  break;
 	}
 #endif

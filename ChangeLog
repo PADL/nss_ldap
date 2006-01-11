@@ -5,6 +5,8 @@ $Id$
 
 	* fix for BUG#222: use asynchronous start TLS if
 	  available, using bind_timeout value
+	* patch from Ralf Haferkamp <rhafer@suse.de>:
+	  compile fix for IPv6
 
 245	Luke Howard <lukeh@padl.com>
 
