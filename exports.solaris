@@ -16,6 +16,12 @@ nss_ldap.so.1 {
 		# libsldap library interfaces
 		__ns_ldap_getMappedAttributes;
 		__ns_ldap_getMappedObjectClass;
+		__ns_ldap_getParam;
+		__ns_ldap_freeError;
+		__ns_ldap_freeEntry;
+		__ns_ldap_freeResult;
+		__ns_ldap_list;
+		__ns_ldap_err2str;
 	local:
 		*;
 };

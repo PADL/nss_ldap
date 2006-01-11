@@ -2648,7 +2648,7 @@ do_parse (ent_context_t * ctx, void *result, char
 			  buffer, buflen);
 
       /* hold onto the state if we're out of memory XXX */
-      ctx->ec_state.ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
+      ctx->ec_state.ls_retry = (parseStat == NSS_TRYAGAIN && buffer != NULL ? 1 : 0);
 
       /* free entry is we're moving on */
       if (ctx->ec_state.ls_retry == 0 &&
@@ -2719,7 +2719,7 @@ do_parse_s (ent_context_t * ctx, void *result, char
       parseStat = parser (e, &ctx->ec_state, result, buffer, buflen);
 
       /* hold onto the state if we're out of memory XXX */
-      ctx->ec_state.ls_retry = (parseStat == NSS_TRYAGAIN ? 1 : 0);
+      ctx->ec_state.ls_retry = (parseStat == NSS_TRYAGAIN && buffer != NULL ? 1 : 0);
     }
   while (parseStat == NSS_NOTFOUND);
 

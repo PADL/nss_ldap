@@ -100,6 +100,14 @@ typedef struct ns_ldap_result {
 #define	NS_LDAP_CB_NEXT	0
 #define	NS_LDAP_CB_DONE	1
 
+typedef struct ns_ldap_cookie {
+	ldap_map_selector_t sel;
+	int ret;
+	int erange;
+	ns_ldap_result_t *result;
+	ns_ldap_entry_t *entry;
+} ns_ldap_cookie_t;
+
 char **__ns_ldap_getMappedAttributes(const char *service, const char *attribute);
 char **__ns_ldap_getMappedObjectClass(const char *service, const char *attribute);
 
@@ -122,5 +130,6 @@ ns_ldap_return_code __ns_ldap_list(
 	int (*callback)(const ns_ldap_entry_t *entry, const void *userdata),
 	const void *userdata);
 
+ns_ldap_return_code __ns_ldap_err2str(ns_ldap_return_code err, char **strmsg);
 
 #endif /* _LDAP_NSS_LDAP_LDAP_SLDAP_H */
