@@ -1681,7 +1681,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
       static char envbuf[256];
 # endif
       char *ccname;
-      const char *oldccname;
+      const char *oldccname = NULL;
       int retval;
 # endif	/* CONFIGURE_KRB5_CCNAME */
 
@@ -3523,7 +3523,7 @@ _nss_ldap_locate_userpassword (char **vals)
     }
 
   if (pwd == NULL)
-    pwd = "x";
+    pwd = "*";
   else
     pwd += token_length;
 
