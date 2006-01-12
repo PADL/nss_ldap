@@ -312,6 +312,7 @@ do_map_error (int rc)
     case LDAP_INVALID_DN_SYNTAX:
     case LDAP_IS_LEAF:
     case LDAP_ALIAS_DEREF_PROBLEM:
+    case LDAP_FILTER_ERROR:
       stat = NSS_NOTFOUND;
       break;
     case LDAP_SERVER_DOWN:
@@ -2545,6 +2546,10 @@ do_search (const char *base, int scope,
 #else
   __session.ls_conn->ld_sizelimit = sizelimit;
 #endif /* LDAP_OPT_SIZELIMIT */
+
+#if 1
+  syslog(LOG_DEBUG, "Searching for %s in base %s", filter, base);
+#endif
 
   *msgid = ldap_search (__session.ls_conn, base, scope, filter,
 			(char **) attrs, 0);

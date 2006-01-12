@@ -27,6 +27,7 @@ static char rcsId[] =
 #include "config.h"
 
 #define DEBUG 1
+#define DEBUG_SYSLOG 1
 
 #ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
@@ -439,7 +440,11 @@ __ns_ldap_parseEntry(LDAPMessage *msg, ldap_state_t *state,
 	int attr_count;
 
 #ifdef DEBUG
-	debug ("==> __ns_ldap_parseEntry");
+	{
+		char *dn = _nss_ldap_get_dn(msg);
+		debug ("==> __ns_ldap_parseEntry (%s)", dn);
+		ldap_memfree(dn);
+	}
 #endif
 
 	entry = (ns_ldap_entry_t *)malloc(sizeof(*entry));
@@ -711,6 +716,7 @@ __ns_ldap_mapFilter(ns_ldap_cookie_t *cookie, char **pFilter)
 		case EXPECT_LHS:
 			switch (cookie->filter[i]) {
 			case '(':
+			case ')':
 			case '&':
 			case '|':
 			case '!':
