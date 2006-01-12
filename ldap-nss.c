@@ -3635,41 +3635,45 @@ _nss_ldap_shadow_handle_flag (struct spwd *sp)
 const char *
 _nss_ldap_map_at (ldap_map_selector_t sel, const char *attribute)
 {
-  const char *value = NULL;
+  const char *mapped = NULL;
+  NSS_STATUS stat;
 
-  _nss_ldap_map_get (__config, sel, MAP_ATTRIBUTE, attribute, &value);
+  stat = _nss_ldap_map_get (__config, sel, MAP_ATTRIBUTE, attribute, &mapped);
 
-  return value;
+  return (stat == NSS_SUCCESS) ? mapped : attribute;
 }
 
 const char *
 _nss_ldap_unmap_at (ldap_map_selector_t sel, const char *attribute)
 {
-  const char *value = NULL;
+  const char *mapped = NULL;
+  NSS_STATUS stat;
 
-  _nss_ldap_map_get (__config, sel, MAP_ATTRIBUTE_REVERSE, attribute, &value);
+  stat = _nss_ldap_map_get (__config, sel, MAP_ATTRIBUTE_REVERSE, attribute, &mapped);
 
-  return value;
+  return (stat == NSS_SUCCESS) ? mapped : attribute;
 }
 
 const char *
 _nss_ldap_map_oc (ldap_map_selector_t sel, const char *objectclass)
 {
-  const char *value = NULL;
+  const char *mapped = NULL;
+  NSS_STATUS stat;
 
-  _nss_ldap_map_get (__config, sel, MAP_OBJECTCLASS, objectclass, &value);
+  stat = _nss_ldap_map_get (__config, sel, MAP_OBJECTCLASS, objectclass, &mapped);
 
-  return value;
+  return (stat == NSS_SUCCESS) ? mapped : objectclass;
 }
 
 const char *
 _nss_ldap_unmap_oc (ldap_map_selector_t sel, const char *objectclass)
 {
-  const char *value = NULL;
+  const char *mapped = NULL;
+  NSS_STATUS stat;
 
-  _nss_ldap_map_get (__config, sel, MAP_OBJECTCLASS_REVERSE, objectclass, &value);
+  stat = _nss_ldap_map_get (__config, sel, MAP_OBJECTCLASS_REVERSE, objectclass, &mapped);
 
-  return value;
+  return (stat == NSS_SUCCESS) ? mapped : objectclass;
 }
 
 const char *
@@ -3796,7 +3800,7 @@ _nss_ldap_map_get (ldap_config_t * config,
   if (stat == NSS_SUCCESS)
     *to = (char *) val.data;
   else
-    *to = from;
+    *to = NULL;
 
   return stat;
 }
