@@ -26,9 +26,6 @@ static char rcsId[] =
 
 #include "config.h"
 
-#define DEBUG 1
-#define DEBUG_SYSLOG 1
-
 #ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
 #endif

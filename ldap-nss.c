@@ -2538,8 +2538,7 @@ do_search (const char *base, int scope,
 			(char **) attrs, 0, serverctrls, NULL,
 			LDAP_NO_LIMIT, sizelimit, msgid);
   ldap_control_free (serverctrls[0]);
-#endif
-
+#else
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_SIZELIMIT)
   ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
 		   (void *) &sizelimit);
@@ -2565,6 +2564,7 @@ do_search (const char *base, int scope,
     {
       rc = LDAP_SUCCESS;
     }
+#endif /* PAGE_RESULTS */
 
   debug ("<== do_search");
 
