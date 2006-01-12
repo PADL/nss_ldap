@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2006 Luke Howard.
+/* Copyright (C) 2006 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 2006.
 
@@ -25,6 +25,8 @@ static char rcsId[] =
   "$Id$";
 
 #include "config.h"
+
+#define DEBUG 1
 
 #ifdef HAVE_PORT_BEFORE_H
 #include <port_before.h>
@@ -73,7 +75,21 @@ static char rcsId[] =
  * for the automounter to work.
  */
 
-static ns_ldap_return_code __ns_ldap_initResult(ns_ldap_result_t **presult);
+static ns_ldap_return_code __ns_ldap_initResult(ns_ldap_result_t **pResult);
+static ns_ldap_return_code __ns_ldap_initSearch(ns_ldap_cookie_t *cookie);
+static ldap_map_selector_t __ns_ldap_str2selector(const char *map);
+static ns_ldap_return_code __ns_ldap_unmapObjectClasses(ns_ldap_cookie_t *cookie, char **mappedClasses, char ***pOrigClasses);
+
+#ifdef DEBUG
+static inline const char *
+NS_LDAP_ERR2STR(ns_ldap_return_code err)
+{
+	char *str = NULL;
+
+	__ns_ldap_err2str(err, &str);
+	return str;
+}
+#endif
 
 static void **
 __ns_ldap_makeStringParam(const char *string)
@@ -99,7 +115,7 @@ __ns_ldap_getMappedAttributes(const char *service, const char *attribute)
 {
 	const char *mapped;
 
-	mapped = _nss_ldap_map_at(_nss_ldap_str2selector(service), attribute);
+	mapped = _nss_ldap_map_at(__ns_ldap_str2selector(service), attribute);
 	if (mapped == NULL) {
 		return NULL;
 	}
@@ -112,7 +128,7 @@ __ns_ldap_getMappedObjectClass(const char *service, const char *objectClass)
 {
 	const char *mapped;
 
-	mapped = _nss_ldap_map_oc(objectClass);
+	mapped = _nss_ldap_map_oc(__ns_ldap_str2selector(service), objectClass);
 	if (mapped == NULL) {
 		return NULL;
 	}
@@ -199,22 +215,32 @@ __ns_ldap_freeParam(void ***data)
 ns_ldap_return_code
 __ns_ldap_getParam(const ParamIndexType type, void ***data, ns_ldap_error_t **errorp)
 {
+	ns_ldap_return_code ret;
+
 	*errorp = NULL;
+
+	debug ("==> __ns_ldap_getParam (param=%d)", type);
 
 	switch (type) {
 	case NS_LDAP_FILE_VERSION_P:
 		*data = __ns_ldap_makeStringParam(NS_LDAP_VERSION);
-		return NS_LDAP_SUCCESS;
+		ret = NS_LDAP_SUCCESS;
+		break;
 	default:
+		ret = NS_LDAP_INVALID_PARAM;
+		break;
 	}
-	return NS_LDAP_INVALID_PARAM;
+
+	debug ("<== __ns_ldap_getParam (ret=%s)", NS_LDAP_ERR2STR(ret));
+
+	return ret;
 }
 
 ns_ldap_return_code
-__ns_ldap_freeAttr(ns_ldap_attr_t **pattr)
+__ns_ldap_freeAttr(ns_ldap_attr_t **pAttr)
 {
 	int i;
-	ns_ldap_attr_t *attr = *pattr;
+	ns_ldap_attr_t *attr = *pAttr;
 
 	if (attr != NULL) {
 		if (attr->attrname != NULL) {
@@ -252,19 +278,21 @@ __ns_ldap_freeEntry(ns_ldap_entry_t **pentry)
 }
 
 ns_ldap_return_code
-__ns_ldap_freeResult(ns_ldap_result_t **presult)
+__ns_ldap_freeResult(ns_ldap_result_t **pResult)
 {
 	ns_ldap_result_t *result;
 	ns_ldap_entry_t *entry, *next = NULL;
 
-	if (presult == NULL) {
+	if (pResult == NULL) {
 		return NS_LDAP_INVALID_PARAM;
 	}
 
-	result = *presult;
+	result = *pResult;
 	if (result == NULL) {
 		return NS_LDAP_SUCCESS;
 	}
+
+	entry = result->entry;
 
 	while (entry != NULL) {
 		next = entry->next;
@@ -273,25 +301,57 @@ __ns_ldap_freeResult(ns_ldap_result_t **presult)
 	}
 
 	free(result);
-	*presult = NULL;
+	*pResult = NULL;
 
 	return NS_LDAP_SUCCESS;
 }
 
 ns_ldap_return_code
-__ns_ldap_parseAttr(ns_ldap_cookie_t *cookie, LDAPMessage *entry, const char *attribute, ns_ldap_attr_t **pattr)
+__ns_ldap_allocAttr(ns_ldap_attr_t **pAttr)
 {
 	ns_ldap_attr_t *attr;
-	const char *unmappedAttribute;
+
+	*pAttr = NULL;
 
 	attr = (ns_ldap_attr_t *)malloc(sizeof(*attr));
 	if (attr == NULL) {
 		return NS_LDAP_MEMORY;
 	}
 
-	unmappedAttribute = _nss_ldap_unmap_at(cookie->sel, attribute);
-	if (unmappedAttribute == NULL) {
-		return NS_LDAP_INVALID_PARAM;
+	attr->attrname = NULL;
+	attr->attrvalue = NULL;
+	attr->value_count = 0;
+
+	*pAttr = attr;
+
+	return NS_LDAP_SUCCESS;
+}
+
+ns_ldap_return_code
+__ns_ldap_parseAttr(ns_ldap_cookie_t *cookie,
+	LDAPMessage *entry,
+	const char *attribute,
+	ns_ldap_attr_t **pAttr)
+{
+	ns_ldap_attr_t *attr;
+	const char *unmappedAttribute;
+	ns_ldap_return_code ret;
+	char **values;
+	int freeValues = 1;
+
+	ret = __ns_ldap_allocAttr(&attr);
+	if (ret != NS_LDAP_SUCCESS) {
+		return ret;
+	}
+
+	if ((cookie->flags & NS_LDAP_NOMAP) == 0) {
+		unmappedAttribute = _nss_ldap_unmap_at(cookie->sel, attribute);
+		if (unmappedAttribute == NULL) {
+			__ns_ldap_freeAttr(&attr);
+			return NS_LDAP_INVALID_PARAM;
+		}
+	} else {
+		unmappedAttribute = attribute;
 	}
 
 	attr->attrname = strdup(unmappedAttribute);
@@ -299,11 +359,69 @@ __ns_ldap_parseAttr(ns_ldap_cookie_t *cookie, LDAPMessage *entry, const char *at
 		__ns_ldap_freeAttr(&attr);
 		return NS_LDAP_MEMORY;
 	}
+	attr->attrvalue = NULL;
 
-	attr->attrvalue = _nss_ldap_get_values(entry, attr->attrname);
+	values = _nss_ldap_get_values(entry, attribute);
+
+	if ((cookie->flags & NS_LDAP_NOMAP) == 0) {
+		if (strcasecmp(attribute, "objectClass") == 0) {
+			/* Map object class values */
+			ret = __ns_ldap_unmapObjectClasses(cookie, values, &attr->attrvalue);
+			if (ret != NS_LDAP_SUCCESS) {
+				__ns_ldap_freeAttr(&attr);
+				return ret;
+			}
+		}
+	}
+
+	if (attr->attrvalue == NULL) {
+		attr->attrvalue = values;
+		freeValues = 0;
+	}
+
 	attr->value_count = (attr->attrvalue != NULL) ? ldap_count_values(attr->attrvalue) : 0;
 
-	*pattr = attr;
+	if (freeValues) {
+		ldap_value_free(values);
+	}
+
+	*pAttr = attr;
+
+	return NS_LDAP_SUCCESS;
+}
+
+ns_ldap_return_code
+__ns_ldap_parseDn(ns_ldap_cookie_t *cookie, LDAPMessage *entry, ns_ldap_attr_t **pAttr)
+{
+	ns_ldap_attr_t *attr;
+	ns_ldap_return_code ret;
+
+	ret = __ns_ldap_allocAttr(&attr);
+	if (ret != NS_LDAP_SUCCESS) {
+		return ret;
+	}
+
+	attr->attrname = strdup("dn");
+	if (attr->attrname == NULL) {
+		__ns_ldap_freeAttr(&attr);
+		return NS_LDAP_MEMORY;
+	}
+
+	attr->value_count = 1;
+
+	attr->attrvalue = (char **)malloc(1 * sizeof(char *));
+	if (attr->attrvalue == NULL) {
+		__ns_ldap_freeAttr(&attr);
+		return NS_LDAP_MEMORY;
+	}
+
+	attr->attrvalue[0] = _nss_ldap_get_dn(entry);
+	if (attr->attrvalue[0] == NULL) {
+		__ns_ldap_freeAttr(&attr);
+		return NS_LDAP_MEMORY;
+	}
+
+	*pAttr = attr;
 
 	return NS_LDAP_SUCCESS;
 }
@@ -317,17 +435,24 @@ __ns_ldap_parseEntry(LDAPMessage *msg, ldap_state_t *state,
 	BerElement *ber = NULL;
 	ns_ldap_return_code ret = NS_LDAP_SUCCESS;
 	ns_ldap_entry_t *entry;
-	int attr_count = 0;
+	int attr_count;
+
+#ifdef DEBUG
+	debug ("==> __ns_ldap_parseEntry");
+#endif
 
 	entry = (ns_ldap_entry_t *)malloc(sizeof(*entry));
 	if (entry == NULL) {
 		cookie->ret = NS_LDAP_MEMORY;
+		debug ("<== __ns_ldap_parseEntry (no memory)");
 		return NSS_NOTFOUND;
 	}
 
 	entry->attr_count = 0;
 	entry->attr_pair = NULL;
 	entry->next = NULL;
+
+	attr_count = 1; /* for DN */
 
 	for (attribute = _nss_ldap_first_attribute (msg, &ber);
 		attribute != NULL;
@@ -345,8 +470,19 @@ __ns_ldap_parseEntry(LDAPMessage *msg, ldap_state_t *state,
 	if (entry->attr_pair == NULL) {
 		__ns_ldap_freeEntry(&entry);
 		cookie->ret = NS_LDAP_MEMORY;
+		debug ("<== __ns_ldap_parseEntry (no memory)");
 		return NSS_NOTFOUND;
 	}
+
+	ret = __ns_ldap_parseDn(cookie, msg, &entry->attr_pair[entry->attr_count]);
+	if (ret != NS_LDAP_SUCCESS) {
+		__ns_ldap_freeEntry(&entry);
+		cookie->ret = ret;
+		debug ("<== __ns_ldap_parseEntry (failed to parse DN)");
+		return ret;
+	}
+
+	entry->attr_count++;
 
 	for (attribute = _nss_ldap_first_attribute (msg, &ber);
 		attribute != NULL;
@@ -371,6 +507,8 @@ __ns_ldap_parseEntry(LDAPMessage *msg, ldap_state_t *state,
 			ret = __ns_ldap_initResult(&cookie->result);
 			if (ret != NS_LDAP_SUCCESS) {
 				__ns_ldap_freeEntry(&entry);
+				cookie->ret = ret;
+				debug ("<== __ns_ldap_parseEntry (failed to init result: %s)", NS_LDAP_ERR2STR(ret));
 				return __ns_ldap_mapError(ret);
 			}
 			cookie->result->entry = entry;
@@ -388,11 +526,15 @@ __ns_ldap_parseEntry(LDAPMessage *msg, ldap_state_t *state,
 		__ns_ldap_freeEntry(&entry);
 	}
 
+	cookie->ret = ret;
+
+	debug ("<== __ns_ldap_parseEntry (ret=%s)", NS_LDAP_ERR2STR(ret));
+
 	return __ns_ldap_mapError(ret);
 }
 
 static ns_ldap_return_code
-__ns_ldap_initResult(ns_ldap_result_t **presult)
+__ns_ldap_initResult(ns_ldap_result_t **pResult)
 {
 	ns_ldap_result_t *result;
 
@@ -404,7 +546,7 @@ __ns_ldap_initResult(ns_ldap_result_t **presult)
 	result->entries_count = 0;
 	result->entry = NULL;
 
-	*presult = result;
+	*pResult = result;
 
 	return NS_LDAP_SUCCESS;
 }
@@ -418,13 +560,44 @@ __ns_ldap_isAutomountMap(const char *map)
 static ldap_map_selector_t
 __ns_ldap_str2selector(const char *map)
 {
-	ldap_map_selector_t sel = _nss_ldap_str2selector(map);
+	ldap_map_selector_t sel;
 
-	if (sel == LM_NONE && __ns_ldap_isAutomountMap(map)) {
-		sel = LM_AUTOMOUNT;
+	if (map == NULL) {
+		sel = LM_NONE;
+	} else {
+		sel = _nss_ldap_str2selector(map);
+
+		if (sel == LM_NONE && __ns_ldap_isAutomountMap(map)) {
+			sel = LM_AUTOMOUNT;
+		}
 	}
 
 	return sel;
+}
+
+static ns_ldap_return_code
+__ns_ldap_unmapObjectClasses(ns_ldap_cookie_t *cookie, char **mappedClasses, char ***pOrigClasses)
+{
+	char **origClasses = NULL;
+	int count, i;
+
+	count = ldap_count_values(mappedClasses);
+	origClasses = (char **)calloc(count + 1, sizeof(char *));
+	if (origClasses == NULL) {
+		return NS_LDAP_MEMORY;
+	}
+
+	for (i = 0; i < count; i++) {
+		origClasses[i] = strdup(_nss_ldap_unmap_oc(cookie->sel, mappedClasses[i]));
+		if (origClasses[i] == NULL) {
+			ldap_value_free(origClasses);
+			return NS_LDAP_MEMORY;
+		}
+	}
+	origClasses[i] = NULL;
+	*pOrigClasses = origClasses;
+
+	return NS_LDAP_SUCCESS;
 }
 
 static ns_ldap_return_code
@@ -460,11 +633,17 @@ __ns_ldap_mapAttributes(ns_ldap_cookie_t *cookie, const char ***pAttributes)
 static ns_ldap_return_code
 __ns_ldap_mapFilter(ns_ldap_cookie_t *cookie, char **pFilter)
 {
+	char *filter;
+
+	*pFilter = NULL;
+
 	/* XXX this should actually do something ! */
-	*pFilter = strdup(cookie->filter);
-	if (*pFilter == NULL) {
+	filter = strdup("(&(objectclass=user)(samaccountname=t_padl00))");//strdup(cookie->filter);
+	if (filter == NULL) {
 		return NS_LDAP_MEMORY;
 	}
+
+	*pFilter = filter;
 
 	return NS_LDAP_SUCCESS;
 }
@@ -528,15 +707,17 @@ __ns_ldap_initCookie(const char *map,
 		return NS_LDAP_MEMORY;
 	}
 
-	if (map == NULL || filter == NULL) {
+	if (filter == NULL) {
 		__ns_ldap_freeCookie(&cookie);
 		return NS_LDAP_INVALID_PARAM;
 	}
 
-	cookie->map = strdup(map);
-	if (cookie->map == NULL) {
-		__ns_ldap_freeCookie(&cookie);
-		return NS_LDAP_MEMORY;
+	if (cookie->map != NULL) {
+		cookie->map = strdup(map);
+		if (cookie->map == NULL) {
+			__ns_ldap_freeCookie(&cookie);
+			return NS_LDAP_MEMORY;
+		}
 	}
 
 	cookie->filter = strdup(filter);
@@ -582,12 +763,17 @@ __ns_ldap_initCookie(const char *map,
 	cookie->result = NULL;
 	cookie->entry = NULL;
 
+	ret = __ns_ldap_initSearch(cookie);
+	if (ret != NS_LDAP_SUCCESS) {
+		__ns_ldap_freeCookie(&cookie);
+		return ret;
+	}
+
 	*pCookie = cookie;
 
 	return NS_LDAP_SUCCESS;
 }
 
-/* caller acquires lock */
 static ns_ldap_return_code
 __ns_ldap_initSearch(ns_ldap_cookie_t *cookie)
 {
@@ -603,6 +789,7 @@ __ns_ldap_initSearch(ns_ldap_cookie_t *cookie)
 	 */
 	if (cookie->sel == LM_AUTOMOUNT) {
 		assert(cookie->am_state == NULL);
+		assert(cookie->map != NULL);
 
 		stat = _nss_ldap_am_context_init(cookie->map, &cookie->am_state);
 		if (stat != NSS_SUCCESS) {
@@ -643,12 +830,6 @@ __ns_ldap_search(ns_ldap_cookie_t *cookie)
 	ldap_args_t a;
 	NSS_STATUS stat;
 	ldap_automount_context_t *am = cookie->am_state;
-	ns_ldap_return_code ret;
-
-	ret = __ns_ldap_initSearch(cookie);
-	if (ret != NS_LDAP_SUCCESS) {
-		return ret;
-	}
 
 	LA_INIT(a);
 	LA_TYPE(a) = LA_TYPE_NONE;
@@ -661,23 +842,22 @@ __ns_ldap_search(ns_ldap_cookie_t *cookie)
 
 	assert(cookie->mapped_filter != NULL);
 
-	do {
-		cookie->ret = -1;
+retry_search:
+	cookie->ret = -1;
 
-		stat = _nss_ldap_getent_ex(&a, &cookie->state, cookie,
-			NULL, 0, &cookie->erange,
-			cookie->mapped_filter,
-			cookie->sel,
-			cookie->mapped_attribute,
-			__ns_ldap_parseEntry);
-		if (stat == NSS_NOTFOUND && cookie->sel == LM_AUTOMOUNT) {
-			if (am->lac_dn_index < am->lac_dn_count - 1) {
-				am->lac_dn_index++;
-			} else {
-				break;
-			}
-		}
-	} while (stat == NSS_NOTFOUND);
+	stat = _nss_ldap_getent_ex(&a, &cookie->state, cookie,
+		NULL, 0, &cookie->erange,
+		cookie->mapped_filter,
+		cookie->sel,
+		cookie->mapped_attribute,
+		__ns_ldap_parseEntry);
+
+	if (stat == NSS_NOTFOUND &&
+	    cookie->sel == LM_AUTOMOUNT &&
+	    am->lac_dn_index < am->lac_dn_count - 1) {
+		am->lac_dn_index++;
+		goto retry_search;
+	}
 
 	if (cookie->ret < 0) {
 		cookie->ret = __ns_ldap_mapError(stat);
@@ -706,6 +886,9 @@ __ns_ldap_firstEntry(const char *service,
 	*result = NULL;
 	*errorp = NULL;
 
+	debug ("==> __ns_ldap_firstEntry (map=%s filter=%s)",
+		service != NULL ? service : "(null)", filter);
+
 	_nss_ldap_enter();
 
 	ret = __ns_ldap_initCookie(service, filter, init_filter_cb,
@@ -722,6 +905,8 @@ __ns_ldap_firstEntry(const char *service,
 	_nss_ldap_leave();
 
 	*pCookie = cookie;
+
+	debug("<== __ns_ldap_firstEntry ret=%s cookie=%p", NS_LDAP_ERR2STR(ret), cookie);
 
 	return ret;
 }
@@ -743,6 +928,8 @@ __ns_ldap_nextEntry(
 		return NS_LDAP_INVALID_PARAM;
 	}
 
+	debug("==> __ns_ldap_nextEntry cookie=%p", cookie);
+
 	_nss_ldap_enter();
 
 	ret = __ns_ldap_search(cookie);
@@ -753,6 +940,8 @@ __ns_ldap_nextEntry(
 	__ns_ldap_mapErrorDetail(ret, errorp);
 
 	_nss_ldap_leave();
+
+	debug("<== __ns_ldap_nextEntry ret=%s", NS_LDAP_ERR2STR(ret));
 
 	return ret;
 }
@@ -768,12 +957,16 @@ __ns_ldap_endEntry(
 
 	cookie = (ns_ldap_cookie_t *)*pCookie;
 
+	debug("==> __ns_ldap_freeEntry cookie=%p", cookie);
+
 	__ns_ldap_mapErrorDetail(cookie->ret, errorp);
 	__ns_ldap_freeCookie(&cookie);
 
 	*pCookie = NULL;
 
 	_nss_ldap_leave();
+
+	debug("<== __ns_ldap_freeEntry");
 
 	return NS_LDAP_SUCCESS;
 }
@@ -786,43 +979,52 @@ __ns_ldap_list(
 	const char * const *attribute,
 	const ns_cred_t *cred,
 	const int flags,
-	ns_ldap_result_t **result,
+	ns_ldap_result_t **pResult,
 	ns_ldap_error_t **errorp,
 	int (*callback)(const ns_ldap_entry_t *entry, const void *userdata),
 	const void *userdata)
 {
-	ns_ldap_cookie_t *cookie;
+	ns_ldap_cookie_t *cookie = NULL;
+	ns_ldap_result_t *result = NULL;
 	ns_ldap_return_code ret;
 
-	debug("==> __ns_ldap_list map=%s filter=%s", map, filter);
+	debug("==> __ns_ldap_list map=%s filter=%s",
+		map != NULL ? map : "(null)", filter);
 
-	*result = NULL;
+	*pResult = NULL;
 	*errorp = NULL;
 
 	_nss_ldap_enter();
 
 	ret = __ns_ldap_initCookie(map, filter, init_filter_cb,
-		attribute, cred, flags, &cookie, NULL, userdata);
+		attribute, cred, flags, &cookie, callback, userdata);
 
 	while (ret == NS_LDAP_SUCCESS) {
 		ret = __ns_ldap_search(cookie);
 
-		if (*result == NULL) {
-			*result = cookie->result;
+		if (result == NULL) {
+			result = cookie->result;
 		}
 
 		if (cookie->cb_ret != NS_LDAP_CB_NEXT) {
+			assert(cookie->callback != NULL);
 			break;
 		}
 	}
 
+	if (ret == NS_LDAP_NOTFOUND && cookie->entry != NULL) {
+		ret = NS_LDAP_SUCCESS;
+	}
+
+	*pResult = result;
 	cookie->result = NULL;
+
 	__ns_ldap_freeCookie(&cookie);
 	__ns_ldap_mapErrorDetail(ret, errorp);
 
 	_nss_ldap_leave();
 
-	debug("<== __ns_ldap_list ret=%s", __ns_ldap_err2str(ret));
+	debug("<== __ns_ldap_list ret=%s", NS_LDAP_ERR2STR(ret));
 
 	return ret;
 }

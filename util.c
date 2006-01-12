@@ -1366,13 +1366,24 @@ _nss_ldap_db_put (void *db, const ldap_datum_t * key,
   struct ldap_dictionary *dict = (struct ldap_dictionary *) db;
   struct ldap_dictionary *p, *q;
 
-  p = do_find_last (dict);
-  assert (p != NULL);
-  assert (p->next == NULL);
+  assert (key != NULL);
+  assert (key->data != NULL);
 
-  q = do_alloc_dictionary ();
-  if (q == NULL)
-    return NSS_TRYAGAIN;
+  if (dict->key.data == NULL)
+    {
+      /* uninitialized */
+      q = dict;
+      p = NULL;
+    }
+  else
+    {
+      p = do_find_last (dict);
+      assert (p != NULL);
+      assert (p->next == NULL);
+      q = do_alloc_dictionary ();
+      if (q == NULL)
+	return NSS_TRYAGAIN;
+    }
 
   if (do_dup_datum (&q->key, key) != NSS_SUCCESS)
     {
@@ -1386,7 +1397,8 @@ _nss_ldap_db_put (void *db, const ldap_datum_t * key,
       return NSS_TRYAGAIN;
     }
 
-  p->next = q;
+  if (p != NULL)
+    p->next = q;
 
   return NSS_SUCCESS;
 }

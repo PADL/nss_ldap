@@ -10,7 +10,9 @@ $Id$
 	* patch from Ralf Haferkamp <rhafer@suse.de>:
 	  compile fix for IPv6
 	* compile for Solaris
-	* schema mapping is always enabled
+	* schema mapping is always enabled, cleanup schema
+	  mapping code
+	* allow for map-specific objectclass mapping
 
 245	Luke Howard <lukeh@padl.com>
 

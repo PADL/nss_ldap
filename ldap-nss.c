@@ -3630,59 +3630,49 @@ _nss_ldap_shadow_handle_flag (struct spwd *sp)
 const char *
 _nss_ldap_map_at (ldap_map_selector_t sel, const char *attribute)
 {
-  char *mapped;
+  const char *value = NULL;
 
-  if (_nss_ldap_atmap_get (__config, sel, attribute, (const char **)
-			   &mapped) == NSS_NOTFOUND)
-    return attribute;
+  _nss_ldap_map_get (__config, sel, MAP_ATTRIBUTE, attribute, &value);
 
-  return mapped;
+  return value;
 }
 
 const char *
 _nss_ldap_unmap_at (ldap_map_selector_t sel, const char *attribute)
 {
-  char *unmapped;
+  const char *value = NULL;
 
-  if (_nss_ldap_atmap_get_reverse (__config, sel, attribute,
-				   (const char **)&unmapped) == NSS_NOTFOUND)
-    return attribute;
+  _nss_ldap_map_get (__config, sel, MAP_ATTRIBUTE_REVERSE, attribute, &value);
 
-  return unmapped;
+  return value;
 }
 
 const char *
-_nss_ldap_map_oc (const char *objectclass)
+_nss_ldap_map_oc (ldap_map_selector_t sel, const char *objectclass)
 {
-  char *mapped;
+  const char *value = NULL;
 
-  if (_nss_ldap_ocmap_get (__config, objectclass, (const char **)
-			   &mapped) == NSS_NOTFOUND)
-    return objectclass;
+  _nss_ldap_map_get (__config, sel, MAP_OBJECTCLASS, objectclass, &value);
 
-  return mapped;
+  return value;
 }
 
 const char *
-_nss_ldap_unmap_oc (const char *objectclass)
+_nss_ldap_unmap_oc (ldap_map_selector_t sel, const char *objectclass)
 {
-  char *unmapped;
+  const char *value = NULL;
 
-  if (_nss_ldap_ocmap_get_reverse (__config, objectclass,
-				   (const char **) &unmapped) == NSS_NOTFOUND)
-    return objectclass;
+  _nss_ldap_map_get (__config, sel, MAP_OBJECTCLASS_REVERSE, objectclass, &value);
 
-  return unmapped;
+  return value;
 }
 
 const char *
 _nss_ldap_map_ov (const char *attribute)
 {
-  char *value;
+  const char *value = NULL;
 
-  if (_nss_ldap_ovmap_get (__config, attribute, (const char **) &value) ==
-      NSS_NOTFOUND)
-    return NULL;
+  _nss_ldap_map_get (__config, LM_NONE, MAP_OVERRIDE, attribute, &value);
 
   return value;
 }
@@ -3690,11 +3680,9 @@ _nss_ldap_map_ov (const char *attribute)
 const char *
 _nss_ldap_map_df (const char *attribute)
 {
-  char *value;
+  const char *value = NULL;
 
-  if (_nss_ldap_dfmap_get (__config, attribute, (const char **) &value) ==
-      NSS_NOTFOUND)
-    return NULL;
+  _nss_ldap_map_get (__config, LM_NONE, MAP_DEFAULT, attribute, &value);
 
   return value;
 }
@@ -3703,8 +3691,8 @@ NSS_STATUS
 _nss_ldap_map_put (ldap_config_t * config,
 		   ldap_map_selector_t sel,
 		   ldap_map_type_t type,
-		   const char *rfc2307attribute,
-		   const char *value)
+		   const char *from,
+		   const char *to)
 {
   ldap_datum_t key, val;
   void **map;
@@ -3714,21 +3702,21 @@ _nss_ldap_map_put (ldap_config_t * config,
     {
     case MAP_ATTRIBUTE:
       /* special handling for attribute mapping */ if (strcmp
-						       (rfc2307attribute,
+						       (from,
 							"userPassword") == 0)
 	{
-	  if (strcasecmp (value, "userPassword") == 0)
+	  if (strcasecmp (to, "userPassword") == 0)
 	    config->ldc_password_type = LU_RFC2307_USERPASSWORD;
-	  else if (strcasecmp (value, "authPassword") == 0)
+	  else if (strcasecmp (to, "authPassword") == 0)
 	    config->ldc_password_type = LU_RFC3112_AUTHPASSWORD;
 	  else
 	    config->ldc_password_type = LU_OTHER_PASSWORD;
 	}
-      else if (strcmp (rfc2307attribute, "shadowLastChange") == 0)
+      else if (strcmp (from, "shadowLastChange") == 0)
 	{
-	  if (strcasecmp (value, "shadowLastChange") == 0)
+	  if (strcasecmp (to, "shadowLastChange") == 0)
 	    config->ldc_shadow_type = LS_RFC2307_SHADOW;
-	  else if (strcasecmp (value, "pwdLastSet") == 0)
+	  else if (strcasecmp (to, "pwdLastSet") == 0)
 	    config->ldc_shadow_type = LS_AD_SHADOW;
 	  else
 	    config->ldc_shadow_type = LS_OTHER_SHADOW;
@@ -3748,17 +3736,20 @@ _nss_ldap_map_put (ldap_config_t * config,
   assert (*map != NULL);
 
   NSS_LDAP_DATUM_ZERO (&key);
-  key.data = (void *) rfc2307attribute;
-  key.size = strlen (rfc2307attribute);
+  key.data = (void *) from;
+  key.size = strlen (from) + 1;
 
   NSS_LDAP_DATUM_ZERO (&val);
-  val.data = (void *) value;
-  val.size = strlen (value) + 1;
+  val.data = (void *) to;
+  val.size = strlen (to) + 1;
 
   stat = _nss_ldap_db_put (*map, &key, &val);
-  if (stat == NSS_SUCCESS && type == MAP_ATTRIBUTE)
+  if (stat == NSS_SUCCESS &&
+      (type == MAP_ATTRIBUTE || type == MAP_OBJECTCLASS))
     {
-      map = &config->ldc_maps[sel][MAP_ATTRIBUTE_REVERSE];
+      type = (type == MAP_ATTRIBUTE) ? MAP_ATTRIBUTE_REVERSE : MAP_OBJECTCLASS_REVERSE;
+      map = &config->ldc_maps[sel][type];
+
       stat = _nss_ldap_db_put (*map, &val, &key);
     }
 
@@ -3766,122 +3757,10 @@ _nss_ldap_map_put (ldap_config_t * config,
 }
 
 NSS_STATUS
-_nss_ldap_atmap_get (ldap_config_t * config, ldap_map_selector_t sel,
-		     const char *rfc2307attribute, const char **attribute)
-{
-  NSS_STATUS stat;
-
-  if (sel != LM_NONE)
-    {
-      stat = _nss_ldap_map_get (config, sel, MAP_ATTRIBUTE,
-				rfc2307attribute, attribute);
-    }
-  else
-    stat = NSS_NOTFOUND;
-
-  if (stat == NSS_NOTFOUND)
-    {
-      stat = _nss_ldap_map_get (config, LM_NONE, MAP_ATTRIBUTE, rfc2307attribute,
-				attribute);
-      if (stat == NSS_NOTFOUND)
-	{
-	  *attribute = rfc2307attribute;
-	}
-    }
-  return stat;
-}
-
-NSS_STATUS
-_nss_ldap_atmap_get_reverse (ldap_config_t * config, ldap_map_selector_t sel,
-			     const char *attribute, const char **rfc2307attribute)
-{
-  NSS_STATUS stat;
-
-  if (sel != LM_NONE)
-    {
-      stat = _nss_ldap_map_get (config, sel, MAP_ATTRIBUTE_REVERSE,
-				attribute, rfc2307attribute);
-    }
-  else
-    stat = NSS_NOTFOUND;
-
-  if (stat == NSS_NOTFOUND)
-    {
-      stat = _nss_ldap_map_get (config, LM_NONE, MAP_ATTRIBUTE_REVERSE, attribute,
-				rfc2307attribute);
-      if (stat == NSS_NOTFOUND)
-	{
-	  *rfc2307attribute = attribute;
-	}
-    }
-  return stat;
-}
-
-NSS_STATUS
-_nss_ldap_ocmap_get (ldap_config_t * config,
-		     const char *rfc2307objectclass, const char **objectclass)
-{
-  NSS_STATUS stat;
-
-  stat =
-    _nss_ldap_map_get (config, LM_NONE, MAP_OBJECTCLASS, rfc2307objectclass,
-		       objectclass);
-  if (stat == NSS_NOTFOUND)
-    {
-      *objectclass = rfc2307objectclass;
-    }
-  return stat;
-}
-
-NSS_STATUS
-_nss_ldap_ocmap_get_reverse (ldap_config_t * config,
-			     const char *objectclass, const char **rfc2307objectclass)
-{
-  NSS_STATUS stat;
-
-  stat =
-    _nss_ldap_map_get (config, LM_NONE, MAP_OBJECTCLASS_REVERSE, objectclass,
-		       rfc2307objectclass);
-  if (stat == NSS_NOTFOUND)
-    {
-      *rfc2307objectclass = objectclass;
-    }
-  return stat;
-}
-
-NSS_STATUS
-_nss_ldap_ovmap_get (ldap_config_t * config,
-		     const char *rfc2307attribute, const char **value)
-{
-  NSS_STATUS stat;
-
-  stat = _nss_ldap_map_get (config, LM_NONE, MAP_OVERRIDE, rfc2307attribute, value);
-  if (stat == NSS_NOTFOUND)
-    {
-      *value = NULL;
-    }
-  return stat;
-}
-
-NSS_STATUS
-_nss_ldap_dfmap_get (ldap_config_t * config,
-		     const char *rfc2307attribute, const char **value)
-{
-  NSS_STATUS stat;
-
-  stat = _nss_ldap_map_get (config, LM_NONE, MAP_DEFAULT, rfc2307attribute, value);
-  if (stat == NSS_NOTFOUND)
-    {
-      *value = NULL;
-    }
-  return stat;
-}
-
-NSS_STATUS
 _nss_ldap_map_get (ldap_config_t * config,
 		   ldap_map_selector_t sel,
 		   ldap_map_type_t type,
-		   const char *rfc2307attribute, const char **value)
+		   const char *from, const char **to)
 {
   ldap_datum_t key, val;
   void *map;
@@ -3896,14 +3775,23 @@ _nss_ldap_map_get (ldap_config_t * config,
   assert (map != NULL);
 
   NSS_LDAP_DATUM_ZERO (&key);
-  key.data = (void *) rfc2307attribute;
-  key.size = strlen (rfc2307attribute);
+  key.data = (void *) from;
+  key.size = strlen (from) + 1;
 
   NSS_LDAP_DATUM_ZERO (&val);
+
   stat = _nss_ldap_db_get (map, &key, &val);
+  if (stat == NSS_NOTFOUND && sel != LM_NONE)
+    {
+      map = config->ldc_maps[LM_NONE][type];
+      assert (map != NULL);
+      stat = _nss_ldap_db_get (map, &key, &val);
+    }
 
   if (stat == NSS_SUCCESS)
-    *value = (char *) val.data;
+    *to = (char *) val.data;
+  else
+    *to = from;
 
   return stat;
 }

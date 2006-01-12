@@ -875,37 +875,11 @@ NSS_STATUS _nss_ldap_map_get (ldap_config_t * config,
                               ldap_map_type_t map,
 			      const char *key, const char **value);
 
-NSS_STATUS _nss_ldap_atmap_get (ldap_config_t * config,
-                                ldap_map_selector_t sel,
-				const char *rfc2307attribute,
-				const char **attribute);
-
-NSS_STATUS _nss_ldap_atmap_get_reverse (ldap_config_t * config,
-					ldap_map_selector_t sel,
-					const char *attribute,
-					const char **rfc2307attribute);
-
-NSS_STATUS _nss_ldap_ocmap_get (ldap_config_t * config,
-				const char *rfc2307objectclass,
-				const char **objectclass);
-
-NSS_STATUS _nss_ldap_ocmap_get_reverse (ldap_config_t * config,
-					const char *objectClass,
-					const char **rfc2307ObjectClass);
-
-NSS_STATUS _nss_ldap_ovmap_get (ldap_config_t * config,
-				const char *rfc2307attribute,
-				const char **value);
-
-NSS_STATUS _nss_ldap_dfmap_get (ldap_config_t * config,
-				const char *rfc2307attribute,
-				const char **value);
-
 const char *_nss_ldap_map_at (ldap_map_selector_t sel, const char *pChar2);
 const char *_nss_ldap_unmap_at (ldap_map_selector_t sel, const char *attribute);
 
-const char *_nss_ldap_map_oc (const char *pChar);
-const char *_nss_ldap_unmap_oc (const char *pChar);
+const char *_nss_ldap_map_oc (ldap_map_selector_t sel, const char *pChar);
+const char *_nss_ldap_unmap_oc (ldap_map_selector_t sel, const char *pChar);
 
 const char *_nss_ldap_map_ov (const char *pChar);
 const char *_nss_ldap_map_df (const char *pChar);
