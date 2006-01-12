@@ -2547,10 +2547,6 @@ do_search (const char *base, int scope,
   __session.ls_conn->ld_sizelimit = sizelimit;
 #endif /* LDAP_OPT_SIZELIMIT */
 
-#if 1
-  syslog(LOG_DEBUG, "Searching for %s in base %s", filter, base);
-#endif
-
   *msgid = ldap_search (__session.ls_conn, base, scope, filter,
 			(char **) attrs, 0);
   if (*msgid < 0)
@@ -3109,7 +3105,7 @@ do_next_page (const ldap_args_t * args,
   stat =
     ldap_search_ext (__session.ls_conn, base,
 		     __session.ls_config->ldc_scope,
-		     (args == NULL) ? (char *) filterprot : filter,
+		     filter,
 		     (char **) attrs, 0, serverctrls, NULL, LDAP_NO_LIMIT,
 		     sizelimit, msgid);
 

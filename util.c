@@ -490,7 +490,7 @@ _nss_ldap_str2selector (const char *key)
 
   if (!strcasecmp (key, MP_passwd))
     sel = LM_PASSWD;
-  if (!strcasecmp (key, MP_shadow))
+  else if (!strcasecmp (key, MP_shadow))
     sel = LM_SHADOW;
   else if (!strcasecmp (key, MP_group))
     sel = LM_GROUP;

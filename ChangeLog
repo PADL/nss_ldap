@@ -3,6 +3,7 @@ $Id$
 
 246	Luke Howard <lukeh@padl.com>
 
+	* fix for BUG#219: paged results delivers wrong results
 	* fix for BUG#222: use asynchronous start TLS if
 	  available, using bind_timeout value
 	* fix for BUG#240: return "*" rather than "x" for

@@ -312,7 +312,7 @@ _nss_ldap_init_attributes (const char ***attrtab)
   attrtab[LM_NONE] = NULL;
 }
 
-void
+static void
 init_pwd_attributes (const char ***pwd_attrs)
 {
   int i = 0;
@@ -340,7 +340,7 @@ init_pwd_attributes (const char ***pwd_attrs)
   (*pwd_attrs)[i] = NULL;
 }
 
-void
+static void
 init_sp_attributes (const char ***sp_attrs)
 {
   static const char *__sp_attrs[ATTRTAB_SIZE + 1];
@@ -359,7 +359,7 @@ init_sp_attributes (const char ***sp_attrs)
   (*sp_attrs)[9] = NULL;
 }
 
-void
+static void
 init_grp_attributes (const char ***grp_attrs)
 {
   int i = 0;
@@ -377,7 +377,7 @@ init_grp_attributes (const char ***grp_attrs)
   (*grp_attrs)[i] = NULL;
 }
 
-void
+static void
 init_hosts_attributes (const char ***hosts_attrs)
 {
   static const char *__hosts_attrs[ATTRTAB_SIZE + 1];
@@ -389,7 +389,7 @@ init_hosts_attributes (const char ***hosts_attrs)
   (*hosts_attrs)[2] = NULL;
 }
 
-void
+static void
 init_services_attributes (const char ***services_attrs)
 {
   static const char *__services_attrs[ATTRTAB_SIZE + 1];
@@ -402,7 +402,7 @@ init_services_attributes (const char ***services_attrs)
   (*services_attrs)[3] = NULL;
 }
 
-void
+static void
 init_network_attributes (const char ***network_attrs)
 {
   static const char *__network_attrs[ATTRTAB_SIZE + 1];
@@ -415,7 +415,7 @@ init_network_attributes (const char ***network_attrs)
   (*network_attrs)[3] = NULL;
 }
 
-void
+static void
 init_proto_attributes (const char ***proto_attrs)
 {
   static const char *__proto_attrs[ATTRTAB_SIZE + 1];
@@ -427,7 +427,7 @@ init_proto_attributes (const char ***proto_attrs)
   (*proto_attrs)[2] = NULL;
 }
 
-void
+static void
 init_rpc_attributes (const char ***rpc_attrs)
 {
   static const char *__rpc_attrs[ATTRTAB_SIZE + 1];
@@ -439,7 +439,7 @@ init_rpc_attributes (const char ***rpc_attrs)
   (*rpc_attrs)[2] = NULL;
 }
 
-void
+static void
 init_ethers_attributes (const char ***ethers_attrs)
 {
   static const char *__ethers_attrs[ATTRTAB_SIZE + 1];
@@ -451,7 +451,7 @@ init_ethers_attributes (const char ***ethers_attrs)
   (*ethers_attrs)[2] = NULL;
 }
 
-void
+static void
 init_bp_attributes (const char ***bp_attrs)
 {
   static const char *__bp_attrs[ATTRTAB_SIZE + 1];
@@ -463,7 +463,7 @@ init_bp_attributes (const char ***bp_attrs)
   (*bp_attrs)[2] = NULL;
 }
 
-void
+static void
 init_alias_attributes (const char ***alias_attrs)
 {
   static const char *__alias_attrs[ATTRTAB_SIZE + 1];
@@ -475,7 +475,7 @@ init_alias_attributes (const char ***alias_attrs)
   (*alias_attrs)[2] = NULL;
 }
 
-void
+static void
 init_netgrp_attributes (const char ***netgrp_attrs)
 {
   static const char *__netgrp_attrs[ATTRTAB_SIZE + 1];
@@ -488,7 +488,7 @@ init_netgrp_attributes (const char ***netgrp_attrs)
   (*netgrp_attrs)[3] = NULL;
 }
 
-void
+static void
 init_automount_attributes (const char ***automount_attrs)
 {
   static const char *__automount_attrs[ATTRTAB_SIZE + 1];
