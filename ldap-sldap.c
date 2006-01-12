@@ -40,6 +40,7 @@ static char rcsId[] =
 #include <stdlib.h>
 #include <string.h>
 #include <netdb.h>
+#include <assert.h>
 
 #ifdef HAVE_LBER_H
 #include <lber.h>
@@ -57,6 +58,7 @@ static char rcsId[] =
 #include <netinet/in.h>
 
 #include "ldap-nss.h"
+#include "ldap-automount.h"
 #include "ldap-sldap.h"
 #include "util.h"
 
@@ -70,6 +72,8 @@ static char rcsId[] =
  * This implements enough of the Solaris libsldap interface in order
  * for the automounter to work.
  */
+
+static ns_ldap_return_code __ns_ldap_initResult(ns_ldap_result_t **presult);
 
 static void **
 __ns_ldap_makeStringParam(const char *string)
@@ -140,21 +144,21 @@ __ns_ldap_mapError(NSS_STATUS error)
 	return code;
 }
 
-static NSS_STATUS
-__ns_ldap_mapErrorDetail(ns_ldap_error_t **errorp)
+static ns_ldap_return_code
+__ns_ldap_mapErrorDetail(ns_ldap_return_code code, ns_ldap_error_t **errorp)
 {
 	char *m = NULL;
 	char *s = NULL;
 
 	*errorp = (ns_ldap_error_t *)calloc(1, sizeof(ns_ldap_error_t));
 	if (*errorp == NULL) {
-		return NSS_TRYAGAIN;
+		return NS_LDAP_MEMORY;
 	}
 
 	(*errorp)->status = _nss_ldap_get_ld_errno(&m, &s);
 	(*errorp)->message = (m != NULL) ? strdup(m) : NULL;
 
-	return NSS_SUCCESS;
+	return code;
 }
 
 ns_ldap_return_code
@@ -363,16 +367,21 @@ __ns_ldap_parseEntry(LDAPMessage *msg, ldap_state_t *state,
 		ber_free (ber, 0);
 
 	if (ret == NS_LDAP_SUCCESS) {
+		if (cookie->result == NULL) {
+			ret = __ns_ldap_initResult(&cookie->result);
+			if (ret != NS_LDAP_SUCCESS) {
+				__ns_ldap_freeEntry(&entry);
+				return __ns_ldap_mapError(ret);
+			}
+			cookie->result->entry = entry;
+		}
+
 		entry->next = cookie->entry;
 		cookie->entry = entry;
 
 		cookie->result->entries_count++;
 	} else {
 		__ns_ldap_freeEntry(&entry);
-	}
-
-	if (cookie->result->entry == NULL) {
-		cookie->result->entry = entry;
 	}
 
 	return __ns_ldap_mapError(ret);
@@ -396,6 +405,324 @@ __ns_ldap_initResult(ns_ldap_result_t **presult)
 	return NS_LDAP_SUCCESS;
 }
 
+static int
+__ns_ldap_isAutomountMap(const char *map)
+{
+	return (strncmp(map, "auto_", 5) == 0);
+}
+
+static ldap_map_selector_t
+__ns_ldap_str2selector(const char *map)
+{
+	ldap_map_selector_t sel = _nss_ldap_str2selector(map);
+
+	if (sel == LM_NONE && __ns_ldap_isAutomountMap(map)) {
+		sel = LM_AUTOMOUNT;
+	}
+
+	return sel;
+}
+
+static ns_ldap_return_code
+__ns_ldap_mapAttributes(ns_ldap_cookie_t *cookie, const char ***pAttributes)
+{
+	const char **attributes;
+	int i;
+
+	*pAttributes = NULL;
+
+	if (cookie->attribute == NULL) {
+		return NS_LDAP_SUCCESS;
+	}
+
+	for (i = 0; cookie->attribute[i] != NULL; i++)
+		;
+
+	attributes = (const char **)calloc(i + 1, sizeof(char **));
+	if (attributes == NULL) {
+		return NS_LDAP_MEMORY;
+	}
+
+	for (i = 0; cookie->attribute[i] != NULL; i++) {
+		attributes[i] = _nss_ldap_map_at(cookie->sel, cookie->attribute[i]);
+		assert(attributes[i] != NULL);
+	}
+	attributes[i] = NULL;
+	*pAttributes = attributes;
+
+	return NS_LDAP_SUCCESS;
+}
+
+static ns_ldap_return_code
+__ns_ldap_mapFilter(ns_ldap_cookie_t *cookie, char **pFilter)
+{
+	/* XXX this should actually do something ! */
+	*pFilter = strdup(cookie->filter);
+	if (*pFilter == NULL) {
+		return NS_LDAP_MEMORY;
+	}
+
+	return NS_LDAP_SUCCESS;
+}
+
+static ns_ldap_return_code
+__ns_ldap_freeCookie(ns_ldap_cookie_t **pcookie)
+{
+	ns_ldap_cookie_t *cookie;
+
+	cookie = *pcookie;
+
+	if (cookie != NULL) {
+		if (cookie->map != NULL)
+			free(cookie->map);
+		if (cookie->filter != NULL)
+			free(cookie->filter);
+		if (cookie->attribute != NULL)
+			ldap_value_free(cookie->attribute);
+		if (cookie->state != NULL) {
+			_nss_ldap_ent_context_release (cookie->state);
+			free (cookie->state);
+		}
+		if (cookie->mapped_filter != NULL)
+			free(cookie->mapped_filter);
+		if (cookie->mapped_attribute != NULL)
+			free(cookie->mapped_attribute);
+		_nss_ldap_am_context_free(&cookie->am_state);
+		__ns_ldap_freeResult(&cookie->result);
+		free(cookie);
+	}
+
+	*pcookie = NULL;
+
+	return NS_LDAP_SUCCESS;
+}
+
+static ns_ldap_return_code
+__ns_ldap_initCookie(const char *map,
+	const char *filter,
+	int (*init_filter_cb)(const ns_ldap_search_desc_t *desc, char **realfilter, const void *userdata),
+	const char * const *attribute,
+	const ns_cred_t *cred,
+	const int flags,
+	ns_ldap_cookie_t **pcookie,
+	ns_ldap_result_t **result,
+	ns_ldap_error_t **errorp,
+	int (*callback)(const ns_ldap_entry_t *entry, const void *userdata),
+	const void *userdata)
+{
+	ns_ldap_cookie_t *cookie;
+	ns_ldap_return_code ret;
+	size_t i;
+
+	assert(pcookie != NULL && *pcookie == NULL);
+
+	ret = __ns_ldap_mapError(_nss_ldap_init());
+	if (ret != NS_LDAP_SUCCESS) {
+		return ret;
+	}
+
+	cookie = (ns_ldap_cookie_t *)calloc(1, sizeof(*cookie));
+	if (cookie == NULL) {
+		return NS_LDAP_MEMORY;
+	}
+
+	if (map == NULL || filter == NULL) {
+		__ns_ldap_freeCookie(&cookie);
+		return NS_LDAP_INVALID_PARAM;
+	}
+
+	cookie->map = strdup(map);
+	if (cookie->map == NULL) {
+		__ns_ldap_freeCookie(&cookie);
+		return NS_LDAP_MEMORY;
+	}
+
+	cookie->filter = strdup(filter);
+	if (cookie->filter == NULL) {
+		__ns_ldap_freeCookie(&cookie);
+		return NS_LDAP_MEMORY;
+	}
+
+	if (attribute != NULL) {
+		for (i = 0; attribute[i] != NULL; i++)
+			;
+
+		cookie->attribute = (char **)calloc(i + 1, sizeof(char *));
+		if (cookie->attribute == NULL) {
+			__ns_ldap_freeCookie(&cookie);
+			return NS_LDAP_MEMORY;
+		}
+
+		for (i = 0; attribute[i] != NULL; i++) {
+			cookie->attribute[i] = strdup(attribute[i]);
+			if (cookie->attribute[i] == NULL) {
+				__ns_ldap_freeCookie(&cookie);
+				return NS_LDAP_MEMORY;
+			}
+		}	
+		cookie->attribute[i] = NULL;
+	}
+
+	cookie->flags = flags;
+	cookie->init_filter_cb = init_filter_cb;
+	cookie->callback = callback;
+	cookie->userdata = userdata;
+	cookie->ret = -1;
+	cookie->erange = 0;
+	cookie->sel = __ns_ldap_str2selector(map);
+
+	if (_nss_ldap_ent_context_init_locked(&cookie->state) == NULL) {
+		__ns_ldap_freeCookie(&cookie);
+		return NS_LDAP_INTERNAL;
+	}
+
+	cookie->result = NULL;
+	cookie->entry = NULL;
+
+	*pcookie = cookie;
+
+	return NS_LDAP_SUCCESS;
+}
+
+/* caller acquires lock */
+static ns_ldap_return_code
+__ns_ldap_initSearch(ns_ldap_cookie_t *cookie)
+{
+	ns_ldap_result_t ret;
+	NSS_STATUS stat;
+
+	assert(cookie != NULL);
+	assert(cookie->state != NULL);
+
+	/*
+	 * In the automount case, we need to do a search for a list of
+	 * search bases
+	 */
+	if (cookie->sel == LM_AUTOMOUNT) {
+		assert(cookie->am_state == NULL);
+
+		stat = _nss_ldap_am_context_init(cookie->map, &cookie->am_state);
+		if (stat != NSS_SUCCESS) {
+			return __ns_ldap_mapError(stat);
+		}
+	}
+
+	ret = __ns_ldap_mapAttributes(cookie, &cookie->mapped_attribute);
+	if (ret != NS_LDAP_SUCCESS) {
+		return ret;
+	}
+
+	ret = __ns_ldap_mapFilter(cookie, &cookie->mapped_filter);
+	if (ret != NS_LDAP_SUCCESS) {
+		return ret;
+	}
+
+
+	return ret;
+}
+
+/*
+ * Performs a search given an existing cookie
+ *
+ * If cookie->result != NULL then the entry will be appended to
+ * the result list. Use this for implementing __ns_ldap_list().
+ *
+ * If cookie->result == NULL then a new result list will be
+ * allocated. Use thsi for implementing __ns_ldap_nextEntry().
+ *
+ * cookie->entry always points to the last entry in cookie->result
+ * 
+ * Caller should acquire global lock
+ */
+static ns_ldap_return_code
+__ns_ldap_search(ns_ldap_cookie_t *cookie)
+{
+	ldap_args_t a;
+	NSS_STATUS stat;
+	ldap_automount_context_t *am = cookie->am_state;
+
+	LA_INIT(a);
+	LA_TYPE(a) = LA_TYPE_NONE;
+
+	if (cookie->sel == LM_AUTOMOUNT) {
+		assert(am != NULL);
+
+		LA_BASE(a) = am->lac_dn_list[am->lac_dn_index];
+	}
+
+	assert(cookie->mapped_filter != NULL);
+
+	cookie->ret = -1;
+
+	do {
+		stat = _nss_ldap_getent_ex(&a, &cookie->state, cookie,
+			NULL, 0, &cookie->erange,
+			cookie->mapped_filter,
+			cookie->sel,
+			cookie->mapped_attribute,
+			__ns_ldap_parseEntry);
+		if (stat == NSS_NOTFOUND && cookie->sel == LM_AUTOMOUNT) {
+			if (am->lac_dn_index < am->lac_dn_count - 1) {
+				am->lac_dn_index++;
+			} else {
+				break;
+			}
+		}
+	} while (stat == NSS_NOTFOUND);
+
+	if (cookie->ret < 0) {
+		cookie->ret = __ns_ldap_mapError(stat);
+	}
+
+	return cookie->ret;
+}
+
+#if 0
+ns_ldap_return_code
+__ns_ldap_firstEntry(const char *service,
+	const char *filter,
+	int (*init_filter_cb)(const ns_ldap_search_desc_t *desc,
+			char **realfilter, const void *userdata),
+	const char * const *attribute,
+	const ns_cred_t *cred,
+	const int flags,
+	void **cookie,
+	ns_ldap_result_t ** result,
+	ns_ldap_error_t **errorp,
+	const void *userdata)
+{
+}
+
+ns_ldap_return_code
+__ns_ldap_nextEntry(
+	void *cookie,
+	ns_ldap_result_t ** result,
+	ns_ldap_error_t **errorp)
+{
+}
+
+ns_ldap_return_code
+__ns_ldap_endEntry(
+	void **pCookie,
+	ns_ldap_error_t **errorp)
+{
+	ns_ldap_return_code ret;
+	ns_ldap_cookie_t *cookie;
+
+	_nss_ldap_enter();
+
+	cookie = (ns_ldap_cookie_t *)*pCookie;
+
+	__ns_ldap_mapErrorDetail(cookie->ret, errorp);
+	__ns_ldap_freeCookie(&cookie);
+
+	*pCookie = NULL;
+
+	_nss_ldap_leave();
+
+	return NS_LDAP_SUCCESS;
+}
+
 ns_ldap_return_code
 __ns_ldap_list(
 	const char *map,
@@ -409,11 +736,11 @@ __ns_ldap_list(
 	int (*callback)(const ns_ldap_entry_t *entry, const void *userdata),
 	const void *userdata)
 {
-	ns_ldap_cookie_t cookie;
-/*	ldap_args_t a; */
-	ent_context_t *ctx = NULL;
-	NSS_STATUS stat;
+	ns_ldap_cookie_t *cookie;
 	int action = NS_LDAP_CB_NEXT;
+	ns_ldap_return_code ret;
+
+	debug("==> __ns_ldap_list map=%s filter=%s", map, filter);
 
 	/*
 	 * XXX for automounts (shall we assume all maps are automounts given
@@ -427,44 +754,36 @@ __ns_ldap_list(
 	 *
 	 */
 
-	cookie.sel = _nss_ldap_str2selector(map);
-	cookie.ret = -1;
-	cookie.erange = 0;
-	cookie.result = NULL;
-	cookie.entry = NULL;
-
-	cookie.ret = __ns_ldap_initResult(&cookie.result);
-	if (cookie.ret != NS_LDAP_SUCCESS) {
-		return cookie.ret;
-	}
-
 	_nss_ldap_enter();
 
-	do {
-		stat = _nss_ldap_getent_ex(NULL, &ctx,
-			(void *)&cookie, NULL, 0,
-			&cookie.erange, filter, cookie.sel,
-			attribute, __ns_ldap_parseEntry);
-		if (stat != NSS_SUCCESS) {
-			break;
-		}
+	/* call init_cookie */
 
+	do {
+		LA_INIT (a);
+		LA_TYPE (a) = LA_TYPE_NONE;
+//		LA_BASE (a) = context->lac_dn_list[context->lac_dn_index];
+
+
+		if (cookie.ret < 0)
+			cookie.ret = __ns_ldap_mapError(stat);
 		if (callback != NULL) {
 			action = (*callback)(cookie.entry, userdata);
 		}
 	} while (action == NS_LDAP_CB_NEXT);
 
-	_nss_ldap_leave();
-
+out:
 	if (cookie.ret != NS_LDAP_SUCCESS) {
 		__ns_ldap_freeResult(&cookie.result);
 	} else {
 		*result = cookie.result;
 	}
-	__ns_ldap_mapErrorDetail(errorp);
 
-	return (cookie.ret < 0) ? __ns_ldap_mapError(stat) : cookie.ret;
+	__ns_ldap_mapErrorDetail(cookie.ret, errorp);
+	_nss_ldap_leave();
+
+	return cookie.ret;
 }
+#endif
 
 ns_ldap_return_code
 __ns_ldap_err2str(ns_ldap_return_code err, char **strmsg)

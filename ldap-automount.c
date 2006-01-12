@@ -82,9 +82,8 @@ _nss_ldap_parse_automount (LDAPMessage * e,
   return NSS_SUCCESS;
 }
 
-#ifdef HAVE_NSS_H
-static NSS_STATUS
-am_context_alloc(ldap_automount_context_t **pContext)
+NSS_STATUS
+_nss_ldap_am_context_alloc(ldap_automount_context_t **pContext)
 {
   ldap_automount_context_t *context;
 
@@ -121,8 +120,8 @@ am_context_alloc(ldap_automount_context_t **pContext)
   return NSS_SUCCESS;
 }
 
-static void
-am_context_free(ldap_automount_context_t **pContext)
+void
+_nss_ldap_am_context_free(ldap_automount_context_t **pContext)
 {
   ldap_automount_context_t *context;
   size_t i;
@@ -145,8 +144,11 @@ am_context_free(ldap_automount_context_t **pContext)
       free (context->lac_dn_list);
     }
 
-  _nss_ldap_ent_context_release (context->lac_state);
-  free (context->lac_state);
+  if (context->lac_state != NULL)
+    {
+      _nss_ldap_ent_context_release (context->lac_state);
+      free (context->lac_state);
+    }
 
   memset (context, 0, sizeof (*context));
   free (context);
@@ -195,34 +197,21 @@ am_context_add_dn (LDAPMessage * e,
   return NSS_SUCCESS;
 }
 
-NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **private)
+NSS_STATUS
+_nss_ldap_am_context_init(const char *mapname, ldap_automount_context_t **pContext)
 {
+  NSS_STATUS stat;
   ldap_automount_context_t *context = NULL;
   const char *no_attrs[] = { NULL };
   ldap_args_t a;
-  NSS_STATUS stat;
   ent_context_t *key = NULL;
   int errnop;
 
-  debug ("==> _nss_ldap_setautomntent");
+  *pContext = NULL;
 
-  _nss_ldap_enter ();
-
-  stat = _nss_ldap_init ();
+  stat = _nss_ldap_am_context_alloc (&context);
   if (stat != NSS_SUCCESS)
-    {
-      _nss_ldap_leave ();
-      debug ("<== _nss_ldap_setautomntent");
       return stat;
-    }
-
-  stat = am_context_alloc (&context);
-  if (stat != NSS_SUCCESS)
-    {
-      _nss_ldap_leave ();
-      debug ("<== _nss_ldap_setautomntent");
-      return stat;
-    }
 
   LA_INIT (a);
   LA_TYPE (a) = LA_TYPE_STRING;
@@ -248,7 +237,7 @@ NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **private)
 
   if (context->lac_dn_count == 0)
     {
-      am_context_free (&context);
+      _nss_ldap_am_context_free (&context);
     }
   else if (stat == NSS_NOTFOUND)
     {
@@ -257,7 +246,37 @@ NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **private)
 
   context->lac_dn_index = 0;
 
-  *private = context;
+  *pContext = context;
+  return NSS_SUCCESS;
+}
+
+#ifdef HAVE_NSS_H
+NSS_STATUS _nss_ldap_setautomntent(const char *mapname, void **private)
+{
+  ldap_automount_context_t *context = NULL;
+  NSS_STATUS stat;
+
+  debug ("==> _nss_ldap_setautomntent");
+
+  _nss_ldap_enter ();
+
+  stat = _nss_ldap_init ();
+  if (stat != NSS_SUCCESS)
+    {
+      _nss_ldap_leave ();
+      debug ("<== _nss_ldap_setautomntent");
+      return stat;
+    }
+
+  stat = _nss_ldap_am_context_init (mapname, &context);
+  if (stat != NSS_SUCCESS)
+    {
+      _nss_ldap_leave ();
+      debug ("<== _nss_ldap_setautomntent");
+      return stat;
+    }
+
+  *private = (void *)context;
   _nss_ldap_leave ();
 
   debug ("<== _nss_ldap_setautomntent");
@@ -322,7 +341,7 @@ NSS_STATUS _nss_ldap_endautomntent(void **private)
   debug ("==> _nss_ldap_endautomntent");
 
   _nss_ldap_enter ();
-  am_context_free (pContext);
+  _nss_ldap_am_context_free (pContext);
   _nss_ldap_leave ();
 
   debug ("<== _nss_ldap_endautomntent");

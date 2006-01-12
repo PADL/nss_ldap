@@ -101,9 +101,24 @@ typedef struct ns_ldap_result {
 #define	NS_LDAP_CB_DONE	1
 
 typedef struct ns_ldap_cookie {
-	ldap_map_selector_t sel;
+	char *map;
+	char *filter;
+	char **attribute;
+	int flags;
+
+	int (*init_filter_cb)(const ns_ldap_search_desc_t *desc, char **realfilter, const void *userdata);
+	int (*callback)(const ns_ldap_entry_t *entry, const void *userdata);
+	const void *userdata;
+
+	char *mapped_filter;
+	const char **mapped_attribute;
+
 	int ret;
 	int erange;
+	ldap_map_selector_t sel;
+	ent_context_t *state;
+	ldap_automount_context_t *am_state;
+
 	ns_ldap_result_t *result;
 	ns_ldap_entry_t *entry;
 } ns_ldap_cookie_t;
@@ -117,6 +132,27 @@ ns_ldap_return_code __ns_ldap_freeEntry(ns_ldap_entry_t **pentry);
 ns_ldap_return_code __ns_ldap_freeResult(ns_ldap_result_t **result);
 
 typedef void ns_cred_t;
+
+ns_ldap_return_code __ns_ldap_firstEntry(const char *service,
+	const char *filter,
+	int (*init_filter_cb)(const ns_ldap_search_desc_t *desc,
+			char **realfilter, const void *userdata),
+	const char * const *attribute,
+	const ns_cred_t *cred,
+	const int flags,
+	void **cookie,
+	ns_ldap_result_t ** result,
+	ns_ldap_error_t **errorp,
+	const void *userdata);
+
+ns_ldap_return_code  __ns_ldap_nextEntry(
+	void *cookie,
+	ns_ldap_result_t ** result,
+	ns_ldap_error_t **errorp);
+
+ns_ldap_return_code  __ns_ldap_endEntry(
+	void **cookie,
+	ns_ldap_error_t **errorp);
 
 ns_ldap_return_code __ns_ldap_list(
 	const char *service,

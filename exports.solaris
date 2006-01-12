@@ -22,6 +22,9 @@ nss_ldap.so.1 {
 		__ns_ldap_freeResult;
 		__ns_ldap_list;
 		__ns_ldap_err2str;
+		__ns_ldap_firstEntry;
+		__ns_ldap_nextEntry;
+		__ns_ldap_endEntry;
 	local:
 		*;
 };
