@@ -238,6 +238,7 @@ _nss_ldap_am_context_init(const char *mapname, ldap_automount_context_t **pConte
   if (context->lac_dn_count == 0)
     {
       _nss_ldap_am_context_free (&context);
+      return NSS_NOTFOUND;
     }
   else if (stat == NSS_NOTFOUND)
     {

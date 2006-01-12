@@ -110,7 +110,7 @@ dn2uid_cache_put (const char *dn, const char *uid)
   val.data = (void *) uid;
   val.size = strlen (uid);
 
-  stat = _nss_ldap_db_put (__cache, &key, &val);
+  stat = _nss_ldap_db_put (__cache, 0, &key, &val);
 
   cache_unlock ();
 
@@ -134,7 +134,7 @@ dn2uid_cache_get (const char *dn, char **uid, char **buffer, size_t * buflen)
   key.data = (void *) dn;
   key.size = strlen (dn);
 
-  stat = _nss_ldap_db_get (__cache, &key, &val);
+  stat = _nss_ldap_db_get (__cache, 0, &key, &val);
   if (stat != NSS_SUCCESS)
     {
       cache_unlock ();
@@ -1303,7 +1303,7 @@ do_free_dictionary (struct ldap_dictionary *dict)
 }
 
 static NSS_STATUS
-do_dup_datum (ldap_datum_t * dst, const ldap_datum_t * src)
+do_dup_datum (unsigned flags, ldap_datum_t * dst, const ldap_datum_t * src)
 {
   dst->data = malloc (src->size);
   if (dst->data == NULL)
@@ -1339,15 +1339,27 @@ _nss_ldap_db_close (void *db)
 }
 
 NSS_STATUS
-_nss_ldap_db_get (void *db, const ldap_datum_t * key, ldap_datum_t * value)
+_nss_ldap_db_get (void *db,
+		  unsigned flags,
+		  const ldap_datum_t * key,
+		  ldap_datum_t * value)
 {
   struct ldap_dictionary *dict = (struct ldap_dictionary *) db;
   struct ldap_dictionary *p;
 
   for (p = dict; p != NULL; p = p->next)
     {
-      if (p->key.size == key->size &&
-	  memcmp (p->key.data, key->data, key->size) == 0)
+      int cmp;
+
+      if (p->key.size != key->size)
+	continue;
+
+      if (flags & NSS_LDAP_DB_NORMALIZE_CASE)
+	cmp = strncasecmp ((char *)p->key.data, (char *)key->data, key->size);
+      else
+	cmp = memcmp (p->key.data, key->data, key->size);
+
+      if (cmp == 0)
 	{
 	  value->data = p->value.data;
 	  value->size = p->value.size;
@@ -1360,7 +1372,9 @@ _nss_ldap_db_get (void *db, const ldap_datum_t * key, ldap_datum_t * value)
 }
 
 NSS_STATUS
-_nss_ldap_db_put (void *db, const ldap_datum_t * key,
+_nss_ldap_db_put (void *db,
+		  unsigned flags,
+		  const ldap_datum_t * key,
 		  const ldap_datum_t * value)
 {
   struct ldap_dictionary *dict = (struct ldap_dictionary *) db;
@@ -1385,13 +1399,13 @@ _nss_ldap_db_put (void *db, const ldap_datum_t * key,
 	return NSS_TRYAGAIN;
     }
 
-  if (do_dup_datum (&q->key, key) != NSS_SUCCESS)
+  if (do_dup_datum (flags, &q->key, key) != NSS_SUCCESS)
     {
       do_free_dictionary (q);
       return NSS_TRYAGAIN;
     }
 
-  if (do_dup_datum (&q->value, value) != NSS_SUCCESS)
+  if (do_dup_datum (flags, &q->value, value) != NSS_SUCCESS)
     {
       do_free_dictionary (q);
       return NSS_TRYAGAIN;

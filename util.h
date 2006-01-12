@@ -182,11 +182,17 @@ typedef struct ldap_datum ldap_datum_t;
 		(d)->size = 0; \
 	} while (0)
 
+#define NSS_LDAP_DB_NORMALIZE_CASE	0x1
+
 void *_nss_ldap_db_open (void);
 void _nss_ldap_db_close (void *db);
-NSS_STATUS _nss_ldap_db_put (void *db, const ldap_datum_t * key,
+NSS_STATUS _nss_ldap_db_put (void *db,
+			     unsigned flags,
+			     const ldap_datum_t * key,
 			     const ldap_datum_t * value);
-NSS_STATUS _nss_ldap_db_get (void *db, const ldap_datum_t * key,
+NSS_STATUS _nss_ldap_db_get (void *db,
+			     unsigned flags,
+			     const ldap_datum_t * key,
 			     ldap_datum_t * value);
 
 /* Routines for managing namelists */

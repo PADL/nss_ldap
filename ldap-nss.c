@@ -3743,14 +3743,14 @@ _nss_ldap_map_put (ldap_config_t * config,
   val.data = (void *) to;
   val.size = strlen (to) + 1;
 
-  stat = _nss_ldap_db_put (*map, &key, &val);
+  stat = _nss_ldap_db_put (*map, NSS_LDAP_DB_NORMALIZE_CASE, &key, &val);
   if (stat == NSS_SUCCESS &&
       (type == MAP_ATTRIBUTE || type == MAP_OBJECTCLASS))
     {
       type = (type == MAP_ATTRIBUTE) ? MAP_ATTRIBUTE_REVERSE : MAP_OBJECTCLASS_REVERSE;
       map = &config->ldc_maps[sel][type];
 
-      stat = _nss_ldap_db_put (*map, &val, &key);
+      stat = _nss_ldap_db_put (*map, NSS_LDAP_DB_NORMALIZE_CASE, &val, &key);
     }
 
   return stat;
@@ -3780,12 +3780,12 @@ _nss_ldap_map_get (ldap_config_t * config,
 
   NSS_LDAP_DATUM_ZERO (&val);
 
-  stat = _nss_ldap_db_get (map, &key, &val);
+  stat = _nss_ldap_db_get (map, NSS_LDAP_DB_NORMALIZE_CASE, &key, &val);
   if (stat == NSS_NOTFOUND && sel != LM_NONE)
     {
       map = config->ldc_maps[LM_NONE][type];
       assert (map != NULL);
-      stat = _nss_ldap_db_get (map, &key, &val);
+      stat = _nss_ldap_db_get (map, NSS_LDAP_DB_NORMALIZE_CASE, &key, &val);
     }
 
   if (stat == NSS_SUCCESS)
