@@ -114,6 +114,7 @@ typedef struct ns_ldap_cookie {
 	const char **mapped_attribute;
 
 	int ret;
+	int cb_ret;
 	int erange;
 	ldap_map_selector_t sel;
 	ent_context_t *state;
