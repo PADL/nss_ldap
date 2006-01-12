@@ -504,6 +504,8 @@ __ns_ldap_parseEntry(LDAPMessage *msg, ldap_state_t *state,
 		ber_free (ber, 0);
 
 	if (ret == NS_LDAP_SUCCESS) {
+		ns_ldap_entry_t *last;
+
 		if (cookie->result == NULL) {
 			ret = __ns_ldap_initResult(&cookie->result);
 			if (ret != NS_LDAP_SUCCESS) {
@@ -513,9 +515,14 @@ __ns_ldap_parseEntry(LDAPMessage *msg, ldap_state_t *state,
 				return __ns_ldap_mapError(ret);
 			}
 			cookie->result->entry = entry;
+		} else {
+			assert(cookie->entry != NULL);
+
+			for (last = cookie->entry; last->next != NULL; last = last->next)
+				;
+			last->next = entry;
 		}
 
-		entry->next = cookie->entry;
 		cookie->entry = entry;
 
 		if (cookie->callback != NULL) {
@@ -552,12 +559,6 @@ __ns_ldap_initResult(ns_ldap_result_t **pResult)
 	return NS_LDAP_SUCCESS;
 }
 
-static int
-__ns_ldap_isAutomountMap(const char *map)
-{
-	return (strncmp(map, "auto_", 5) == 0);
-}
-
 static ldap_map_selector_t
 __ns_ldap_str2selector(const char *map)
 {
@@ -568,8 +569,12 @@ __ns_ldap_str2selector(const char *map)
 	} else {
 		sel = _nss_ldap_str2selector(map);
 
-		if (sel == LM_NONE && __ns_ldap_isAutomountMap(map)) {
+		if (strcmp(map, "automount") == 0) {
+			sel = LM_NONE; /* for enumeration only */
+		} else if (sel == LM_NONE && (strncmp(map, "auto_", 5)) == 0) {
 			sel = LM_AUTOMOUNT;
+		} else {
+			sel = _nss_ldap_str2selector(map);
 		}
 	}
 
@@ -693,10 +698,10 @@ __ns_ldap_mapFilter(ns_ldap_cookie_t *cookie, char **pFilter)
 	enum { EXPECT_LHS, FOUND_LHS, EXPECT_RHS, FOUND_RHS } state;
 	char *lhs = NULL;
 	char *rhs = NULL;
-	char *filter;
 	size_t len = 0, size = 0;
 	char tmp;
 	size_t i;
+	char *filter = NULL;
 	size_t filterLen = strlen(cookie->filter);
 
 	state = EXPECT_LHS;
@@ -968,7 +973,7 @@ __ns_ldap_search(ns_ldap_cookie_t *cookie)
 		assert(am->lac_dn_count > 0);
 
 		LA_BASE(a) = am->lac_dn_list[am->lac_dn_index];
-	}
+	} /* XXX todo is support maps that are RDNs relative to default search base */
 
 	assert(cookie->mapped_filter != NULL);
 
