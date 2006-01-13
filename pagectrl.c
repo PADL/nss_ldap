@@ -24,8 +24,6 @@ static char rcsId[] = "$Id$";
 
 #include "config.h"
 
-#ifdef PAGE_RESULTS
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -226,5 +224,3 @@ foundPageControl:
 }
 #endif /* HAVE_LDAP_CREATE_CONTROL */
 #endif /* HAVE_LDAP_PARSE_PAGE_CONTROL */
-
-#endif /* PAGE_RESULTS */

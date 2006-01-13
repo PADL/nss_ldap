@@ -77,8 +77,6 @@ static NSS_STATUS do_searchdescriptorconfig (const char *key,
 					     ** result, char **buffer,
 					     size_t * buflen);
 
-#ifdef RFC2307BIS
-
 #include <fcntl.h>
 static void *__cache = NULL;
 
@@ -218,7 +216,6 @@ _nss_ldap_dn2uid (const char *dn, char **uid, char **buffer, size_t * buflen,
 
   return stat;
 }
-#endif /* RFC2307BIS */
 
 NSS_STATUS
 _nss_ldap_getrdnvalue (LDAPMessage * entry,
@@ -644,15 +641,20 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_idle_timelimit = 0;
   result->ldc_reconnect_pol = LP_RECONNECT_HARD_OPEN;
   result->ldc_sasl_secprops = NULL;
+  result->ldc_srv_domain = NULL;
   result->ldc_logdir = NULL;
   result->ldc_debug = 0;
-#ifdef PAGE_RESULTS
   result->ldc_pagesize = LDAP_PAGESIZE;
-#endif /* PAGE_RESULTS */
 #ifdef CONFIGURE_KRB5_CCNAME
   result->ldc_krb5_ccname = NULL;
 #endif /* CONFIGURE_KRB5_CCNAME */
   result->ldc_flags = 0;
+#ifdef RFC2307BIS
+  result->ldc_flags |= NSS_LDAP_FLAGS_RFC2307BIS;
+#endif
+#ifdef PAGE_RESULTS
+  result->ldc_flags |= NSS_LDAP_FLAGS_PAGED_RESULTS;
+#endif
   result->ldc_reconnect_tries = LDAP_NSS_TRIES;
   result->ldc_reconnect_sleeptime = LDAP_NSS_SLEEPTIME;
   result->ldc_reconnect_maxsleeptime = LDAP_NSS_MAXSLEEPTIME;
@@ -1024,12 +1026,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  result->ldc_debug = atoi (v);
 	}
-#ifdef PAGE_RESULTS
       else if (!strcasecmp (k, NSS_LDAP_KEY_PAGESIZE))
 	{
 	  result->ldc_pagesize = atoi (v);
 	}
-#endif /* PAGE_RESULTS */
 #ifdef CONFIGURE_KRB5_CCNAME
       else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_CCNAME))
 	{
@@ -1093,7 +1093,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  do_parse_map_statement (result, v, MAP_DEFAULT);
 	}
-#ifdef RFC2307BIS
       else if (!strcasecmp (k, NSS_LDAP_KEY_INITGROUPS))
 	{
 	  if (!strcasecmp (v, "backlink"))
@@ -1105,7 +1104,30 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	      result->ldc_flags &= ~(NSS_LDAP_FLAGS_INITGROUPS_BACKLINK);
 	    }
 	}
-#endif /* RFC2307BIS */
+      else if (!strcasecmp (k, NSS_LDAP_KEY_SCHEMA))
+	{
+	  if (!strcasecmp (v, "rfc2307bis"))
+	    {
+	      result->ldc_flags |= NSS_LDAP_FLAGS_RFC2307BIS;
+	    }
+	  else if (!strcasecmp (v, "rfc2307"))
+	    {
+	      result->ldc_flags &= ~(NSS_LDAP_FLAGS_RFC2307BIS);
+	    }
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_PAGED_RESULTS))
+	{
+	  if (!strcasecmp (v, "on")
+	      || !strcasecmp (v, "yes")
+	      || !strcasecmp (v, "true"))
+	    {
+	      result->ldc_flags |= NSS_LDAP_FLAGS_PAGED_RESULTS;
+	    }
+	  else
+	    {
+	      result->ldc_flags &= ~(NSS_LDAP_FLAGS_PAGED_RESULTS);
+	    }
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_INITGROUPS_IGNOREUSERS))
 	{
 	  stat = do_parse_list (v, &result->ldc_initgroups_ignoreusers,
@@ -1114,6 +1136,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	    {
 	      break;
 	    }
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_SRV_DOMAIN))
+	{
+	  t = &result->ldc_srv_domain;
 	}
       else
 	{

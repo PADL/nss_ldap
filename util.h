@@ -39,14 +39,12 @@ NSS_STATUS _nss_ldap_getrdnvalue (LDAPMessage * entry,
 				  const char *rdntype,
 				  char **rval, char **buf, size_t * len);
 
-#ifdef RFC2307BIS
 /*
  * map a distinguished name to a login name, or group entry
  */
 NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 			     char **uid, char **buf, size_t * len,
 			     int *pIsNestedGroup, LDAPMessage ** pRes);
-#endif /* RFC2307BIS */
 
 #define NSS_LDAP_KEY_MAP_ATTRIBUTE      "nss_map_attribute"
 #define NSS_LDAP_KEY_MAP_OBJECTCLASS    "nss_map_objectclass"
@@ -83,9 +81,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_LOGDIR		"logdir"
 #define NSS_LDAP_KEY_DEBUG		"debug"
 #define NSS_LDAP_KEY_PAGESIZE		"pagesize"
-#ifdef RFC2307BIS
 #define NSS_LDAP_KEY_INITGROUPS		"nss_initgroups"
-#endif
 #define NSS_LDAP_KEY_INITGROUPS_IGNOREUSERS	"nss_initgroups_ignoreusers"
 
 /* more reconnect policy fine-tuning */
@@ -93,6 +89,10 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_RECONNECT_SLEEPTIME	"nss_reconnect_sleeptime"
 #define NSS_LDAP_KEY_RECONNECT_MAXSLEEPTIME	"nss_reconnect_maxsleeptime"
 #define NSS_LDAP_KEY_RECONNECT_MAXCONNTRIES	"nss_reconnect_maxconntries"
+
+#define NSS_LDAP_KEY_PAGED_RESULTS	"nss_paged_results"
+#define NSS_LDAP_KEY_SCHEMA		"nss_schema"
+#define NSS_LDAP_KEY_SRV_DOMAIN		"nss_srv_domain"
 
 /*
  * support separate naming contexts for each map 
@@ -105,7 +105,9 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 /*
  * Flags that are exposed via _nss_ldap_test_config_flag()
  */
-#define NSS_LDAP_FLAGS_INITGROUPS_BACKLINK	0x00000001
+#define NSS_LDAP_FLAGS_INITGROUPS_BACKLINK	0x0001
+#define NSS_LDAP_FLAGS_PAGED_RESULTS		0x0002
+#define NSS_LDAP_FLAGS_RFC2307BIS		0x0003
 
 /*
  * There are a number of means of obtaining configuration information.

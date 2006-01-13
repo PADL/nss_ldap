@@ -119,9 +119,7 @@
 #define LDAP_NSS_MAXUESS_ATTRS	8	/* maximum number of attributes in a getentry call */
 #endif /* HAVE_USERSEC_H */
 
-#ifdef PAGE_RESULTS
 #define LDAP_PAGESIZE 1000
-#endif /* PAGE_RESULTS */
 
 #ifndef LDAP_FILT_MAXSIZ
 #define LDAP_FILT_MAXSIZ 1024
@@ -355,13 +353,13 @@ struct ldap_config
 
   /* sasl security */
   char *ldc_sasl_secprops;
+  /* DNS SRV RR domain */
+  char *ldc_srv_domain;
   /* directory for debug files */
   char *ldc_logdir;
   /* LDAP debug level */
   int ldc_debug;
-#ifdef PAGE_RESULTS
   int ldc_pagesize;
-#endif /* PAGE_RESULTS */
 #ifdef CONFIGURE_KRB5_CCNAME
   /* krb5 ccache name */
   char *ldc_krb5_ccname;
@@ -563,9 +561,7 @@ struct ent_context
   int ec_msgid;			/* message ID */
   LDAPMessage *ec_res;		/* result chain */
   ldap_service_search_descriptor_t *ec_sd;	/* current sd */
-#ifdef PAGE_RESULTS
   struct berval *ec_cookie;     /* cookie for paged searches */
-#endif /* PAGE_RESULTS */
 };
 
 typedef struct ent_context ent_context_t;

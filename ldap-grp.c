@@ -63,9 +63,7 @@ static char rcsId[] =
 static ent_context_t *gr_context = NULL;
 #endif
 
-#ifdef RFC2307BIS
 static char *_nss_ldap_no_members[] = { NULL };
-#endif
 
 #ifdef HAVE_USERSEC_H
 typedef struct ldap_initgroups_args
@@ -74,9 +72,7 @@ typedef struct ldap_initgroups_args
   size_t listlen;
   int depth;
   struct name_list *known_groups;
-# ifdef RFC2307BIS
   int backlink;
-# endif
 }
 ldap_initgroups_args_t;
 #else
@@ -86,9 +82,7 @@ typedef struct ldap_initgroups_args
   struct nss_groupsbymem *gbm;
   int depth;
   struct name_list *known_groups;
-# ifdef RFC2307BIS
   int backlink;
-# endif
 }
 ldap_initgroups_args_t;
 # else
@@ -101,15 +95,12 @@ typedef struct ldap_initgroups_args
   long int limit;
   int depth;
   struct name_list *known_groups;
-# ifdef RFC2307BIS
   int backlink;
-# endif
 }
 ldap_initgroups_args_t;
 # endif
 #endif /* HAVE_USERSEC_H */
 
-#ifdef RFC2307BIS
 static NSS_STATUS
 ng_chase (const char *dn, ldap_initgroups_args_t * lia);
 
@@ -574,7 +565,6 @@ do_fix_group_members_buffer (char **mallocedGroupMembers,
 
   return NSS_SUCCESS;
 }
-#endif /* RFC2307BIS */
 
 static NSS_STATUS
 _nss_ldap_parse_gr (LDAPMessage * e,
@@ -584,7 +574,6 @@ _nss_ldap_parse_gr (LDAPMessage * e,
   struct group *gr = (struct group *) result;
   char *gid;
   NSS_STATUS stat;
-#ifdef RFC2307BIS
   char **groupMembers;
   size_t groupMembersCount;
   size_t groupMembersBufferSize;
@@ -592,7 +581,6 @@ _nss_ldap_parse_gr (LDAPMessage * e,
   int groupMembersBufferIsMalloced;
   int depth;
   struct name_list *knownGroups = NULL;
-#endif /* RFC2307BIS */
 
   stat =
     _nss_ldap_assign_attrval (e, ATM (LM_GROUP, gidNumber), &gid, &buffer,
@@ -617,41 +605,42 @@ _nss_ldap_parse_gr (LDAPMessage * e,
   if (stat != NSS_SUCCESS)
     return stat;
 
-#ifndef RFC2307BIS
-  stat =
-    _nss_ldap_assign_attrvals (e, ATM (LM_GROUP, memberUid), NULL,
-			       &gr->gr_mem, &buffer, &buflen, NULL);
-  if (stat != NSS_SUCCESS)
-    return stat;
-#else
-  groupMembers = groupMembersBuffer;
-  groupMembersCount = 0;
-  groupMembersBufferSize = sizeof (groupMembers);
-  groupMembersBufferIsMalloced = 0;
-  depth = 0;
-
-  stat = do_parse_group_members (e, &groupMembers, &groupMembersCount,
-				 &groupMembersBufferSize,
-				 &groupMembersBufferIsMalloced, &buffer,
-				 &buflen, &depth, &knownGroups);
-  if (stat != NSS_SUCCESS)
+  if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
     {
+      groupMembers = groupMembersBuffer;
+      groupMembersCount = 0;
+      groupMembersBufferSize = sizeof (groupMembers);
+      groupMembersBufferIsMalloced = 0;
+      depth = 0;
+
+      stat = do_parse_group_members (e, &groupMembers, &groupMembersCount,
+				     &groupMembersBufferSize,
+				     &groupMembersBufferIsMalloced, &buffer,
+				     &buflen, &depth, &knownGroups);
+      if (stat != NSS_SUCCESS)
+	{
+	  if (groupMembersBufferIsMalloced)
+	    free (groupMembers);
+	  _nss_ldap_namelist_destroy (&knownGroups);
+	  return stat;
+	}
+
+      stat = do_fix_group_members_buffer (groupMembers, groupMembersCount,
+					  &gr->gr_mem, &buffer, &buflen);
+
       if (groupMembersBufferIsMalloced)
 	free (groupMembers);
       _nss_ldap_namelist_destroy (&knownGroups);
-      return stat;
     }
-
-  stat = do_fix_group_members_buffer (groupMembers, groupMembersCount,
-				      &gr->gr_mem, &buffer, &buflen);
-
-  if (groupMembersBufferIsMalloced)
-    free (groupMembers);
-  _nss_ldap_namelist_destroy (&knownGroups);
+  else
+    {
+      stat =
+	_nss_ldap_assign_attrvals (e, ATM (LM_GROUP, memberUid), NULL,
+				   &gr->gr_mem, &buffer, &buflen, NULL);
+    }
 
   if (stat != NSS_SUCCESS)
     return stat;
-#endif /* RFC2307BIS */
 
   return NSS_SUCCESS;
 }
@@ -778,10 +767,8 @@ do_parse_initgroups_nested (LDAPMessage * e,
 {
   NSS_STATUS stat;
   ldap_initgroups_args_t *lia = (ldap_initgroups_args_t *) result;
-#ifdef RFC2307BIS
   char **values;
   char *groupdn;
-#endif /* RFC2307BIS */
 
   stat = do_parse_initgroups (e, pvt, result, buffer, buflen);
   if (stat != NSS_NOTFOUND)
@@ -789,7 +776,11 @@ do_parse_initgroups_nested (LDAPMessage * e,
       return stat;
     }
 
-#ifdef RFC2307BIS
+  if (!_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
+    {
+      return NSS_SUCCESS;
+    }
+
   if (lia->backlink != 0)
     {
       /*
@@ -830,12 +821,10 @@ do_parse_initgroups_nested (LDAPMessage * e,
 #endif
 	}
     }
-#endif /* RFC2307BIS */
 
   return stat;
 }
 
-#ifdef RFC2307BIS
 static NSS_STATUS
 ng_chase (const char *dn, ldap_initgroups_args_t * lia)
 {
@@ -964,7 +953,6 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
 
   return stat;
 }
-#endif /* RFC2307BIS */
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H) || defined(HAVE_USERSEC_H)
 #ifdef HAVE_NSS_H
@@ -1007,11 +995,9 @@ char *_nss_ldap_getgrset (char *user)
 #ifndef HAVE_NSS_H
   int erange = 0;
 #endif /* HAVE_NSS_H */
-#ifdef RFC2307BIS
   char *userdn = NULL;
   LDAPMessage *res, *e;
   static const char *no_attrs[] = { NULL };
-#endif /* RFC2307BIS */
   const char *filter;
   ldap_args_t a;
   NSS_STATUS stat;
@@ -1068,7 +1054,6 @@ char *_nss_ldap_getgrset (char *user)
   if (_nss_ldap_test_initgroups_ignoreuser (LA_STRING (a)))
     return NSS_NOTFOUND;
 
-#ifdef RFC2307BIS
   lia.backlink = _nss_ldap_test_config_flag (NSS_LDAP_FLAGS_INITGROUPS_BACKLINK);
 
   if (lia.backlink != 0)
@@ -1085,18 +1070,26 @@ char *_nss_ldap_getgrset (char *user)
     }
   else
     {
-      /* lookup the user's DN. */
-      stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwnam, LM_PASSWD,
-				 no_attrs, 1, &res);
-      if (stat == NSS_SUCCESS)
+      if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
 	{
-	  e = _nss_ldap_first_entry (res);
-	  if (e != NULL)
+	  /* lookup the user's DN. */
+	  stat = _nss_ldap_search_s (&a, _nss_ldap_filt_getpwnam, LM_PASSWD,
+				     no_attrs, 1, &res);
+	  if (stat == NSS_SUCCESS)
 	    {
-	      userdn = _nss_ldap_get_dn (e);
+	      e = _nss_ldap_first_entry (res);
+	      if (e != NULL)
+		{
+		  userdn = _nss_ldap_get_dn (e);
+		}
+	      ldap_msgfree (res);
 	    }
-	  ldap_msgfree (res);
 	}
+      else
+	{
+	  userdn = NULL;
+	}
+
       if (userdn != NULL)
 	{
 	  LA_STRING2 (a) = userdn;
@@ -1122,12 +1115,6 @@ char *_nss_ldap_getgrset (char *user)
       return NSS_UNAVAIL;
 # endif				/* HAVE_USERSEC_H */
     }
-#else
-  filter = _nss_ldap_filt_getgroupsbymember;
-
-  gidnumber_attrs[0] = ATM (LM_GROUP, gidNumber);
-  gidnumber_attrs[1] = NULL;
-#endif /* RFC2307BIS */
 
   stat = _nss_ldap_getent_ex (&a, &ctx, (void *) &lia, NULL, 0,
 #ifdef HAVE_NSS_H
@@ -1140,7 +1127,6 @@ char *_nss_ldap_getgrset (char *user)
 			      gidnumber_attrs,
 			      do_parse_initgroups_nested);
 
-#ifdef RFC2307BIS
   if (userdn != NULL)
     {
 #ifdef HAVE_LDAP_MEMFREE
@@ -1149,7 +1135,6 @@ char *_nss_ldap_getgrset (char *user)
       free (userdn);
 #endif /* HAVE_LDAP_MEMFREE */
     }
-#endif /* RFC2307BIS */
 
   _nss_ldap_namelist_destroy (&lia.known_groups);
   _nss_ldap_ent_context_release (ctx);

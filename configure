@@ -852,9 +852,9 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking Speeds up one-time builds
   --enable-dependency-tracking  Do not reject slow dependency extractors
-  --enable-rfc2307bis       use RFC2307bis schema
+  --enable-rfc2307bis       use RFC2307bis schema by default
   --enable-debugging        enable debug code
-  --enable-paged-results    enable paged results control
+  --enable-paged-results    use paged results control by default
   --enable-configurable-krb5-ccname-env   enable configurable Kerberos V credentials cache name (putenv method)
   --enable-configurable-krb5-ccname-gssapi   enable configurable Kerberos V credentials cache name (gssapi method)
 
@@ -3084,6 +3084,8 @@ if test "${enable_rfc2307bis+set}" = set; then
 _ACEOF
 
 fi;
+
+
 # Check whether --enable-debugging or --disable-debugging was given.
 if test "${enable_debugging+set}" = set; then
   enableval="$enable_debugging"
@@ -3092,6 +3094,7 @@ if test "${enable_debugging+set}" = set; then
 _ACEOF
 
 fi;
+
 # Check whether --enable-paged-results or --disable-paged-results was given.
 if test "${enable_paged_results+set}" = set; then
   enableval="$enable_paged_results"
@@ -3100,6 +3103,7 @@ if test "${enable_paged_results+set}" = set; then
 _ACEOF
 
 fi;
+
 # Check whether --enable-configurable-krb5-ccname-env or --disable-configurable-krb5-ccname-env was given.
 if test "${enable_configurable_krb5_ccname_env+set}" = set; then
   enableval="$enable_configurable_krb5_ccname_env"
@@ -3122,6 +3126,7 @@ _ACEOF
 _ACEOF
 
 fi;
+
 
 # Check whether --with-ldap-lib or --without-ldap-lib was given.
 if test "${with_ldap_lib+set}" = set; then
@@ -10381,7 +10386,8 @@ done
 
 
 
-for ac_func in ldap_sasl_interactive_bind_s ldap_initialize
+
+for ac_func in ldap_sasl_interactive_bind_s ldap_initialize ldap_search_ext
 do
 as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
 echo "$as_me:$LINENO: checking for $ac_func" >&5

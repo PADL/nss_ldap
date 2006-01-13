@@ -88,10 +88,7 @@ static char rcsId[] =
 #include "ltf.h"
 #include "util.h"
 #include "dnsconfig.h"
-
-#ifdef PAGE_RESULTS
 #include "pagectrl.h"
-#endif
 
 #if defined(HAVE_THREAD_H) && !defined(_AIX)
 #ifdef HAVE_PTHREAD_ATFORK
@@ -1813,21 +1810,17 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
 	{
 	  ldap_msgfree (ctx->ec_res);
 	}
-#ifdef PAGE_RESULTS
       if (ctx->ec_cookie != NULL)
 	{
 	  ber_bvfree (ctx->ec_cookie);
 	}
-#endif /* PAGE_RESULTS */
       if (ctx->ec_msgid > -1 && do_result (ctx, LDAP_MSG_ONE) == NSS_SUCCESS)
 	{
 	  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
 	}
     }
 
-#ifdef PAGE_RESULTS
   ctx->ec_cookie = NULL;
-#endif /* PAGE_RESULTS */
   ctx->ec_res = NULL;
   ctx->ec_msgid = -1;
   ctx->ec_sd = NULL;
@@ -1869,13 +1862,11 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
       ctx->ec_msgid = -1;
     }
 
-#ifdef PAGE_RESULTS
   if (ctx->ec_cookie != NULL)
     {
       ber_bvfree (ctx->ec_cookie);
       ctx->ec_cookie = NULL;
     }
-#endif /* PAGE_RESULTS */
 
   ctx->ec_sd = NULL;
 
@@ -2282,20 +2273,13 @@ do_result (ent_context_t * ctx, int all)
 #ifdef LDAP_MORE_RESULTS_TO_RETURN
 	      int parserc;
 	      /* NB: this frees ctx->ec_res */
-#ifdef PAGE_RESULTS
 	      LDAPControl **resultControls = NULL;
-	      ctx->ec_cookie = NULL;
-#endif /* PAGE_RESULTS */
 
-#ifdef PAGE_RESULTS
+	      ctx->ec_cookie = NULL;
+
 	      parserc =
 		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
 				   NULL, NULL, &resultControls, 1);
-#else
-	      parserc =
-		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,
-				   NULL, NULL, NULL, 1);
-#endif /* PAGE_RESULTS */
 	      if (parserc != LDAP_SUCCESS
 		  && parserc != LDAP_MORE_RESULTS_TO_RETURN)
 		{
@@ -2305,7 +2289,6 @@ do_result (ent_context_t * ctx, int all)
 			  "nss_ldap: could not get LDAP result - %s",
 			  ldap_err2string (rc));
 		}
-#ifdef PAGE_RESULTS
 	      else if (resultControls != NULL)
 		{
 		  /* See if there are any more pages to come */
@@ -2315,7 +2298,6 @@ do_result (ent_context_t * ctx, int all)
 		  ldap_controls_free (resultControls);
 		  stat = NSS_NOTFOUND;
 		}
-#endif /* PAGE_RESULTS */
 	      else
 		{
 		  stat = NSS_NOTFOUND;
@@ -2522,22 +2504,38 @@ do_search (const char *base, int scope,
 	   const char *filter, const char **attrs, int sizelimit, int *msgid)
 {
   int rc;
-#ifdef PAGE_RESULTS
-  LDAPControl *serverctrls[2] = { NULL, NULL };
-#endif /* PAGE_RESULTS */
+  LDAPControl *serverCtrls[2];
+  LDAPControl **pServerCtrls;
 
   debug ("==> do_search");
 
-#ifdef PAGE_RESULTS
-  rc = ldap_create_page_control (__session.ls_conn,
-				 __session.ls_config->ldc_pagesize,
-				 NULL, 0, &serverctrls[0]);
-  if (rc != LDAP_SUCCESS)
-    return rc;
+#ifdef HAVE_LDAP_SEARCH_EXT
+  if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_PAGED_RESULTS))
+    {
+      rc = ldap_create_page_control (__session.ls_conn,
+				     __session.ls_config->ldc_pagesize,
+				     NULL, 0, &serverCtrls[0]);
+      if (rc != LDAP_SUCCESS)
+	return rc;
+
+      serverCtrls[1] = NULL;
+      pServerCtrls = serverCtrls;
+    }
+  else
+    {
+      pServerCtrls = NULL;
+    }
+
   rc = ldap_search_ext (__session.ls_conn, base, scope, filter,
-			(char **) attrs, 0, serverctrls, NULL,
+			(char **) attrs, 0, pServerCtrls, NULL,
 			LDAP_NO_LIMIT, sizelimit, msgid);
-  ldap_control_free (serverctrls[0]);
+
+  if (pServerCtrls != NULL)
+    {
+      ldap_control_free (serverCtrls[0]);
+      serverCtrls[0] = NULL;
+    }
+
 #else
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_SIZELIMIT)
   ldap_set_option (__session.ls_conn, LDAP_OPT_SIZELIMIT,
@@ -2564,7 +2562,7 @@ do_search (const char *base, int scope,
     {
       rc = LDAP_SUCCESS;
     }
-#endif /* PAGE_RESULTS */
+#endif /* HAVE_LDAP_SEARCH_EXT */
 
   debug ("<== do_search");
 
@@ -3030,7 +3028,7 @@ _nss_ldap_search (const ldap_args_t * args,
   return stat;
 }
 
-#ifdef PAGE_RESULTS
+#ifdef HAVE_LDAP_SEARCH_EXT
 static NSS_STATUS
 do_next_page (const ldap_args_t * args,
 	      const char *filterprot, ldap_map_selector_t sel, int
@@ -3115,7 +3113,7 @@ do_next_page (const ldap_args_t * args,
 
   return (*msgid < 0) ? NSS_UNAVAIL : NSS_SUCCESS;
 }
-#endif /* PAGE_RESULTS */
+#endif /* HAVE_LDAP_SEARCH_EXT */
 
 /*
  * General entry point for enumeration routines.
@@ -3197,7 +3195,7 @@ next:
 
   stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
 
-#ifdef PAGE_RESULTS
+#ifdef HAVE_LDAP_SEARCH_EXT
   if (stat == NSS_NOTFOUND)
     {
       /* Is there another page of results? */
@@ -3217,7 +3215,7 @@ next:
 	  stat = do_parse (*ctx, result, buffer, buflen, errnop, parser);
 	}
     }
-#endif /* PAGE_RESULTS */
+#endif /* HAVE_LDAP_SEARCH_EXT */
 
   if (stat == NSS_NOTFOUND && (*ctx)->ec_sd != NULL)
     {
@@ -3248,9 +3246,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
   debug ("==> _nss_ldap_getbyname");
 
   ctx.ec_msgid = -1;
-#ifdef PAGE_RESULTS
   ctx.ec_cookie = NULL;
-#endif /* PAGE_RESULTS */
 
   stat = _nss_ldap_search_s (args, filterprot, sel, NULL, 1, &ctx.ec_res);
   if (stat != NSS_SUCCESS)

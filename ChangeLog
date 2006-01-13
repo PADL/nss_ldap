@@ -3,10 +3,18 @@ $Id$
 
 246	Luke Howard <lukeh@padl.com>
 
+	* XXX TODO indent ldap-sldap.c
+	* paged results and RFC2307bis support is now always
+	  compiled in; they are by default disabled unless
+	  you configured with --enable-paged-results and
+	  --enable-rfc2307bis, respectively. See nss_ldap(5)
+	  for configuration options.
 	* fix for BUG#245: paged results broken since nss_ldap-241
 	* fix for BUG#219: paged results delivers wrong results
 	* fix for BUG#222: use asynchronous start TLS if
 	  available, using bind_timeout value
+	* fix for BUG#235: make DNS SRV lookup domain
+	  configurable (nss_srv_domain)
 	* fix for BUG#240: return "*" rather than "x" for
 	  userPassword if not present
 	* patch from Ralf Haferkamp <rhafer@suse.de>:

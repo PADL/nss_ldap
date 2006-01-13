@@ -52,11 +52,9 @@ extern char _nss_ldap_filt_getetherent[];
 extern char _nss_ldap_filt_getgrnam[];
 extern char _nss_ldap_filt_getgrgid[];
 extern char _nss_ldap_filt_getgrent[];
-#ifdef RFC2307BIS
 extern char _nss_ldap_filt_getgroupsbymemberanddn[];
 extern char _nss_ldap_filt_getgroupsbydn[];
 extern char _nss_ldap_filt_getpwnam_groupsbymember[];
-#endif /* RFC2307BIS */
 extern char _nss_ldap_filt_getgroupsbymember[];
 
 /* IP hosts */

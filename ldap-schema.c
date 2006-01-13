@@ -54,6 +54,7 @@ static char rcsId[] =
 #endif /* HAVE_SNPRINTF */
 #include "ldap-nss.h"
 #include "ldap-schema.h"
+#include "util.h"
 
 #ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
@@ -80,11 +81,9 @@ char _nss_ldap_filt_getetherent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getgrnam[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getgrgid[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getgrent[LDAP_FILT_MAXSIZ];
-#ifdef RFC2307BIS
 char _nss_ldap_filt_getgroupsbymemberanddn[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getgroupsbydn[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getpwnam_groupsbymember[LDAP_FILT_MAXSIZ];
-#endif /* RFC2307BIS */
 char _nss_ldap_filt_getgroupsbymember[LDAP_FILT_MAXSIZ];
 
 /* IP hosts */
@@ -169,7 +168,6 @@ _nss_ldap_init_filters ()
             ATM (LM_GROUP, gidNumber), "%d");
   snprintf (_nss_ldap_filt_getgrent, LDAP_FILT_MAXSIZ, "(&(objectclass=%s))",
 	    OC (posixGroup));
-#ifdef RFC2307BIS
   snprintf (_nss_ldap_filt_getgroupsbymemberanddn, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(|(%s=%s)(%s=%s)))",
 	    OC (posixGroup), AT (memberUid), "%s", AT (uniqueMember), "%s");
@@ -180,7 +178,6 @@ _nss_ldap_init_filters ()
 	    "(|(&(objectclass=%s)(%s=%s))(&(objectclass=%s)(%s=%s)))",
 	    OC (posixGroup), AT (memberUid), "%s",
 	    OC (posixAccount), ATM (LM_PASSWD, uid), "%s");
-#endif /* RFC2307BIS */
   snprintf (_nss_ldap_filt_getgroupsbymember, LDAP_FILT_MAXSIZ,
 	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup), AT (memberUid),
 	    "%s");
@@ -370,9 +367,8 @@ init_grp_attributes (const char ***grp_attrs)
   (*grp_attrs)[i++] = (char *) ATM (LM_GROUP, cn);
   (*grp_attrs)[i++] = (char *) ATM (LM_GROUP, userPassword);
   (*grp_attrs)[i++] = (char *) AT (memberUid);
-#ifdef RFC2307BIS
-  (*grp_attrs)[i++] = (char *) AT (uniqueMember);
-#endif /* RFC2307BIS */
+  if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
+    (*grp_attrs)[i++] = (char *) AT (uniqueMember);
   (*grp_attrs)[i++] = (char *) ATM (LM_GROUP, gidNumber);
   (*grp_attrs)[i] = NULL;
 }

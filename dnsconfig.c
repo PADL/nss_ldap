@@ -138,6 +138,7 @@ _nss_ldap_mergeconfigfromdns (ldap_config_t * result,
   struct dns_reply *r;
   struct resource_record *rr;
   char domain[MAXHOSTNAMELEN + 1];
+  char *pDomain;
   char uribuf[NSS_BUFSIZ];
 
   if ((_res.options & RES_INIT) == 0 && res_init () == -1)
@@ -145,9 +146,15 @@ _nss_ldap_mergeconfigfromdns (ldap_config_t * result,
       return NSS_UNAVAIL;
     }
 
-  snprintf (domain, sizeof (domain), "_ldap._tcp.%s.", _res.defdname);
+  if (result->ldc_srv_domain != NULL)
+    pDomain = result->ldc_srv_domain;
+  else
+    {
+      snprintf (domain, sizeof (domain), "_ldap._tcp.%s.", _res.defdname);
+      pDomain = domain;
+    }
 
-  r = dns_lookup (domain, "srv");
+  r = dns_lookup (pDomain, "srv");
   if (r == NULL)
     {
       return NSS_NOTFOUND;
