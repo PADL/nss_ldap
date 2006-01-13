@@ -22,6 +22,11 @@ $Id$
 	* schema mapping is always enabled, cleanup schema
 	  mapping code
 	* allow for map-specific objectclass mapping
+	* partial implementation of Solaris Simplified LDAP
+	  API, allows automountd support on Solaris via nss_ldap
+	* for Linux automounter, always close connection after
+	  endautomntent() to avoid persistent connection
+	* add nss_connect_policy argument to ldap.conf
 
 245	Luke Howard <lukeh@padl.com>
 

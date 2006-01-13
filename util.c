@@ -1137,6 +1137,17 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	      break;
 	    }
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_CONNECT_POLICY))
+        {
+	  if (!strcasecmp (v, "oneshot"))
+	    {
+	      result->ldc_flags |= NSS_LDAP_FLAGS_CONNECT_POLICY_ONESHOT;
+	    }
+	  else if (!strcasecmp (v, "persist"))
+	    {
+	      result->ldc_flags &= ~(NSS_LDAP_FLAGS_CONNECT_POLICY_ONESHOT);
+	    }
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SRV_DOMAIN))
 	{
 	  t = &result->ldc_srv_domain;

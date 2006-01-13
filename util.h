@@ -93,6 +93,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_PAGED_RESULTS	"nss_paged_results"
 #define NSS_LDAP_KEY_SCHEMA		"nss_schema"
 #define NSS_LDAP_KEY_SRV_DOMAIN		"nss_srv_domain"
+#define NSS_LDAP_KEY_CONNECT_POLICY	"nss_connect_policy"
 
 /*
  * support separate naming contexts for each map 
@@ -107,7 +108,8 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
  */
 #define NSS_LDAP_FLAGS_INITGROUPS_BACKLINK	0x0001
 #define NSS_LDAP_FLAGS_PAGED_RESULTS		0x0002
-#define NSS_LDAP_FLAGS_RFC2307BIS		0x0003
+#define NSS_LDAP_FLAGS_RFC2307BIS		0x0004
+#define NSS_LDAP_FLAGS_CONNECT_POLICY_ONESHOT	0x0008
 
 /*
  * There are a number of means of obtaining configuration information.

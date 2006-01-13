@@ -894,6 +894,7 @@ typedef struct ldap_proxy_bind_args ldap_proxy_bind_args_t;
 NSS_STATUS _nss_ldap_proxy_bind (const char *user, const char *password);
 
 NSS_STATUS _nss_ldap_init (void);
+void _nss_ldap_close (void);
 
 int _nss_ldap_test_config_flag (unsigned int flag);
 int _nss_ldap_test_initgroups_ignoreuser (const char *user);

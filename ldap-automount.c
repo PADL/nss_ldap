@@ -343,6 +343,8 @@ NSS_STATUS _nss_ldap_endautomntent(void **private)
 
   _nss_ldap_enter ();
   _nss_ldap_am_context_free (pContext);
+  /* workaround because Linux automounter spawns a lot of processes */
+  _nss_ldap_close ();
   _nss_ldap_leave ();
 
   debug ("<== _nss_ldap_endautomntent");

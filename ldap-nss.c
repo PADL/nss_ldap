@@ -884,6 +884,15 @@ _nss_ldap_init (void)
   return do_init ();
 }
 
+/*
+ * A simple alias around do_close().
+ */
+void
+_nss_ldap_close (void)
+{
+  do_close ();
+}
+
 static NSS_STATUS
 do_init_session (LDAP ** ld, const char *uri, int defport)
 {
@@ -1871,6 +1880,11 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
   ctx->ec_sd = NULL;
 
   LS_INIT (ctx->ec_state);
+
+  if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_CONNECT_POLICY_ONESHOT))
+    {
+      do_close ();
+    }
 
   debug ("<== _nss_ldap_ent_context_release");
 
