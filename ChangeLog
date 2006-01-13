@@ -3,7 +3,6 @@ $Id$
 
 246	Luke Howard <lukeh@padl.com>
 
-	* XXX TODO indent ldap-sldap.c
 	* paged results and RFC2307bis support is now always
 	  compiled in; they are by default disabled unless
 	  you configured with --enable-paged-results and
