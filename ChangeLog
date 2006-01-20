@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+247	Luke Howard <lukeh@padl.com>
+
+	* double-check *ld != NULL even if mapped eror return
+	  from ldap_initialize() returns NSS_SUCCESS
+
 246	Luke Howard <lukeh@padl.com>
 
 	* paged results and RFC2307bis support are now always

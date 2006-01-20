@@ -900,6 +900,7 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
   int ldaps;
   char uribuf[NSS_BUFSIZ];
   char *p;
+  NSS_STATUS stat;
 
   ldaps = (strncasecmp (uri, "ldaps://", sizeof ("ldaps://") - 1) == 0);
   p = strchr (uri, ':');
@@ -954,7 +955,12 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
 
 #endif /* HAVE_LDAP_INITIALIZE */
 
-  return do_map_error (rc);
+  stat = do_map_error (rc);
+  if (stat == NSS_SUCCESS && *ld == NULL)
+    {
+      stat = NSS_UNAVAIL;
+    }
+  return stat;
 }
 
 static NSS_STATUS
