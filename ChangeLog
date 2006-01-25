@@ -1,12 +1,15 @@
 $Id$
 ===============================================================
 
+248	Luke Howard <lukeh@padl.com>
+
+	* fix regression in per-objectclass attribute mapping
+	  introduced in nss_ldap-246
+
 247	Luke Howard <lukeh@padl.com>
 
 	* double-check *ld != NULL even if mapped eror return
 	  from ldap_initialize() returns NSS_SUCCESS
-	* fix regression in per-objectclass attribute mapping
-	  introduced in nss_ldap-246
 
 246	Luke Howard <lukeh@padl.com>
 
