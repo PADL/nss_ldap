@@ -406,8 +406,8 @@ do_parse_map_statement (ldap_config_t * cfg,
 
     if (p != NULL)
       {
-	sel = _nss_ldap_str2selector (key);
 	*p = '\0';
+	sel = _nss_ldap_str2selector (key);
 	key = ++p;
       }
   }
