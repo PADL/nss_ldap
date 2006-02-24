@@ -131,8 +131,8 @@ static struct ldap_uess_fn __uess_fns[] = {
 	} while (0)
 	
 static void *
-_nss_ldap_open (const char *name, const char *domain,
-		const int mode, char *options)
+_nss_ldap_uess_open (const char *name, const char *domain,
+		     const int mode, char *options)
 {
   /* Currently we do not use the above parameters */
   GR_PVTINIT();
@@ -142,7 +142,7 @@ _nss_ldap_open (const char *name, const char *domain,
 }
 
 static void
-_nss_ldap_close (void *token)
+_nss_ldap_uess_close (void *token)
 {
   if (uess_gr_be != NULL)
     {
@@ -1011,8 +1011,8 @@ nss_ldap_initialize (struct secmethod_table *meths)
   meths->method_getpasswd = _nss_ldap_getpasswd;
 
   /* Support methods */
-  meths->method_open = _nss_ldap_open;
-  meths->method_close = _nss_ldap_close;
+  meths->method_open = _nss_ldap_uess_open;
+  meths->method_close = _nss_ldap_uess_close;
 
   /* Authentication methods */
   meths->method_authenticate = _nss_ldap_authenticate;

@@ -1052,7 +1052,11 @@ char *_nss_ldap_getgrset (char *user)
     }
 
   if (_nss_ldap_test_initgroups_ignoreuser (LA_STRING (a)))
-    return NSS_NOTFOUND;
+    {
+      debug ("<== " NSS_LDAP_INITGROUPS_FUNCTION " (user ignored)");
+      _nss_ldap_leave ();
+      return NSS_NOTFOUND;
+    }
 
   lia.backlink = _nss_ldap_test_config_flag (NSS_LDAP_FLAGS_INITGROUPS_BACKLINK);
 

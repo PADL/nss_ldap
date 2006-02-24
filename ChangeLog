@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+249	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#253: build broken on AIX
+	* fix for BUG#255: deadlock in initgroups
+
 248	Luke Howard <lukeh@padl.com>
 
 	* fix regression in per-objectclass attribute mapping
