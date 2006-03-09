@@ -302,8 +302,7 @@ malformed configuration file will trigger reconnection. If
 is specified, then
 .B nss_ldap
 will return immediately on server failure. All "hard" reconnect
-policies block with exponential backoff before retrying. At present
-the backoff parameters are configurable at compile time only.
+policies block with exponential backoff before retrying.
 .TP
 .B nss_connect_policy <persist|oneshot>
 Determines whether nss_ldap persists connections. The default
