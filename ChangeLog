@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+250	Luke Howard <lukeh@padl.com>
+
+	* don't use static _nss_ldap_no_members buffer,
+	  causes crash when nss_ldap is unloaded and memory
+	  is still referenced
+
 249	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#253: build broken on AIX

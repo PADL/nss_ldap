@@ -63,8 +63,6 @@ static char rcsId[] =
 static ent_context_t *gr_context = NULL;
 #endif
 
-static char *_nss_ldap_no_members[] = { NULL };
-
 #ifdef HAVE_USERSEC_H
 typedef struct ldap_initgroups_args
 {
@@ -540,12 +538,6 @@ do_fix_group_members_buffer (char **mallocedGroupMembers,
 			     char **buffer, size_t * buflen)
 {
   size_t len;
-
-  if (groupMembersCount == 0)
-    {
-      *pGroupMembers = _nss_ldap_no_members;
-      return NSS_SUCCESS;
-    }
 
   len = (groupMembersCount + 1) * sizeof (char *);
 
