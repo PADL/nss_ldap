@@ -631,10 +631,7 @@ _nss_ldap_parse_gr (LDAPMessage * e,
 				   &gr->gr_mem, &buffer, &buflen, NULL);
     }
 
-  if (stat != NSS_SUCCESS)
-    return stat;
-
-  return NSS_SUCCESS;
+  return stat;
 }
 
 /*
@@ -770,7 +767,7 @@ do_parse_initgroups_nested (LDAPMessage * e,
 
   if (!_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
     {
-      return NSS_SUCCESS;
+      return NSS_NOTFOUND;
     }
 
   if (lia->backlink != 0)
