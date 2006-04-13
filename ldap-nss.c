@@ -1639,6 +1639,8 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
   struct timeval tv;
   LDAPMessage *result;
 
+  debug("==> do_bind");
+
   /*
    * set timelimit in ld for select() call in ldap_pvt_connect() 
    * function implemented in libldap2's os-ip.c
