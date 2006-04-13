@@ -47,6 +47,7 @@ static char rcsId[] =
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/param.h>
+#include <errno.h>
 #ifdef HAVE_SYS_UN_H
 #include <sys/un.h>
 #endif
@@ -285,6 +286,15 @@ static int do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 static int do_sasl_interact (LDAP * ld, unsigned flags, void *defaults,
 			     void *p);
 #endif
+
+static int
+do_get_our_socket(int *sd);
+
+static int
+do_dupfd(int oldfd, int newfd);
+
+static void
+do_drop_connection(int sd, int closeSd);
 
 static NSS_STATUS
 do_map_error (int rc)
@@ -651,7 +661,7 @@ do_set_sockopts (void)
        * files and sockets, eventually opening a descriptor with the same number
        * as that originally used by the LDAP library.  The only way to know that
        * this isn't "our" socket descriptor is to save the local and remote
-       * sockaddr_in structures for later comparison in do_close_no_unbind ().
+       * sockaddr_in structures for later comparison.
        */
       (void) getsockname (sd, (struct sockaddr *) &__session.ls_sockname,
 			  &socknamelen);
@@ -723,7 +733,7 @@ do_sockaddr_isequal (NSS_LDAP_SOCKADDR_STORAGE *_s1,
 	  struct sockaddr_in *s2 = (struct sockaddr_in *) _s2;
 
 	  ret = (s1->sin_port == s2->sin_port &&
-		 memcmp (&s1->sin_addr, &s2->sin_addr, sizeof(struct in_addr) == 0));
+		 memcmp (&s1->sin_addr, &s2->sin_addr, sizeof(struct in_addr)) == 0);
 	  break;
 	}
       case AF_UNIX:
@@ -742,7 +752,7 @@ do_sockaddr_isequal (NSS_LDAP_SOCKADDR_STORAGE *_s1,
 	  struct sockaddr_in6 *s2 = (struct sockaddr_in6 *) _s2;
 
 	  ret = (s1->sin6_port == s2->sin6_port &&
-		 memcmp (&s1->sin6_addr, &s2->sin6_addr, sizeof(struct in6_addr) == 0) &&
+		 memcmp (&s1->sin6_addr, &s2->sin6_addr, sizeof(struct in6_addr)) == 0 &&
 		 s1->sin6_scope_id == s2->sin6_scope_id);
 	  break;
 	}
@@ -753,6 +763,185 @@ do_sockaddr_isequal (NSS_LDAP_SOCKADDR_STORAGE *_s1,
     }
 
   return ret;
+}
+
+static int
+do_get_our_socket(int *sd)
+{
+  /*
+   * Before freeing the LDAP context or closing the socket descriptor,
+   * we must ensure that it is *our* socket descriptor.  See the much
+   * lengthier description of this at the end of do_open () where the
+   * values __session.ls_sockname and __session.ls_peername are saved.
+   * With HAVE_LDAPSSL_CLIENT_INIT this returns 0 if the socket has
+   * been closed or reopened, and sets *sd to the ldap socket
+   * descriptor.. Returns 1 in all other cases.
+   */
+
+  int isOurSocket = 1;
+
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
+  if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, sd) == 0)
+#else
+  if ((*sd = __session.ls_conn->ld_sb.sb_sd) > 0)
+#endif /* LDAP_OPT_DESC */
+    {
+      NSS_LDAP_SOCKADDR_STORAGE sockname;
+      NSS_LDAP_SOCKADDR_STORAGE peername;
+      NSS_LDAP_SOCKLEN_T socknamelen = sizeof (sockname);
+      NSS_LDAP_SOCKLEN_T peernamelen = sizeof (peername);
+
+      if (getsockname (*sd, (struct sockaddr *) &sockname, &socknamelen) != 0 ||
+          getpeername (*sd, (struct sockaddr *) &peername, &peernamelen) != 0)
+	{
+	  isOurSocket = 0;
+	}
+      else
+	{
+	  isOurSocket = do_sockaddr_isequal (&__session.ls_sockname,
+					     socknamelen,
+					     &sockname,
+					     socknamelen);
+	  if (isOurSocket)
+	    {
+	      isOurSocket = do_sockaddr_isequal (&__session.ls_peername,
+					         peernamelen,
+					         &peername,
+					         peernamelen);
+	    }
+	}
+    }
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
+  return isOurSocket;
+}
+
+static int
+do_dupfd(int oldfd, int newfd)
+{
+  int d = -1;
+  int flags;
+
+  flags = fcntl(oldfd, F_GETFD);
+
+  while (1)
+    {
+      d = (newfd > -1) ? dup2 (oldfd, newfd) : dup (oldfd);
+      if (d > -1)
+	break;
+
+      if (errno == EBADF)
+	return -1; /* not open */
+
+      if (errno != EINTR
+#ifdef EBUSY
+	    && errno != EBUSY
+#endif
+	    )
+	return -1;
+  }
+
+  /* duplicate close-on-exec flag */
+  (void) fcntl (d, F_SETFD, flags);
+
+  return d;
+}
+
+static int
+do_closefd(int fd)
+{
+  int rc;
+
+  while ((rc = close(fd)) < 0 && errno == EINTR)
+    ;
+
+  return rc;
+}
+
+static void
+do_drop_connection(int sd, int closeSd)
+{
+     /* Close the LDAP connection without writing anything to the
+	underlying socket.  The socket will be left open afterwards if
+	closeSd is 0 */
+#ifndef HAVE_LDAPSSL_CLIENT_INIT
+  {
+    int dummyfd = -1, savedfd = -1;
+    /*  Under OpenLDAP 2.x, ldap_set_option (..., LDAP_OPT_DESC, ...) is
+	a no-op, so to shut down the LDAP connection without writing
+	anything to the socket, we swap a dummy socket onto that file
+	descriptor, and then swap the real fd back once the shutdown is
+	done. */
+    savedfd = do_dupfd (sd, -1);
+    dummyfd = socket (AF_INET, SOCK_STREAM, 0);
+    if (dummyfd > -1 && dummyfd != sd)
+      {
+	do_closefd (sd);
+	do_dupfd (dummyfd, sd);
+	do_closefd (dummyfd);
+      }
+
+#ifdef HAVE_LDAP_LD_FREE
+#if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+    (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
+#else
+    (void) ldap_ld_free (__session.ls_conn, 0);
+#endif /* OPENLDAP 2.x */
+#else
+    ldap_unbind (__session.ls_conn);
+#endif /* HAVE_LDAP_LD_FREE */
+
+    /* Do we want our original sd back? */
+    do_closefd (sd);
+    if (savedfd > -1)
+      {
+	if (closeSd == 0)
+	  do_dupfd (savedfd, sd);
+	do_closefd (savedfd);
+    }
+  }
+#else /* No sd available */
+  {
+    int bogusSd = -1;
+    if (closeSd == 0)
+      {
+	sd = -1; /* don't want to really close the socket */
+#ifdef HAVE_LDAP_LD_FREE
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
+	(void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
+#else
+	__session.ls_conn->ld_sb.sb_sd = -1;
+#endif /* LDAP_OPT_DESC */
+#endif /* HAVE_LDAP_LD_FREE */
+      }
+
+#ifdef HAVE_LDAP_LD_FREE
+
+#if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+    (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
+#else
+    (void) ldap_ld_free (__session.ls_conn, 0);
+#endif /* OPENLDAP 2.x */
+    
+#else
+
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
+    (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
+#else
+    __session.ls_conn->ld_sb.sb_sd = bogusSd;
+#endif /* LDAP_OPT_DESC */
+
+    /* hope we closed it OK! */
+    ldap_unbind (__session.ls_conn);
+
+#endif /* HAVE_LDAP_LD_FREE */
+    
+  }
+#endif /* HAVE_LDAPSSL_CLIENT_INIT */
+  __session.ls_conn = NULL;
+  __session.ls_state = LS_UNINITIALIZED;
+
+  return;
 }
 
 /*
@@ -769,12 +958,7 @@ do_sockaddr_isequal (NSS_LDAP_SOCKADDR_STORAGE *_s1,
 static void
 do_close_no_unbind (void)
 {
-#ifndef HAVE_LDAPSSL_CLIENT_INIT
   int sd = -1;
-#endif /* HAVE_LDAPSSL_CLIENT_INIT */
-#ifndef HAVE_LDAP_LD_FREE
-  int bogusSd = -1;
-#endif /* HAVE_LDAP_LD_FREE */
   int closeSd = 1;
 
   debug ("==> do_close_no_unbind");
@@ -786,89 +970,14 @@ do_close_no_unbind (void)
       return;
     }
 
-  /*
-   * Before freeing the LDAP context or closing the socket descriptor, we
-   * must ensure that it is *our* socket descriptor.  See the much lengthier
-   * description of this at the end of do_open () where the values
-   * __session.ls_sockname and __session.ls_peername are saved.
-   */
-#ifndef HAVE_LDAPSSL_CLIENT_INIT
-#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
-  if (ldap_get_option (__session.ls_conn, LDAP_OPT_DESC, &sd) == 0)
-#else
-  if ((sd = __session.ls_conn->ld_sb.sb_sd) > 0)
-#endif /* LDAP_OPT_DESC */
-    {
-      NSS_LDAP_SOCKADDR_STORAGE sockname;
-      NSS_LDAP_SOCKADDR_STORAGE peername;
-      NSS_LDAP_SOCKLEN_T socknamelen = sizeof (sockname);
-      NSS_LDAP_SOCKLEN_T peernamelen = sizeof (peername);
-
-      if (getsockname (sd, (struct sockaddr *) &sockname, &socknamelen) != 0 ||
-          getpeername (sd, (struct sockaddr *) &peername, &peernamelen) != 0)
-	{
-	  closeSd = 0;
-	}
-      else
-	{
-	  closeSd = do_sockaddr_isequal (&__session.ls_sockname,
-					 socknamelen,
-					 &sockname,
-					 socknamelen);
-	  if (closeSd)
-	    {
-	      closeSd = do_sockaddr_isequal (&__session.ls_peername,
-					     peernamelen,
-					     &peername,
-					     peernamelen);
-	    }
-	}
-    }
-#endif /* HAVE_LDAPSSL_CLIENT_INIT */
+  closeSd = do_get_our_socket (&sd);
 
 #if defined(DEBUG) || defined(DEBUG_SOCKETS)
   syslog (LOG_INFO, "nss_ldap: %sclosing connection (no unbind) %p fd %d",
-	  closeSd ? "" : "not", __session.ls_conn, sd);
+	  closeSd ? "" : "not ", __session.ls_conn, sd);
 #endif /* DEBUG */
 
-  if (closeSd == 0)
-    {
-      sd = -1; /* don't want to really close the socket */
-#ifdef HAVE_LDAP_LD_FREE
-#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_DESC)
-      (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &sd);
-#else
-      __session.ls_conn->ld_sb.sb_sd = -1;
-#endif /* LDAP_OPT_DESC */
-#endif /* HAVE_LDAP_LD_FREE */
-    }
-
-#ifdef HAVE_LDAP_LD_FREE
-
-#if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
-  (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
-#else
-  (void) ldap_ld_free (__session.ls_conn, 0);
-#endif /* OPENLDAP 2.x */
-
-#else
-#ifndef HAVE_LDAPSSL_CLIENT_INIT
-  if (sd != -1)
-    close (sd);
-#endif /* HAVE_LDAPSSL_CLIENT_INIT */
-#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_DESC)
-  (void) ldap_set_option (__session.ls_conn, LDAP_OPT_DESC, &bogusSd);
-#else
-  __session.ls_conn->ld_sb.sb_sd = bogusSd;
-#endif /* LDAP_OPT_DESC */
-
-  /* hope we closed it OK! */
-  ldap_unbind (__session.ls_conn);
-
-#endif /* HAVE_LDAP_LD_FREE */
-
-  __session.ls_conn = NULL;
-  __session.ls_state = LS_UNINITIALIZED;
+  do_drop_connection(sd, closeSd);
 
   debug ("<== do_close_no_unbind");
 
@@ -963,6 +1072,7 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
   return stat;
 }
 
+
 static NSS_STATUS
 do_init (void)
 {
@@ -972,6 +1082,7 @@ do_init (void)
 #endif
   uid_t euid;
   NSS_STATUS stat;
+  int sd=-1;
 
   debug ("==> do_init");
 
@@ -1035,6 +1146,14 @@ do_init (void)
 #endif
 #endif /* DEBUG */
 
+  if (__session.ls_state == LS_CONNECTED_TO_DSA &&
+      do_get_our_socket (&sd) == 0)
+    {
+      /* The calling app has stolen our socket. */
+      debug (":== do_init (stolen socket detected)");
+      do_drop_connection (sd, 0);
+    }
+  else
 #ifndef HAVE_PTHREAD_ATFORK
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   if (__pthread_once == NULL && __pid != pid)

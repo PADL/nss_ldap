@@ -6,6 +6,8 @@ $Id$
 	* don't use static _nss_ldap_no_members buffer,
 	  causes crash when nss_ldap is unloaded and memory
 	  is still referenced
+	* fix for BUG#249: tcsh closes file descriptors,
+	  confuses nss_ldap and hangs (from David Houlder)
 	* fix for BUG#257: initgroups() broken in RFC2307bis
 	  support disabled
 	* fix for BUG#261: sslpath example wrong
