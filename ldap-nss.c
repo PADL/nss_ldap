@@ -2018,7 +2018,7 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
   return;
 }
 
-#ifdef HAVE_NSSWITCH_H
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_IRS_H)
 /*
  * Make all triple permutations
  */
@@ -2117,7 +2117,7 @@ do_triple_permutations (const char *machine, const char *user,
 
   return NSS_SUCCESS;
 }
-#endif /* HAVE_NSSWITCH_H */
+#endif /* HAVE_NSSWITCH_H || HAVE_IRS_H */
 
 /*
  * AND or OR a set of filters.
@@ -2239,7 +2239,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	  snprintf (filterBufP, filterSiz, filterprot,
 		    args->la_arg1.la_number, buf1);
 	  break;
-#ifdef HAVE_NSSWITCH_H
+#if defined(HAVE_NSSWITCH_H) || defined(HAVE_IRS_H)
 	case LA_TYPE_TRIPLE:
 	  do
 	    {
@@ -2258,7 +2258,7 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	    }
 	  while (stat == NSS_TRYAGAIN);
 	  break;
-#endif /* HAVE_NSSWITCH_H */
+#endif /* HAVE_NSSWITCH_H || HAVE_IRS_H */
 	case LA_TYPE_STRING_LIST_OR:
 	case LA_TYPE_STRING_LIST_AND:
 	  do

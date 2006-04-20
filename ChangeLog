@@ -11,6 +11,8 @@ $Id$
 	* fix for BUG#257: initgroups() broken in RFC2307bis
 	  support disabled
 	* fix for BUG#261: sslpath example wrong
+	* fix for BUG#263: compile do_triple_permutations()
+	  when IRS enabled
 
 249	Luke Howard <lukeh@padl.com>
 
