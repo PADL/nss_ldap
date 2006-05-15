@@ -2099,7 +2099,9 @@ do_triple_permutations (const char *machine, const char *user,
 		APPEND_CONSTANT_STRING((_buffer), (_buflen), "\\))"); \
 	} while (0)
 
-  APPEND_CONSTANT_STRING (bufptr, buflen, "(&(objectclass=");
+  APPEND_CONSTANT_STRING (bufptr, buflen, "(&(");
+  APPEND_STRING (bufptr, buflen, AT (objectClass));
+  APPEND_CONSTANT_STRING (bufptr, buflen, "=");
   APPEND_STRING (bufptr, buflen, OC (nisNetgroup));
   APPEND_CONSTANT_STRING (bufptr, buflen, ")(|");
 
@@ -3713,7 +3715,7 @@ _nss_ldap_oc_check (LDAPMessage * e, const char *oc)
       return NSS_UNAVAIL;
     }
 
-  vals = ldap_get_values (__session.ls_conn, e, "objectClass");
+  vals = ldap_get_values (__session.ls_conn, e, AT (objectClass));
   if (vals != NULL)
     {
       for (valiter = vals; *valiter != NULL; valiter++)

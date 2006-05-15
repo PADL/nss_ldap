@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+251	Luke Howard <lukeh@padl.com>
+
+	* remove doc/rfc2307.txt, it is available from
+	  http://www.ietf.org/rfc/rfc2307.txt
+	* make objectClass a mappable attribute
+
 250	Luke Howard <lukeh@padl.com>
 
 	* don't use static _nss_ldap_no_members buffer,

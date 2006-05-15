@@ -139,136 +139,136 @@ _nss_ldap_init_filters ()
 {
   /* rfc822 mail aliases */
   snprintf (_nss_ldap_filt_getaliasbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (nisMailAlias),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (nisMailAlias),
             ATM (LM_ALIASES, cn), "%s");
   snprintf (_nss_ldap_filt_getaliasent, LDAP_FILT_MAXSIZ,
-	    "(objectclass=%s)", OC (nisMailAlias));
+	    "(%s=%s)", AT (objectClass), OC (nisMailAlias));
 
   /* boot parameters */
   snprintf (_nss_ldap_filt_getbootparamsbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (bootableDevice),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (bootableDevice),
             ATM (LM_BOOTPARAMS, cn), "%d");
 
   /* MAC address mappings */
   snprintf (_nss_ldap_filt_gethostton, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ieee802Device),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ieee802Device),
             ATM (LM_ETHERS, cn), "%s");
   snprintf (_nss_ldap_filt_getntohost, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ieee802Device), AT (macAddress),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ieee802Device), AT (macAddress),
 	    "%s");
-  snprintf (_nss_ldap_filt_getetherent, LDAP_FILT_MAXSIZ, "(objectclass=%s)",
-	    OC (ieee802Device));
+  snprintf (_nss_ldap_filt_getetherent, LDAP_FILT_MAXSIZ, "(%s=%s)",
+	    AT (objectClass), OC (ieee802Device));
 
   /* groups */
   snprintf (_nss_ldap_filt_getgrnam, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (posixGroup),
             ATM (LM_GROUP, cn), "%s");
   snprintf (_nss_ldap_filt_getgrgid, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (posixGroup),
             ATM (LM_GROUP, gidNumber), "%d");
-  snprintf (_nss_ldap_filt_getgrent, LDAP_FILT_MAXSIZ, "(&(objectclass=%s))",
-	    OC (posixGroup));
+  snprintf (_nss_ldap_filt_getgrent, LDAP_FILT_MAXSIZ, "(&(%s=%s))",
+	    AT (objectClass), OC (posixGroup));
   snprintf (_nss_ldap_filt_getgroupsbymemberanddn, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(|(%s=%s)(%s=%s)))",
-	    OC (posixGroup), AT (memberUid), "%s", AT (uniqueMember), "%s");
+	    "(&(%s=%s)(|(%s=%s)(%s=%s)))",
+	    AT (objectClass), OC (posixGroup), AT (memberUid), "%s", AT (uniqueMember), "%s");
   snprintf (_nss_ldap_filt_getgroupsbydn, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))",
-	    OC (posixGroup), AT (uniqueMember), "%s");
+	    "(&(%s=%s)(%s=%s))",
+	    AT (objectClass), OC (posixGroup), AT (uniqueMember), "%s");
   snprintf (_nss_ldap_filt_getpwnam_groupsbymember, LDAP_FILT_MAXSIZ,
-	    "(|(&(objectclass=%s)(%s=%s))(&(objectclass=%s)(%s=%s)))",
-	    OC (posixGroup), AT (memberUid), "%s",
-	    OC (posixAccount), ATM (LM_PASSWD, uid), "%s");
+	    "(|(&(%s=%s)(%s=%s))(&(%s=%s)(%s=%s)))",
+	    AT (objectClass), OC (posixGroup), AT (memberUid), "%s",
+	    AT (objectClass), OC (posixAccount), ATM (LM_PASSWD, uid), "%s");
   snprintf (_nss_ldap_filt_getgroupsbymember, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (posixGroup), AT (memberUid),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (posixGroup), AT (memberUid),
 	    "%s");
 
   /* IP hosts */
   snprintf (_nss_ldap_filt_gethostbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipHost), ATM (LM_HOSTS, cn),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipHost), ATM (LM_HOSTS, cn),
             "%s");
   snprintf (_nss_ldap_filt_gethostbyaddr, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipHost), AT (ipHostNumber),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipHost), AT (ipHostNumber),
 	    "%s");
-  snprintf (_nss_ldap_filt_gethostent, LDAP_FILT_MAXSIZ, "(objectclass=%s)",
-	    OC (ipHost));
+  snprintf (_nss_ldap_filt_gethostent, LDAP_FILT_MAXSIZ, "(%s=%s)",
+	    AT (objectClass), OC (ipHost));
 
   /* IP networks */
   snprintf (_nss_ldap_filt_getnetbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipNetwork),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipNetwork),
             ATM (LM_NETWORKS, cn), "%s");
   snprintf (_nss_ldap_filt_getnetbyaddr, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipNetwork),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipNetwork),
 	    AT (ipNetworkNumber), "%s");
-  snprintf (_nss_ldap_filt_getnetent, LDAP_FILT_MAXSIZ, "(objectclass=%s)",
-	    OC (ipNetwork));
+  snprintf (_nss_ldap_filt_getnetent, LDAP_FILT_MAXSIZ, "(%s=%s)",
+	    AT (objectClass), OC (ipNetwork));
 
   /* IP protocols */
   snprintf (_nss_ldap_filt_getprotobyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipProtocol),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipProtocol),
             ATM (LM_PROTOCOLS, cn), "%s");
   snprintf (_nss_ldap_filt_getprotobynumber, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipProtocol),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipProtocol),
 	    AT (ipProtocolNumber), "%d");
-  snprintf (_nss_ldap_filt_getprotoent, LDAP_FILT_MAXSIZ, "(objectclass=%s)",
-	    OC (ipProtocol));
+  snprintf (_nss_ldap_filt_getprotoent, LDAP_FILT_MAXSIZ, "(%s=%s)",
+	    AT (objectClass), OC (ipProtocol));
 
   /* users */
   snprintf (_nss_ldap_filt_getpwnam, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (posixAccount),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (posixAccount),
             ATM (LM_PASSWD, uid), "%s");
   snprintf (_nss_ldap_filt_getpwuid, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))",
-	    OC (posixAccount), AT (uidNumber), "%d");
+	    "(&(%s=%s)(%s=%s))",
+	    AT (objectClass), OC (posixAccount), AT (uidNumber), "%d");
   snprintf (_nss_ldap_filt_getpwent, LDAP_FILT_MAXSIZ,
-	    "(objectclass=%s)", OC (posixAccount));
+	    "(%s=%s)", AT (objectClass), OC (posixAccount));
 
   /* RPCs */
   snprintf (_nss_ldap_filt_getrpcbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (oncRpc), ATM (LM_RPC, cn), "%s");
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (oncRpc), ATM (LM_RPC, cn), "%s");
   snprintf (_nss_ldap_filt_getrpcbynumber, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (oncRpc), AT (oncRpcNumber),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (oncRpc), AT (oncRpcNumber),
 	    "%d");
-  snprintf (_nss_ldap_filt_getrpcent, LDAP_FILT_MAXSIZ, "(objectclass=%s)",
-	    OC (oncRpc));
+  snprintf (_nss_ldap_filt_getrpcent, LDAP_FILT_MAXSIZ, "(%s=%s)",
+	    AT (objectClass), OC (oncRpc));
 
   /* IP services */
   snprintf (_nss_ldap_filt_getservbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipService), ATM (LM_SERVICES, cn),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipService), ATM (LM_SERVICES, cn),
             "%s");
   snprintf (_nss_ldap_filt_getservbynameproto, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s)(%s=%s))",
-	    OC (ipService), ATM (LM_SERVICES, cn), "%s", AT (ipServiceProtocol),
+	    "(&(%s=%s)(%s=%s)(%s=%s))",
+	    AT (objectClass), OC (ipService), ATM (LM_SERVICES, cn), "%s", AT (ipServiceProtocol),
             "%s");
   snprintf (_nss_ldap_filt_getservbyport, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (ipService), AT (ipServicePort),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipService), AT (ipServicePort),
 	    "%d");
   snprintf (_nss_ldap_filt_getservbyportproto, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s)(%s=%s))", OC (ipService),
+	    "(&(%s=%s)(%s=%s)(%s=%s))", AT (objectClass), OC (ipService),
 	    AT (ipServicePort), "%d", AT (ipServiceProtocol), "%s");
-  snprintf (_nss_ldap_filt_getservent, LDAP_FILT_MAXSIZ, "(objectclass=%s)",
-	    OC (ipService));
+  snprintf (_nss_ldap_filt_getservent, LDAP_FILT_MAXSIZ, "(%s=%s)",
+	    AT (objectClass), OC (ipService));
 
   /* shadow users */
   snprintf (_nss_ldap_filt_getspnam, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (shadowAccount),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (shadowAccount),
             ATM (LM_SHADOW, uid), "%s");
   snprintf (_nss_ldap_filt_getspent, LDAP_FILT_MAXSIZ,
-	    "(objectclass=%s)", OC (shadowAccount));
+	    "(%s=%s)", AT (objectClass), OC (shadowAccount));
 
   /* netgroups */
   snprintf (_nss_ldap_filt_getnetgrent, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup),
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (nisNetgroup),
             ATM (LM_NETGROUP, cn), "%s");
   snprintf (_nss_ldap_filt_innetgr, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (nisNetgroup), AT (memberNisNetgroup), "%s");
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (nisNetgroup), AT (memberNisNetgroup), "%s");
 
   /* automounts */
   snprintf (_nss_ldap_filt_setautomntent, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (automountMap), AT (automountMapName), "%s");
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (automountMap), AT (automountMapName), "%s");
   snprintf (_nss_ldap_filt_getautomntent, LDAP_FILT_MAXSIZ,
-	    "(objectclass=%s)", OC (automount));
+	    "(%s=%s)", AT (objectClass), OC (automount));
   snprintf (_nss_ldap_filt_getautomntbyname, LDAP_FILT_MAXSIZ,
-	    "(&(objectclass=%s)(%s=%s))", OC (automount), AT (automountKey), "%s");
+	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (automount), AT (automountKey), "%s");
 }
 
 static void init_pwd_attributes (const char ***pwd_attrs);
