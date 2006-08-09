@@ -6,7 +6,7 @@
  *
  *   Copyright 1997 Transmeta Corporation - All Rights Reserved
  *   Copyright 2001-2003 Ian Kent <raven@themaw.net>
- *   Copyright 2005 PADL Software Pty Ltd - All Rights Reserved
+ *   Copyright 2005-2006 PADL Software Pty Ltd - All Rights Reserved
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
+#include <signal.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
 #include <resolv.h>
@@ -164,18 +165,17 @@ static const char *nsserr_string(enum nss_status status)
 	return "Unknown error";
 }
 
-static int read_map(const char *root, struct lookup_context *context)
+static int read_map(const char *root, time_t age, struct lookup_context *context)
 {
 	enum nss_status status;
 	void *private = NULL;
-	time_t age = time(NULL);
 	const char *key, *mapent;
 	int nss_errno;
 	char buffer[KEY_MAX_LEN + 1 + MAPENT_MAX_LEN + 1];
 
 	status = (*context->setautomntent)(context->mapname, &private);
 	if (status != NSS_STATUS_SUCCESS) {
-		warn(MODPREFIX "failed to read map %s: %s",
+		warn(MODPREFIX "lookup_ghost for map %s failed: %s",
 			context->mapname, nsserr_string(status));
 		return 0;
 	}
@@ -186,31 +186,38 @@ static int read_map(const char *root, struct lookup_context *context)
 						     &nss_errno);
 		if (status != NSS_STATUS_SUCCESS)
 			break;
-#ifdef CHE_FAIL
-                cache_update(root, key, mapent, age);
-#else
-		cache_update(key, mapent, age);
-#endif
+
+                cache_add(root, key, mapent, age);
 	}
 
 	(*context->endautomntent)(&private);
-	
+
+	if (status != NSS_STATUS_SUCCESS && status != NSS_STATUS_NOTFOUND) {
+		warn(MODPREFIX "lookup_ghost for map %s failed: %s",
+			context->mapname, nsserr_string(status));
+		return 0;
+	}
+
+	/* Clean stale entries from the cache */
 	cache_clean(root, age);
+
 	return 1;
 }
 
 int lookup_ghost(const char *root, int ghost, time_t now, void *context)
 {
 	struct lookup_context *ctxt = (struct lookup_context *)context;
+	time_t age = now ? now : time(NULL);
 	struct mapent_cache *me;
 	int status = 1;
 
-	if (!read_map(root, ctxt))
+	if (!read_map(root, age, ctxt))
 		return LKP_FAIL;
 
 	status = cache_ghost(root, ghost, ctxt->mapname, ctxt->nsname, ctxt->parse);
 
 	me = cache_lookup_first();
+	/* me NULL => empty map */
 	if (me == NULL)
 		return LKP_FAIL;
 
@@ -224,85 +231,115 @@ int lookup_ghost(const char *root, int ghost, time_t now, void *context)
 	return status;
 }
 
+int lookup_one(const char *root, const char *key, time_t age, struct lookup_context *ctxt)
+{
+	enum nss_status status;
+	void *private = NULL;
+	int nss_errno;
+	char buffer[KEY_MAX_LEN + 1 + MAPENT_MAX_LEN + 1];
+	const char *canon_key, *mapent;
+
+	status = (*ctxt->setautomntent)(ctxt->mapname, &private);
+	if (status != NSS_STATUS_SUCCESS) {
+		warn(MODPREFIX "failed to lookup map %s: %s", ctxt->mapname, nsserr_string(status));
+		return CHE_FAIL;
+	}
+
+	status = (*ctxt->getautomntbyname_r)(private, key,
+					     &canon_key, &mapent,
+					     buffer, sizeof(buffer),
+					     &nss_errno);
+
+	(*ctxt->endautomntent)(&private);
+
+	if (status == NSS_STATUS_NOTFOUND) {
+		warn(MODPREFIX "key %s not found in map %s", key, ctxt->mapname);
+		return CHE_MISSING;
+	} else if (status != NSS_STATUS_SUCCESS) {
+		warn(MODPREFIX "failed to read map %s: %s", ctxt->mapname, nsserr_string(status));
+		return CHE_FAIL;
+	}
+
+	/* XXX should we be using canon_key or key */
+	return cache_update(root, canon_key, mapent, age);
+}
+
+int lookup_wild(const char *root, time_t age, struct lookup_context *ctxt)
+{
+	return lookup_one(root, "*", age, ctxt);
+}
+
 int lookup_mount(const char *root, const char *name, int name_len, void *context)
 {
 	struct lookup_context *ctxt = (struct lookup_context *)context;
 	char key[KEY_MAX_LEN + 1];
-	char buffer[KEY_MAX_LEN + 1 + MAPENT_MAX_LEN + 1];
-	const char *canon_key, *mapent;
+	size_t key_len;
+	char mapent[MAPENT_MAX_LEN + 1];
 	struct mapent_cache *me = NULL;
-	time_t age = time(NULL);
-	enum nss_status status;
+	int ret;
+	time_t now = time(NULL);
+	time_t t_last_read;
+	int rmdir_if_mount_fails = 0;
 
 	debug(MODPREFIX "looking up %s", name);
 
-	snprintf(key, sizeof(key), "%s/%s", root, name);
+	if (ap.type == LKP_DIRECT)
+		key_len = snprintf(key, KEY_MAX_LEN, "%s/%s", root, name);
+	else
+		key_len = snprintf(key, KEY_MAX_LEN, "%s", name);
 
-	me = cache_lookup(name);
-	if (me == NULL) {
-		me = cache_lookup(key);
+	if (key_len > KEY_MAX_LEN)
+		return 1;
+
+	/* check map and if change is detected re-read map */
+	ret = lookup_one(root, key, now, ctxt);
+	if (ret == CHE_FAIL)
+		return 1;
+
+	me = cache_lookup_first();
+	t_last_read = (me != NULL) ? now - me->age : ap.exp_runfreq + 1;
+
+	if (ret == CHE_UPDATED) {
+		/* Have parent update its map */
+		if (t_last_read > ap.exp_runfreq)
+			kill(getppid(), SIGHUP);
+	} else if (ret == CHE_MISSING) {
+		if (!cache_delete(root, key, 0)) {
+			rmdir_if_mount_fails = 1;
+		}
+
+		/* Maybe update wild card map entry */
+		if (ap.type == LKP_INDIRECT)
+			ret = lookup_wild(root, now, ctxt);
+
+		/* Have parent update its map */
+		if (t_last_read > ap.exp_runfreq)
+			kill(getppid(), SIGHUP);
 	}
 
-	if (me == NULL) {
+	me = cache_lookup(key);
+	if (me != NULL) {
+		snprintf(mapent, sizeof(mapent), "%s", me->mapent);
+	} else {	
 		/* path component, do submount */
 		me = cache_partial_match(key);
-
-		if (me) {
-			snprintf(buffer, sizeof(buffer), "-fstype=autofs %s:%s",
+		if (me != NULL) {
+			snprintf(mapent, sizeof(mapent), "-fstype=autofs %s:%s",
 				 ctxt->nsname, ctxt->mapname);
-			mapent = buffer;
 		}
-	} else {
-		snprintf(buffer, sizeof(buffer), "%s", me->mapent);
-		mapent = buffer;
 	}
 
-	if (me == NULL) {
-		const char *keys[3];
-		int i;
-		int nss_errno;
-		void *private = NULL;
-
-		status = (*ctxt->setautomntent)(ctxt->mapname, &private);
-		if (status != NSS_STATUS_SUCCESS) {
-			warn(MODPREFIX "failed to read map %s: %s", ctxt->mapname, nsserr_string(status));
-			goto out_err;
-		}
-
-		keys[0] = name,
-		keys[1] = key;
-		keys[2] = "*";
-
-		for (i = 0; i < sizeof(keys)/sizeof(keys[0]); i++) {
-			status = (*ctxt->getautomntbyname_r)(private, name,
-							     &canon_key, &mapent,
-							     buffer, sizeof(buffer),
-							     &nss_errno);
-			if (status != NSS_STATUS_NOTFOUND)
-				break;
-		}
-
-		(*ctxt->endautomntent)(&private);
-
-		if (status != NSS_STATUS_SUCCESS) {
-			warn(MODPREFIX "failed to read map %s: %s", ctxt->mapname, nsserr_string(status));
-			goto out_err;
-		}
-
-#ifdef CHE_FAIL
-                cache_update(root, keys[i], mapent, age);
-#else
-		cache_update(keys[i], mapent, age);
-#endif
-	}
+	if (me == NULL)
+		return 1;
 
 	debug(MODPREFIX "%s -> %s", name, mapent);
 
-	return ctxt->parse->parse_mount(root, name, name_len, mapent, ctxt->parse->context);
+	ret = ctxt->parse->parse_mount(root, name, name_len, mapent, ctxt->parse->context);
 
-out_err:
-	warn(MODPREFIX "lookup for %s failed: %d", name, status);
-	return 1;
+	if (ret && rmdir_if_mount_fails)
+		rmdir_path(key);
+
+	return ret;
 }
 
 int lookup_done(void *context)
