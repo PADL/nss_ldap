@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+252	Luke Howard <lukeh@padl.com>
+
+	* doc/lookup_nssldap.c: rewrite for autofs-4.1.3
+
 251	Luke Howard <lukeh@padl.com>
 
 	* remove doc/rfc2307.txt, it is available from
