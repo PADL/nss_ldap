@@ -33,6 +33,7 @@ static char rcsId[] =
 #include <pthread.h>
 #endif
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -719,7 +720,18 @@ do_parse_initgroups (LDAPMessage * e,
 	  return NSS_TRYAGAIN;
 	}
     }
-  if (*(lia->start) == *(lia->size))
+
+  if (*(lia->size) == 0)
+    {
+      *(lia->groups) = (gid_t *) realloc(*(lia->groups),
+					 LDAP_NSS_NGROUPS * sizeof (gid_t));
+      if (*(lia->groups) == NULL)
+	{
+	  return NSS_TRYAGAIN;
+	}
+      *(lia->size) = LDAP_NSS_NGROUPS;
+    }
+  else if (*(lia->start) == *(lia->size))
     {
       /* Need a bigger buffer */
       *(lia->groups) = (gid_t *) realloc (*(lia->groups),
@@ -729,6 +741,10 @@ do_parse_initgroups (LDAPMessage * e,
 	  return NSS_TRYAGAIN;
 	}
       *(lia->size) *= 2;
+    }
+  else
+    {
+      assert(*(lia->start) < *(lia->size));
     }
 
   /* weed out duplicates; is this really our responsibility? */
