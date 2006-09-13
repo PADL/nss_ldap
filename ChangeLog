@@ -1,6 +1,13 @@
 $Id$
 ===============================================================
 
+253	Luke Howard <lukeh@padl.com>
+
+	* fix crasher if an empty buffer is passed to
+	  initgroups (glibc NSS only)
+	* fix for BUG#283: netgroup assertion failure in
+	  Solaris mountd
+
 252	Luke Howard <lukeh@padl.com>
 
 	* doc/lookup_nssldap.c: rewrite for autofs-4.1.3
