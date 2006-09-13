@@ -791,7 +791,6 @@ _nss_ldap_getnetgroup_getent (nss_backend_t * _be, void *_args)
 static NSS_STATUS
 _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 {
-  NSS_STATUS stat = NSS_NOTFOUND;
   struct nss_innetgr_args *args = (struct nss_innetgr_args *) _args;
   int i;
 
@@ -806,27 +805,26 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
      args->arg[NSS_NETGR_MACHINE].argc, args->arg[NSS_NETGR_USER].argc,
      args->arg[NSS_NETGR_DOMAIN].argc, args->groups.argc);
 
-  /* Presume these are harmonized -- this is a strange interface */
-  assert (args->arg[NSS_NETGR_MACHINE].argc == 0 ||
-	  args->arg[NSS_NETGR_MACHINE].argc == args->groups.argc);
-  assert (args->arg[NSS_NETGR_USER].argc == 0 ||
-	  args->arg[NSS_NETGR_USER].argc == args->groups.argc);
-  assert (args->arg[NSS_NETGR_DOMAIN].argc == 0 ||
-	  args->arg[NSS_NETGR_DOMAIN].argc == args->groups.argc);
+  /* note: mountd on Solaris does set multiple 'groups' with one 'arg' for
+   * efficiency reasons */
+
+  assert (args->arg[NSS_NETGR_MACHINE].argc <= 1);
+  assert (args->arg[NSS_NETGR_USER].argc <= 1);
+  assert (args->arg[NSS_NETGR_DOMAIN].argc <= 1);
 
   _nss_ldap_enter ();
+
+  const char *machine = (args->arg[NSS_NETGR_MACHINE].argc != 0) ?
+    args->arg[NSS_NETGR_MACHINE].argv[0] : NULL;
+  const char *user = (args->arg[NSS_NETGR_USER].argc != 0) ?
+    args->arg[NSS_NETGR_USER].argv[0] : NULL;
+  const char *domain = (args->arg[NSS_NETGR_DOMAIN].argc != 0) ?
+    args->arg[NSS_NETGR_DOMAIN].argv[0] : NULL;
 
   for (i = 0; i < args->groups.argc; i++)
     {
       NSS_STATUS parseStat;
       ldap_innetgr_args_t li_args;
-
-      const char *machine = (args->arg[NSS_NETGR_MACHINE].argc != 0) ?
-	args->arg[NSS_NETGR_MACHINE].argv[i] : NULL;
-      const char *user = (args->arg[NSS_NETGR_USER].argc != 0) ?
-	args->arg[NSS_NETGR_USER].argv[i] : NULL;
-      const char *domain = (args->arg[NSS_NETGR_DOMAIN].argc != 0) ?
-	args->arg[NSS_NETGR_DOMAIN].argv[i] : NULL;
 
       li_args.lia_netgroup = args->groups.argv[i];
       li_args.lia_netgr_status = NSS_NETGR_NO;
@@ -846,15 +844,15 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 
       if (args->status == NSS_NETGR_FOUND)
 	{
-	  stat = NSS_SUCCESS;
+	  _nss_ldap_leave ();
+	  debug ("<== _nss_ldap_innetgr (FOUND)");
+	  return NSS_SUCCESS;
 	}
     }
 
   _nss_ldap_leave ();
-
-  debug ("<== _nss_ldap_innetgr");
-
-  return stat;
+  debug ("<== _nss_ldap_innetgr (not found)");
+  return NSS_NOTFOUND;
 }
 
 /*
