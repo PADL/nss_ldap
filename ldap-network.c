@@ -221,7 +221,7 @@ _nss_ldap_getnetbyaddr_r (unsigned long addr, int type,
 	{
 	  if (retval == NSS_NOTFOUND)
 	    {
-	      if (buf[blen - 2] == '.' && buf[blen - 1] == '\0')
+	      if (blen > 1 && buf[blen - 2] == '.' && buf[blen - 1] == '\0')
 		{
 		  buf[blen - 2] = '\0';
 		  blen -= 2;

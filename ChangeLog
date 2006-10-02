@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+254	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#292: array bounds check in ldap-network.c
+
 253	Luke Howard <lukeh@padl.com>
 
 	* fix crasher if an empty buffer is passed to
