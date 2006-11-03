@@ -602,7 +602,7 @@ _nss_ldap_parse_gr (LDAPMessage * e,
     {
       groupMembers = groupMembersBuffer;
       groupMembersCount = 0;
-      groupMembersBufferSize = sizeof (groupMembers);
+      groupMembersBufferSize = sizeof (groupMembersBuffer);
       groupMembersBufferIsMalloced = 0;
       depth = 0;
 
