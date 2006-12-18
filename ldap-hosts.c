@@ -270,6 +270,13 @@ _nss_ldap_gethostbyname2_r (const char *name, int af, struct hostent * result,
   NSS_STATUS status;
   ldap_args_t a;
 
+#ifndef INET6
+  if (af == AF_INET6)
+    {
+      return NSS_NOTFOUND;
+    }
+#endif
+
   LA_INIT (a);
   LA_STRING (a) = name;
   LA_TYPE (a) = LA_TYPE_STRING;
