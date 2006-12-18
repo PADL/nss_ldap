@@ -283,6 +283,7 @@ static NSS_STATUS
 do_parse_group_members (LDAPMessage * e,
 			char ***pGroupMembers,
 			size_t * pGroupMembersCount,
+                        size_t * pGroupMembersNext,
 			size_t * pGroupMembersBufferSize,
 			int *pGroupMembersBufferIsMalloced,
 			char **buffer, size_t * buflen,
@@ -312,7 +313,7 @@ do_parse_group_members (LDAPMessage * e,
       return NSS_NOTFOUND;
     }
 
-  i = *pGroupMembersCount;	/* index of next member */
+  i = *pGroupMembersNext;	/* index of next member */
   groupMembers = *pGroupMembers;
 
   groupdn = _nss_ldap_get_dn (e);
@@ -362,11 +363,11 @@ do_parse_group_members (LDAPMessage * e,
        * As an optimization the buffer is preferentially allocated off
        * the stack
        */
-      if ((i + groupMembersCount) * sizeof (char *) >=
+      if ((*pGroupMembersCount + groupMembersCount) * sizeof (char *) >=
 	  *pGroupMembersBufferSize)
 	{
 	  *pGroupMembersBufferSize =
-	    (i + groupMembersCount + 1) * sizeof (char *);
+	    (*pGroupMembersCount + groupMembersCount + 1) * sizeof (char *);
 	  *pGroupMembersBufferSize +=
 	    (LDAP_NSS_NGROUPS * sizeof (char *)) - 1;
 	  *pGroupMembersBufferSize -=
@@ -397,6 +398,7 @@ do_parse_group_members (LDAPMessage * e,
 	}
 
       groupMembers = *pGroupMembers;
+      *pGroupMembersCount += groupMembersCount;
 
       /* Parse distinguished name members */
       if (dnValues != NULL)
@@ -429,7 +431,7 @@ do_parse_group_members (LDAPMessage * e,
 		  (*depth)++;
 		  parseStat =
 		    do_parse_group_members (_nss_ldap_first_entry (res),
-					    &groupMembers, &i,
+					    &groupMembers, pGroupMembersCount, &i,
 					    pGroupMembersBufferSize,
 					    pGroupMembersBufferIsMalloced,
 					    buffer, buflen, depth,
@@ -523,7 +525,7 @@ out:
 #endif
 
   *pGroupMembers = groupMembers;
-  *pGroupMembersCount = i;
+  *pGroupMembersNext = i;
 
   return stat;
 }
@@ -568,7 +570,7 @@ _nss_ldap_parse_gr (LDAPMessage * e,
   char *gid;
   NSS_STATUS stat;
   char **groupMembers;
-  size_t groupMembersCount;
+  size_t groupMembersCount, groupMembersAttrCount;
   size_t groupMembersBufferSize;
   char *groupMembersBuffer[LDAP_NSS_NGROUPS];
   int groupMembersBufferIsMalloced;
@@ -601,12 +603,15 @@ _nss_ldap_parse_gr (LDAPMessage * e,
   if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
     {
       groupMembers = groupMembersBuffer;
+      groupMembersAttrCount = 0;
       groupMembersCount = 0;
       groupMembersBufferSize = sizeof (groupMembersBuffer);
       groupMembersBufferIsMalloced = 0;
       depth = 0;
 
-      stat = do_parse_group_members (e, &groupMembers, &groupMembersCount,
+      stat = do_parse_group_members (e, &groupMembers,
+				     &groupMembersAttrCount,
+				     &groupMembersCount,
 				     &groupMembersBufferSize,
 				     &groupMembersBufferIsMalloced, &buffer,
 				     &buflen, &depth, &knownGroups);
