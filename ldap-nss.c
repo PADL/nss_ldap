@@ -793,23 +793,31 @@ do_get_our_socket(int *sd)
       NSS_LDAP_SOCKLEN_T peernamelen = sizeof (peername);
 
       if (getsockname (*sd, (struct sockaddr *) &sockname, &socknamelen) != 0 ||
-          getpeername (*sd, (struct sockaddr *) &peername, &peernamelen) != 0)
+	  !do_sockaddr_isequal (&__session.ls_sockname,
+				socknamelen,
+				&sockname,
+				socknamelen))
+        {
+          isOurSocket = 0;
+        }
+      /*
+       * XXX: We don't pay any attention to return codes in places such as
+       * do_search_s so we never observe when the other end has disconnected
+       * our socket.  In that case we'll get an ENOTCONN error here... and
+       * it's best we ignore the error -- otherwise we'll leak a filedescriptor.
+       * The correct fix would be to test error codes in many places.
+       */
+      else if (getpeername (*sd, (struct sockaddr *) &peername, &peernamelen) != 0)
 	{
-	  isOurSocket = 0;
+          if (errno != ENOTCONN)
+            isOurSocket = 0;
 	}
       else
 	{
-	  isOurSocket = do_sockaddr_isequal (&__session.ls_sockname,
-					     socknamelen,
-					     &sockname,
-					     socknamelen);
-	  if (isOurSocket)
-	    {
-	      isOurSocket = do_sockaddr_isequal (&__session.ls_peername,
-					         peernamelen,
-					         &peername,
-					         peernamelen);
-	    }
+          isOurSocket = do_sockaddr_isequal (&__session.ls_peername,
+                                              peernamelen,
+                                              &peername,
+                                              peernamelen);
 	}
     }
 #endif /* HAVE_LDAPSSL_CLIENT_INIT */
@@ -876,13 +884,16 @@ do_drop_connection(int sd, int closeSd)
     dummyfd = socket (AF_INET, SOCK_STREAM, 0);
     if (dummyfd > -1 && dummyfd != sd)
       {
-	do_closefd (sd);
+        /* we must let dup2 close sd for us to avoid race conditions
+         * in multithreaded code.
+         */
 	do_dupfd (dummyfd, sd);
 	do_closefd (dummyfd);
       }
 
 #ifdef HAVE_LDAP_LD_FREE
 #if defined(LDAP_API_FEATURE_X_OPENLDAP) && (LDAP_API_VERSION > 2000)
+    /* XXX: when using openssl this will *ALWAYS* close the fd */
     (void) ldap_ld_free (__session.ls_conn, 0, NULL, NULL);
 #else
     (void) ldap_ld_free (__session.ls_conn, 0);
@@ -892,13 +903,18 @@ do_drop_connection(int sd, int closeSd)
 #endif /* HAVE_LDAP_LD_FREE */
 
     /* Do we want our original sd back? */
-    do_closefd (sd);
     if (savedfd > -1)
       {
 	if (closeSd == 0)
 	  do_dupfd (savedfd, sd);
+        else
+          do_closefd (sd);
 	do_closefd (savedfd);
-    }
+      }
+    else
+      {
+        do_closefd (sd);
+      }
   }
 #else /* No sd available */
   {
