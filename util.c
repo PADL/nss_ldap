@@ -776,6 +776,12 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
   ldap_config_t *result;
   struct stat statbuf;
 
+  fp = fopen (NSS_LDAP_PATH_CONF, "r");
+  if (fp == NULL)
+    {
+      return NSS_UNAVAIL;
+    }
+
   if (bytesleft (*buffer, *buflen, ldap_config_t *) < sizeof (ldap_config_t))
     {
       return NSS_TRYAGAIN;
@@ -789,12 +795,6 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
   if (stat != NSS_SUCCESS)
     {
       return NSS_SUCCESS;
-    }
-
-  fp = fopen (NSS_LDAP_PATH_CONF, "r");
-  if (fp == NULL)
-    {
-      return NSS_UNAVAIL;
     }
 
   if (fstat (fileno (fp), &statbuf) == 0)
