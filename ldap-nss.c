@@ -1263,11 +1263,16 @@ do_init (void)
 	{
 	  /* Config was read but no host information specified; try DNS */
 	  stat = _nss_ldap_mergeconfigfromdns (__config, &configbufp, &configbuflen);
+	  if (stat != NSS_SUCCESS)
+	    {
+      	      syslog (LOG_ERR, "nss_ldap: could not determine LDAP server from ldap.conf or DNS");
+	    }
 	}
 
       if (stat != NSS_SUCCESS)
 	{
 	  debug ("<== do_init (failed to read config)");
+	  __config = NULL;
 	  return NSS_UNAVAIL;
 	}
     }
