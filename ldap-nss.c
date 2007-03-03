@@ -1032,7 +1032,7 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
   /* we should be looking for the second instance to find the port number */
   if (p != NULL)
     {
-      p = strchr (p, ':');
+      p = strchr (++p, ':');
     }
 
 #ifdef HAVE_LDAP_INITIALIZE

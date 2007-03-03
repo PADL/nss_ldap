@@ -3,11 +3,14 @@ $Id$
 
 255	Luke Howard <lukeh@padl.com>
 
+	* fix for BUG#303: SSL port behavior change since
+	  version 241
+	* fix for BUG#304: fd leak in do_close_no_unbind
 	* fix for BUG#313: assertion in do_init() when no
 	  host/uri is configured
-	* fix for BUG#304: fd leak in do_close_no_unbind
 	* patch from Adrian Bridgett <adrian@smop.co.uk>
-	  for Debian BUG#375533: Assertion failure in libnss-ldap
+	  for Debian BUG#375533: Assertion failure in
+	  libnss-ldap
 
 254	Luke Howard <lukeh@padl.com>
 
