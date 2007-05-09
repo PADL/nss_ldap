@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+256	Luke Howard <lukeh@padl.com>
+
+	* patch from Tomas Janousek <tjanouse@redhat.com>
+	  to check for pthread_once()
+
 255	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#303: SSL port behavior change since

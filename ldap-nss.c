@@ -1230,12 +1230,14 @@ do_init (void)
   __session.ls_timestamp = 0;
   __session.ls_state = LS_UNINITIALIZED;
 
-#ifdef HAVE_PTHREAD_ATFORK
+#if defined(HAVE_PTHREAD_ONCE) && defined(HAVE_PTHREAD_ATFORK)
   if (pthread_once (&__once, do_atfork_setup) != 0)
     {
       debug ("<== do_init (pthread_once failed)");
       return NSS_UNAVAIL;
     }
+#elif defined(HAVE_PTHREAD_ATFORK) && ( defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H) )
+  __libc_once (__once, do_atfork_setup);
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   /*
    * Only install the pthread_atfork() handlers i

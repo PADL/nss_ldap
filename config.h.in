@@ -180,6 +180,10 @@
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #undef HAVE_LIBPTHREAD
 
+/* Define to 1 if you have the `pthread_nonshared' library
+   (-lpthread_nonshared). */
+#undef HAVE_LIBPTHREAD_NONSHARED
+
 /* Define to 1 if you have the `resolv' library (-lresolv). */
 #undef HAVE_LIBRESOLV
 
@@ -224,6 +228,9 @@
 
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
+
+/* Define to 1 if you have the `pthread_once' function. */
+#undef HAVE_PTHREAD_ONCE
 
 /* Define to 1 if you have the `res_search' function. */
 #undef HAVE_RES_SEARCH
