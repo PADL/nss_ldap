@@ -1120,6 +1120,11 @@ do_init (void)
    * threading library, and we need to compare the current
    * process ID against the saved one to figure out
    * whether we've forked. 
+   *
+   * --
+   *  __pthread_once does not imply __pthread_atfork being non-NULL!
+   *  <tjanouse@redhat.com>
+   * --
    * 
    * Once we know whether we have forked or not, 
    * courtesy of pthread_atfork() or us checking
@@ -1131,7 +1136,7 @@ do_init (void)
    * will wreak all sorts of havoc or inefficiencies,
    * respectively.
    */
-  if (__pthread_once == NULL)
+  if (__pthread_once == NULL || __pthread_atfork == NULL)
     pid = getpid ();
   else
     pid = -1;			/* linked against libpthreads, don't care */
@@ -1172,7 +1177,7 @@ do_init (void)
   else
 #ifndef HAVE_PTHREAD_ATFORK
 #if defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
-  if (__pthread_once == NULL && __pid != pid)
+  if ((__pthread_once == NULL || __pthread_atfork == NULL) && __pid != pid)
 #else
   if (__pid != pid)
 #endif /* HAVE_LIBC_LOCK_H || HAVE_BITS_LIBC_LOCK_H */
@@ -1244,7 +1249,7 @@ do_init (void)
    * we are linked against libpthreads. Otherwise,
    * do close the session when the PID changes.
    */
-  if (__pthread_once == NULL)
+  if (__pthread_once == NULL || __pthread_atfork == NULL)
     __pid = pid;
   else
     __libc_once (__once, do_atfork_setup);
