@@ -1155,11 +1155,11 @@ do_init (void)
 #elif defined(HAVE_LIBC_LOCK_H) || defined(HAVE_BITS_LIBC_LOCK_H)
   syslog (LOG_DEBUG,
 	  "nss_ldap: libpthreads=%s, __session.ls_state=%d, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
-	  (__pthread_once == NULL ? "FALSE" : "TRUE"),
+ 	  ((__pthread_once == NULL || __pthread_atfork == NULL) ? "FALSE" : "TRUE"),
 	  __session.ls_state,
 	  __session.ls_conn,
-	  (__pthread_once == NULL ? __pid : -1),
-	  (__pthread_once == NULL ? pid : -1), __euid, euid);
+ 	  ((__pthread_once == NULL || __pthread_atfork == NULL) ? __pid : -1),
+ 	  ((__pthread_once == NULL || __pthread_atfork == NULL) ? pid : -1), __euid, euid);
 #else
   syslog (LOG_DEBUG,
 	  "nss_ldap: __session.ls_state=%d, __session.ls_conn=%p, __pid=%i, pid=%i, __euid=%i, euid=%i",
