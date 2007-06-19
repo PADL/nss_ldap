@@ -6,6 +6,8 @@ $Id$
 	* patch from Tomas Janousek <tjanouse@redhat.com>
 	  to check for pthread_once(); __pthread_once does
 	  not imply __pthread_atfork being non-NULL
+	* fix for BUG#315: memory corruption/crash in
+	  initgroups parsing
 
 255	Luke Howard <lukeh@padl.com>
 

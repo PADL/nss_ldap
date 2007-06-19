@@ -736,7 +736,7 @@ do_parse_initgroups (LDAPMessage * e,
 	}
       *(lia->size) = LDAP_NSS_NGROUPS;
     }
-  else if (*(lia->start) == *(lia->size))
+  if (*(lia->start) == *(lia->size))
     {
       /* Need a bigger buffer */
       *(lia->groups) = (gid_t *) realloc (*(lia->groups),
