@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+257	Luke Howard <lukeh@padl.com>
+
+	* patch from Ralf Haferkamp <rhafer@suse.de>:
+	  block SIGPIPE in atfork handler
+
 256	Luke Howard <lukeh@padl.com>
 
 	* patch from Tomas Janousek <tjanouse@redhat.com>

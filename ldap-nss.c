@@ -517,7 +517,7 @@ static void
 do_atfork_prepare (void)
 {
   debug ("==> do_atfork_prepare");
-  NSS_LDAP_LOCK (__lock);
+  _nss_ldap_enter ();
   debug ("<== do_atfork_prepare");
 }
 
@@ -525,7 +525,7 @@ static void
 do_atfork_parent (void)
 {
   debug ("==> do_atfork_parent");
-  NSS_LDAP_UNLOCK (__lock);
+  _nss_ldap_leave ();
   debug ("<== do_atfork_parent");
 }
 
@@ -534,7 +534,7 @@ do_atfork_child (void)
 {
   debug ("==> do_atfork_child");
   do_close_no_unbind ();
-  NSS_LDAP_UNLOCK (__lock);
+  _nss_ldap_leave ();
   debug ("<== do_atfork_child");
 }
 
