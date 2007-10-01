@@ -165,7 +165,7 @@ _nss_ldap_mergeconfigfromdns (ldap_config_t * result,
     {
       if (rr->type == T_SRV)
 	{
-	  snprintf (uribuf, sizeof(uribuf), "ldap%s:%s:%d",
+	  snprintf (uribuf, sizeof(uribuf), "ldap%s://%s:%d",
 	    (rr->u.srv->port == LDAPS_PORT) ? "s" : "",
 	    rr->u.srv->target,
 	    rr->u.srv->port);

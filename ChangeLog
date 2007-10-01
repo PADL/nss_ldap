@@ -5,6 +5,8 @@ $Id$
 
 	* fix for BUG#339: replacement code for Kerbeors
 	  SASL operations
+	* fix for BUG#338: nss_ldap constructs LDAP URIs
+	  incorrectly
 	* fix for BUG#337: configure fails to detect resolver
 	  functions
 	* fix for BUG#332: --enable-schema-mapping incorrectly
