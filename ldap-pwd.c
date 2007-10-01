@@ -185,7 +185,7 @@ _nss_ldap_parse_pw (LDAPMessage * e,
         _nss_ldap_assign_attrval (e, AT (shadowLastChange), &tmp, &buffer,
 		    	          &buflen);
       if (stat == NSS_SUCCESS)
-        pw->pw_change += atol(tmp);
+        pw->pw_change += atol(tmp) * (24*60*60);
       else
 	pw->pw_change = 0;
     }
