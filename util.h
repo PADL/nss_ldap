@@ -77,7 +77,16 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_SASL_SECPROPS      "sasl_secprops"
 #ifdef CONFIGURE_KRB5_CCNAME
 #define NSS_LDAP_KEY_KRB5_CCNAME        "krb5_ccname"
+#define NSS_LDAP_KEY_KRB5_ROOTCCNAME    "krb5_rootccname"
+#define NSS_LDAP_KEY_KRB5_AUTORENEW     "krb5_autorenew"
+#define NSS_LDAP_KEY_KRB5_ROOTAUTORENEW "krb5_rootautorenew"
 #endif /* CONFIGURE_KRB5_CCNAME */
+#ifdef CONFIGURE_KRB5_KEYTAB
+#define NSS_LDAP_KEY_KRB5_KEYTAB	"krb5_keytabname"
+#define NSS_LDAP_KEY_KRB5_ROOTKEYTAB    "krb5_rootkeytabname"
+#define NSS_LDAP_KEY_KRB5_USEKEYTAB     "krb5_usekeytab"
+#define NSS_LDAP_KEY_KRB5_ROOTUSEKEYTAB "krb5_rootusekeytab"
+#endif /* CONFIGURE_KRB5_KEYTAB */
 #define NSS_LDAP_KEY_LOGDIR		"logdir"
 #define NSS_LDAP_KEY_DEBUG		"debug"
 #define NSS_LDAP_KEY_PAGESIZE		"pagesize"

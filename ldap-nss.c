@@ -84,6 +84,9 @@ static char rcsId[] =
 #include <gssapi/gssapi.h>
 #include <gssapi/gssapi_krb5.h>
 #endif
+#ifdef CONFIGURE_KRB5_CCNAME
+#include <krb5.h>
+#endif
 
 #include "ldap-nss.h"
 #include "ltf.h"
@@ -1035,6 +1038,9 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
       p = strchr (++p, ':');
     }
 
+# ifdef CONFIGURE_KRB5_KEYTAB
+  (void)do_init_krb5_cache(__config);
+# endif /* CONFIGURE_KRB5_KEYTAB */
 #ifdef HAVE_LDAP_INITIALIZE
   if (p == NULL &&
       ((ldaps && defport != LDAPS_PORT) || (!ldaps && defport != LDAP_PORT)))
@@ -1069,7 +1075,6 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
       defport = atoi (p + 1);
       uri = uribuf;
     }
-
 # ifdef HAVE_LDAP_INIT
   *ld = ldap_init (uri, defport);
 # else
@@ -1461,14 +1466,13 @@ do_open (void)
   assert (__session.ls_config != NULL);
   assert (__session.ls_state != LS_UNINITIALIZED);
 
+  cfg = __session.ls_config;
+
   if (__session.ls_state == LS_CONNECTED_TO_DSA)
     {
       debug ("<== do_open (cached session)");
       return NSS_SUCCESS;
     }
-
-  cfg = __session.ls_config;
-
 #ifdef LDAP_OPT_THREAD_FN_PTRS
   if (_nss_ldap_ltf_thread_init (__session.ls_conn) != NSS_SUCCESS)
     {
@@ -1859,12 +1863,29 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 	    }
 	}
 
+#ifdef CONFIGURE_KRB5_KEYTAB
+      if (do_select_krb5_cache(__config)) { return -1; }
+#else
 # ifdef CONFIGURE_KRB5_CCNAME
       /* Set default Kerberos ticket cache for SASL-GSSAPI */
       /* There are probably race conditions here XXX */
-      if (__config->ldc_krb5_ccname != NULL)
+      ccname = __config->ldc_krb5_ccname;
+      if (ccname != NULL)
 	{
-	  ccname = __config->ldc_krb5_ccname;
+	  char *ccfile = ccname;
+	  /* Check that cache exists and is readable */
+	  if ((strncasecmp(ccfile, "FILE:", sizeof("FILE:") - 1) == 0)
+	      || (strncasecmp(ccfile, "WRFILE:", sizeof("WRFILE:") - 1) == 0))
+	    {
+	      ccfile = strchr(ccfile, ':') + 1;
+	    }
+	  if (access(ccfile, R_OK) != 0)
+	    {
+	      ccname = NULL;
+	    }
+	}
+      if (ccname != NULL)
+	{	    
 # ifdef CONFIGURE_KRB5_CCNAME_ENV
 	  oldccname = getenv ("KRB5CCNAME");
 	  if (oldccname != NULL)
@@ -1889,11 +1910,13 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 # endif
 	}
 # endif	/* CONFIGURE_KRB5_CCNAME */
-
+#endif /* CONFIGURE_KRB5_KEYTAB */
       rc = ldap_sasl_interactive_bind_s (ld, dn, "GSSAPI", NULL, NULL,
 					 LDAP_SASL_QUIET,
 					 do_sasl_interact, (void *) pw);
-      
+#ifdef CONFIGURE_KRB5_KEYTAB
+      if (do_restore_krb5_cache(__config)) { return -1; }
+#else
 # ifdef CONFIGURE_KRB5_CCNAME
       /* Restore default Kerberos ticket cache. */
       if (oldccname != NULL)
@@ -1911,7 +1934,7 @@ do_bind (LDAP * ld, int timelimit, const char *dn, const char *pw,
 # endif
 	}
 # endif	/* CONFIGURE_KRB5_CCNAME */
-
+#endif /* CONFIGURE_KRB5_KEYTAB */
       return rc;
 #endif /* HAVE_LDAP_GSS_BIND */
     }

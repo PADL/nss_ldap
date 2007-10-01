@@ -647,7 +647,16 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_pagesize = LDAP_PAGESIZE;
 #ifdef CONFIGURE_KRB5_CCNAME
   result->ldc_krb5_ccname = NULL;
+  result->ldc_krb5_rootccname = NULL;
+  result->ldc_krb5_autorenew = 0;
+  result->ldc_krb5_rootautorenew = 0;
 #endif /* CONFIGURE_KRB5_CCNAME */
+#ifdef CONFIGURE_KRB5_KEYTAB
+  result->ldc_krb5_keytabname = NULL;
+  result->ldc_krb5_rootkeytabname = NULL;
+  result->ldc_krb5_usekeytab = 0;
+  result->ldc_krb5_rootusekeytab = 0;
+#endif /* CONFIGURE_KRB5_KEYTAB */
   result->ldc_flags = 0;
 #ifdef RFC2307BIS
   result->ldc_flags |= NSS_LDAP_FLAGS_RFC2307BIS;
@@ -1035,7 +1044,37 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  t = &result->ldc_krb5_ccname;
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_ROOTCCNAME))
+	{
+	  t = &result->ldc_krb5_rootccname;
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_AUTORENEW))
+	{
+	  result->ldc_krb5_autorenew = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_ROOTAUTORENEW))
+	{
+	  result->ldc_krb5_rootautorenew = atoi (v);
+	}
 #endif /* CONFIGURE_KRB5_CCNAME */
+#ifdef CONFIGURE_KRB5_KEYTAB
+      else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_KEYTAB))
+	{
+	  t = &result->ldc_krb5_keytabname;
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_ROOTKEYTAB))
+	{
+	  t = &result->ldc_krb5_rootkeytabname;
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_USEKEYTAB))
+	{
+	  result->ldc_krb5_usekeytab = atoi (v);
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_ROOTUSEKEYTAB))
+	{
+	  result->ldc_krb5_rootusekeytab = atoi (v);
+	}
+#endif /* CONFIGURE_KRB5_KEYTAB */
       else if (!strcasecmp (k, "tls_checkpeer"))
 	{
 	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")

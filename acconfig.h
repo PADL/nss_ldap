@@ -28,6 +28,9 @@
 /* define to enable configurable Kerberos credentials cache (gssapi method) */
 #undef CONFIGURE_KRB5_CCNAME_GSSAPI
 
+/* define to enable configurable Kerberos V keytab file name */
+#undef CONFIGURE_KRB5_KEYTAB
+
 /* Define to 1 if you have the <gssapi/gssapi_krb5.h> header file. */
 #undef HAVE_GSSAPI_GSSAPI_KRB5_H
 

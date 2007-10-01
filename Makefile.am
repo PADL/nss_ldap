@@ -22,7 +22,7 @@ nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c 
 	ldap-hosts.c ldap-network.c ldap-proto.c ldap-spwd.c \
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
 	ldap-bp.c ldap-automount.c util.c ltf.c snprintf.c resolve.c \
-	dnsconfig.c irs-nss.c pagectrl.c ldap-sldap.c
+	dnsconfig.c irs-nss.c pagectrl.c ldap-sldap.c ldap-init-krb5-cache.c
 
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 
@@ -31,7 +31,7 @@ NSS_LDAP_PATH_ROOTPASSWD = @NSS_LDAP_PATH_ROOTPASSWD@
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c \
 	util.c ltf.c snprintf.c resolve.c dnsconfig.c \
-	irs-nss.c pagectrl.c aix_authmeth.c
+	irs-nss.c pagectrl.c aix_authmeth.c ldap-init-krb5-cache.c
 
 NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
 DEFS = @DEFS@

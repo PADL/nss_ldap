@@ -363,7 +363,17 @@ struct ldap_config
 #ifdef CONFIGURE_KRB5_CCNAME
   /* krb5 ccache name */
   char *ldc_krb5_ccname;
+  char *ldc_krb5_rootccname;
+  int ldc_krb5_autorenew;
+  int ldc_krb5_rootautorenew;
 #endif /* CONFIGURE_KRB5_CCNAME */
+#ifdef CONFIGURE_KRB5_KEYTAB
+  /* krb5 keytab name */
+  char *ldc_krb5_keytabname;
+  char *ldc_krb5_rootkeytabname;
+  int ldc_krb5_usekeytab;
+  int ldc_krb5_rootusekeytab;
+#endif /* CONFIGURE_KRB5_KEYTAB */
   /*
    * attribute/objectclass maps relative to this config
    */
@@ -900,4 +910,7 @@ int _nss_ldap_test_config_flag (unsigned int flag);
 int _nss_ldap_test_initgroups_ignoreuser (const char *user);
 int _nss_ldap_get_ld_errno (char **m, char **s);
 
+#ifdef CONFIGURE_KRB5_KEYTAB
+int do_init_krb5_cache(ldap_config_t *config);
+#endif /* CONFIGURE_KRB5_KEYTAB */
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */
