@@ -194,6 +194,35 @@ AC_CHECK_FUNCS(sigaction)
 AC_CHECK_FUNCS(sigset)
 AC_CHECK_FUNCS(res_search)
 AC_CHECK_FUNCS(dn_expand)
+AC_CHECK_HEADERS(resolv.h)
+if test x$ac_cv_func_res_search = xno ; then
+	AC_MSG_CHECKING([for res_search again])
+	AC_TRY_LINK([#ifdef HAVE_RESOLV_H
+		     #include <resolv.h>
+		     #endif
+		     #ifdef HAVE_STDLIB_H
+		     #include <stdlib.h>
+		     #endif],
+		    [res_search(NULL,0,0,NULL,0);],
+		    AC_DEFINE(HAVE_RES_SEARCH,1,
+		    	      [Define if you have res_search().])
+		    ac_cv_func_res_search=yes)
+	AC_CHECK_FUNCS(res_search)
+fi
+if test x$ac_cv_func_dn_expand = xno ; then
+	AC_MSG_CHECKING([for dn_expand again])
+	AC_TRY_LINK([#ifdef HAVE_RESOLV_H
+		     #include <resolv.h>
+		     #endif
+		     #ifdef HAVE_STDLIB_H
+		     #include <stdlib.h>
+		     #endif],
+		    [dn_expand(NULL,NULL,NULL,NULL,0);],
+		    AC_DEFINE(HAVE_DN_EXPAND,1,
+		    	      [Define if you have dn_expand().])
+		    ac_cv_func_dn_expand=yes)
+	AC_CHECK_FUNCS(dn_expand)
+fi
 AC_CHECK_FUNCS(snprintf)
 AC_CHECK_FUNCS(gethostbyname)
 AC_CHECK_FUNCS(nsdispatch)

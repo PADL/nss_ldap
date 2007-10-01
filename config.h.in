@@ -241,6 +241,9 @@
 /* Define to 1 if you have the `pthread_once' function. */
 #undef HAVE_PTHREAD_ONCE
 
+/* Define to 1 if you have the <resolv.h> header file. */
+#undef HAVE_RESOLV_H
+
 /* Define to 1 if you have the `res_search' function. */
 #undef HAVE_RES_SEARCH
 
