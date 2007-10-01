@@ -310,7 +310,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP NSS_LDAP_PATH_CONF NSS_LDAP_PATH_ROOTPASSWD GLIBC_TRUE GLIBC_FALSE AIX_TRUE AIX_FALSE HPUX_TRUE HPUX_FALSE USE_NATIVE_LINKER_TRUE USE_NATIVE_LINKER_FALSE nss_ldap_so_LD nss_ldap_so_LDFLAGS NSS_LDAP_LDFLAGS EGREP LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os host host_cpu host_vendor host_os target target_cpu target_vendor target_os INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM mkdir_p AWK SET_MAKE am__leading_dot AMTAR am__tar am__untar CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE CPP NSS_LDAP_PATH_CONF NSS_LDAP_PATH_ROOTPASSWD GCC_TRUE GCC_FALSE GLIBC_TRUE GLIBC_FALSE AIX_TRUE AIX_FALSE HPUX_TRUE HPUX_FALSE USE_NATIVE_LINKER_TRUE USE_NATIVE_LINKER_FALSE nss_ldap_so_LD nss_ldap_so_LDFLAGS NSS_LDAP_LDFLAGS EGREP LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -3409,6 +3409,16 @@ hpux*) if test "$ac_cv_c_compiler_gnu" = yes; then
 linux*) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic -Wl,--version-script,\$(srcdir)/exports.linux" ;;
 *) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic" ;;
 esac
+
+
+
+if test "$GCC" = "yes"; then
+  GCC_TRUE=
+  GCC_FALSE='#'
+else
+  GCC_TRUE='#'
+  GCC_FALSE=
+fi
 
 
 
@@ -10762,6 +10772,80 @@ if test $ac_cv_lib_krb5_main = yes; then
 fi
 
 
+echo "$as_me:$LINENO: checking for sasl_client_init in -lsasl2" >&5
+echo $ECHO_N "checking for sasl_client_init in -lsasl2... $ECHO_C" >&6
+if test "${ac_cv_lib_sasl2_sasl_client_init+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lsasl2  $LIBS"
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+/* Override any gcc2 internal prototype to avoid an error.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+/* We use char because int might match the return type of a gcc2
+   builtin and then its argument prototype would still apply.  */
+char sasl_client_init ();
+int
+main ()
+{
+sasl_client_init ();
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_lib_sasl2_sasl_client_init=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_lib_sasl2_sasl_client_init=no
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_lib_sasl2_sasl_client_init" >&5
+echo "${ECHO_T}$ac_cv_lib_sasl2_sasl_client_init" >&6
+if test $ac_cv_lib_sasl2_sasl_client_init = yes; then
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBSASL2 1
+_ACEOF
+
+  LIBS="-lsasl2 $LIBS"
+
+fi
+
+
 if test -z "$found_ldap_lib" -a \( $with_ldap_lib = auto -o $with_ldap_lib = umich -o $with_ldap_lib = openldap \); then
 
 echo "$as_me:$LINENO: checking for main in -llber" >&5
@@ -12487,6 +12571,13 @@ echo "$as_me: error: conditional \"am__fastdepCC\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
+if test -z "${GCC_TRUE}" && test -z "${GCC_FALSE}"; then
+  { { echo "$as_me:$LINENO: error: conditional \"GCC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&5
+echo "$as_me: error: conditional \"GCC\" was never defined.
+Usually this means the macro was only invoked conditionally." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 if test -z "${GLIBC_TRUE}" && test -z "${GLIBC_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"GLIBC\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -13100,6 +13191,8 @@ s,@am__fastdepCC_FALSE@,$am__fastdepCC_FALSE,;t t
 s,@CPP@,$CPP,;t t
 s,@NSS_LDAP_PATH_CONF@,$NSS_LDAP_PATH_CONF,;t t
 s,@NSS_LDAP_PATH_ROOTPASSWD@,$NSS_LDAP_PATH_ROOTPASSWD,;t t
+s,@GCC_TRUE@,$GCC_TRUE,;t t
+s,@GCC_FALSE@,$GCC_FALSE,;t t
 s,@GLIBC_TRUE@,$GLIBC_TRUE,;t t
 s,@GLIBC_FALSE@,$GLIBC_FALSE,;t t
 s,@AIX_TRUE@,$AIX_TRUE,;t t

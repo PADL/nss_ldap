@@ -123,6 +123,8 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
+GCC_FALSE = @GCC_FALSE@
+GCC_TRUE = @GCC_TRUE@
 GLIBC_FALSE = @GLIBC_FALSE@
 GLIBC_TRUE = @GLIBC_TRUE@
 HPUX_FALSE = @HPUX_FALSE@
@@ -216,10 +218,12 @@ NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c 
 	util.c ltf.c snprintf.c resolve.c dnsconfig.c \
 	irs-nss.c pagectrl.c aix_authmeth.c ldap-init-krb5-cache.c
 
+@GCC_FALSE@MULTI_OS_DIRECTORY = .
 #INCLUDES = -I$(top_builddir) -I$(srcdir)
-@GLIBC_TRUE@LIBC_VERS = `ls /lib/libc-*.so | tail -n 1 |sed -e 's/\/lib\/libc-\(.*\)\.so/\1/'`
+@GCC_TRUE@MULTI_OS_DIRECTORY = $(shell $(CC) $(CFLAGS) -print-multi-os-directory)
+@GLIBC_TRUE@LIBC_VERS = $(shell ls /lib/$(MULTI_OS_DIRECTORY)/libc-*.so | tail -n 1 | sed -e 's|.*libc-\(.*\)\.so|\1|')
 @GLIBC_TRUE@NSS_LDAP_LIBC_VERSIONED = libnss_ldap-$(LIBC_VERS).so
-@GLIBC_TRUE@NSS_VERS = $(shell ls /lib/libnss_files.so.? | tail -n 1 | sed -e 's/\/lib\/libnss_files\.so\.\(.*\)/\1/')
+@GLIBC_TRUE@NSS_VERS = $(shell ls /lib/$(MULTI_OS_DIRECTORY)/libnss_files.so.? | tail -n 1 | sed -e 's|.*libnss_files\.so\.\(.*\)|\1|')
 @GLIBC_TRUE@NSS_LDAP_NSS_VERSIONED = libnss_ldap.so.$(NSS_VERS)
 @USE_NATIVE_LINKER_TRUE@NATIVE_LINK = $(nss_ldap_so_LD) $(AM_LDFLAGS) -o $@ 
 @USE_NATIVE_LINKER_FALSE@GNU_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@

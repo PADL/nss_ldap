@@ -97,6 +97,7 @@ linux*) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic -Wl,--version-script,\$(srcdi
 *) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic" ;;
 esac
 
+AM_CONDITIONAL(GCC, test "$GCC" = "yes")
 AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu")
 AM_CONDITIONAL(AIX, test "$TARGET_OS" = AIX)
 AM_CONDITIONAL(HPUX, test "$TARGET_OS" = HPUX)
@@ -263,7 +264,7 @@ AC_CHECK_LIB(com_err, main,[LIBS="-lcom_err $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(k5crypto, main,[LIBS="-lk5crypto $LIBS"],,$LIBS)
 AC_CHECK_LIB(krb5, main,[LIBS="-lkrb5 $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(krb4, main,[LIBS="-lkrb4 $LIBS"],,$LIBS)
-dnl AC_CHECK_LIB(sasl, sasl_client_init,[LIBS="-lsasl $LIBS"],,$LIBS)
+AC_CHECK_LIB(sasl2, sasl_client_init)
 
 if test -z "$found_ldap_lib" -a \( $with_ldap_lib = auto -o $with_ldap_lib = umich -o $with_ldap_lib = openldap \); then
   AC_CHECK_LIB(lber, main)
