@@ -273,7 +273,7 @@ _nss_ldap_init_filters ()
 
 static void init_pwd_attributes (const char ***pwd_attrs);
 static void init_sp_attributes (const char ***sp_attrs);
-static void init_grp_attributes (const char ***grp_attrs);
+static void init_grp_attributes (const char ***grp_attrs, int skipmembers);
 static void init_hosts_attributes (const char ***hosts_attrs);
 static void init_services_attributes (const char ***services_attrs);
 static void init_network_attributes (const char ***network_attrs);
@@ -289,11 +289,11 @@ static void init_automount_attributes (const char ***automount_attrs);
  * attribute table initialization routines
  */
 void
-_nss_ldap_init_attributes (const char ***attrtab)
+_nss_ldap_init_attributes (const char ***attrtab, int skipmembers)
 {
   init_pwd_attributes (&attrtab[LM_PASSWD]);
   init_sp_attributes (&attrtab[LM_SHADOW]);
-  init_grp_attributes (&attrtab[LM_GROUP]);
+  init_grp_attributes (&attrtab[LM_GROUP], skipmembers);
   init_hosts_attributes (&attrtab[LM_HOSTS]);
   init_services_attributes (&attrtab[LM_SERVICES]);
   init_network_attributes (&attrtab[LM_NETWORKS]);
@@ -357,7 +357,7 @@ init_sp_attributes (const char ***sp_attrs)
 }
 
 static void
-init_grp_attributes (const char ***grp_attrs)
+init_grp_attributes (const char ***grp_attrs, int skipmembers)
 {
   int i = 0;
   static const char *__grp_attrs[ATTRTAB_SIZE + 1];
@@ -366,9 +366,12 @@ init_grp_attributes (const char ***grp_attrs)
 
   (*grp_attrs)[i++] = (char *) ATM (LM_GROUP, cn);
   (*grp_attrs)[i++] = (char *) ATM (LM_GROUP, userPassword);
-  (*grp_attrs)[i++] = (char *) AT (memberUid);
-  if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
-    (*grp_attrs)[i++] = (char *) AT (uniqueMember);
+  if (!skipmembers)
+    {
+      (*grp_attrs)[i++] = (char *) AT (memberUid);
+      if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
+        (*grp_attrs)[i++] = (char *) AT (uniqueMember);
+    }
   (*grp_attrs)[i++] = (char *) ATM (LM_GROUP, gidNumber);
   (*grp_attrs)[i] = NULL;
 }

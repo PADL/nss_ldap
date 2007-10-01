@@ -445,6 +445,14 @@ implementation of
 to return NSS_STATUS_NOTFOUND if called with a listed users as
 its argument.
 .TP
+.B nss_getgrent_skipmembers <yes|no>
+Specifies whether or not to populate the members list in
+the group structure for group lookups. If very large groups
+are present, enabling this option will greatly increase
+perforance, at the cost of some lost functionality. You should
+verify no local applications rely on this information before
+enabling this on a production system.
+.TP
 .B nss_srv_domain <domain>
 This option determines the DNS domain used for performing SRV
 lookups.

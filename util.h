@@ -92,6 +92,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_PAGESIZE		"pagesize"
 #define NSS_LDAP_KEY_INITGROUPS		"nss_initgroups"
 #define NSS_LDAP_KEY_INITGROUPS_IGNOREUSERS	"nss_initgroups_ignoreusers"
+#define NSS_LDAP_KEY_GETGRENT_SKIPMEMBERS	"nss_getgrent_skipmembers"
 
 /* more reconnect policy fine-tuning */
 #define NSS_LDAP_KEY_RECONNECT_TRIES		"nss_reconnect_tries"
@@ -119,6 +120,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_FLAGS_PAGED_RESULTS		0x0002
 #define NSS_LDAP_FLAGS_RFC2307BIS		0x0004
 #define NSS_LDAP_FLAGS_CONNECT_POLICY_ONESHOT	0x0008
+#define NSS_LDAP_FLAGS_GETGRENT_SKIPMEMBERS	0x0010
 
 /*
  * There are a number of means of obtaining configuration information.

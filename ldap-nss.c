@@ -1291,7 +1291,7 @@ do_init (void)
 
   cfg = __config;
 
-  _nss_ldap_init_attributes (cfg->ldc_attrtab);
+  _nss_ldap_init_attributes (cfg->ldc_attrtab, (cfg->ldc_flags & NSS_LDAP_FLAGS_GETGRENT_SKIPMEMBERS) != 0);
   _nss_ldap_init_filters ();
 
 #ifdef HAVE_LDAP_SET_OPTION

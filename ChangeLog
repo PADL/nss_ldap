@@ -5,6 +5,10 @@ $Id$
 
 	* fix for BUG#339: replacement code for Kerbeors
 	  SASL operations
+	* fix for BUG#293: add nss_getgrent_skipmembers
+	  parameter to ldap.conf, if enabled will not request
+	  member attributes for group lookups, greatly increasing
+	  performance for large groups
 	* fix for BUG#272: nss_ldap's install target doesn't
 	  always create the right solink for x86_64 glibc
 	* fix for BUG#284: an error occurs during bulding with

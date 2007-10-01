@@ -1176,6 +1176,19 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	      break;
 	    }
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_GETGRENT_SKIPMEMBERS))
+	{
+	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
+	      || !strcasecmp (v, "true"))
+	    {
+	      result->ldc_flags |= NSS_LDAP_FLAGS_GETGRENT_SKIPMEMBERS;
+	    }
+	  else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
+		   || !strcasecmp (v, "false"))
+	    {
+	      result->ldc_flags &= ~(NSS_LDAP_FLAGS_GETGRENT_SKIPMEMBERS);
+	    }
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_CONNECT_POLICY))
         {
 	  if (!strcasecmp (v, "oneshot"))

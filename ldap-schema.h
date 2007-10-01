@@ -30,7 +30,7 @@
  * function to initialize global lookup filters.
  */
 void _nss_ldap_init_filters ();
-void _nss_ldap_init_attributes (const char ***attrtab);
+void _nss_ldap_init_attributes (const char ***attrtab, int skipmembers);
 
 /**
  * make filters formerly declared in ldap-*.h globally available.
