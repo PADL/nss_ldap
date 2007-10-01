@@ -3,6 +3,8 @@ $Id$
 
 258	Luke Howard <lukeh@padl.com>
 
+	* fix for BUG#343: nss_srv_domain should take a domain
+	  not a record
 	* fix for BUG#339: replacement code for Kerbeors
 	  SASL operations
 	* fix for BUG#338: nss_ldap constructs LDAP URIs

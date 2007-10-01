@@ -146,13 +146,9 @@ _nss_ldap_mergeconfigfromdns (ldap_config_t * result,
       return NSS_UNAVAIL;
     }
 
-  if (result->ldc_srv_domain != NULL)
-    pDomain = result->ldc_srv_domain;
-  else
-    {
-      snprintf (domain, sizeof (domain), "_ldap._tcp.%s.", _res.defdname);
-      pDomain = domain;
-    }
+  snprintf (domain, sizeof (domain), "_ldap._tcp.%s.", 
+                  result->ldc_srv_domain ? result->ldc_srv_domain : _res.defdname);
+  pDomain = domain;
 
   r = dns_lookup (pDomain, "srv");
   if (r == NULL)
