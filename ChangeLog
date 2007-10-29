@@ -6,6 +6,8 @@ $Id$
 	* fix for BUG#348: fix memory leak
 	* fix for BUG#349: nss_ldap crashes after START_TLS timeout
 	  (assertion failure in libldap)
+	* fix for BUG#350: assertion failure in ldap_result (called
+	  from do_result()) 
 
 258	Luke Howard <lukeh@padl.com>
 

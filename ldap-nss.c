@@ -2425,6 +2425,12 @@ do_result (ent_context_t * ctx, int all)
 
   debug ("==> do_result");
 
+  if (__session.ls_state != LS_CONNECTED_TO_DSA)
+    {
+      debug ("<== do_result");
+      return NSS_UNAVAIL;
+    }
+
   if (__session.ls_config->ldc_timelimit == LDAP_NO_LIMIT)
     {
       tvp = NULL;
