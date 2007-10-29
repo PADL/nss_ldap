@@ -2034,12 +2034,6 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
       return;
     }
 
-  if (ctx->ec_res != NULL)
-    {
-      ldap_msgfree (ctx->ec_res);
-      ctx->ec_res = NULL;
-    }
-
   /*
    * Abandon the search if there were more results to fetch.
    */
@@ -2047,6 +2041,12 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
     {
       ldap_abandon (__session.ls_conn, ctx->ec_msgid);
       ctx->ec_msgid = -1;
+    }
+
+  if (ctx->ec_res != NULL)
+    {
+      ldap_msgfree (ctx->ec_res);
+      ctx->ec_res = NULL;
     }
 
   if (ctx->ec_cookie != NULL)
@@ -2469,7 +2469,11 @@ do_result (ent_context_t * ctx, int all)
 	      /* NB: this frees ctx->ec_res */
 	      LDAPControl **resultControls = NULL;
 
-	      ctx->ec_cookie = NULL;
+	      if (ctx->ec_cookie != NULL)
+		{
+		  ber_bvfree(ctx->ec_cookie);
+		  ctx->ec_cookie = NULL;
+		}
 
 	      parserc =
 		ldap_parse_result (__session.ls_conn, ctx->ec_res, &rc, NULL,

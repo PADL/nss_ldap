@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+259	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#348: fix memory leak
+
 258	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#343: nss_srv_domain should take a domain
