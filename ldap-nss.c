@@ -2007,6 +2007,7 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
       if (ctx->ec_res != NULL)
 	{
 	  ldap_msgfree (ctx->ec_res);
+          ctx->ec_res = NULL;
 	}
       if (ctx->ec_cookie != NULL)
 	{

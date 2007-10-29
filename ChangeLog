@@ -8,6 +8,7 @@ $Id$
 	  (assertion failure in libldap)
 	* fix for BUG#350: assertion failure in ldap_result (called
 	  from do_result()) 
+	* fix for BUG#351: double ldap_msgfree()
 
 258	Luke Howard <lukeh@padl.com>
 
