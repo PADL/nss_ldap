@@ -1392,25 +1392,36 @@ do_start_tls (ldap_session_t * session)
     }
 
   rc = ldap_result (session->ls_conn, msgid, 1, timeout, &res);
-  if (rc == -1)
+  if (rc > 0)
     {
-#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
-      if (ldap_get_option (session->ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
-	{
-	  rc = LDAP_UNAVAILABLE;
-	}
-#else
-      rc = ld->ld_errno;
-#endif /* LDAP_OPT_ERROR_NUMBER */
-
-      debug ("<== do_start_tls (ldap_start_tls failed: %s)", ldap_err2string (rc));
-      return rc;
+      rc = ldap_result2error (session->ls_conn, res, 1);
+      if (rc != LDAP_SUCCESS)
+        {
+          debug ("<== do_start_tls (ldap_result2error failed: %s)", ldap_err2string (rc));
+          return rc;
+        }
     }
-
-  rc = ldap_result2error (session->ls_conn, res, 1);
-  if (rc != LDAP_SUCCESS)
+  else 
     {
-      debug ("<== do_start_tls (ldap_result2error failed: %s)", ldap_err2string (rc));
+      if (rc == -1)
+        {
+#if defined(HAVE_LDAP_GET_OPTION) && defined(LDAP_OPT_ERROR_NUMBER)
+          if (ldap_get_option (session->ls_conn, LDAP_OPT_ERROR_NUMBER, &rc) != LDAP_SUCCESS)
+    	    {
+    	      rc = LDAP_UNAVAILABLE;
+    	    }
+#else
+          rc = session->ls_conn->ld_errno;
+#endif /* LDAP_OPT_ERROR_NUMBER */
+        }
+      else if (rc == 0) /* took too long */
+        {
+          ldap_abandon (session->ls_conn, msgid);
+          rc = LDAP_TIMEOUT;
+        } 
+
+      syslog (LOG_INFO, "nss_ldap: ldap_start_tls failed: %s", ldap_err2string (rc));
+      debug ("<== do_start_tls (ldap_start_tls failed: %s)", ldap_err2string (rc));
       return rc;
     }
 
