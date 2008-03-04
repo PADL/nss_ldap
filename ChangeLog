@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+260	Luke Howard <lukeh@padl.com>
+
+	* patch from Ralf Haferkamp <rhafer@suse.de>:
+	  only set errno for NSS_TRYAGAIN
+
 259	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#348: fix memory leak

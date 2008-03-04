@@ -2788,26 +2788,17 @@ do_search (const char *base, int scope,
 static void
 do_map_errno (NSS_STATUS status, int *errnop)
 {
-  switch (status)
+  if (status == NSS_TRYAGAIN)
     {
-    case NSS_TRYAGAIN:
 #ifdef HAVE_NSSWITCH_H
       errno = ERANGE;
-      *errnop = 1;		/* this is really
-				   erange */
+      *errnop = 1; /* this is really erange */
 #else
-      *errnop = ERANGE;
-#endif /* HAVE_NSSWITCH_H */
-      break;
-
-#ifndef HAVE_NSSWITCH_H
-    case NSS_NOTFOUND:
-      *errnop = ENOENT;
-      break;
-#endif /* !HAVE_NSSWITCH_H */
-
-    case NSS_SUCCESS:
-    default:
+      *errnop = errno = ERANGE;
+#endif
+    }
+  else
+    {
       *errnop = 0;
     }
 }
