@@ -1,7 +1,12 @@
 $Id$
 ===============================================================
 
-261	Luke Howard <lukeh@pad.com>
+262	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#370: nss_ldap fails to work on Solaris
+	  without that patch applied
+
+261	Luke Howard <lukeh@padl.com>
 
 	* fix for Debian BUG#486778: ldap.conf template is
 	  missing a comment in the first line
