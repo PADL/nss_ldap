@@ -82,7 +82,6 @@ static ns_ldap_return_code __ns_ldap_unmapObjectClasses (ns_ldap_cookie_t *
 							 char
 							 ***pOrigClasses);
 
-#ifdef DEBUG
 static const char *
 NS_LDAP_ERR2STR (ns_ldap_return_code err)
 {
@@ -92,7 +91,6 @@ NS_LDAP_ERR2STR (ns_ldap_return_code err)
 
   return str;
 }
-#endif /* DEBUG */
 
 static void **
 __ns_ldap_makeStringParam (const char *string)
