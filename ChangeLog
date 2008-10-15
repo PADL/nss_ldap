@@ -6,6 +6,9 @@ $Id$
 	* fix for BUG#374: nss_ldap returns success from
 	  setnetgrent() when the requested netgroup doesn't
 	  exist
+	* fix for BUG#376: getXXent() only returns NULL once
+	  before implicitly calling setXXent(), whereas other
+	  backends continue to return NULL (Red Hat BUG#466794)
 
 262	Luke Howard <lukeh@padl.com>
 

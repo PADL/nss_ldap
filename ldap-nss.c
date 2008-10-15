@@ -2023,6 +2023,7 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
   ctx->ec_res = NULL;
   ctx->ec_msgid = -1;
   ctx->ec_sd = NULL;
+  ctx->ec_eof = 0;
 
   LS_INIT (ctx->ec_state);
 
@@ -2068,6 +2069,7 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
     }
 
   ctx->ec_sd = NULL;
+  ctx->ec_eof = 0;
 
   LS_INIT (ctx->ec_state);
 
@@ -3374,7 +3376,12 @@ _nss_ldap_getent_ex (ldap_args_t * args,
 
   debug ("==> _nss_ldap_getent_ex");
 
-  if (*ctx == NULL || (*ctx)->ec_msgid < 0)
+  if (*ctx != NULL && (*ctx)->ec_eof != 0)
+    {
+      debug ("<== _nss_ldap_getent_ex (EOF)");
+      return NSS_NOTFOUND;
+    }
+  else if (*ctx == NULL || (*ctx)->ec_msgid < 0)
     {
       /*
        * implicitly call setent() if this is the first time
@@ -3430,10 +3437,18 @@ next:
     }
 #endif /* HAVE_LDAP_SEARCH_EXT */
 
-  if (stat == NSS_NOTFOUND && (*ctx)->ec_sd != NULL)
+  if (stat == NSS_NOTFOUND)
     {
-      (*ctx)->ec_msgid = -1;
-      goto next;
+      if ((*ctx)->ec_sd != NULL)
+	{
+	  (*ctx)->ec_msgid = -1;
+	  goto next;
+	}
+      else
+	{
+	  /* Mark notional end of file */
+	  (*ctx)->ec_eof = 1;
+	}
     }
 
   debug ("<== _nss_ldap_getent_ex");
@@ -3460,6 +3475,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
 
   ctx.ec_msgid = -1;
   ctx.ec_cookie = NULL;
+  ctx.ec_eof = 0;
 
   stat = _nss_ldap_search_s (args, filterprot, sel, NULL, 1, &ctx.ec_res);
   if (stat != NSS_SUCCESS)

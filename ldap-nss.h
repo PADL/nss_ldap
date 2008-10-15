@@ -543,6 +543,7 @@ struct ldap_state
 {
   int ls_type;
   int ls_retry;
+  int ls_eof;
 #define LS_TYPE_KEY	(0)
 #define LS_TYPE_INDEX	(1)
   union
@@ -572,6 +573,7 @@ struct ent_context
   LDAPMessage *ec_res;		/* result chain */
   ldap_service_search_descriptor_t *ec_sd;	/* current sd */
   struct berval *ec_cookie;     /* cookie for paged searches */
+  int ec_eof;			/* reached notional end of file */
 };
 
 typedef struct ent_context ent_context_t;
