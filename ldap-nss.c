@@ -3118,12 +3118,18 @@ _nss_ldap_search_s (const ldap_args_t * args,
       dynamicFilterBuf = NULL;
     }
 
+  if (stat == NSS_SUCCESS &&
+      ldap_count_entries (__session.ls_conn, *res) == 0) /* No results */
+    {
+      stat = NSS_NOTFOUND;
+      ldap_msgfree (*res);
+      *res = NULL;
+    }
+
   /* If no entry was returned, try the next search descriptor. */
   if (sd != NULL && sd->lsd_next != NULL)
     {
-      if (stat == NSS_NOTFOUND ||
-	  (stat == NSS_SUCCESS &&
-	   ldap_first_entry (__session.ls_conn, *res) == NULL))
+      if (stat == NSS_NOTFOUND)
 	{
 	  sd = sd->lsd_next;
 	  goto next;

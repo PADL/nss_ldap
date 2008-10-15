@@ -1,6 +1,12 @@
 $Id$
 ===============================================================
 
+263	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#374: nss_ldap returns success from
+	  setnetgrent() when the requested netgroup doesn't
+	  exist
+
 262	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#370: nss_ldap fails to work on Solaris

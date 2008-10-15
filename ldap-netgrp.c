@@ -372,6 +372,9 @@ _nss_ldap_setnetgrent (char *group, struct __netgrent *result)
 			 _nss_ldap_filt_getnetgrent, LM_NETGROUP,
 			 _nss_ldap_load_netgr);
 
+  if (stat == NSS_NOTFOUND)
+    return stat;
+
   LOOKUP_SETENT (_ngbe);
 }
 
