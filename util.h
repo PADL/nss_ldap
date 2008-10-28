@@ -152,7 +152,7 @@ NSS_STATUS _nss_ldap_escape_string (const char *str,
 			(herr) = 0;		\
 			break;			\
 		case NSS_TRYAGAIN:		\
-			(herr) = TRY_AGAIN;	\
+			(herr) = NETDB_INTERNAL;\
 			break;			\
 		case NSS_NOTFOUND:		\
 			(herr) = HOST_NOT_FOUND;\

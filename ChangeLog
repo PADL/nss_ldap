@@ -1,6 +1,11 @@
 $Id$
 ===============================================================
 
+264	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#378: MAP_H_ERRNO() should map NSS_TRYAGAIN
+	  to NETDB_INTERNAL not TRY_AGAIN
+
 263	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#374: nss_ldap returns success from
