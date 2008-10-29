@@ -1270,16 +1270,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	}
     }
 
-  if (result->ldc_port == 0)
+  if (result->ldc_port == 0 &&
+      result->ldc_ssl_on == SSL_LDAPS)
     {
-      if (result->ldc_ssl_on == SSL_LDAPS)
-	{
-	  result->ldc_port = LDAPS_PORT;
-	}
-      else
-	{
-	  result->ldc_port = LDAP_PORT;
-	}
+      result->ldc_port = LDAPS_PORT;
     }
 
   if (result->ldc_uris[0] == NULL)

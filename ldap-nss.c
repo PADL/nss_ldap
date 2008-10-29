@@ -1042,7 +1042,7 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
   (void)do_init_krb5_cache(__config);
 # endif /* CONFIGURE_KRB5_KEYTAB */
 #ifdef HAVE_LDAP_INITIALIZE
-  if (p == NULL &&
+  if (p == NULL && defport != 0 &&
       ((ldaps && defport != LDAPS_PORT) || (!ldaps && defport != LDAP_PORT)))
     {
       /* No port specified in URI and non-default port specified */
@@ -1586,9 +1586,13 @@ do_open (void)
 #endif /* HAVE_LDAP_START_TLS_S || HAVE_LDAP_START_TLS */
 
     /*
-     * If SSL is desired, then enable it.
+     * If SSL is desired, either by the "ssl" option or if this
+     * is a "ldaps" URI, then enable it.
      */
-  if (cfg->ldc_ssl_on == SSL_LDAPS)
+  if (cfg->ldc_ssl_on == SSL_LDAPS ||
+      strncasecmp(cfg->ldc_uris[__session.ls_current_uri],
+                  "ldaps://", sizeof ("ldaps://") - 1) == 0
+     )
     {
 #if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS)
       int tls = LDAP_OPT_X_TLS_HARD;

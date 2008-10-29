@@ -5,6 +5,8 @@ $Id$
 
 	* fix for BUG#378: MAP_H_ERRNO() should map NSS_TRYAGAIN
 	  to NETDB_INTERNAL not TRY_AGAIN
+	* fix for BUG#379: ldaps:// URIs only work if "ssl on"
+	  is set
 
 263	Luke Howard <lukeh@padl.com>
 
