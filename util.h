@@ -224,4 +224,16 @@ _nss_ldap_add_uri (ldap_config_t *result, const char *uri,
 ldap_map_selector_t
 _nss_ldap_str2selector (const char *key);
 
+NSS_STATUS
+_nss_ldap_parse_long (const char *text, long default_value, long *value);
+NSS_STATUS
+_nss_ldap_parse_ulong (const char *text, unsigned long default_value,
+                       unsigned long *value);
+NSS_STATUS
+_nss_ldap_parse_int (const char *text, int default_value, int *value);
+NSS_STATUS
+_nss_ldap_parse_uid_t (const char *text, uid_t default_value, uid_t *value);
+NSS_STATUS
+_nss_ldap_parse_gid_t (const char *text, gid_t default_value, gid_t *value);
+
 #endif /* _LDAP_NSS_LDAP_UTIL_H */

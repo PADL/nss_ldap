@@ -1628,3 +1628,148 @@ NSS_STATUS _nss_ldap_validateconfig (ldap_config_t *config)
   return NSS_SUCCESS;
 }
 
+/*
+ * Parse a text string into a long integer. If we fail for
+ * any reason, store the passed-in default value and return
+ * an error.
+ */
+NSS_STATUS
+_nss_ldap_parse_long (const char *text, long default_value, long *value)
+{
+  char *p;
+  long l;
+
+  if (text == NULL || strlen(text) == 0)
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  l = strtol(text, &p, 10);
+  if (p == NULL || p == text || *p != '\0')
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  *value = l;
+
+  return NSS_SUCCESS;
+}
+
+NSS_STATUS
+_nss_ldap_parse_ulong (const char *text, unsigned long default_value,
+                       unsigned long *value)
+{
+  char *p;
+  unsigned long l;
+
+  if (text == NULL || strlen(text) == 0)
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  l = strtoul(text, &p, 10);
+  if (p == NULL || p == text || *p != '\0')
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  *value = l;
+
+  return NSS_SUCCESS;
+}
+
+NSS_STATUS
+_nss_ldap_parse_int (const char *text, int default_value, int *value)
+{
+  char *p;
+  long l;
+
+  if (text == NULL || strlen(text) == 0)
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  l = strtol(text, &p, 10);
+  if (p == NULL || p == text || *p != '\0')
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  if (l < INT_MIN || l > INT_MAX)
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  *value = l;
+
+  return NSS_SUCCESS;
+}
+
+NSS_STATUS
+_nss_ldap_parse_uid_t (const char *text, uid_t default_value, uid_t *value)
+{
+  char *p;
+  unsigned long l;
+
+  if (text == NULL || strlen(text) == 0)
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  l = strtoul(text, &p, 10);
+  if (p == NULL || p == text || *p != '\0')
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+#if SIZEOF_UID_T == SIZEOF_UNSIGNED_INT
+  if (l > UINT_MAX)
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+#endif
+
+  *value = l;
+
+  return NSS_SUCCESS;
+}
+
+NSS_STATUS
+_nss_ldap_parse_gid_t (const char *text, gid_t default_value, gid_t *value)
+{
+  char *p;
+  unsigned long l;
+
+  if (text == NULL || strlen(text) == 0)
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+
+  l = strtoul(text, &p, 10);
+  if (p == NULL || p == text || *p != '\0')
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+#if SIZEOF_GID_T == SIZEOF_UNSIGNED_INT
+  if (l > UINT_MAX)
+    {
+      *value = default_value;
+      return NSS_NOTFOUND;
+    }
+#endif
+
+  *value = l;
+
+  return NSS_SUCCESS;
+}

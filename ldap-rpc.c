@@ -95,7 +95,10 @@ _nss_ldap_parse_rpc (LDAPMessage * e,
   if (stat != NSS_SUCCESS)
     return stat;
 
-  rpc->r_number = atol (number);
+  stat =
+    _nss_ldap_parse_int (number, 0, &rpc->r_number);
+  if (stat != NSS_SUCCESS)
+    return stat;
 
   stat =
     _nss_ldap_assign_attrvals (e, ATM (LM_RPC, cn), rpc->r_name,

@@ -3827,22 +3827,36 @@ _nss_ldap_oc_check (LDAPMessage * e, const char *oc)
 }
 
 #ifdef HAVE_SHADOW_H
-int
-_nss_ldap_shadow_date (const char *val)
+NSS_STATUS
+_nss_ldap_shadow_date (const char *val, long default_date, long *value)
 {
   int date;
+  char *p;
+  long long ll;
 
+  if (val == NULL || strlen(val) == 0)
+    {
+      *value = default_date;
+      return NSS_NOTFOUND;
+    }
+  ll = strtoll(val, &p, 10);
+  if (p == NULL || p == val || *p != '\0')
+    {
+      *value = default_date;
+      return NSS_NOTFOUND;
+    }
   if (__config->ldc_shadow_type == LS_AD_SHADOW)
     {
-      date = atoll (val) / 864000000000LL - 134774LL;
+      date = ll / 864000000000LL - 134774LL;
       date = (date > 99999) ? 99999 : date;
     }
   else
     {
-      date = atol (val);
+      date = ll;
     }
 
-  return date;
+  *value = date;
+  return NSS_SUCCESS;
 }
 
 void

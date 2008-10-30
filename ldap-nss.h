@@ -865,11 +865,11 @@ NSS_STATUS _nss_ldap_assign_userpassword (LDAPMessage * e,	/* IN */
 
 NSS_STATUS _nss_ldap_oc_check (LDAPMessage * e, const char *oc);
 
+NSS_STATUS _nss_ldap_shadow_date(const char *val, long default_date,
+				 long *value);
 #if defined(HAVE_SHADOW_H)
-int _nss_ldap_shadow_date(const char *val);
 void _nss_ldap_shadow_handle_flag(struct spwd *sp);
 #else
-#define _nss_ldap_shadow_date(_v)		atol((_v))
 #define _nss_ldap_shadow_handle_flag(_sp)	do { /* nothing */ } while (0)
 #endif /* HAVE_SHADOW_H */
 

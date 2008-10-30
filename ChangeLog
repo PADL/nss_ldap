@@ -7,6 +7,8 @@ $Id$
 	  to NETDB_INTERNAL not TRY_AGAIN
 	* fix for BUG#379: ldaps:// URIs only work if "ssl on"
 	  is set
+	* fix for BUG#248: nss_ldap exposes malformed entries
+	  to the system
 
 263	Luke Howard <lukeh@padl.com>
 

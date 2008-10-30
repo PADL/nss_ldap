@@ -381,7 +381,12 @@ uess_get_pgrp (LDAPMessage * e, ldap_uess_args_t * lua, int i)
 
   LA_INIT (a);
   LA_TYPE (a) = LA_TYPE_NUMBER;
-  LA_NUMBER (a) = atol(vals[0]);
+  stat = _nss_ldap_parse_long (vals[0], 0, &(LA_NUMBER(a)));
+  if (stat != NSS_SUCCESS)
+    {
+      ldap_value_free (vals);
+      return stat;
+    }
 
   attrs[0] = ATM (LM_GROUP, cn);
   attrs[1] = NULL;
@@ -543,9 +548,11 @@ uess_get_int (LDAPMessage * e, ldap_uess_args_t * lua, int i)
       return NSS_NOTFOUND;
     }
 
-  av->attr_un.au_int = atoi (vals[0]);
+  stat = _nss_ldap_parse_int(vals[0], 0, &av->attr_un.au_int);
+
   ldap_value_free (vals);
-  return NSS_SUCCESS;
+
+  return stat;
 }
 
 /*
@@ -869,12 +876,12 @@ uess_get_pwuid(const char *user, uid_t *uid)
       return NSS_NOTFOUND;
     }
 
-  *uid = atoi(vals[0]);
+  stat = _nss_ldap_parse_uid_t (vals[0], 0, uid);
 
   ldap_value_free (vals);
   ldap_msgfree (res);
 
-  return NSS_SUCCESS;
+  return stat;
 }
 
 /*

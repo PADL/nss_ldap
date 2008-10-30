@@ -77,7 +77,8 @@ _nss_ldap_parse_serv (LDAPMessage * e,
 		      void *result, char *buffer, size_t buflen)
 {
   struct servent *service = (struct servent *) result;
-  char *port;
+  char *portstr;
+  int port;
   NSS_STATUS stat = NSS_SUCCESS;
 
   /* this is complicated and ugly, because some git (me) specified that service
@@ -175,14 +176,20 @@ _nss_ldap_parse_serv (LDAPMessage * e,
     }
 
   stat =
-    _nss_ldap_assign_attrval (e, AT (ipServicePort), &port, &buffer,
+    _nss_ldap_assign_attrval (e, AT (ipServicePort), &portstr, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
     {
       return stat;
     }
 
-  service->s_port = htons (atoi (port));
+  stat = _nss_ldap_parse_int (portstr, 0, &port);
+  if (stat != NSS_SUCCESS)
+    {
+      return stat;
+    }
+
+  service->s_port = htons(port);
 
   return NSS_SUCCESS;
 }

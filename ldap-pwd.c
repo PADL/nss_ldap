@@ -122,7 +122,15 @@ _nss_ldap_parse_pw (LDAPMessage * e,
     _nss_ldap_assign_attrval (e, AT (uidNumber), &uid, &tmp, &tmplen);
   if (stat != NSS_SUCCESS)
     return stat;
-  pw->pw_uid = (*uid == '\0') ? UID_NOBODY : (uid_t) atol (uid);
+  if (*uid == '\0')
+    pw->pw_uid = UID_NOBODY;
+  else
+    {
+      stat =
+        _nss_ldap_parse_uid_t (uid, UID_NOBODY, &pw->pw_uid);
+      if (stat != NSS_SUCCESS)
+        return stat;
+    }
 
   tmp = tmpbuf;
   tmplen = sizeof (tmpbuf);
@@ -131,7 +139,15 @@ _nss_ldap_parse_pw (LDAPMessage * e,
                               &tmplen);
   if (stat != NSS_SUCCESS)
     return stat;
-  pw->pw_gid = (*gid == '\0') ? GID_NOBODY : (gid_t) atol (gid);
+  if (*gid == '\0')
+    pw->pw_gid = GID_NOBODY;
+  else
+    {
+      stat =
+        _nss_ldap_parse_gid_t (gid, GID_NOBODY, &pw->pw_gid);
+      if (stat != NSS_SUCCESS)
+        return stat;
+    }
 
   stat =
     _nss_ldap_assign_attrval (e, AT (gecos), &pw->pw_gecos, &buffer,
@@ -176,16 +192,29 @@ _nss_ldap_parse_pw (LDAPMessage * e,
  tmp = NULL;
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowMax), &tmp, &buffer, &buflen);
-  pw->pw_change = (stat == NSS_SUCCESS) ? atol(tmp) * (24*60*60) : 0;
+  if (stat == NSS_SUCCESS)
+    _nss_ldap_parse_long (tmp, 0, &pw->pw_change);
+  else
+    pw->pw_change = 0;
 
   if (pw->pw_change > 0)
     {
+      long sp_change;
       tmp = NULL;
       stat =
         _nss_ldap_assign_attrval (e, AT (shadowLastChange), &tmp, &buffer,
 		    	          &buflen);
       if (stat == NSS_SUCCESS)
-        pw->pw_change += atol(tmp) * (24*60*60);
+	{
+	  stat = _nss_ldap_parse_long(tmp, 0, &sp_change);
+	  if (stat == NSS_SUCCESS)
+	    {
+	      pw->pw_change += sp_change;
+	      pw->pw_change *= (24 * 60 * 60);
+	    }
+	  else
+	    pw->pw_change = 0;
+	}
       else
 	pw->pw_change = 0;
     }
@@ -195,7 +224,13 @@ _nss_ldap_parse_pw (LDAPMessage * e,
   tmp = NULL;
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowExpire), &tmp, &buffer, &buflen);
-  pw->pw_expire = (stat == NSS_SUCCESS) ? atol(tmp) * (24*60*60) : 0;
+  if (stat == NSS_SUCCESS)
+    {
+      _nss_ldap_parse_long (tmp, 0, &pw->pw_expire);
+      pw->pw_expire *= (24 * 60 * 60);
+    }
+  else
+    pw->pw_expire = 0;
 #endif /* HAVE_PASSWD_PW_EXPIRE */
 
   return NSS_SUCCESS;

@@ -2,7 +2,7 @@ AC_INIT(ldap-nss.c)
 AC_CANONICAL_SYSTEM
 AC_PREFIX_DEFAULT()
 
-AM_INIT_AUTOMAKE(nss_ldap, 260)
+AM_INIT_AUTOMAKE(nss_ldap, 264)
 AM_CONFIG_HEADER(config.h)
 
 AC_PROG_CC
@@ -277,6 +277,11 @@ dnl check which ldap library we have
 if test -z "$with_ldap_lib"; then
   with_ldap_lib=auto
 fi
+
+AC_CHECK_SIZEOF([unsigned int])
+AC_CHECK_SIZEOF([unsigned long])
+AC_CHECK_SIZEOF([uid_t],,[#include <pwd.h>])
+AC_CHECK_SIZEOF([gid_t],,[#include <grp.h>])
 
 AC_CHECK_LIB(dl, dlopen,[LIBS="-ldl $LIBS"],,$LIBS)
 dnl AC_CHECK_LIB(db, main,[LIBS="-ldb $LIBS"],,$LIBS)

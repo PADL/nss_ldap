@@ -51,6 +51,7 @@ static char rcsId[] =
 
 #include "ldap-nss.h"
 #include "ldap-spwd.h"
+#include "util.h"
 
 #ifdef HAVE_PORT_AFTER_H
 #include <port_after.h>
@@ -86,34 +87,55 @@ _nss_ldap_parse_sp (LDAPMessage * e,
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowLastChange), &tmp, &buffer,
 			      &buflen);
-  sp->sp_lstchg = (stat == NSS_SUCCESS) ? _nss_ldap_shadow_date (tmp) : -1;
+  if (stat == NSS_SUCCESS)
+    _nss_ldap_shadow_date (tmp, -1, &sp->sp_lstchg);
+  else
+    sp->sp_lstchg = -1;
 
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowMax), &tmp, &buffer, &buflen);
-  sp->sp_max = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
+  if (stat == NSS_SUCCESS)
+    _nss_ldap_parse_long (tmp, -1, &sp->sp_max);
+  else
+    sp->sp_max = -1;
 
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowMin), &tmp, &buffer, &buflen);
-  sp->sp_min = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
+  if (stat == NSS_SUCCESS)
+    _nss_ldap_parse_long (tmp, -1, &sp->sp_min);
+  else
+    sp->sp_min = -1;
 
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowWarning), &tmp, &buffer,
 			      &buflen);
-  sp->sp_warn = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
+  if (stat == NSS_SUCCESS)
+    _nss_ldap_parse_long (tmp, -1, &sp->sp_warn);
+  else
+    sp->sp_warn = -1;
 
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowInactive), &tmp, &buffer,
 			      &buflen);
-  sp->sp_inact = (stat == NSS_SUCCESS) ? atol (tmp) : -1;
+  if (stat == NSS_SUCCESS)
+    _nss_ldap_parse_long (tmp, -1, &sp->sp_inact);
+  else
+    sp->sp_inact = -1;
 
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowExpire), &tmp, &buffer,
 			      &buflen);
-  sp->sp_expire = (stat == NSS_SUCCESS) ? _nss_ldap_shadow_date (tmp) : -1;
+  if (stat == NSS_SUCCESS)
+    _nss_ldap_shadow_date (tmp, -1, &sp->sp_expire);
+  else
+    sp->sp_expire = -1;
 
   stat =
     _nss_ldap_assign_attrval (e, AT (shadowFlag), &tmp, &buffer, &buflen);
-  sp->sp_flag = (stat == NSS_SUCCESS) ? atol (tmp) : 0;
+  if (stat == NSS_SUCCESS)
+    _nss_ldap_parse_ulong (tmp, -1, &sp->sp_flag);
+  else
+    sp->sp_flag = -1;
 
   _nss_ldap_shadow_handle_flag(sp);
 
