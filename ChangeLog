@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+265	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#388: bad LDAP query for ether lookups
+
 264	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#378: MAP_H_ERRNO() should map NSS_TRYAGAIN

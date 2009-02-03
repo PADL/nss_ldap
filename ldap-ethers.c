@@ -207,12 +207,28 @@ NSS_STATUS
 _nss_ldap_getntohost_r (struct ether_addr * addr, struct ether * result,
 			char *buffer, size_t buflen, int *errnop)
 {
-/* The correct ether_ntoa call would have a struct ether instead of whatever
-   result->e_addr is */
+  ldap_args_t a;
+  char fullmac[18];
 
-  LOOKUP_NAME (ether_ntoa ((struct ether_addr *) (&result->e_addr)), result,
-	       buffer, buflen, errnop, _nss_ldap_filt_getntohost, LM_ETHERS,
-	       _nss_ldap_parse_ether, LDAP_NSS_BUFLEN_DEFAULT);
+  if (buflen < LDAP_NSS_BUFLEN_DEFAULT)
+    {
+      *errnop = ERANGE;
+      return NSS_TRYAGAIN;
+    }
+
+  snprintf(fullmac, sizeof(fullmac), "%02x:%02x:%02x:%02x:%02x:%02x",
+	   addr->ether_addr_octet[0], addr->ether_addr_octet[1],
+	   addr->ether_addr_octet[2], addr->ether_addr_octet[3],
+	   addr->ether_addr_octet[4], addr->ether_addr_octet[5]);
+
+  LA_INIT(a);
+  LA_STRING(a) = ether_ntoa(addr);
+  LA_TYPE(a) = LA_TYPE_STRING_AND_STRING;
+  LA_STRING2(a) = fullmac;
+
+  return _nss_ldap_getbyname(&a, result, buffer, buflen, errnop,
+			     _nss_ldap_filt_getntohost, LM_ETHERS,
+			     _nss_ldap_parse_ether);
 }
 #endif
 

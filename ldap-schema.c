@@ -154,8 +154,8 @@ _nss_ldap_init_filters ()
 	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ieee802Device),
             ATM (LM_ETHERS, cn), "%s");
   snprintf (_nss_ldap_filt_getntohost, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ieee802Device), AT (macAddress),
-	    "%s");
+	    "(&(%s=%s)(|(%s=%s)(%s=%s)))", AT (objectClass), OC (ieee802Device),
+	    AT (macAddress), "%s", AT (macAddress), "%s");
   snprintf (_nss_ldap_filt_getetherent, LDAP_FILT_MAXSIZ, "(%s=%s)",
 	    AT (objectClass), OC (ieee802Device));
 
