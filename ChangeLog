@@ -4,6 +4,9 @@ $Id$
 265	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#388: bad LDAP query for ether lookups
+	* fix for BUG#392: call do_close() if ldap_result()
+	  or ldap_parse_result() fails (before returning
+	  NSS_UNAVAIL)
 
 264	Luke Howard <lukeh@padl.com>
 

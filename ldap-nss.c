@@ -2475,6 +2475,7 @@ do_result (ent_context_t * ctx, int all)
 #endif /* LDAP_OPT_ERROR_NUMBER */
 	  syslog (LOG_ERR, "nss_ldap: could not get LDAP result - %s",
 		  ldap_err2string (rc));
+	  do_close();
 	  stat = NSS_UNAVAIL;
 	  break;
 	case LDAP_RES_SEARCH_ENTRY:
@@ -2505,11 +2506,12 @@ do_result (ent_context_t * ctx, int all)
 	      if (parserc != LDAP_SUCCESS
 		  && parserc != LDAP_MORE_RESULTS_TO_RETURN)
 		{
-		  stat = NSS_UNAVAIL;
 		  ldap_abandon (__session.ls_conn, ctx->ec_msgid);
 		  syslog (LOG_ERR,
 			  "nss_ldap: could not get LDAP result - %s",
 			  ldap_err2string (rc));
+		  do_close();
+		  stat = NSS_UNAVAIL;
 		}
 	      else if (resultControls != NULL)
 		{
