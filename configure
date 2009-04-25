@@ -1708,7 +1708,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=nss_ldap
- VERSION=264
+ VERSION=265
 
 
 cat >>confdefs.h <<_ACEOF
