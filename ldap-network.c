@@ -44,6 +44,9 @@ static char rcsId[] =
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <arpa/nameser.h>
+#ifdef HAVE_ARPA_NAMESER_COMPAT_H
+#include <arpa/nameser_compat.h>
+#endif
 #include <sys/socket.h>
 #include <errno.h>
 

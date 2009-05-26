@@ -498,7 +498,7 @@ do_getnetgrent (nss_ldap_netgr_backend_t *be,
       char **vals, **p;
       ldap_state_t *state = &ctx->ec_state;
       struct __netgrent __netgrent;
-      LDAPMessage *e;
+      LDAPMessage *e = NULL;
 
       if (state->ls_retry == 0 && state->ls_info.ls_index == -1)
 	{

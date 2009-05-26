@@ -43,6 +43,9 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
+#ifdef HAVE_ARPA_NAMESER_COMPAT_H
+#include <arpa/nameser_compat.h>
+#endif
 #include <string.h>
 #ifdef HAVE_STRINGS_H
 #include <strings.h>

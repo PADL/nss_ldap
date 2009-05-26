@@ -1,5 +1,3 @@
-
-
 /*
  * Copyright (c) 1995, 1996, 1997 Kungliga Tekniska Hvgskolan
  * (Royal Institute of Technology, Stockholm, Sweden).
@@ -46,7 +44,12 @@
 #define __RESOLVE_H__
 
 /* when would this *not* be defined? */
-#define HAVE_ARPA_NAMESER_H
+#include "config.h"
+
+#include <arpa/nameser.h>
+#ifdef HAVE_ARPA_NAMESER_COMPAT_H
+#include <arpa/nameser_compat.h>
+#endif
 
 /* We use these, but they are not always present in <arpa/nameser.h> */
 
@@ -100,11 +103,6 @@ struct resource_record
   u;
   struct resource_record *next;
 };
-
-
-#ifndef HAVE_ARPA_NAMESER_H	/* XXX */
-typedef int HEADER;		/* will never be used */
-#endif
 
 struct dns_reply
 {
