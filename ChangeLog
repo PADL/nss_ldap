@@ -9,6 +9,7 @@ $Id$
 	* fix for BUG#392: call do_close() if ldap_result()
 	  or ldap_parse_result() fails (before returning
 	  NSS_UNAVAIL)
+	* fix for BUG#401: FreeBSD thread library check
 
 264	Luke Howard <lukeh@padl.com>
 

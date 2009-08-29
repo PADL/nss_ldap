@@ -67,11 +67,11 @@
 #include "ldap-schema.h"
 
 #ifndef NSS_BUFSIZ
-#define NSS_BUFSIZ              1024
+#define NSS_BUFSIZ	      1024
 #endif
 
 #ifndef NSS_BUFLEN_GROUP
-#define NSS_BUFLEN_GROUP        LDAP_NSS_BUFLEN_GROUP
+#define NSS_BUFLEN_GROUP	LDAP_NSS_BUFLEN_GROUP
 #endif
 
 #ifndef NSS_BUFLEN_PASSWD
@@ -79,11 +79,11 @@
 #endif
 
 #ifndef HAVE_NSSWITCH_H
-#define NSS_BUFLEN_HOSTS        (NSS_BUFSIZ + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
+#define NSS_BUFLEN_HOSTS	(NSS_BUFSIZ + (MAXALIASES + MAXALIASES + 2) * sizeof (char *))
 #define NSS_BUFLEN_NETGROUP     (MAXHOSTNAMELEN * 2 + LOGNAME_MAX + 3)
 #define NSS_BUFLEN_NETWORKS     NSS_BUFSIZ
 #define NSS_BUFLEN_PROTOCOLS    NSS_BUFSIZ
-#define NSS_BUFLEN_RPC          NSS_BUFSIZ
+#define NSS_BUFLEN_RPC	  NSS_BUFSIZ
 #define NSS_BUFLEN_SERVICES     NSS_BUFSIZ
 #define NSS_BUFLEN_SHADOW       NSS_BUFSIZ
 #define NSS_BUFLEN_ETHERS       NSS_BUFSIZ
@@ -96,7 +96,7 @@
  * unacceptable, in which case you may wish to adjust
  * the constants below.
  */
-#define LDAP_NSS_TRIES           5	/* number of sleeping reconnect attempts */
+#define LDAP_NSS_TRIES	   5	/* number of sleeping reconnect attempts */
 #define LDAP_NSS_SLEEPTIME       4	/* seconds to sleep; doubled until max */
 #define LDAP_NSS_MAXSLEEPTIME    64	/* maximum seconds to sleep */
 #define LDAP_NSS_MAXCONNTRIES    2	/* reconnect attempts before sleeping */
@@ -185,7 +185,7 @@ debug (char *fmt, ...)
 #define INLINE
 #endif /* __GNUC__ */
 
-#define align(ptr, blen, TYPE)              do { \
+#define align(ptr, blen, TYPE)	      do { \
 					char *qtr = ptr; \
 					ptr += alignof(TYPE) - 1; \
 					ptr -= ((ptr - (char *)NULL) % alignof(TYPE)); \
@@ -194,7 +194,7 @@ debug (char *fmt, ...)
 
 /* worst case */
 #define bytesleft(ptr, blen, TYPE)    ( (blen < alignof(TYPE)) ? \
-                                            0 : (blen - alignof(TYPE) + 1))
+					    0 : (blen - alignof(TYPE) + 1))
 
 /* selectors for different maps */
 enum ldap_map_selector
@@ -666,7 +666,7 @@ extern int __multi_threaded;
 /*
  * Portable locking macro.
  */
-#if defined(HAVE_THREAD_H) && !defined(_AIX)
+#if defined(HAVE_THREAD_H) && !defined(_AIX) && !defined(__FreeBSD__)
 #define NSS_LDAP_LOCK(m)		mutex_lock(&m)
 #define NSS_LDAP_UNLOCK(m)		mutex_unlock(&m)
 #define NSS_LDAP_DEFINE_LOCK(m)		static mutex_t m = DEFAULTMUTEX
@@ -689,6 +689,16 @@ extern int __multi_threaded;
 							pthread_mutex_unlock(&m); \
 					} while (0)
 # define NSS_LDAP_DEFINE_LOCK(m)		static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
+#elif defined(__FreeBSD__)
+# define NSS_LDAP_LOCK(m)	      do { \
+					       if (__isthreaded) \
+						       pthread_mutex_lock(&m); \
+				       } while (0)
+# define NSS_LDAP_UNLOCK(m)	    do { \
+					       if (__isthreaded) \
+						       pthread_mutex_unlock(&m); \
+				       } while (0)
+# define NSS_LDAP_DEFINE_LOCK(m)	       static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER
 #else
 # define NSS_LDAP_LOCK(m)		pthread_mutex_lock(&m)
 # define NSS_LDAP_UNLOCK(m)		pthread_mutex_unlock(&m)
@@ -811,7 +821,7 @@ NSS_STATUS _nss_ldap_getent_ex (ldap_args_t * args, /* IN */
 				int *errnop,	/* OUT */
 				const char *filterprot,	/* IN */
 				ldap_map_selector_t sel,	/* IN */
-			        const char **user_attrs, /* IN */
+				const char **user_attrs, /* IN */
 				parser_t parser /* IN */ );
 
 /*
@@ -874,13 +884,13 @@ void _nss_ldap_shadow_handle_flag(struct spwd *sp);
 #endif /* HAVE_SHADOW_H */
 
 NSS_STATUS _nss_ldap_map_put (ldap_config_t * config,
-                              ldap_map_selector_t sel,
-                              ldap_map_type_t map,
+			      ldap_map_selector_t sel,
+			      ldap_map_type_t map,
 			      const char *key, const char *value);
 
 NSS_STATUS _nss_ldap_map_get (ldap_config_t * config,
-                              ldap_map_selector_t sel,
-                              ldap_map_type_t map,
+			      ldap_map_selector_t sel,
+			      ldap_map_type_t map,
 			      const char *key, const char **value);
 
 const char *_nss_ldap_map_at (ldap_map_selector_t sel, const char *pChar2);
