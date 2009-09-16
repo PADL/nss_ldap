@@ -3,6 +3,7 @@ $Id$
 
 265	Luke Howard <lukeh@padl.com>
 
+	* fix for BUG#403: add AM_MAINTAINER_MODE
 	* fix for BUG#388: bad LDAP query for ether lookups
 	* fix for BUG#391: clarify bind timelimit defaults
 	  in ldap.conf
