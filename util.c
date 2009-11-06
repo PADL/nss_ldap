@@ -793,6 +793,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 
   if (bytesleft (*buffer, *buflen, ldap_config_t *) < sizeof (ldap_config_t))
     {
+      fclose (fp);
       return NSS_TRYAGAIN;
     }
   align (*buffer, *buflen, ldap_config_t *);
@@ -803,6 +804,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
   stat = _nss_ldap_init_config (result);
   if (stat != NSS_SUCCESS)
     {
+      fclose (fp);
       return NSS_SUCCESS;
     }
 
@@ -1253,6 +1255,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 
 	      if (*buflen < (size_t) (len + 1))
 		{
+		  fclose (fp);
 		  return NSS_UNAVAIL;
 		}
 

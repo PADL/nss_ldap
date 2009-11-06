@@ -13,6 +13,8 @@ $Id$
 	* fix for BUG#401: FreeBSD thread library check
 	* fix for BUG#409: deallocate context in
 	  _nss_ldap_ent_context_release() to avoid bad usage
+	* fix for BUG#410: don't leak file descriptors in
+	  _nss_ldap_readconfig
 
 264	Luke Howard <lukeh@padl.com>
 
