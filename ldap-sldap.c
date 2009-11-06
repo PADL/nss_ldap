@@ -887,8 +887,7 @@ __ns_ldap_freeCookie (ns_ldap_cookie_t ** pCookie)
 	ldap_value_free (cookie->attribute);
       if (cookie->state != NULL)
 	{
-	  _nss_ldap_ent_context_release (cookie->state);
-	  free (cookie->state);
+	  _nss_ldap_ent_context_release (&(cookie->state));
 	}
       if (cookie->mapped_filter != NULL)
 	free (cookie->mapped_filter);

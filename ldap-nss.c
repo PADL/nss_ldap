@@ -481,9 +481,7 @@ _nss_ldap_default_destr (nss_backend_t * be, void *args)
   if ((((nss_ldap_backend_t *) be)->state) != NULL)
     {
       _nss_ldap_enter ();
-      _nss_ldap_ent_context_release ((((nss_ldap_backend_t *) be)->state));
-      free ((((nss_ldap_backend_t *) be)->state));
-      ((nss_ldap_backend_t *) be)->state = NULL;
+      _nss_ldap_ent_context_release (&(((nss_ldap_backend_t *) be)->state));
       _nss_ldap_leave ();
     }
 
@@ -2036,21 +2034,9 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
   return ctx;
 }
 
-/*
- * Clears a given context; we require the caller
- * to acquire the lock.
- */
-void
-_nss_ldap_ent_context_release (ent_context_t * ctx)
+static void
+do_context_release (ent_context_t * ctx, int free_context)
 {
-  debug ("==> _nss_ldap_ent_context_release");
-
-  if (ctx == NULL)
-    {
-      debug ("<== _nss_ldap_ent_context_release");
-      return;
-    }
-
   /*
    * Abandon the search if there were more results to fetch.
    */
@@ -2081,6 +2067,28 @@ _nss_ldap_ent_context_release (ent_context_t * ctx)
     {
       do_close ();
     }
+
+  if (free_context)
+    free (ctx);
+}
+
+/*
+ * Clears a given context; we require the caller
+ * to acquire the lock.
+ */
+void
+_nss_ldap_ent_context_release (ent_context_t ** ctx)
+{
+  debug ("==> _nss_ldap_ent_context_release");
+
+  if (ctx == NULL || *ctx == NULL)
+    {
+      debug ("<== _nss_ldap_ent_context_release");
+      return;
+    }
+
+  do_context_release (*ctx, 1);
+  *ctx = NULL;
 
   debug ("<== _nss_ldap_ent_context_release");
 
@@ -3503,7 +3511,7 @@ _nss_ldap_getbyname (ldap_args_t * args,
 
   stat = do_parse_s (&ctx, result, buffer, buflen, errnop, parser);
 
-  _nss_ldap_ent_context_release (&ctx);
+  do_context_release (&ctx, 0);
 
   /* moved unlock here to avoid race condition bug #49 */
   _nss_ldap_leave ();

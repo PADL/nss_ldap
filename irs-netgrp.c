@@ -94,7 +94,7 @@ ng_rewind (struct irs_ng *this, const char *group)
     _nss_ldap_namelist_push (&ngbe->known_groups, group);
 
   if (stat != NSS_SUCCESS)
-    _nss_ldap_ent_context_release (ngbe->state);
+    _nss_ldap_ent_context_release (&(ngbe->state));
 
   _nss_ldap_leave ();
 }
@@ -141,8 +141,7 @@ ng_close (struct irs_ng *this)
       if (ngbe->state != NULL)
 	{
 	  _nss_ldap_enter ();
-	  _nss_ldap_ent_context_release (ngbe->state);
-	  free (ngbe->state);
+	  _nss_ldap_ent_context_release (&(ngbe->state));
 	  _nss_ldap_leave ();
 	}
 

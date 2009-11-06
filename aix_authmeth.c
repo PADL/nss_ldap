@@ -795,8 +795,7 @@ _nss_ldap_getentry (char *key, char *table, char *attributes[],
 			      (ap == NULL) ? namingAttributes : NULL,
 			      do_parse_uess_getentry);
 
-  _nss_ldap_ent_context_release (ctx);
-  free (ctx);
+  _nss_ldap_ent_context_release (&ctx);
   _nss_ldap_leave ();
 
   /*

@@ -768,7 +768,7 @@ ent_context_t *_nss_ldap_ent_context_init_locked (ent_context_t **);
 /*
  * _nss_ldap_ent_context_release() is used to manually free a context 
  */
-void _nss_ldap_ent_context_release (ent_context_t *);
+void _nss_ldap_ent_context_release (ent_context_t **);
 
 /*
  * these are helper functions for ldap-grp.c only on Solaris

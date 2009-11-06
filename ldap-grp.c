@@ -288,7 +288,8 @@ do_parse_group_members (LDAPMessage * e,
 			int *pGroupMembersBufferIsMalloced,
 			char **buffer, size_t * buflen,
 			int *depth,
-			struct name_list **pKnownGroups) /* traversed groups */
+			struct name_list **pKnownGroups,
+			int itemsLeft) /* traversed groups */
 {
   NSS_STATUS stat = NSS_SUCCESS;
   char **dnValues = NULL;
@@ -425,6 +426,7 @@ do_parse_group_members (LDAPMessage * e,
 		    {
 		      /* just a normal user which we have flattened */
 		      i++;
+			  itemsLeft--;
 		      continue;
 		    }
 
@@ -435,7 +437,7 @@ do_parse_group_members (LDAPMessage * e,
 					    pGroupMembersBufferSize,
 					    pGroupMembersBufferIsMalloced,
 					    buffer, buflen, depth,
-					    pKnownGroups);
+					    pKnownGroups, itemsLeft);
 		  (*depth)--;
 
 		  if (parseStat == NSS_TRYAGAIN)
@@ -614,7 +616,7 @@ _nss_ldap_parse_gr (LDAPMessage * e,
 				     &groupMembersCount,
 				     &groupMembersBufferSize,
 				     &groupMembersBufferIsMalloced, &buffer,
-				     &buflen, &depth, &knownGroups);
+				     &buflen, &depth, &knownGroups, 0);
       if (stat != NSS_SUCCESS)
 	{
 	  if (groupMembersBufferIsMalloced)
@@ -872,8 +874,7 @@ ng_chase (const char *dn, ldap_initgroups_args_t * lia)
       stat = _nss_ldap_namelist_push (&lia->known_groups, dn);
     }
 
-  _nss_ldap_ent_context_release (ctx);
-  free (ctx);
+  _nss_ldap_ent_context_release (&ctx);
 
   return stat;
 }
@@ -958,8 +959,7 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
 
   free (filteredMembersOf);
 
-  _nss_ldap_ent_context_release (ctx);
-  free (ctx);
+  _nss_ldap_ent_context_release (&ctx);
 
   return stat;
 }
@@ -1151,8 +1151,7 @@ char *_nss_ldap_getgrset (char *user)
     }
 
   _nss_ldap_namelist_destroy (&lia.known_groups);
-  _nss_ldap_ent_context_release (ctx);
-  free (ctx);
+  _nss_ldap_ent_context_release (&ctx);
   _nss_ldap_leave ();
 
   /*

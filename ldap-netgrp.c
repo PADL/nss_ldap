@@ -705,8 +705,7 @@ do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
 
   li_args->lia_depth--;
 
-  _nss_ldap_ent_context_release (ctx);
-  free (ctx);
+  _nss_ldap_ent_context_release (&ctx);
 
   debug ("<== do_innetgr_nested status=%d netgr_status=%d",
 	 stat, li_args->lia_netgr_status);
@@ -746,8 +745,7 @@ do_innetgr (ldap_innetgr_args_t * li_args,
 			      &li_args->lia_erange, NULL, LM_NETGROUP,
 			      NULL, do_parse_innetgr);
 
-  _nss_ldap_ent_context_release (ctx);
-  free (ctx);
+  _nss_ldap_ent_context_release (&ctx);
 
   debug ("<== do_innetgr status=%d netgr_status=%d",
 	 stat, li_args->lia_netgr_status);

@@ -146,8 +146,7 @@ _nss_ldap_am_context_free(ldap_automount_context_t **pContext)
 
   if (context->lac_state != NULL)
     {
-      _nss_ldap_ent_context_release (context->lac_state);
-      free (context->lac_state);
+      _nss_ldap_ent_context_release (&(context->lac_state));
     }
 
   memset (context, 0, sizeof (*context));
@@ -231,8 +230,7 @@ _nss_ldap_am_context_init(const char *mapname, ldap_automount_context_t **pConte
 
   if (key != NULL)
     {
-      _nss_ldap_ent_context_release (key);
-      free (key);
+      _nss_ldap_ent_context_release (&key);
     }
 
   if (context->lac_dn_count == 0)

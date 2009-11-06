@@ -11,6 +11,8 @@ $Id$
 	  or ldap_parse_result() fails (before returning
 	  NSS_UNAVAIL)
 	* fix for BUG#401: FreeBSD thread library check
+	* fix for BUG#409: deallocate context in
+	  _nss_ldap_ent_context_release() to avoid bad usage
 
 264	Luke Howard <lukeh@padl.com>
 
