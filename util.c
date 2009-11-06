@@ -676,10 +676,35 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
 	{
 	  result->ldc_maps[i][j] = _nss_ldap_db_open ();
 	  if (result->ldc_maps[i][j] == NULL)
-	    return NSS_UNAVAIL;
+	    {
+	      _nss_ldap_destroy_config (&result);
+	      return NSS_UNAVAIL;
+	    }
 	}
     }
 
+  return NSS_SUCCESS;
+}
+
+NSS_STATUS
+_nss_ldap_destroy_config (ldap_config_t ** result)
+{
+  int i, j;
+  ldap_config_t * r;
+
+  if (result == NULL || *result == NULL)
+    return NSS_UNAVAIL;
+
+  r = *result;
+
+  for (i = 0; i <= LM_NONE; i++)
+    for (j = 0; j <= MAP_MAX; j++)
+      if (r->ldc_maps[i][j] != NULL)
+        {
+           _nss_ldap_db_close(&(r->ldc_maps[i][j]));
+        }
+
+  *result = NULL;
   return NSS_SUCCESS;
 }
 
@@ -1192,7 +1217,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	    }
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_CONNECT_POLICY))
-        {
+	{
 	  if (!strcasecmp (v, "oneshot"))
 	    {
 	      result->ldc_flags |= NSS_LDAP_FLAGS_CONNECT_POLICY_ONESHOT;
@@ -1408,11 +1433,14 @@ _nss_ldap_db_open (void)
 }
 
 void
-_nss_ldap_db_close (void *db)
+_nss_ldap_db_close (void **db)
 {
   struct ldap_dictionary *dict;
 
-  dict = (struct ldap_dictionary *) db;
+  if (! db || ! *db)
+    return;
+
+  dict = (struct ldap_dictionary *) *db;
 
   while (dict != NULL)
     {
@@ -1422,6 +1450,8 @@ _nss_ldap_db_close (void *db)
 
       dict = next;
     }
+
+  *db = NULL;
 }
 
 NSS_STATUS

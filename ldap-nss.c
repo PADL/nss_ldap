@@ -1282,7 +1282,7 @@ do_init (void)
       if (stat != NSS_SUCCESS)
 	{
 	  debug ("<== do_init (failed to read config)");
-	  __config = NULL;
+	  _nss_ldap_destroy_config (&__config);
 	  return NSS_UNAVAIL;
 	}
     }

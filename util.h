@@ -136,6 +136,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
  */
 
 NSS_STATUS _nss_ldap_init_config (ldap_config_t *);
+NSS_STATUS _nss_ldap_destroy_config (ldap_config_t **);
 NSS_STATUS _nss_ldap_readconfig (ldap_config_t ** result, char **buffer, size_t *buflen);
 NSS_STATUS _nss_ldap_validateconfig (ldap_config_t *config);
 
@@ -200,7 +201,7 @@ typedef struct ldap_datum ldap_datum_t;
 #define NSS_LDAP_DB_NORMALIZE_CASE	0x1
 
 void *_nss_ldap_db_open (void);
-void _nss_ldap_db_close (void *db);
+void _nss_ldap_db_close (void **db);
 NSS_STATUS _nss_ldap_db_put (void *db,
 			     unsigned flags,
 			     const ldap_datum_t * key,

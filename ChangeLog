@@ -1,6 +1,10 @@
 $Id$
 ===============================================================
 
+266	Luke Howard <lukeh@padl.com>
+
+	* fix for BUG#411: memory leak in do_init()
+
 265	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#132: add versioning information to binary
