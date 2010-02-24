@@ -1658,8 +1658,8 @@ do_check_init (ldap_session_t *session)
    * If the connection is still there (ie. do_close() wasn't
    * called) then we can return the cached connection.
    */
-  if ((session->ls_state == LS_CONNECTED_TO_DSA)
-      || (session->ls_state == LS_INITIALIZED))
+  if (session->ls_state == LS_CONNECTED_TO_DSA
+      || session->ls_state == LS_INITIALIZED)
     {
       debug ("<== do_check_init: cached session");
       return NSS_SUCCESS;
@@ -1671,7 +1671,7 @@ do_check_init (ldap_session_t *session)
     }
 }
 
-void
+static void
 do_init_mechs (ldap_session_t *session)
 {
   ldap_session_mechs_t mechs = session->ls_mechs;
@@ -1738,7 +1738,8 @@ do_init (ldap_session_t *session)
   session->ls_timestamp = 0;
   session->ls_state = LS_UNINITIALIZED;
 
-  if ((stat = do_thread_once ()) != NSS_SUCCESS)
+  stat = do_thread_once ();
+  if (stat != NSS_SUCCESS)
     {
       return stat;
     }
@@ -2068,7 +2069,8 @@ do_open (ldap_session_t *session)
   if (geteuid () == 0)
     {
       who = ((cfg->ldc_rootbinddn != NULL) ? cfg->ldc_rootbinddn : cfg->ldc_binddn);
-      if ((with_sasl = ((cfg->ldc_rootsaslid) ? cfg->ldc_rootusesasl : cfg->ldc_usesasl)) != 0)
+      with_sasl = (cfg->ldc_rootsaslid) ? cfg->ldc_rootusesasl : cfg->ldc_usesasl;
+      if (with_sasl != 0)
 	{
 	  cred = ((cfg->ldc_rootsaslid) ? cfg->ldc_rootsaslid : cfg->ldc_saslid);
 	}
@@ -2080,7 +2082,8 @@ do_open (ldap_session_t *session)
   else
     {
       who = cfg->ldc_binddn;
-      if ((with_sasl = cfg->ldc_usesasl) != 0)
+      with_sasl = cfg->ldc_usesasl;
+      if (with_sasl)
 	{
 	  cred = cfg->ldc_saslid;
 	}
@@ -2406,7 +2409,7 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
 	{
 	  ber_bvfree (ctx->ec_cookie);
 	}
-      if ((ctx->ec_msgid > -1) && (do_result (session, ctx, LDAP_MSG_ONE) == NSS_SUCCESS))
+      if (ctx->ec_msgid > -1 && do_result (session, ctx, LDAP_MSG_ONE) == NSS_SUCCESS)
 	{
 	  ldap_abandon (session->ls_conn, ctx->ec_msgid);
 	}
@@ -3015,7 +3018,7 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 
 	  stat = do_check_init (session);
 
-	  if ((stat == NSS_SUCCESS) && (session->ls_state == LS_CONNECTED_TO_DSA))
+	  if (stat == NSS_SUCCESS && session->ls_state == LS_CONNECTED_TO_DSA)
 	    {
 	      debug (":== do_with_reconnect: trying to search %s, with base %s, scope %d and filter %s",
 		     session->ls_config->ldc_uris[session->ls_current_uri],
@@ -3033,13 +3036,13 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 		     session->ls_config->ldc_uris[session->ls_current_uri],
 		     __nss_ldap_status2string(stat), stat);
 
-	      if ((stat != NSS_UNAVAIL) && (stat != NSS_TRYAGAIN))
+	      if (stat != NSS_UNAVAIL && stat != NSS_TRYAGAIN)
 		{
-		  goto GotResult;;
+		  goto got_result;
 		}
 	    }
 
-	  while ((stat != NSS_SUCCESS) || (session->ls_state != LS_CONNECTED_TO_DSA))
+	  while (stat != NSS_SUCCESS || session->ls_state != LS_CONNECTED_TO_DSA)
 	    {
 	      if (firstTime == 0)
 		{
@@ -3052,9 +3055,8 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 		    session->ls_current_uri = 0;
 
 		  if (session->ls_current_uri == start_uri)
-		    {
-		      goto TriedAllURIs;
-		    }
+		    goto tried_all_uris;
+
 		  log++;
 		}
 	      else
@@ -3072,9 +3074,7 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 		  debug (":== do_with_reconnect: do_init returns %s(%d)", __nss_ldap_status2string(stat), stat);
  
 		  if (stat != NSS_SUCCESS)
-		    {
-		      continue;
-		    }
+		    continue;
 		}
 
 	      assert (session->ls_config->ldc_uris[session->ls_current_uri] != NULL);
@@ -3090,11 +3090,11 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 	    }
 	}
 
-    TriedAllURIs:
+  tried_all_uris:
       /* Will exit the above loop if:
        * 1. Search succeeded - stat = NSS_SUCCESS
-       * 2. Failed to initialise a connection to any of the URI's
-       * 3. Failed to open a connection to any of the URI's
+       * 2. Failed to initialise a connection to any of the URIs
+       * 3. Failed to open a connection to any of the URIs
       */
 
       /* Release all of the session resources */
@@ -3135,7 +3135,7 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 	}
     }
 
- GotResult:
+ got_result:
   switch (stat)
     {
     case NSS_UNAVAIL:
@@ -3164,7 +3164,7 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 	  else
 	    syslog (LOG_INFO, "nss_ldap: reconnected to LDAP server %s", uri);
 	}
-      time (&(session->ls_timestamp));
+      time (&session->ls_timestamp);
       break;
     case NSS_NOTFOUND:
       break;
@@ -3439,7 +3439,7 @@ do_parse_s (ldap_session_t * session, ent_context_t * ctx,
        * If we do not parse the entry because of a schema
        * violation, the parser should return NSS_NOTFOUND.
        * We'll keep on trying subsequent entries until we
-       * find one which is parseable, or exhaust avialable
+       * find one which is parseable, or exhaust available
        * entries, whichever is first.
        */
       parseStat = parser (e, &ctx->ec_state, result, buffer, buflen);
@@ -3617,8 +3617,9 @@ do_filter_with_reconnect(ldap_session_t *session, const ldap_args_t *args, const
   debug ("==> do_filter_with_reconnect filterprot = %s, base = %s, scope = %d, sizelimit = %d",
 	 filterprot, base, scope, sizelimit);
 
-  if ((stat = do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf),
-			 &dynamicFilterBuf, &filter)) == NSS_SUCCESS)
+  stat = do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf),
+		    &dynamicFilterBuf, &filter);
+  if (stat == NSS_SUCCESS)
     {
 
       stat = do_with_reconnect (session, base, scope, filter, attrs, sizelimit, res, searcher);
