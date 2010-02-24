@@ -10,6 +10,9 @@
 /* define to enable debug code */
 #undef DEBUG
 
+/* define to enable syslog debug code */
+#undef DEBUG_SYSLOG
+
 /* define to enable attribute/objectclass mapping */
 #undef AT_OC_MAP
 

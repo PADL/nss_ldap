@@ -26,6 +26,7 @@ dnl AC_ARG_ENABLE(schema-mapping, [  --enable-schema-mapping   enable attribute/
 dnl
 
 AC_ARG_ENABLE(debugging, [  --enable-debugging        enable debug code ], [AC_DEFINE(DEBUG)])
+AC_ARG_ENABLE(syslog-debugging, [  --enable-syslog-debugging        enable syslog debug code ], [AC_DEFINE(DEBUG_SYSLOG)])
 
 dnl
 dnl --enable-paged-results is now deprecated; if this option is set,

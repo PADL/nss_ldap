@@ -1318,6 +1318,7 @@ Optional Features:
   --enable-dependency-tracking   do not reject slow dependency extractors
   --enable-rfc2307bis       use RFC2307bis schema by default
   --enable-debugging        enable debug code
+  --enable-syslog-debugging enable syslog debug code
   --enable-paged-results    use paged results control by default
   --enable-configurable-krb5-ccname-env   enable configurable Kerberos V credentials cache name (putenv method)
   --enable-configurable-krb5-ccname-gssapi   enable configurable Kerberos V credentials cache name (gssapi method)
@@ -3805,6 +3806,14 @@ test -z "$INSTALL_DATA" && INSTALL_DATA='${INSTALL} -m 644'
 if test "${enable_rfc2307bis+set}" = set; then
   enableval=$enable_rfc2307bis; cat >>confdefs.h <<\_ACEOF
 #define RFC2307BIS 1
+_ACEOF
+
+fi
+
+# Check whether --enable-syslog-debugging was given
+if test "${enable_syslog_debugging+set}" = set ; then
+  enableval=$enable_syslog_debugging; cat >> condefs.h <<\_ACEOF
+#define DEBUG_SYSLOG 1
 _ACEOF
 
 fi

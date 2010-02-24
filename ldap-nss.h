@@ -140,9 +140,9 @@
 #ifdef DEBUG
 #ifdef DEBUG_SYSLOG
 #ifdef HAVE_NSSWITCH_H
-#define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: %s:%d thread %u - " fmt, __FILE__, __LINE__, thr_self() , ## args)
+#define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: %s:%d thread %u - " fmt, __FILE__, __LINE__, (uint)thr_self() , ## args)
 #else
-#define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: %s:%d thread %u - " fmt, __FILE__, __LINE__, pthread_self() , ## args)
+#define debug(fmt, args...) syslog(LOG_DEBUG, "nss_ldap: %s:%d thread %u - " fmt, __FILE__, __LINE__, (uint)pthread_self() , ## args)
 #endif /* HAVE_NSSWITCH_H */
 #else
 #ifndef __GNUC__
