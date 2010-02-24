@@ -44,10 +44,16 @@ static char rcsId[] =
 #include <syslog.h>
 #include <signal.h>
 #include <fcntl.h>
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <sys/param.h>
 #include <errno.h>
+#ifdef HAVE_RESOLV_H
+#include <resolv.h>
+#endif
 #ifdef HAVE_SYS_UN_H
 #include <sys/un.h>
 #endif
@@ -1019,6 +1025,29 @@ _nss_ldap_close (void)
   do_close ();
 }
 
+static void
+_nss_ldap_res_init (const char *uri)
+{
+  if (strncmp(uri, "ldapi://", 8) != 0)
+    {
+      struct stat st;
+      static time_t last_mtime = (time_t) -1;
+#if defined(HAVE_RESOLV_H) && defined(_PATH_RESCONF)
+      NSS_LDAP_DEFINE_LOCK (_nss_ldap_res_init_lock);
+      NSS_LDAP_LOCK (_nss_ldap_res_init_lock);
+      if (stat(_PATH_RESCONF, &st) == 0)
+        {
+          if (last_mtime != st.st_mtime)
+            {
+              last_mtime = st.st_mtime;
+              res_init();
+            }
+        }
+      NSS_LDAP_UNLOCK (_nss_ldap_res_init_lock);
+#endif
+    }
+}
+
 static NSS_STATUS
 do_init_session (LDAP ** ld, const char *uri, int defport)
 {
@@ -1048,6 +1077,8 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
       uri = uribuf;
     }
 
+  _nss_ldap_res_init(uri);
+
   rc = ldap_initialize (ld, uri);
 #else
   if (strncasecmp (uri, "ldap://", sizeof ("ldap://") - 1) != 0)
@@ -1073,6 +1104,8 @@ do_init_session (LDAP ** ld, const char *uri, int defport)
       defport = atoi (p + 1);
       uri = uribuf;
     }
+
+  _nss_ldap_res_init(NULL);
 # ifdef HAVE_LDAP_INIT
   *ld = ldap_init (uri, defport);
 # else

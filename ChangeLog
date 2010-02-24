@@ -4,6 +4,7 @@ $Id$
 266	Luke Howard <lukeh@padl.com>
 
 	* fix for BUG#411: memory leak in do_init()
+        * fix for BUG#412: check whether resolv.conf has changed
 
 265	Luke Howard <lukeh@padl.com>
 
