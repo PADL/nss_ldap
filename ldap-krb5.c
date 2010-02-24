@@ -76,6 +76,7 @@ static char rcsId[] =
  */
 
 /*
+ * 24th February 2010 - Integrated and cleaned up
  * 23rd October 2009 -  Incorporated changes suggested by Luke Howard.
  * 4th December 2008 -	Removed static variables as part of making code
  *			reentrant/thread safe.
