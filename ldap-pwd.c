@@ -162,6 +162,15 @@ _nss_ldap_parse_pw (LDAPMessage * e,
 	return stat;
     }
 
+
+#ifdef HAVE_LOGIN_CLASSES 
+  stat =
+    _nss_ldap_assign_attrval (e, AT (loginClass), &pw->pw_class, &buffer,
+		  	      &buflen);
+  if (stat != NSS_SUCCESS)
+    (void) _nss_ldap_assign_emptystring (&pw->pw_class, &buffer, &buflen);
+#endif
+
   stat =
     _nss_ldap_assign_attrval (e, AT (homeDirectory), &pw->pw_dir, &buffer,
 			      &buflen);

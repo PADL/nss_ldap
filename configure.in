@@ -67,7 +67,6 @@ dnl OpenLDAP 2.2, respectively
 CPPFLAGS="$CPPFLAGS -DLDAP_REFERRALS -DLDAP_DEPRECATED"
 
 case "$target_os" in
-freebsd*) CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
 aix*) CPPFLAGS="$CPPFLAGS -D_THREAD_SAFE" ;;
 *) CPPFLAGS="$CPPFLAGS -D_REENTRANT" ;;
 esac
@@ -96,6 +95,9 @@ hpux*) if test "$ac_cv_prog_gcc" = yes; then
   CPPFLAGS="$CPPFLAGS -I. -DHPUX"
   TARGET_OS=HPUX ;;
 linux*) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic -Wl,--version-script,\$(srcdir)/exports.linux" ;;
+freebsd*) TARGET_OS=FreeBSD
+  nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic"
+  CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
 *) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic" ;;
 esac
 
@@ -103,6 +105,7 @@ AM_CONDITIONAL(GCC, test "$GCC" = "yes")
 AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu")
 AM_CONDITIONAL(AIX, test "$TARGET_OS" = AIX)
 AM_CONDITIONAL(HPUX, test "$TARGET_OS" = HPUX)
+AM_CONDITIONAL(FreeBSD, test "$TARGET_OS" = FreeBSD)
 
 AM_CONDITIONAL(USE_NATIVE_LINKER, test -n "$nss_ldap_so_LD")
 
@@ -147,12 +150,14 @@ dnl		AC_DEFINE(HAVE_LDAP_SSL_H, 1)
 dnl	],
 dnl	AC_MSG_RESULT(no))
 
-# For HP-UX and AIX we use private API, the headers for which
-# are included locally. We need to do something to stop both
-# API being detected.
+# For HP-UX and AIX we use private APIs, the headers for which
+# are included locally.
+# For FreeBSD we want to include the GNU-style nsswitch
+# headers, not the BSD-style ones.
 case "$target_os" in
   aix*) AC_CHECK_HEADERS(irs.h usersec.h) ;;
   hpux*) AC_CHECK_HEADERS(nsswitch.h) ;;
+  freebsd*) AC_CHECK_HEADERS(nss.h irs.h) ;;
   *) AC_CHECK_HEADERS(nss.h)
      AC_CHECK_HEADERS(nsswitch.h)
      AC_CHECK_HEADERS(irs.h) ;;

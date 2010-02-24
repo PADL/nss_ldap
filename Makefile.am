@@ -9,7 +9,11 @@ INST_UID=root
 if AIX
 INST_GID=system
 else
+if FreeBSD
+INST_GID=wheel
+else
 INST_GID=root
+endif
 endif
 
 EXTRA_DIST = CVSVersionInfo.txt ChangeLog \
@@ -23,7 +27,7 @@ nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c 
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
 	ldap-bp.c ldap-automount.c util.c ltf.c snprintf.c resolve.c \
 	dnsconfig.c irs-nss.c pagectrl.c ldap-sldap.c ldap-krb5.c \
-	vers.c
+	bsd-nss.c vers.c
 
 nss_ldap_so_LDFLAGS = @nss_ldap_so_LDFLAGS@
 
@@ -32,7 +36,7 @@ NSS_LDAP_PATH_ROOTPASSWD = @NSS_LDAP_PATH_ROOTPASSWD@
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c \
 	util.c ltf.c snprintf.c resolve.c dnsconfig.c \
-	irs-nss.c pagectrl.c aix_authmeth.c ldap-krb5.c vers.c
+	irs-nss.c pagectrl.c aix_authmeth.c ldap-krb5.c bsd-nss.c vers.c
 
 NSS_LDAP_LDFLAGS = @NSS_LDAP_LDFLAGS@
 DEFS = @DEFS@

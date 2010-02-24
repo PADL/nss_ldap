@@ -24,7 +24,7 @@
 #define _LDAP_NSS_LDAP_LDAP_SCHEMA_H
 
 /* max number of attributes per object class */
-#define ATTRTAB_SIZE	15
+#define ATTRTAB_SIZE	16
 
 /**
  * function to initialize global lookup filters.
@@ -153,6 +153,10 @@ extern char _nss_ldap_filt_getautomntbyname[];
 #define AT_gecos                  "gecos"
 #define AT_homeDirectory          "homeDirectory"
 
+#ifdef HAVE_LOGIN_CLASSES
+/* FreeBSD extension - Michael Graziano <mikeg@bsd-box.net> */
+#define AT_loginClass           "loginClass"
+#endif
 /*
  * ( nisSchema.2.1 NAME 'shadowAccount' SUP top AUXILIARY
  *   DESC 'Additional attributes for shadow passwords'            

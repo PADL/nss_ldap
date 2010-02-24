@@ -215,12 +215,17 @@ _nss_ldap_getntohost_r (struct ether_addr * addr, struct ether * result,
       *errnop = ERANGE;
       return NSS_TRYAGAIN;
     }
-
+#ifdef __FreeBSD__
+  snprintf(fullmac, sizeof(fullmac), "%02x:%02x:%02x:%02x:%02x:%02x",
+	   addr->octet[0], addr->octet[1],
+	   addr->octet[2], addr->octet[3],
+	   addr->octet[4], addr->octet[5]);
+#else
   snprintf(fullmac, sizeof(fullmac), "%02x:%02x:%02x:%02x:%02x:%02x",
 	   addr->ether_addr_octet[0], addr->ether_addr_octet[1],
 	   addr->ether_addr_octet[2], addr->ether_addr_octet[3],
 	   addr->ether_addr_octet[4], addr->ether_addr_octet[5]);
-
+#endif
   LA_INIT(a);
   LA_STRING(a) = ether_ntoa(addr);
   LA_TYPE(a) = LA_TYPE_STRING_AND_STRING;

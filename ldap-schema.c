@@ -334,6 +334,9 @@ init_pwd_attributes (const char ***pwd_attrs)
 #ifdef HAVE_PASSWD_PW_EXPIRE
   (*pwd_attrs)[i++] = AT (shadowExpire);
 #endif /* HAVE_PASSWD_PW_EXPIRE */
+#ifdef HAVE_LOGIN_CLASSES
+  (*pwd_attrs)[i++] = AT (loginClass);
+#endif
   (*pwd_attrs)[i] = NULL;
 }
 
