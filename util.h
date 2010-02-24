@@ -75,7 +75,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_IDLE_TIMELIMIT     "idle_timelimit"
 #define NSS_LDAP_KEY_RECONNECT_POLICY	"bind_policy"
 #define NSS_LDAP_KEY_SASL_SECPROPS      "sasl_secprops"
-#ifdef CONFIGURE_KRB5_CCNAME
+#if defined(CONFIGURE_KRB5_CCNAME) || defined(CONFIGURE_KRB5_KEYTAB)
 #define NSS_LDAP_KEY_KRB5_CCNAME        "krb5_ccname"
 #define NSS_LDAP_KEY_KRB5_ROOTCCNAME    "krb5_rootccname"
 #define NSS_LDAP_KEY_KRB5_AUTORENEW     "krb5_autorenew"

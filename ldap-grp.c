@@ -124,11 +124,14 @@ do_parse_range (const char *attributeType,
   char *st = NULL;
 #endif
 
+  debug ("==> do_parse_range");
+
   *start = 0;
   *end = -1;
 
   if (strcasecmp (attributeType, attributeDescription) == 0)
     {
+      debug ("==> do_parse_range: returns NSS_SUCCESS");
       return NSS_SUCCESS;
     }
 
@@ -138,6 +141,7 @@ do_parse_range (const char *attributeType,
   if (attributeDescriptionLength < attributeTypeLength)
     {
       /* could not be a subtype */
+      debug ("<== do_parse_range: returns NSS_NOTFOUND");
       return NSS_NOTFOUND;
     }
 
@@ -145,6 +149,7 @@ do_parse_range (const char *attributeType,
   attribute = strdup (attributeDescription);
   if (attribute == NULL)
     {
+      debug ("<== do_parse_range: returns NSS_TRYAGAIN");
       return NSS_TRYAGAIN;
     }
 
@@ -162,6 +167,7 @@ do_parse_range (const char *attributeType,
 	  if (strcasecmp (p, attributeType) != 0)
 	    {
 	      free (attribute);
+	      debug ("<== do_parse_range: returns NSS_NOTFOUND");
 	      return NSS_NOTFOUND;
 	    }
 	}
@@ -173,6 +179,7 @@ do_parse_range (const char *attributeType,
 	  if (q == NULL)
 	    {
 	      free (attribute);
+	      debug ("<== do_parse_range: returns NSS_NOTFOUND");
 	      return NSS_NOTFOUND;
 	    }
 
@@ -190,6 +197,7 @@ do_parse_range (const char *attributeType,
     }
 
   free (attribute);
+  debug ("<== do_parse_range: returns %s(%d)", __nss_ldap_status2string(stat), stat);
   return stat;
 }
 
@@ -201,6 +209,8 @@ do_get_range_values (LDAPMessage * e,
   NSS_STATUS stat = NSS_NOTFOUND;
   BerElement *ber = NULL;
   char *attribute;
+
+  debug ("==> do_get_range_values");
 
   *pGroupMembers = NULL;
 
@@ -217,6 +227,7 @@ do_get_range_values (LDAPMessage * e,
 	    }
 	  else if ((*pGroupMembers)[0] == NULL)
 	    {
+	      debug (":== do_get_range_values: call ldap_value_free");
 	      ldap_value_free (*pGroupMembers);
 	      *pGroupMembers = NULL;
 	      stat = NSS_NOTFOUND;
@@ -224,6 +235,7 @@ do_get_range_values (LDAPMessage * e,
 	}
 
 #ifdef HAVE_LDAP_MEMFREE
+      debug (":== do_get_range_values: call ldap_memfree");
       ldap_memfree (attribute);
 #endif
 
@@ -232,7 +244,12 @@ do_get_range_values (LDAPMessage * e,
     }
 
   if (ber != NULL)
-    ber_free (ber, 0);
+    {
+      debug (":== do_get_range_values: call ber_free");
+      ber_free (ber, 0);
+    }
+
+  debug ("<== do_get_range_values: returns %s(%d)", __nss_ldap_status2string(stat), stat);
 
   return stat;
 }
@@ -252,6 +269,8 @@ do_construct_range_attribute (const char *attribute,
   size_t len;
   char startbuf[32], endbuf[32];
 
+  debug ("==> do_construct_range_attribute");
+
   snprintf (startbuf, sizeof (startbuf), "%u", start);
 
   if (end != -1)
@@ -264,7 +283,10 @@ do_construct_range_attribute (const char *attribute,
   len++;			/* \0 */
 
   if (*buflen < len)
-    return NSS_TRYAGAIN;
+    {
+      debug ("<== do_construct_range_attribute: returns NSS_TRYAGAIN");
+      return NSS_TRYAGAIN;
+    }
 
   *pAttributeWithRange = *buffer;
 
@@ -272,6 +294,8 @@ do_construct_range_attribute (const char *attribute,
 
   *buffer += len;
   *buflen -= len;
+
+  debug ("<== do_construct_range_attribute: returns NSS_SUCCESS");
 
   return NSS_SUCCESS;
 }
@@ -304,6 +328,8 @@ do_parse_group_members (LDAPMessage * e,
   int start, end = 0;
   char *groupdn = NULL;
 
+  debug ("==> do_parse_group_members");
+
   uniquemember_attr = ATM (LM_GROUP, uniqueMember);
 
   uniquemember_attrs[0] = uniquemember_attr;
@@ -311,6 +337,7 @@ do_parse_group_members (LDAPMessage * e,
 
   if (*depth > LDAP_NSS_MAXGR_DEPTH)
     {
+      debug ("<== do_parse_group_members: returns NSS_NOTFOUND");
       return NSS_NOTFOUND;
     }
 
@@ -350,12 +377,14 @@ do_parse_group_members (LDAPMessage * e,
       (void) do_get_range_values (e, uniquemember_attrs[0], &start, &end, &dnValues);
       if (dnValues != NULL)
 	{
+	  debug (":== do_parse_group_members: call ldap_count_values on dnValues");
 	  groupMembersCount += ldap_count_values (dnValues);
 	}
 
       uidValues = _nss_ldap_get_values (e, ATM (LM_GROUP, memberUid));
       if (uidValues != NULL)
 	{
+	  debug (":== do_parse_group_members: call ldap_count_values on uidValues");
 	  groupMembersCount += ldap_count_values (uidValues);
 	}
 
@@ -446,6 +475,7 @@ do_parse_group_members (LDAPMessage * e,
 		      goto out;
 		    }
 
+		  debug (":== do_parse_group_members: call ldap_msgfree");
 		  ldap_msgfree (res);
 		}
 	      else if (parseStat == NSS_TRYAGAIN)
@@ -488,16 +518,19 @@ do_parse_group_members (LDAPMessage * e,
 	    {
 	      if (dnValues != NULL)
 		{
+		  debug (":== do_parse_group_members: call ldap_value_free on dnValues");
 		  ldap_value_free (dnValues);
 		  dnValues = NULL;
 		}
 	      if (uidValues != NULL)
 		{
+		  debug (":== do_parse_group_members: call ldap_value_free on uidValues");
 		  ldap_value_free (uidValues);
 		  uidValues = NULL;
 		}
 	      if (res != NULL)
 		{
+		  debug (":== do_parse_group_members: call ldap_msgfree");
 		  ldap_msgfree (res);
 		  res = NULL;
 		}
@@ -514,20 +547,34 @@ do_parse_group_members (LDAPMessage * e,
 
 out:
   if (dnValues != NULL)
-    ldap_value_free (dnValues);
+    {
+      debug (":== do_parse_group_members: call ldap_value_free on dnValues");
+      ldap_value_free (dnValues);
+    }
   if (uidValues != NULL)
-    ldap_value_free (uidValues);
+    {
+      debug (":== do_parse_group_members: call ldap_value_free on uidValues");
+      ldap_value_free (uidValues);
+    }
   if (res != NULL)
-    ldap_msgfree (res);
+    {
+      debug (":== do_parse_group_members: call ldap_msgfree");
+      ldap_msgfree (res);
+    }
   if (groupdn != NULL)
+    {
 #ifdef HAVE_LDAP_MEMFREE
-    ldap_memfree (groupdn);
+      debug (":== do_parse_group_members: call ldap_memfree");
+      ldap_memfree (groupdn);
 #else
-    free (groupdn);
+      free (groupdn);
 #endif
+    }
 
   *pGroupMembers = groupMembers;
   *pGroupMembersNext = i;
+
+  debug ("<== do_parse_group_members: returns %s(%d)", __nss_ldap_status2string(stat), stat);
 
   return stat;
 }
@@ -544,10 +591,13 @@ do_fix_group_members_buffer (char **mallocedGroupMembers,
 {
   size_t len;
 
+  debug ("==> do_fix_group_members_buffer");
+
   len = (groupMembersCount + 1) * sizeof (char *);
 
   if (bytesleft (*buffer, *buflen, char *) < len)
     {
+      debug ("<== do_fix_group_members_buffer: returns NSS_TRYAGAIN");
       return NSS_TRYAGAIN;
     }
 
@@ -560,6 +610,7 @@ do_fix_group_members_buffer (char **mallocedGroupMembers,
 	  groupMembersCount * sizeof (char *));
   (*pGroupMembers)[groupMembersCount] = NULL;
 
+  debug ("<== do_fix_group_members_buffer: returns NSS_SUCCESS");
   return NSS_SUCCESS;
 }
 
@@ -579,11 +630,16 @@ _nss_ldap_parse_gr (LDAPMessage * e,
   int depth;
   struct name_list *knownGroups = NULL;
 
+  debug ("==> _nss_ldap_parse_gr");
+
   stat =
     _nss_ldap_assign_attrval (e, ATM (LM_GROUP, gidNumber), &gid, &buffer,
 			      &buflen);
   if (stat != NSS_SUCCESS)
-    return stat;
+    {
+      debug ("<== _nss_ldap_parse_gr: returns %s(%d)", __nss_ldap_status2string(stat), stat);
+      return stat;
+    }
 
   gr->gr_gid =
     (*gid == '\0') ? (unsigned) GID_NOBODY : (gid_t) strtoul (gid,
@@ -594,13 +650,19 @@ _nss_ldap_parse_gr (LDAPMessage * e,
     _nss_ldap_getrdnvalue (e, ATM (LM_GROUP, cn), &gr->gr_name, &buffer,
 			   &buflen);
   if (stat != NSS_SUCCESS)
-    return stat;
+    {
+      debug ("<== _nss_ldap_parse_gr: returns %s(%d)", __nss_ldap_status2string(stat), stat);
+      return stat;
+    }
 
   stat =
     _nss_ldap_assign_userpassword (e, ATM (LM_GROUP, userPassword),
 				   &gr->gr_passwd, &buffer, &buflen);
   if (stat != NSS_SUCCESS)
-    return stat;
+    {
+      debug ("<== _nss_ldap_parse_gr: returns %s(%d)", __nss_ldap_status2string(stat), stat);
+      return stat;
+    }
 
   if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
     {
@@ -622,6 +684,7 @@ _nss_ldap_parse_gr (LDAPMessage * e,
 	  if (groupMembersBufferIsMalloced)
 	    free (groupMembers);
 	  _nss_ldap_namelist_destroy (&knownGroups);
+	  debug ("<== _nss_ldap_parse_gr: returns %s(%d)", __nss_ldap_status2string(stat), stat);
 	  return stat;
 	}
 
@@ -639,6 +702,7 @@ _nss_ldap_parse_gr (LDAPMessage * e,
 				   &gr->gr_mem, &buffer, &buflen, NULL);
     }
 
+  debug ("<== _nss_ldap_parse_gr: returns %s(%d)", __nss_ldap_status2string(stat), stat);
   return stat;
 }
 
@@ -657,16 +721,20 @@ do_parse_initgroups (LDAPMessage * e,
   gid_t gid;
   ldap_initgroups_args_t *lia = (ldap_initgroups_args_t *) result;
 
+  debug ("==> do_parse_initgroups");
+
   values = _nss_ldap_get_values (e, ATM (LM_GROUP, gidNumber));
   if (values == NULL)
     {
       /* invalid group; skip it */
+      debug ("<== do_parse_initgroups: returns NSS_NOTFOUND");
       return NSS_NOTFOUND;
     }
 
   if (values[0] == NULL)
     {
       /* invalid group; skip it */
+      debug ("<== do_parse_initgroups: calls ldap_value_free and returns NSS_NOTFOUND");
       ldap_value_free (values);
       return NSS_NOTFOUND;
     }
@@ -676,20 +744,24 @@ do_parse_initgroups (LDAPMessage * e,
   lia->grplist = realloc (lia->grplist, lia->listlen + i + 2);
   if (lia->grplist == NULL)
     {
+      debug ("<== do_parse_initgroups: calls ldap_value_free and returns NSS_TRYAGAIN");
       ldap_value_free (values);
       return NSS_TRYAGAIN;
     }
   memcpy (lia->grplist + lia->listlen, values[0], i);
   lia->grplist[lia->listlen + i] = ',';
   lia->listlen += i + 1;
+  debug ("<== do_parse_initgroups: calls ldap_value_free");
   ldap_value_free (values);
 #else
   gid = strtoul (values[0], (char **) NULL, 10);
+  debug ("<== do_parse_initgroups: calls ldap_value_free");
   ldap_value_free (values);
 
   if (gid == LONG_MAX && errno == ERANGE)
     {
       /* invalid group, skip it */
+      debug ("<== do_parse_initgroups: returns NSS_NOTFOUND");
       return NSS_NOTFOUND;
     }
 
@@ -698,7 +770,10 @@ do_parse_initgroups (LDAPMessage * e,
   for (i = 0; i < lia->gbm->numgids; i++)
     {
       if (lia->gbm->gid_array[i] == (gid_t) gid)
-	return NSS_NOTFOUND;
+	{
+	  debug ("<== do_parse_initgroups: returns NSS_NOTFOUND");
+	  return NSS_NOTFOUND;
+	}
     }
 
   if (lia->gbm->numgids == lia->gbm->maxgids)
@@ -708,6 +783,7 @@ do_parse_initgroups (LDAPMessage * e,
        * should probably return NSS_TRYAGAIN but IIRC
        * will send Solaris into an infinite loop XXX
        */
+      debug ("<== do_parse_initgroups: returns NSS_SUCCESS");
       return NSS_SUCCESS;
     }
 
@@ -716,6 +792,7 @@ do_parse_initgroups (LDAPMessage * e,
   if (gid == lia->group)
     {
       /* primary group, so skip it */
+      debug ("<== do_parse_initgroups: returns NSS_NOTFOUND");
       return NSS_NOTFOUND;
     }
 
@@ -724,6 +801,7 @@ do_parse_initgroups (LDAPMessage * e,
       if (*(lia->start) >= lia->limit)
 	{
 	  /* can't fit any more */
+	  debug ("<== do_parse_initgroups: returns NSS_TRYAGAIN");
 	  return NSS_TRYAGAIN;
 	}
     }
@@ -734,6 +812,7 @@ do_parse_initgroups (LDAPMessage * e,
 					 LDAP_NSS_NGROUPS * sizeof (gid_t));
       if (*(lia->groups) == NULL)
 	{
+	  debug ("<== do_parse_initgroups: returns NSS_TRYAGAIN");
 	  return NSS_TRYAGAIN;
 	}
       *(lia->size) = LDAP_NSS_NGROUPS;
@@ -745,6 +824,7 @@ do_parse_initgroups (LDAPMessage * e,
 					  2 * *(lia->size) * sizeof (gid_t));
       if (*(lia->groups) == NULL)
 	{
+	  debug ("<== do_parse_initgroups: returns NSS_TRYAGAIN");
 	  return NSS_TRYAGAIN;
 	}
       *(lia->size) *= 2;
@@ -759,6 +839,7 @@ do_parse_initgroups (LDAPMessage * e,
     {
       if ((*(lia->groups))[i] == gid)
 	{
+	  debug ("<== do_parse_initgroups: returns NSS_NOTFOUND");
 	  return NSS_NOTFOUND;
 	}
     }
@@ -769,6 +850,7 @@ do_parse_initgroups (LDAPMessage * e,
 # endif				/* HAVE_NSSWITCH_H */
 #endif /* HAVE_USERSEC_H */
 
+  debug ("<== do_parse_initgroups: returns NSS_NOTFOUND");
   return NSS_NOTFOUND;
 }
 
@@ -782,14 +864,17 @@ do_parse_initgroups_nested (LDAPMessage * e,
   char **values;
   char *groupdn;
 
+  debug ("==> do_parse_initgroups_nested");
   stat = do_parse_initgroups (e, pvt, result, buffer, buflen);
   if (stat != NSS_NOTFOUND)
     {
+      debug ("<== do_parse_initgroups_nested: returns %s(%d)", __nss_ldap_status2string(stat), stat);
       return stat;
     }
 
   if (!_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_RFC2307BIS))
     {
+      debug ("<== do_parse_initgroups_nested: returns NSS_NOTFOUND");
       return NSS_NOTFOUND;
     }
 
@@ -808,8 +893,10 @@ do_parse_initgroups_nested (LDAPMessage * e,
 	  stat = ng_chase_backlink ((const char **)values, lia);
 	  lia->depth--;
 
+	  debug ("<== do_parse_initgroups_nested: calls ldap_value_free");
 	  ldap_value_free (values);
  
+	  debug ("<== do_parse_initgroups_nested: returns %s(%d)", __nss_ldap_status2string(stat), stat);
 	  return stat;
 	}
     }
@@ -827,6 +914,7 @@ do_parse_initgroups_nested (LDAPMessage * e,
 	  stat = ng_chase (groupdn, lia);
 	  lia->depth--;
 #ifdef HAVE_LDAP_MEMFREE
+	  debug ("<== do_parse_initgroups_nested: calls ldap_memfree");
 	  ldap_memfree (groupdn);
 #else
 	  free (groupdn);
@@ -834,6 +922,7 @@ do_parse_initgroups_nested (LDAPMessage * e,
 	}
     }
 
+  debug ("<== do_parse_initgroups_nested: returns %s(%d)", __nss_ldap_status2string(stat), stat);
   return stat;
 }
 
@@ -846,11 +935,18 @@ ng_chase (const char *dn, ldap_initgroups_args_t * lia)
   const char *gidnumber_attrs[2];
   int erange;
 
+  debug ("==> ng_chase");
   if (lia->depth > LDAP_NSS_MAXGR_DEPTH)
-    return NSS_NOTFOUND;
+    {
+      debug ("<== ns_chase: returns NSS_NOTFOUND");
+      return NSS_NOTFOUND;
+    }
 
   if (_nss_ldap_namelist_find (lia->known_groups, dn))
-    return NSS_NOTFOUND;
+    {
+      debug ("<== ns_chase: returns NSS_NOTFOUND");
+      return NSS_NOTFOUND;
+    }
 
   gidnumber_attrs[0] = ATM (LM_GROUP, gidNumber);
   gidnumber_attrs[1] = NULL;
@@ -861,6 +957,7 @@ ng_chase (const char *dn, ldap_initgroups_args_t * lia)
 
   if (_nss_ldap_ent_context_init_internal_locked (&ctx) == NULL)
     {
+      debug ("<== ns_chase: returns NSS_UNAVAIL");
       return NSS_UNAVAIL;
     }
 
@@ -876,6 +973,7 @@ ng_chase (const char *dn, ldap_initgroups_args_t * lia)
 
   _nss_ldap_ent_context_release (&ctx);
 
+  debug ("<== ns_chase: returns %s(%d)", __nss_ldap_status2string(stat), stat);
   return stat;
 }
 
@@ -891,8 +989,12 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
   size_t memberCount, i;
   int erange;
 
+  debug ("==> ng_chase_backlink");
   if (lia->depth > LDAP_NSS_MAXGR_DEPTH)
-    return NSS_NOTFOUND;
+    {
+      debug ("<== ng_chase_backlink: returns NSS_NOTFOUND");
+      return NSS_NOTFOUND;
+    }
 
   for (memberCount = 0; membersOf[memberCount] != NULL; memberCount++)
     ;
@@ -901,6 +1003,7 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
   filteredMembersOf = (const char **) malloc(sizeof(char *) * (memberCount + 1));
   if (filteredMembersOf == NULL)
     {
+      debug ("<== ns_chase_backlink: returns NSS_TRYAGAIN");
       return NSS_TRYAGAIN;
     }
 
@@ -920,6 +1023,7 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
   if (filteredMembersOf[0] == NULL)
     {
       free (filteredMembersOf);
+      debug ("<== ns_chase_backlink: returns NSS_NOTFOUND");
       return NSS_NOTFOUND;
     }
 
@@ -934,6 +1038,7 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
   if (_nss_ldap_ent_context_init_internal_locked (&ctx) == NULL)
     {
       free (filteredMembersOf);
+      debug ("<== ns_chase_backlink: returns NSS_UNAVAIL");
       return NSS_UNAVAIL;
     }
 
@@ -961,6 +1066,7 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
 
   _nss_ldap_ent_context_release (&ctx);
 
+  debug ("<== ns_chase_backlink: returns %s(%d)", __nss_ldap_status2string(stat), stat);
   return stat;
 }
 
@@ -1028,7 +1134,10 @@ char *_nss_ldap_getgrset (char *user)
 #ifdef INITGROUPS_ROOT_ONLY
   /* XXX performance hack for old versions of KDE only */
   if ((getuid() != 0) && (geteuid() != 0))
-    return NSS_NOTFOUND;
+    {
+      debug ("<== " NSS_LDAP_INITGROUPS_FUNCTION ": returns NSS_NOTFOUND");
+      return NSS_NOTFOUND;
+    }
 #endif
 
 #ifdef HAVE_USERSEC_H
@@ -1096,6 +1205,7 @@ char *_nss_ldap_getgrset (char *user)
 		{
 		  userdn = _nss_ldap_get_dn (e);
 		}
+	      debug (":== " NSS_LDAP_INITGROUPS_FUNCTION ": call ldap_msgfree");
 	      ldap_msgfree (res);
 	    }
 	}
@@ -1144,6 +1254,7 @@ char *_nss_ldap_getgrset (char *user)
   if (userdn != NULL)
     {
 #ifdef HAVE_LDAP_MEMFREE
+      debug (":== " NSS_LDAP_INITGROUPS_FUNCTION ": call ldap_memfree");
       ldap_memfree (userdn);
 #else
       free (userdn);

@@ -11,6 +11,9 @@ $Id$
 	* fix for BUG#412: tidy up bootparams code
 	* fix for BUG#412: use macros for ldap_get_option calls
 	* fix for BUG#412: better debugging of NSS status codes
+	* fix for BUG#412: rewrite and abstract Kerberos support
+	* fix for BUG#412: allow runtime configuration of LDAP
+	  configuration file and keytab using environment
 
 265	Luke Howard <lukeh@padl.com>
 

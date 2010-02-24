@@ -316,9 +316,10 @@ nss_ldap
 will close connections to the directory server. The default is not to
 time out connections.
 .TP
-.B sasl_authid <authid>
+.B sasl_auth_id <authid>
 Specifies the authorization identity to be used when performing SASL
-authentication.
+authentication. [Note this has changed in the documentation, this field used to
+be documented as 'sasl_authid' but the code uses sasl_auth_id]
 .TP
 .B rootsasl_auth_id <authid>
 Specifies the authorization identity to be used when performing SASL
@@ -335,11 +336,44 @@ manual page.
 Specifies whether SASL authentication should be used when the effective
 user ID is zero.
 .TP
-.B krb5_ccname <PREFIX:args>
+.B krb5_ entries
 If
 .B nss_ldap
 is built with configurable GSS-API credentials cache name support,
-specifies the Kerberos credentials cache to use.
+the krb5_ entries specify parameters to this feature.
+.TP
+.B krb5_ccname <PREFIX:args>
+Specifies the Kerberos credentials cache to use if not running as the root user.
+The PREFIX can be FILE, WRFILE or MEMORY. If FILE or WRFILE then the args
+are the absolute path of a file. If MEMORY then they specify the credentials key in the
+process memory. This is usually set to 'store_creds'. This value can also be passed as an
+environment variable KRB5CCNAME.
+.TP
+.B krb5_autorenew <yes|no>
+Specifies that the credentials should be autmoatically renewed if they are about
+to expire and can be renewed.
+.TP
+.B krb5_keytabname <PREFIX:args>
+Specifies the kerberos keytab to be used to acquire new credentials.
+The PREFIX can be either FILE or WRFILE. MEMORY does not make any sense.
+The args are the absolute path to the keytab file which must be readable by the
+effective user. This value can also be passed as an environment variable KRB5_KTNAME.
+.TP
+.B krb5_usekeytab <yes|no>
+Specifies that a keytab should be used to acquire credentials.
+This is necessary even if a keytab file has been set by krb5_keytabname.
+.TP
+.B krb5_rootccname <PREFIX:args>
+specifies the credentials cache if running as the root user (See krb5_ccname).
+.TP
+.B krb5_rootautorenew <yes|no>
+specifies that the root credentials should be automatically renewed. (See krb5_autorenew)
+.TP
+.B krb5_rootkeytabname <PREFIX:args>
+specifies the kerberos keytab used by processes executing with the effective id of the root user.
+.TP
+.B krb5_rootusekeytab <yes|no>
+specifies that the root credentials should be acquired using a keytab.
 .TP
 .B nss_paged_results <yes|no>
 .BR

@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2005 Luke Howard.
+/* Copyright (C) 1997-2010 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
 
@@ -287,6 +287,8 @@ typedef struct ldap_service_search_descriptor
  */
 struct ldap_config
 {
+  /* Name of the file from which the config has been read */
+  char *ldc_config_filename;
   /* NULL terminated list of URIs */
   char *ldc_uris[NSS_LDAP_CONFIG_URI_MAX + 1];
   /* default port, if not specified in URI */
@@ -362,7 +364,7 @@ struct ldap_config
   /* LDAP debug level */
   int ldc_debug;
   int ldc_pagesize;
-#ifdef CONFIGURE_KRB5_CCNAME
+#if defined(CONFIGURE_KRB5_CCNAME) || defined(CONFIGURE_KRB5_KEYTAB)
   /* krb5 ccache name */
   char *ldc_krb5_ccname;
   char *ldc_krb5_rootccname;
@@ -419,6 +421,41 @@ typedef struct sockaddr NSS_LDAP_SOCKADDR_STORAGE;
 #define ss_family sa_family
 #endif /* __GLIBC__ */
 
+/*
+ * Opaque structures are used by subsystems such as the Kerberos facilities
+ */
+enum ldap_session_opaque_type
+{
+  LSO_UNKNOWN = 0,
+  LSO_KRB5
+};
+
+typedef enum ldap_session_opaque_type ldap_session_opaque_type_t;
+
+struct ldap_session_opaque
+{
+  ldap_session_opaque_type_t lso_type;
+  struct ldap_session_opaque *lso_next, *lso_prev;
+  void *lso_data;
+};
+
+typedef struct ldap_session_opaque *ldap_session_opaque_t;
+
+/*
+ * Predeclare this as we use it in the ldap_session structure
+ */
+typedef struct ldap_session_mech *ldap_session_mech_t;
+
+struct ldap_session_mechs
+{
+  int			lsms_count;
+  ldap_session_mech_t	lsms_mechs[1];
+};
+
+typedef struct ldap_session_mechs *ldap_session_mechs_t;
+/*
+ * Session state management
+ */
 enum ldap_session_state
 {
   LS_UNINITIALIZED = -1,
@@ -442,14 +479,52 @@ struct ldap_session
   time_t ls_timestamp;
   /* has session been connected? */
   ldap_session_state_t ls_state;
+  /* index into ldc_uris: currently connected DSA */
+  int ls_current_uri;
+  /* Process id session was established under */
+  pid_t pid;
+  /* Effective UID session was established under */
+  uid_t euid;
+  /* Opaque structure pointer used by KRB5 routines */
+  ldap_session_opaque_t ls_opaque;
+  /* SASL mechanisms */
+  ldap_session_mechs_t ls_mechs;
+  /* These are large structures (128 bytes plus on Linux) */
   /* keep track of the LDAP sockets */
   NSS_LDAP_SOCKADDR_STORAGE ls_sockname;
   NSS_LDAP_SOCKADDR_STORAGE ls_peername;
-  /* index into ldc_uris: currently connected DSA */
-  int ls_current_uri;
 };
 
 typedef struct ldap_session ldap_session_t;
+
+/*
+ * SASL mechanisms are provided as plugins. this supports the vectors
+ */
+
+enum ldap_session_mech_type
+{
+  LSM_UNKNOWN = 0,
+  LSM_KRB5,
+  LSM_EXTERNAL
+};
+
+typedef enum ldap_session_mech_type ldap_session_mech_type_t;
+
+typedef void * (*ldap_session_mech_init_t) (ldap_session_t *);
+typedef int (*ldap_session_mech_select_t) (ldap_session_t *);
+typedef int (*ldap_session_mech_restore_t) (ldap_session_t *);
+typedef void (*ldap_session_mech_close_t) (ldap_session_t *);
+
+struct ldap_session_mech
+{
+  ldap_session_mech_type_t	lsm_type;
+  ldap_session_mech_init_t	lsm_init;
+  ldap_session_mech_select_t	lsm_select;
+  ldap_session_mech_restore_t	lsm_restore;
+  ldap_session_mech_close_t	lsm_close;
+};
+
+typedef ldap_session_mech_t (*ldap_session_mech_setup_t)(void);
 
 #ifndef HAVE_NSSWITCH_H
 #ifndef UID_NOBODY
@@ -935,8 +1010,26 @@ int _nss_ldap_test_config_flag (unsigned int flag);
 int _nss_ldap_test_initgroups_ignoreuser (const char *user);
 int _nss_ldap_get_ld_errno (char **m, char **s);
 
-#ifdef CONFIGURE_KRB5_KEYTAB
-int do_init_krb5_cache(ldap_config_t *config);
-#endif /* CONFIGURE_KRB5_KEYTAB */
+ldap_session_mech_t __nss_ldap_mech_setup(ldap_session_mech_type_t mechType,
+ 					  ldap_session_mech_init_t initFunc,
+ 					  ldap_session_mech_select_t selectFunc,
+ 					  ldap_session_mech_restore_t restoreFunc,
+ 					  ldap_session_mech_close_t closeFunc);
+ 
+ldap_session_mech_t __nss_ldap_krb5_cache();
+ 
+/*
+ * Support addition of opaque structures for subsystems
+ */
+ldap_session_opaque_t __nss_ldap_find_opaque(ldap_session_t *session,
+					     ldap_session_opaque_type_t opaque_type);
+ldap_session_opaque_t __nss_ldap_add_opaque(ldap_session_t *session,
+					    ldap_session_opaque_type_t opaque_type,
+					    ldap_session_opaque_t current);
+ldap_session_opaque_t __nss_ldap_allocate_opaque(ldap_session_t *session,
+					         ldap_session_opaque_type_t opaque_type);
+ldap_session_opaque_t __nss_ldap_remove_opaque(ldap_session_t *session,
+					       ldap_session_opaque_type_t opaque_type);
+void __nss_ldap_free_opaque(ldap_session_t *session, ldap_session_opaque_type_t opaque_type);
 
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */

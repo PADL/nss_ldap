@@ -34,6 +34,7 @@
 #include <strings.h>
 #endif
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <sys/param.h>
 #include <sys/stat.h>
@@ -609,6 +610,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
 
   memset (result, 0, sizeof (*result));
 
+  result->ldc_config_filename = NSS_LDAP_PATH_CONF;
   result->ldc_scope = LDAP_SCOPE_SUBTREE;
   result->ldc_deref = LDAP_DEREF_NEVER;
   result->ldc_base = NULL;
@@ -646,7 +648,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_logdir = NULL;
   result->ldc_debug = 0;
   result->ldc_pagesize = LDAP_PAGESIZE;
-#ifdef CONFIGURE_KRB5_CCNAME
+#if defined(CONFIGURE_KRB5_CCNAME) || defined(CONFIGURE_KRB5_KEYTAB)
   result->ldc_krb5_ccname = NULL;
   result->ldc_krb5_rootccname = NULL;
   result->ldc_krb5_autorenew = 0;
@@ -810,8 +812,19 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
   NSS_STATUS stat = NSS_SUCCESS;
   ldap_config_t *result;
   struct stat statbuf;
+  char *configFilename = NSS_LDAP_PATH_CONF;
 
-  fp = fopen (NSS_LDAP_PATH_CONF, "r");
+  if (getuid() == geteuid() && getgid() == getegid())
+    {
+      char *envFilename = getenv("NSS_LDAP_CONFIG_FILE");
+
+      if (envFilename != NULL)
+	{
+	  /* Should check that it is accessible, but leave this for later */
+	  configFilename = envFilename;
+	}
+    }
+  fp = fopen (configFilename, "r");
   if (fp == NULL)
     {
       return NSS_UNAVAIL;
@@ -826,6 +839,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
   result = *presult = (ldap_config_t *) *buffer;
   *buffer += sizeof (ldap_config_t);
   *buflen -= sizeof (ldap_config_t);
+
+  result->ldc_config_filename = configFilename;
 
   stat = _nss_ldap_init_config (result);
   if (stat != NSS_SUCCESS)
@@ -1067,7 +1082,7 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  result->ldc_pagesize = atoi (v);
 	}
-#ifdef CONFIGURE_KRB5_CCNAME
+#if defined(CONFIGURE_KRB5_CCNAME) || defined(CONFIGURE_KRB5_KEYTAB)
       else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_CCNAME))
 	{
 	  t = &result->ldc_krb5_ccname;
@@ -1078,11 +1093,29 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_AUTORENEW))
 	{
-	  result->ldc_krb5_autorenew = atoi (v);
+	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
+	      || !strcasecmp (v, "true"))
+	    {
+	      result->ldc_krb5_autorenew = 1;
+	    }
+	  else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
+		   || !strcasecmp (v, "false"))
+	    {
+	      result->ldc_krb5_autorenew = 0;
+	    }
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_ROOTAUTORENEW))
 	{
-	  result->ldc_krb5_rootautorenew = atoi (v);
+	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
+	      || !strcasecmp (v, "true"))
+	    {
+	      result->ldc_krb5_rootautorenew = 1;
+	    }
+	  else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
+		   || !strcasecmp (v, "false"))
+	    {
+	      result->ldc_krb5_rootautorenew = 0;
+	    }
 	}
 #endif /* CONFIGURE_KRB5_CCNAME */
 #ifdef CONFIGURE_KRB5_KEYTAB
@@ -1096,11 +1129,29 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_USEKEYTAB))
 	{
-	  result->ldc_krb5_usekeytab = atoi (v);
+	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
+	      || !strcasecmp (v, "true"))
+	    {
+	      result->ldc_krb5_usekeytab = 1;
+	    }
+	  else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
+		   || !strcasecmp (v, "false"))
+	    {
+	      result->ldc_krb5_usekeytab = 0;
+	    }
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_KRB5_ROOTUSEKEYTAB))
 	{
-	  result->ldc_krb5_rootusekeytab = atoi (v);
+	  if (!strcasecmp (v, "on") || !strcasecmp(v, "yes")
+	      || !strcasecmp(v, "true"))
+	    {
+	      result->ldc_krb5_rootusekeytab = 1;
+	    }
+	  else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
+		   || !strcasecmp (v, "false"))
+	    {
+	      result->ldc_krb5_rootusekeytab = 0;
+	    }
 	}
 #endif /* CONFIGURE_KRB5_KEYTAB */
       else if (!strcasecmp (k, "tls_checkpeer"))
@@ -1647,6 +1698,7 @@ _nss_ldap_namelist_find (struct name_list *head, const char *netgroup)
 NSS_STATUS _nss_ldap_validateconfig (ldap_config_t *config)
 {
   struct stat statbuf;
+  char *configFilename = NSS_LDAP_PATH_CONF;
 
   if (config == NULL)
     {
@@ -1658,7 +1710,21 @@ NSS_STATUS _nss_ldap_validateconfig (ldap_config_t *config)
       return NSS_SUCCESS;
     }
 
-  if (stat (NSS_LDAP_PATH_CONF, &statbuf) == 0)
+  if (getuid() == geteuid() && getgid() == getegid())
+    {
+      char *envFilename = getenv("NSS_LDAP_CONFIG_FILE");
+      if (envFilename)
+	{
+	  /* Should check that it is accessible, but leave this for later */
+	  configFilename = envFilename;
+	}
+    }
+
+  if (strcmp(config->ldc_config_filename, configFilename) != 0)
+    {
+      return NSS_TRYAGAIN;
+    }
+  else if (stat (configFilename, &statbuf) == 0)
     {
       return (statbuf.st_mtime > config->ldc_mtime) ? NSS_TRYAGAIN : NSS_SUCCESS;
     }
