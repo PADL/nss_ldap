@@ -355,6 +355,8 @@ struct ldap_config
   char *ldc_sasl_secprops;
   /* DNS SRV RR domain */
   char *ldc_srv_domain;
+  /* DNS SRV RR site */
+  char *ldc_srv_site;
   /* directory for debug files */
   char *ldc_logdir;
   /* LDAP debug level */

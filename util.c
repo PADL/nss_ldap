@@ -642,6 +642,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_reconnect_pol = LP_RECONNECT_HARD_OPEN;
   result->ldc_sasl_secprops = NULL;
   result->ldc_srv_domain = NULL;
+  result->ldc_srv_site = NULL;
   result->ldc_logdir = NULL;
   result->ldc_debug = 0;
   result->ldc_pagesize = LDAP_PAGESIZE;
@@ -1231,6 +1232,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  t = &result->ldc_srv_domain;
 	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_SRV_SITE))
+ 	{
+ 	  t = &result->ldc_srv_site;
+ 	}
       else
 	{
 	  /*

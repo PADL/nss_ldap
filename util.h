@@ -103,6 +103,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_PAGED_RESULTS	"nss_paged_results"
 #define NSS_LDAP_KEY_SCHEMA		"nss_schema"
 #define NSS_LDAP_KEY_SRV_DOMAIN		"nss_srv_domain"
+#define NSS_LDAP_KEY_SRV_SITE		"nss_srv_site"
 #define NSS_LDAP_KEY_CONNECT_POLICY	"nss_connect_policy"
 
 /*

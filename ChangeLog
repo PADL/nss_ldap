@@ -7,6 +7,7 @@ $Id$
         * fix for BUG#412: check whether resolv.conf has changed
 	* fix for BUG#412: don't close nested contexts
 	* fix for BUG#412: make syslog debugging configurable
+	* fix for BUG#412: support configurable site name
 
 265	Luke Howard <lukeh@padl.com>
 
