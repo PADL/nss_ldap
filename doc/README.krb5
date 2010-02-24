@@ -1,0 +1,96 @@
+This is an attempt to document the changes that have been introduced
+into nss_ldap-264 as part of the mega patch.
+
+This patch started life as a refactoring of the Kerberos Authentication
+code, so that the system would allow keytabs to be provided as well as
+credentials.
+
+The resulting Kerberos code is contained in a single file in the current
+implementation. This file 'ldap-init-krb5-cache.c' should probably be
+renamed (ldap-nss-krb5.c) possibly. It contains a single entry point
+__nss_ldap_krb5_cache_setup. This is a SASL mech entry point which 
+provides 4 routines for each of the SASL functions.
+
+The actual code is implemented as init, select, restore, and close functions.
+
+These four functions have 3 separate implementations in the current file,
+these are under conditional compilation and are selected by configuration
+time switches.
+
+--enable-configurable-krb5-ccname-env
+--enable-configurable-krb5-ccname-gssapi
+--enable-configurable-krb5-keytab
+
+The first and second switches enable the older Kerberos code which had limited
+facilities for managing the credentials cache. The first one used the
+environment to pass the credentials cache, the second used the gssapi interface
+to pass the cache. Both methods had to have a preexisting credentials cache
+and required external processes to refresh and renew the cache as required.
+
+The third switch enables the new code. This activates new configuration options
+that allow the passing of a keytab as well as a credential cache. This new code
+will acquire credentials (and refresh them if they expire) using the keytab
+to achieve this. It will also renew the credentials if they are due to expire
+but can be renewed. (There are some limitations in this as the library only
+get activated when the upper layers are called and thus cannot guarantee to
+renew credentials) The new code can be run without a keytab, and will just run
+renew logic is it is. It also detects if a third party is refresh the
+credentials and will use these rather forcing its own renewal/refresh code.
+
+The new code also allows for 'root' keytab/credentials as well as user based.
+
+The code honors the environment variables for the credentials cache and the
+keytab, and uses a search order of the environment, followed by the root
+files (if specified and running as root) followed by the 'user' files.
+
+A normal configuration would have the 'user' files set up to be readable by
+NSCD (and other system non-root processes) with the root files for special
+applications/uses. Setting the KRB5CCNAME and/or KRB5_KTNAME variables allow
+long running daemons to use special credentials. (The code also allows
+the use of the _NSS_LDAP_KRB5CCNAME/_NSS_LDAP_KRB5_KTNAME variables which will
+override the system ones.
+
+Having started this implementation it became obvious that the ldap-nss.c code
+was deficient in some areas and over difficult to read. A serious of changes
+were added to make the code more readable. These are largely in the
+LDAP_GET_OPTION/LDAP_SET_OPTION features. This has been factored out into
+conditional compilation based macros which are then called in the mainline.
+
+Additional debugging code was added as part of this exercise which has added
+some significant number of lines of code. This is in the form of the debug
+macro calls and assert statements.
+
+The utility code has been modified to allow the specification of an
+alternative config file in the environment. This will only be honored
+if the process is not running as the root user. This allows testing of
+new features as well as alternate running configurations.
+
+A major rearrangement of the code in the ldap-nss.c file has taken place to
+support the reconnection code. This was not working and the 'hard' reconnect
+feature was a complete waste of time. The new code will allow reconnection
+using whichever credentials are used for the initial connection and allows
+for the kerberos credentials to be refresh/renewed as part of the reconnection
+logic.
+
+This change has shown up some weaknesses in the ldap-grp.c code which have
+been partially fixed as of 23rd October 2009. There is a recursive call
+into the code that build a group and this does not allow reconnection to
+occur inside the recursion stack. Additional debugging has been added to
+diagnose this problem and a fix will be coming shortly.
+
+The kerberos code needs tuning and tests need to be run on all combinations
+of configuration for the keytabs/credential caches. This code has been
+developed on Linux (late series kernels only) and has been run under valgrind
+which has allowed the removal of some memory leaks. Further testing and
+analysis will no doubt find other issues that need fixing.
+
+There is a facility to keep the credentials cache in a MEMORY store, this has
+not been exercised in this version by the author yet, but is believed to work
+as it has been used in previous versions of the code.
+
+Some work has been done to factor out static data in the lower levels. More
+work needs to be undertaken to remove such data from the higher level code,
+which may allow the code to be run multi-threaded. If this can be achieved
+then there are places where a second house keeping thread may be useful. This
+would have to be under control of the application (via the config or an
+additional to the nss interface).
