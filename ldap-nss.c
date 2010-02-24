@@ -3179,6 +3179,8 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 
   debug ("<== do_with_reconnect returns %s(%d)", __nss_ldap_status2string(stat), stat);
 
+  assert (stat != NSS_TRYAGAIN);
+
   return stat;
 }
 
