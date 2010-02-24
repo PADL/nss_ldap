@@ -60,10 +60,14 @@ static char rcsId[] = "$Id$";
 
 #if defined(HAVE_NSSWITCH_H) || defined(HAVE_NSS_H)
 
+#ifdef notdef
+/* This is not currently used and therefore is not compiled in */
 #ifdef HAVE_NSS_H
 static ent_context_t *bp_context = NULL;
 #endif
+#endif
 
+#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_parse_bp (LDAPMessage * e,
 		    ldap_state_t * pvt,
@@ -87,16 +91,13 @@ _nss_ldap_parse_bp (LDAPMessage * e,
   return NSS_SUCCESS;
 }
 
-#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_getbootparamsbyname_r (nss_backend_t * be, void *args)
 {
   LOOKUP_NAME (args, _nss_ldap_filt_getbootparamsbyname, LM_BOOTPARAMS,
 	       _nss_ldap_parse_bp, LDAP_NSS_BUFLEN_DEFAULT);
 }
-#endif
 
-#ifdef HAVE_NSSWITCH_H
 static NSS_STATUS
 _nss_ldap_bootparams_destr (nss_backend_t * bp_context, void *args)
 {
@@ -133,4 +134,4 @@ _nss_ldap_bootparams_constr (const char *db_name,
 
 #endif /* HAVE_NSSWITCH_H */
 
-#endif /* !HAVE_IRS_H */
+#endif /* HAVE_NSSWITCH_H || HAVE_NSS_H */

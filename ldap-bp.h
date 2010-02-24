@@ -31,11 +31,6 @@ struct bootparams
 };
 
 
-static NSS_STATUS _nss_ldap_parse_bp (LDAPMessage * e,
-				      ldap_state_t * pvt,
-				      void *result,
-				      char *buffer, size_t buflen);
-
 #ifdef HAVE_NSSWITCH_H
 
 /*
@@ -44,6 +39,11 @@ static NSS_STATUS _nss_ldap_parse_bp (LDAPMessage * e,
    char **bp_rootpath, char **bp_swappath, char **bp_dumppath,
    char **bp_execpath, char **bp_kvmpath);
  */
+
+static NSS_STATUS _nss_ldap_parse_bp (LDAPMessage * e,
+				      ldap_state_t * pvt,
+				      void *result,
+				      char *buffer, size_t buflen);
 
 static NSS_STATUS _nss_ldap_getbootparamsbyname_r (nss_backend_t * be,
 						   void *fakeargs);

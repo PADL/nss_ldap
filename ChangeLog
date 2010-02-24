@@ -8,6 +8,7 @@ $Id$
 	* fix for BUG#412: don't close nested contexts
 	* fix for BUG#412: make syslog debugging configurable
 	* fix for BUG#412: support configurable site name
+	* fix for BUG#412: tidy up bootparams code
 
 265	Luke Howard <lukeh@padl.com>
 
