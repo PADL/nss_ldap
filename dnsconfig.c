@@ -1,4 +1,4 @@
-/* Copyright (C) 1997-2005 Luke Howard.
+/* Copyright (C) 1997-2010 Luke Howard.
    This file is part of the nss_ldap library.
    Contributed by Luke Howard, <lukeh@padl.com>, 1997.
    (The author maintains a non-exclusive licence to distribute this file
@@ -42,6 +42,8 @@ static char rcsId[] =
 #include <arpa/nameser.h>
 #include <resolv.h>
 #include <string.h>
+
+#include <assert.h>
 
 #ifdef HAVE_LBER_H
 #include <lber.h>
@@ -130,6 +132,22 @@ _nss_ldap_getdnsdn (char *src_domain,
   return NSS_SUCCESS;
 }
 
+static int
+priority_sort(const void *r1, const void *r2)
+{
+  struct resource_record **rr1 = (struct resource_record **)r1;
+  struct resource_record **rr2 = (struct resource_record **)r2;
+  int ret;
+
+  ret = (*rr1)->u.srv->priority - (*rr2)->u.srv->priority;
+  if (ret == 0)
+    {
+      ret = (*rr2)->u.srv->weight - (*rr1)->u.srv->weight;
+    }
+
+  return ret;
+}
+
 NSS_STATUS
 _nss_ldap_mergeconfigfromdns (ldap_config_t * result,
 			      char **buffer, size_t *buflen)
@@ -140,6 +158,11 @@ _nss_ldap_mergeconfigfromdns (ldap_config_t * result,
   char domain[MAXHOSTNAMELEN + 1];
   char *pDomain;
   char uribuf[NSS_BUFSIZ];
+  int srv_count = 0;
+  int i;
+  struct resource_record **srr;
+
+  debug ("==> _nss_ldap_mergeconfigfromdns");
 
   if ((_res.options & RES_INIT) == 0 && res_init () == -1)
     {
@@ -165,23 +188,46 @@ _nss_ldap_mergeconfigfromdns (ldap_config_t * result,
       return NSS_NOTFOUND;
     }
 
-  /* XXX sort by priority */
   for (rr = r->head; rr != NULL; rr = rr->next)
     {
       if (rr->type == T_SRV)
-	{
-	  snprintf (uribuf, sizeof(uribuf), "ldap%s://%s:%d",
-	    (rr->u.srv->port == LDAPS_PORT) ? "s" : "",
-	    rr->u.srv->target,
-	    rr->u.srv->port);
+	srv_count++;
+    }
 
-	  stat = _nss_ldap_add_uri (result, uribuf, buffer, buflen);
-	  if (stat != NSS_SUCCESS)
-	    {
-	      break;
-	    }
+  debug (":== _nss_ldap_mergeconfigfromdns: retrieved %d SRV records", srv_count);
+
+  srr = (struct resource_record **)calloc (srv_count, sizeof(struct resource_record *));
+  if (srr == NULL)
+    {
+      dns_free_data (r);
+      return NSS_NOTFOUND;
+    }
+
+  for (rr = r->head, i = 0; rr != NULL; rr = rr->next, i++)
+    {
+      if (rr->type == T_SRV)
+	srr[i] = rr;
+    }
+
+  qsort(srr, srv_count, sizeof(struct resource_record *), priority_sort);
+
+  for (i = 0; i < srv_count; i++)
+    {
+      rr = srr[i];
+      snprintf (uribuf, sizeof(uribuf), "ldap%s://%s:%d",
+		(rr->u.srv->port == LDAPS_PORT) ? "s" : "",
+		rr->u.srv->target,
+		rr->u.srv->port);
+
+      stat = _nss_ldap_add_uri (result, uribuf, buffer, buflen);
+      if (stat != NSS_SUCCESS)
+	{
+	  break;
 	}
     }
+
+  debug (":== _nss_ldap_mergeconfigfromdns: processed sort array");
+  free(srr);
 
   dns_free_data (r);
   stat = NSS_SUCCESS;
@@ -191,6 +237,8 @@ _nss_ldap_mergeconfigfromdns (ldap_config_t * result,
       stat = _nss_ldap_getdnsdn (_res.defdname, &result->ldc_base,
 				 buffer, buflen);
     }
+
+  debug ("<== _nss_ldap_mergeconfigfromdns");
 
   return stat;
 }

@@ -15,6 +15,7 @@ $Id$
 	* fix for BUG#412: allow runtime configuration of LDAP
 	  configuration file and keytab using environment
 	* fix for BUG#412: correctly clamp max sleep time
+        * fix for BUG#412: sort SRV records by weight and priority
 
 265	Luke Howard <lukeh@padl.com>
 
