@@ -102,7 +102,7 @@ freebsd*) TARGET_OS=FreeBSD
 esac
 
 AM_CONDITIONAL(GCC, test "$GCC" = "yes")
-AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu")
+AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu" -o "$target_os" = "linux-gnueabi")
 AM_CONDITIONAL(AIX, test "$TARGET_OS" = AIX)
 AM_CONDITIONAL(HPUX, test "$TARGET_OS" = HPUX)
 AM_CONDITIONAL(FreeBSD, test "$TARGET_OS" = FreeBSD)
