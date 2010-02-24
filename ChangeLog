@@ -9,6 +9,7 @@ $Id$
 	* fix for BUG#412: make syslog debugging configurable
 	* fix for BUG#412: support configurable site name
 	* fix for BUG#412: tidy up bootparams code
+	* fix for BUG#412: use macros for ldap_get_option calls
 
 265	Luke Howard <lukeh@padl.com>
 
