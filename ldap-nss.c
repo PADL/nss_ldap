@@ -3120,7 +3120,7 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 	{
 	  if (backoff == 0)
 	    backoff = session->ls_config->ldc_reconnect_sleeptime;
-	  else if (backoff < session->ls_config->ldc_reconnect_maxsleeptime)
+	  else if (backoff * 2 < session->ls_config->ldc_reconnect_maxsleeptime)
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,

@@ -14,6 +14,7 @@ $Id$
 	* fix for BUG#412: rewrite and abstract Kerberos support
 	* fix for BUG#412: allow runtime configuration of LDAP
 	  configuration file and keytab using environment
+	* fix for BUG#412: correctly clamp max sleep time
 
 265	Luke Howard <lukeh@padl.com>
 
