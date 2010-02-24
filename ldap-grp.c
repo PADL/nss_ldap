@@ -859,7 +859,7 @@ ng_chase (const char *dn, ldap_initgroups_args_t * lia)
   LA_STRING (a) = dn;
   LA_TYPE (a) = LA_TYPE_STRING;
 
-  if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
+  if (_nss_ldap_ent_context_init_internal_locked (&ctx) == NULL)
     {
       return NSS_UNAVAIL;
     }
@@ -931,7 +931,7 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
   LA_STRING_LIST (a) = filteredMembersOf;
   LA_TYPE (a) = LA_TYPE_STRING_LIST_OR;
 
-  if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
+  if (_nss_ldap_ent_context_init_internal_locked (&ctx) == NULL)
     {
       free (filteredMembersOf);
       return NSS_UNAVAIL;

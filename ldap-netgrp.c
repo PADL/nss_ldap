@@ -691,7 +691,7 @@ do_innetgr_nested (ldap_innetgr_args_t * li_args, const char *nested)
   LA_TYPE (a) = LA_TYPE_STRING;
   LA_STRING (a) = nested;	/* memberNisNetgroup */
 
-  if (_nss_ldap_ent_context_init_locked (&ctx) == NULL)
+  if (_nss_ldap_ent_context_init_internal_locked (&ctx) == NULL)
     {
       debug ("<== do_innetgr_nested: failed to initialize context");
       return NSS_UNAVAIL;

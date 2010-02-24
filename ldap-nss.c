@@ -2029,7 +2029,7 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
 
   if (ctx == NULL)
     {
-      ctx = (ent_context_t *) malloc (sizeof (*ctx));
+      ctx = (ent_context_t *) calloc (1, sizeof (*ctx));
       if (ctx == NULL)
 	{
 	  debug ("<== _nss_ldap_ent_context_init_locked");
@@ -2067,6 +2067,20 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
   return ctx;
 }
 
+ent_context_t *
+_nss_ldap_ent_context_init_internal_locked (ent_context_t ** pctx)
+{
+  ent_context_t *ctx;
+
+  ctx = _nss_ldap_ent_context_init_locked (pctx);
+  if (ctx == NULL)
+    return NULL;
+
+  ctx->ec_internal = 1;
+
+  return ctx;
+}
+
 static void
 do_context_release (ent_context_t * ctx, int free_context)
 {
@@ -2096,7 +2110,8 @@ do_context_release (ent_context_t * ctx, int free_context)
 
   LS_INIT (ctx->ec_state);
 
-  if (_nss_ldap_test_config_flag (NSS_LDAP_FLAGS_CONNECT_POLICY_ONESHOT))
+  if (!ctx->ec_internal &&
+      _nss_ldap_test_config_flag (NSS_LDAP_FLAGS_CONNECT_POLICY_ONESHOT))
     {
       do_close ();
     }

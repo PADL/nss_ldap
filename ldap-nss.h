@@ -573,7 +573,9 @@ struct ent_context
   LDAPMessage *ec_res;		/* result chain */
   ldap_service_search_descriptor_t *ec_sd;	/* current sd */
   struct berval *ec_cookie;     /* cookie for paged searches */
-  int ec_eof;			/* reached notional end of file */
+  int ec_eof : 1;		/* reached notional end of file */
+  int ec_internal : 1;		/* this context is just a part of a larger
+				 * query for information */
 };
 
 typedef struct ent_context ent_context_t;
@@ -764,6 +766,15 @@ ent_context_t *_nss_ldap_ent_context_init (ent_context_t **);
  */
 
 ent_context_t *_nss_ldap_ent_context_init_locked (ent_context_t **);
+
+/*
+ * _nss_ldap_ent_context_init_internal_locked() has the same
+ * behaviour, except it marks the context as one that's being
+ * used to fetch additional data used in answering a request, i.e.
+ * that this isn't the "main" context
+ */
+
+ent_context_t *_nss_ldap_ent_context_init_internal_locked (ent_context_t **);
 
 /*
  * _nss_ldap_ent_context_release() is used to manually free a context 
