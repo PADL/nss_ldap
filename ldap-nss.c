@@ -532,6 +532,20 @@ __local_option (void *outvalue)
   (__local_option (NULL))
 #endif
 
+static const char *
+__nss_ldap_status2string (NSS_STATUS stat)
+{
+  switch (stat)
+    {
+    case NSS_TRYAGAIN:	return "NSS_TRYAGAIN";
+    case NSS_UNAVAIL:	return "NSS_UNAVAIL";
+    case NSS_NOTFOUND:	return "NSS_NOTFOUND";
+    case NSS_SUCCESS:	return "NSS_SUCCESS";
+    case NSS_RETURN:	return "NSS_RETURN";
+    default:		return "UNKNOWN";
+    }
+}
+
 static NSS_STATUS
 do_map_error (int rc)
 {
@@ -2728,7 +2742,8 @@ do_result (ent_context_t * ctx, int all)
   if (stat == NSS_SUCCESS)
     time (&__session.ls_timestamp);
 
-  debug ("<== do_result");
+  debug ("<== do_result: returns %s(%d), ldap result %s",
+	 __nss_ldap_status2string (stat), stat, ldap_err2string (rc));
 
   return stat;
 }
@@ -2854,7 +2869,8 @@ do_with_reconnect (const char *base, int scope,
       break;
     }
 
-  debug ("<== do_with_reconnect");
+  debug ("<== do_with_reconnect: returns %s (%d)",
+	 __nss_ldap_status2string (stat), stat);
   return stat;
 }
 

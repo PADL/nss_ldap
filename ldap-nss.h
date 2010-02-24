@@ -938,4 +938,5 @@ int _nss_ldap_get_ld_errno (char **m, char **s);
 #ifdef CONFIGURE_KRB5_KEYTAB
 int do_init_krb5_cache(ldap_config_t *config);
 #endif /* CONFIGURE_KRB5_KEYTAB */
+
 #endif /* _LDAP_NSS_LDAP_LDAP_NSS_H */
