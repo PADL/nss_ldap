@@ -2989,6 +2989,31 @@ do_result (ldap_session_t *session, ent_context_t * ctx, int all)
   return stat;
 }
 
+static void
+do_sleep (long usecs)
+{
+  /*
+   * Historically nss_ldap did not attempt to resume sleep in the
+   * event of a signal. This is probably useful behaviour (so that
+   * a user can interrupt) so it is preserved here.
+   */
+#if defined(HAVE_NANOSLEEP)
+  struct timespec ts;
+
+  ts.tv_sec = usecs / USECSPERSEC;
+  ts.tv_nsec = (usecs % USECSPERSEC) * 1000;
+#elif defined(HAVE_USLEEP)
+  usleep(usecs);
+#else
+  struct timeval tv;
+
+  tv.tv_sec = usecs / USECSPERSEC;
+  tv.tv_usec = usecs % USECSPERSEC;
+
+  select(0, NULL, NULL, NULL, &tv);
+#endif
+}
+
 /*
  * Function to call either do_search() or do_search_s() with
  * reconnection logic.
@@ -3131,9 +3156,9 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnecting to LDAP server (sleeping %d seconds)...",
-		  backoff);
-	  (void) sleep (backoff);
+		  "nss_ldap: reconnecting to LDAP server (sleeping %d.%0.6d seconds)...",
+		  backoff / USECSPERSEC, backoff % USECSPERSEC);
+	  (void) do_sleep (backoff);
 	}
       else if (tries > 1)
 	{

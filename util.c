@@ -668,8 +668,8 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_flags |= NSS_LDAP_FLAGS_PAGED_RESULTS;
 #endif
   result->ldc_reconnect_tries = LDAP_NSS_TRIES;
-  result->ldc_reconnect_sleeptime = LDAP_NSS_SLEEPTIME;
-  result->ldc_reconnect_maxsleeptime = LDAP_NSS_MAXSLEEPTIME;
+  result->ldc_reconnect_sleeptime = LDAP_NSS_SLEEPTIME * USECSPERSEC;
+  result->ldc_reconnect_maxsleeptime = LDAP_NSS_MAXSLEEPTIME * USECSPERSEC;
   result->ldc_reconnect_maxconntries = LDAP_NSS_MAXCONNTRIES;
   result->ldc_initgroups_ignoreusers = NULL;
 
@@ -802,6 +802,28 @@ do_add_hosts (ldap_config_t *result, char *hosts,
     }
 
   return stat;
+}
+
+static NSS_STATUS
+do_parse_time (unsigned long *result, const char *value)
+{
+  unsigned long secs, usecs = 0;
+  char *endptr;
+
+  secs = strtoul(value, &endptr, 10);
+  if (secs == 0)
+    {
+      return NSS_UNAVAIL;
+    }
+
+  if (endptr != NULL && *endptr == 'u')
+    {
+      usecs = strtoul(endptr + 1, NULL, 10);
+    }
+
+  *result = (secs * USECSPERSEC) + usecs;
+
+  return NSS_SUCCESS;
 }
 
 NSS_STATUS
@@ -1056,11 +1078,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_SLEEPTIME))
 	{
-	  result->ldc_reconnect_sleeptime = atoi (v);
+	  do_parse_time (&result->ldc_reconnect_sleeptime, v);
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_MAXSLEEPTIME))
 	{
-	  result->ldc_reconnect_maxsleeptime = atoi (v);
+	  do_parse_time (&result->ldc_reconnect_maxsleeptime, v);
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_RECONNECT_MAXCONNTRIES))
 	{

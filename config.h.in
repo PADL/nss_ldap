@@ -66,6 +66,12 @@
 /* Define to 1 if you have the <alignof.h> header file. */
 #undef HAVE_ALIGNOF_H
 
+/* Define to 1 if you have the <arpa/nameser_compat.h> header file. */
+#undef HAVE_ARPA_NAMESER_COMPAT_H
+
+/* Define to 1 if you have the <arpa/nameser.h> header file. */
+#undef HAVE_ARPA_NAMESER_H
+
 /* Define to 1 if you have the <bits/libc-lock.h> header file. */
 #undef HAVE_BITS_LIBC_LOCK_H
 
@@ -208,6 +214,9 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Define to 1 if you have the `nanosleep' function. */
+#undef HAVE_NANOSLEEP
+
 /* Define to 1 if you have the <netinet/ether.h> header file. */
 #undef HAVE_NETINET_ETHER_H
 
@@ -313,6 +322,9 @@
 /* Define to 1 if you have the <usersec.h> header file. */
 #undef HAVE_USERSEC_H
 
+/* Define to 1 if you have the `usleep' function. */
+#undef HAVE_USLEEP
+
 /* Name of package */
 #undef PACKAGE
 
@@ -331,16 +343,16 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* The size of a `gid_t', as computed by sizeof. */
+/* The size of `gid_t', as computed by sizeof. */
 #undef SIZEOF_GID_T
 
-/* The size of a `uid_t', as computed by sizeof. */
+/* The size of `uid_t', as computed by sizeof. */
 #undef SIZEOF_UID_T
 
-/* The size of a `unsigned int', as computed by sizeof. */
+/* The size of `unsigned int', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_INT
 
-/* The size of a `unsigned long', as computed by sizeof. */
+/* The size of `unsigned long', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_LONG
 
 /* Define to 1 if you have the ANSI C header files. */

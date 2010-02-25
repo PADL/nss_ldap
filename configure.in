@@ -367,4 +367,6 @@ AC_TRY_COMPILE([
 #include <ldap.h>], [ldap_set_rebind_proc(0, 0, 0);], [nss_ldap_cv_ldap_set_rebind_proc=3], [nss_ldap_cv_ldap_set_rebind_proc=2]) ])
 AC_DEFINE_UNQUOTED(LDAP_SET_REBIND_PROC_ARGS, $nss_ldap_cv_ldap_set_rebind_proc)
 
+AC_CHECK_FUNCS(usleep nanosleep)
+
 AC_OUTPUT(Makefile)

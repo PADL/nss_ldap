@@ -5,7 +5,7 @@ $Id$
 
 	* fix for BUG#402: incorrectly detected glibc on armel
 	* fix for BUG#411: memory leak in do_init()
-        * fix for BUG#412: check whether resolv.conf has changed
+	* fix for BUG#412: check whether resolv.conf has changed
 	* fix for BUG#412: don't close nested contexts
 	* fix for BUG#412: make syslog debugging configurable
 	* fix for BUG#412: support configurable site name
@@ -16,7 +16,8 @@ $Id$
 	* fix for BUG#412: allow runtime configuration of LDAP
 	  configuration file and keytab using environment
 	* fix for BUG#412: correctly clamp max sleep time
-        * fix for BUG#412: sort SRV records by weight and priority
+	* fix for BUG#412: sort SRV records by weight and priority
+	* fix for BUG#412: support microsecond backoff granularity
 	* fix for BUG#414: SIGPIPE handling in atfork()
 	* fix for BUG#416: FreeBSD 7.x/8.x compatibility
 

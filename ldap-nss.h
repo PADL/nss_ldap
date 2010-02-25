@@ -349,8 +349,11 @@ struct ldap_config
   /* reconnect policy */
   ldap_reconnect_policy_t ldc_reconnect_pol;
   int ldc_reconnect_tries;
-  int ldc_reconnect_sleeptime;
-  int ldc_reconnect_maxsleeptime;
+#define USECSPERSEC	1000000
+  /* sleep time in microseconds */
+  unsigned long ldc_reconnect_sleeptime;
+  /* max sleep time in microseconds */
+  unsigned long ldc_reconnect_maxsleeptime;
   int ldc_reconnect_maxconntries;
 
   /* sasl security */
