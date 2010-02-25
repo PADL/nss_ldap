@@ -2075,15 +2075,15 @@ do_open (ldap_session_t *session)
    */
   if (geteuid () == 0)
     {
-      who = ((cfg->ldc_rootbinddn != NULL) ? cfg->ldc_rootbinddn : cfg->ldc_binddn);
+      who = (cfg->ldc_rootbinddn != NULL) ? cfg->ldc_rootbinddn : cfg->ldc_binddn;
       with_sasl = (cfg->ldc_rootsaslid) ? cfg->ldc_rootusesasl : cfg->ldc_usesasl;
       if (with_sasl != 0)
 	{
-	  cred = ((cfg->ldc_rootsaslid) ? cfg->ldc_rootsaslid : cfg->ldc_saslid);
+	  cred = (cfg->ldc_rootsaslid != NULL) ? cfg->ldc_rootsaslid : cfg->ldc_saslid;
 	}
       else
 	{
-	  cred = ((cfg->ldc_rootbindpw) ? cfg->ldc_rootbindpw : cfg->ldc_bindpw);
+	  cred = (cfg->ldc_rootbindpw != NULL) ? cfg->ldc_rootbindpw : cfg->ldc_bindpw;
 	}
     }
   else
@@ -2100,7 +2100,11 @@ do_open (ldap_session_t *session)
 	}
     }
 
-  rc = do_bind (session, cfg->ldc_bind_timelimit, with_sasl ? cred : who, with_sasl ? NULL : cred, with_sasl);
+  rc = do_bind (session,
+		cfg->ldc_bind_timelimit,
+		with_sasl ? cred : who,
+		with_sasl ? NULL : cred,
+		with_sasl);
 
   if (rc != LDAP_SUCCESS)
     {
@@ -3158,7 +3162,7 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 	  syslog (LOG_INFO,
 		  "nss_ldap: reconnecting to LDAP server (sleeping %d.%0.6d seconds)...",
 		  backoff / USECSPERSEC, backoff % USECSPERSEC);
-	  (void) do_sleep (backoff);
+	  do_sleep (backoff);
 	}
       else if (tries > 1)
 	{
@@ -3202,9 +3206,9 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
       break;
     default:
       syslog (LOG_ERR,
-	      "nss_ldap: could not search server failed with %s(%d), ldap code %s(%d)",
+	      "nss_ldap: could not search LDAP server: %s(%d), LDAP error code %s(%d)",
 	      __nss_ldap_status2string(stat), stat, ldap_err2string(rc), rc);
-      debug (":== do_with_reconnect: could not search server failed with %s(%d), ldap code %s(%d)",
+      debug (":== do_with_reconnect: could not search LDAP server: %s(%d), LDAP error code %s(%d)",
 	      __nss_ldap_status2string(stat), stat, ldap_err2string(rc), rc);
       break;
     }
@@ -3275,6 +3279,7 @@ do_search (ldap_session_t *session, const char *base, int scope,
       /* Bug in ldap library does not clear errno */
       {
 	int erc;
+
 	GET_ERROR_NUMBER (session->ls_conn, &erc);
 	debug (":== do_search: error number prior to call to ldap_create_page_control %d", erc);
 	erc = LDAP_SUCCESS;
@@ -3605,35 +3610,38 @@ _nss_ldap_next_attribute (LDAPMessage * entry, BerElement * ber)
   return ldap_next_attribute (session->ls_conn, entry, ber);
 }
 
-static ldap_service_search_descriptor_t *
-do_adjust_search_base(ldap_session_t *session, ldap_service_search_descriptor_t * sd, const char **base, int *scope)
+static void
+do_search_params (const ldap_session_t *session,
+		  const ldap_service_search_descriptor_t *sd,
+		  char *sdBase,
+		  size_t sdBaseSize,
+		  const char **base,
+		  int *scope)
 {
-  char sdBase[LDAP_FILT_MAXSIZ];
-
-  debug ("==> do_adjust_search_base ");
+  debug ("==> do_search_params");
 
   if (sd != NULL)
     {
       size_t len = strlen (sd->lsd_base);
+
       if (sd->lsd_base[len - 1] == ',')
 	{
 	  /* is relative */
-	  snprintf (sdBase, sizeof (sdBase), "%s%s", sd->lsd_base, session->ls_config->ldc_base);
+	  snprintf (sdBase, sdBaseSize, "%s%s", sd->lsd_base, session->ls_config->ldc_base);
 	  *base = sdBase;
 	}
       else
 	{
 	  *base = sd->lsd_base;
 	}
+
       if (sd->lsd_scope != -1)
 	{
 	  *scope = sd->lsd_scope;
 	}
     }
 
-  debug ("<== do_adjust_search_base base = %s, scope = %d", *base, *scope);
-
-  return sd;
+  debug ("<== do_search_params base=%s, scope=%d", *base, *scope);
 }
 
 static NSS_STATUS
@@ -3678,6 +3686,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
 		    const char *filterprot, ldap_map_selector_t sel, const
 		    char **user_attrs, int sizelimit, LDAPMessage ** res)
 {
+  char sdBase[LDAP_FILT_MAXSIZ];
   const char *base = NULL;
   const char **attrs;
   int scope;
@@ -3714,8 +3723,7 @@ _nss_ldap_search_s (const ldap_args_t * args,
     {
       sd = session->ls_config->ldc_sds[sel];
     next:
-      sd = do_adjust_search_base (session, sd, &base, &scope);
-
+      do_search_params (session, sd, sdBase, sizeof(sdBase), &base, &scope);
       attrs = session->ls_config->ldc_attrtab[sel];
     }
 
@@ -3768,6 +3776,7 @@ _nss_ldap_search (const ldap_args_t * args,
   NSS_STATUS stat;
   ldap_service_search_descriptor_t *sd = NULL;
   ldap_session_t *session = &__session;
+  char sdBase[LDAP_FILT_MAXSIZ];
 
   debug ("==> _nss_ldap_search");
 
@@ -3814,7 +3823,7 @@ _nss_ldap_search (const ldap_args_t * args,
 
       *csd = sd;
 
-      sd = do_adjust_search_base (session, sd, &base, &scope);
+      do_search_params (session, sd, sdBase, sizeof(sdBase), &base, &scope);
 
       attrs = session->ls_config->ldc_attrtab[sel];
     }
@@ -3837,6 +3846,7 @@ do_next_page (const ldap_args_t * args,
 	      const char *filterprot, ldap_map_selector_t sel, int
 	      sizelimit, int *msgid, struct berval *pCookie)
 {
+  char sdBase[LDAP_FILT_MAXSIZ];
   const char *base = NULL;
   char filterBuf[LDAP_FILT_MAXSIZ], *dynamicFilterBuf = NULL;
   const char **attrs, *filter;
@@ -3863,7 +3873,8 @@ do_next_page (const ldap_args_t * args,
 
   if (sel < LM_NONE)
     {
-      sd = do_adjust_search_base (session, session->ls_config->ldc_sds[sel], &base, &scope);
+      do_search_params (session, session->ls_config->ldc_sds[sel],
+			sdBase, sizeof(sdBase), &base, &scope);
 
       attrs = session->ls_config->ldc_attrtab[sel];
     }
@@ -3877,14 +3888,17 @@ do_next_page (const ldap_args_t * args,
     }
 
   debug (":== do_next_page: call ldap_create_page_control");
-  /* Bug in openldap library does not reset err number */
+
   {
+    /* Bug in OpenLDAP library does not reset err number */
     int erc;
+
     GET_ERROR_NUMBER (session->ls_conn, &erc);
     debug (":== do_next_page: error number prior to call to ldap_create_page_control %d", erc);
     erc = LDAP_SUCCESS;
     SET_ERROR_NUMBER (session->ls_conn, &erc);
   }
+
   stat =
     ldap_create_page_control (session->ls_conn,
 			      session->ls_config->ldc_pagesize,
