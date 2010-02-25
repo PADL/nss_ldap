@@ -811,14 +811,15 @@ do_parse_time (unsigned long *result, const char *value)
   char *endptr;
 
   secs = strtoul(value, &endptr, 10);
-  if (secs == 0)
-    {
-      return NSS_UNAVAIL;
-    }
 
   if (endptr != NULL && *endptr == 'u')
     {
       usecs = strtoul(endptr + 1, NULL, 10);
+    }
+
+  if (secs == 0 && usecs == 0)
+    {
+      return NSS_UNAVAIL;
     }
 
   *result = (secs * USECSPERSEC) + usecs;
