@@ -647,8 +647,9 @@ _nss_ldap_parse_gr (LDAPMessage * e,
 							      10);
 
   stat =
-    _nss_ldap_getrdnvalue (e, ATM (LM_GROUP, cn), &gr->gr_name, &buffer,
-			   &buflen);
+    _nss_ldap_assign_attrval (e, ATM (LM_GROUP, cn), &gr->gr_name, &buffer,
+                              &buflen);
+
   if (stat != NSS_SUCCESS)
     {
       debug ("<== _nss_ldap_parse_gr: returns %s(%d)", __nss_ldap_status2string(stat), stat);
