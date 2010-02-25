@@ -956,7 +956,7 @@ NSS_STATUS _nss_ldap_assign_attrval (LDAPMessage * e,	/* IN */
 				     size_t * buflen /* IN/OUT */ );
 
 
-const char *_nss_ldap_locate_userpassword (char **vals);
+const char *_nss_ldap_locate_userpassword (LDAPMessage *e, char **vals);
 
 NSS_STATUS _nss_ldap_assign_userpassword (LDAPMessage * e,	/* IN */
 					  const char *attr,	/* IN */

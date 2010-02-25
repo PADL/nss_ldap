@@ -4306,7 +4306,7 @@ _nss_ldap_assign_attrval (LDAPMessage * e,
 }
 
 const char *
-_nss_ldap_locate_userpassword (char **vals)
+_nss_ldap_locate_userpassword (LDAPMessage *e, char **vals)
 {
   const char *token = NULL;
   size_t token_length = 0;
@@ -4345,7 +4345,12 @@ _nss_ldap_locate_userpassword (char **vals)
     }
 
   if (pwd == NULL)
-    pwd = "*";
+    {
+      if (_nss_ldap_oc_check (e, "shadowAccount") == NSS_SUCCESS)
+	pwd = "x";
+      else
+	pwd = "*";
+    }
   else
     pwd += token_length;
 
@@ -4375,7 +4380,7 @@ _nss_ldap_assign_userpassword (LDAPMessage * e,
     }
 
   vals = ldap_get_values (session->ls_conn, e, (char *) attr);
-  pwd = _nss_ldap_locate_userpassword (vals);
+  pwd = _nss_ldap_locate_userpassword (e, vals);
 
   vallen = strlen (pwd);
 

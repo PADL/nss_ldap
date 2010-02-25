@@ -5,6 +5,7 @@ $Id$
 
 	* fix for BUG#129: native linker doesn't use LDFLAGS
 	* fix for BUG#143: don't use getrdnvalue for groups
+	* fix for BUG#240: return "x" for shadowAccount password
 	* fix for BUG#402: incorrectly detected glibc on armel
 	* fix for BUG#411: memory leak in do_init()
 	* fix for BUG#412: check whether resolv.conf has changed

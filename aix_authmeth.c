@@ -515,7 +515,7 @@ uess_get_pwd (LDAPMessage * e, ldap_uess_args_t * lua, int i)
     return NSS_NOTFOUND;
 
   vals = _nss_ldap_get_values (e, attribute);
-  pwd = _nss_ldap_locate_userpassword (vals);
+  pwd = _nss_ldap_locate_userpassword (e, vals);
 
   av->attr_un.au_char = strdup (pwd);
   if (vals != NULL)
