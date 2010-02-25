@@ -841,9 +841,16 @@ static void
 do_atfork_child (void)
 {
   ldap_session_t *session = &__session;
+  sigset_t unblock, mask;
 
   debug ("==> do_atfork_child");
+
+  sigemptyset(&unblock);
+  sigaddset(&unblock, SIGPIPE);
+  sigprocmask(SIG_UNBLOCK, &unblock, &mask);
   do_close_no_unbind (session);
+  sigprocmask(SIG_SETMASK, &mask, NULL);
+
   _nss_ldap_leave ();
   debug ("<== do_atfork_child");
 }

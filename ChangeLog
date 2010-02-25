@@ -17,6 +17,7 @@ $Id$
 	  configuration file and keytab using environment
 	* fix for BUG#412: correctly clamp max sleep time
         * fix for BUG#412: sort SRV records by weight and priority
+	* fix for BUG#414: SIGPIPE handling in atfork()
 	* fix for BUG#416: FreeBSD 7.x/8.x compatibility
 
 265	Luke Howard <lukeh@padl.com>
