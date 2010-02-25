@@ -3160,7 +3160,7 @@ do_with_reconnect (ldap_session_t *session, const char *base, int scope,
 	    backoff *= 2;
 
 	  syslog (LOG_INFO,
-		  "nss_ldap: reconnecting to LDAP server (sleeping %d.%0.6d seconds)...",
+		  "nss_ldap: reconnecting to LDAP server (sleeping %d.%06d seconds)...",
 		  backoff / USECSPERSEC, backoff % USECSPERSEC);
 	  do_sleep (backoff);
 	}
