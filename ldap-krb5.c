@@ -320,7 +320,7 @@ do_krb5_cache_get_ccname (nss_ldap_krb5_state_t *state,
 	}
     }
 
-  debug ("<== do_krb5_cache_get_ccname: returns ccname = %s",
+  debug ("<== do_krb5_cache_get_ccname: returns ccname=%s",
 	 ccname ? ccname : "NULL");
 
   return (ccname != NULL) ? strdup (ccname) : NULL;
@@ -802,7 +802,7 @@ do_krb5_cache_acquire (nss_ldap_krb5_state_t *state, ldap_config_t *config)
       state->saslid = do_krb5_cache_get_saslid (state, config);
     }
 
-  debug (":== do_krb5_cache_acquire: saslid = %s",
+  debug (":== do_krb5_cache_acquire: saslid=%s",
 	 state->saslid ? state->saslid : "NULL");
 
   if (state->saslid && state->principal == NULL)
@@ -1156,14 +1156,14 @@ do_krb5_cache_select (ldap_session_t *session)
 	  debug (":== do_krb5_cache_select: unable to set default credential cache - retval %d", retval);
 	  result = -1;
 	}
-      debug(":== do_krb5_cache_select: ccname = %s", state->ccname);
+      debug(":== do_krb5_cache_select: ccname=%s", state->ccname);
     }
   else
     {
       debug(":== do_krb5_cache_select: ccname is NULL");
     }
 
-  debug ("<== do_krb5_cache_select returns result = %d", result);
+  debug ("<== do_krb5_cache_select returns result=%d", result);
 
   return result;
 }
@@ -1214,7 +1214,7 @@ do_krb5_cache_restore (ldap_session_t *session)
 
   state->saveccname = NULL;
 
-  debug ("<== do_krb5_cache_restore: returns result = %d", result);
+  debug ("<== do_krb5_cache_restore: returns result=%d", result);
 
   return result;
 }
