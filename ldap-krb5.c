@@ -134,7 +134,7 @@ typedef enum
   KRB5_CACHE_ERROR		/* Cannot get any credentials (this time) */
 } krb5_cache_state;
 
-typedef struct _nss_ldap_krb5_state {
+typedef struct nss_ldap_krb5_state {
   krb5_cache_state	cache_state;
   uid_t			euid;
   krb5_context		context;
@@ -150,105 +150,104 @@ typedef struct _nss_ldap_krb5_state {
   char			*ktname;
   char			*saslid;
   int			autorenew;
-} _nss_ldap_krb5_state, *_nss_ldap_krb5_state_p;
+} nss_ldap_krb5_state_t;
 
 #define credsOK(__ks__)				\
-  (((__ks__)->creds != NULL) && (((__ks__)->creds->times.endtime - time(0)) > (2 * (__ks__)->skew)))
+  (((__ks__)->creds != NULL) && (((__ks__)->creds->times.endtime - time(NULL)) > (2 * (__ks__)->skew)))
 
 #define credsEXPIRING(__ks__)			\
   (((__ks__)->creds != NULL)			\
-   && ((((__ks__)->creds->times.endtime - time(0)) <= (2 * (__ks__)->skew)) \
-       && (((__ks__)->creds->times.endtime - time(0)) > (__ks__)->skew)))
+   && ((((__ks__)->creds->times.endtime - time(NULL)) <= (2 * (__ks__)->skew)) \
+       && (((__ks__)->creds->times.endtime - time(NULL)) > (__ks__)->skew)))
 
 #define credsEXPIRED(__ks__)			\
   (((__ks__)->creds == NULL)			\
-   || ((((__ks__)->creds->times.renew_till - time(0)) <= (2 * (__ks__)->skew)) \
-       || (((__ks__)->creds->times.endtime - time(0)) <= (__ks__)->skew)))
+   || ((((__ks__)->creds->times.renew_till - time(NULL)) <= (2 * (__ks__)->skew)) \
+       || (((__ks__)->creds->times.endtime - time(NULL)) <= (__ks__)->skew)))
 
-static void *__nss_ldap_krb5_cache_init(ldap_session_t *session);
-static int __nss_ldap_krb5_cache_select (ldap_session_t *session);
-static int __nss_ldap_krb5_cache_restore (ldap_session_t *session);
-static void __nss_ldap_krb5_cache_close(ldap_session_t *session);
+static void *do_krb5_cache_init(ldap_session_t *session);
+static int do_krb5_cache_select (ldap_session_t *session);
+static int do_krb5_cache_restore (ldap_session_t *session);
+static void do_krb5_cache_close(ldap_session_t *session);
 
 static void
-__nss_ldap_krb5_cache_reset (_nss_ldap_krb5_state_p krb5_cache_state)
+do_krb5_cache_reset (nss_ldap_krb5_state_t *state)
 {
-  debug ("==> __nss_ldap_krb5_cache_reset");
+  debug ("==> do_krb5_cache_reset");
 
-  assert(krb5_cache_state != NULL);
+  assert(state != NULL);
 
-  if (krb5_cache_state->context != NULL)
+  if (state->context != NULL)
     {
-      if (krb5_cache_state->creds != NULL)
+      if (state->creds != NULL)
 	{
-	  debug (":== __nss_ldap_krb5_cache_reset: call krb5_free_creds");
-	  krb5_free_creds (krb5_cache_state->context, krb5_cache_state->creds);
-	  krb5_cache_state->creds = NULL;
+	  krb5_free_creds (state->context, state->creds);
+	  state->creds = NULL;
 	}
 #ifdef HEIMDAL
-      if (krb5_cache_state->creds2 != NULL)
+      if (state->creds2 != NULL)
 	{
-	  debug (":== __nss_ldap_krb5_cache_reset: call krb5_free_creds");
-	  krb5_free_creds (krb5_cache_state->context, krb5_cache_state->creds2);
-	  krb5_cache_state->creds2 = NULL;
+	  krb5_free_creds (state->context, state->creds2);
+	  state->creds2 = NULL;
 	}
 #endif
-      if (krb5_cache_state->principal != NULL)
+      if (state->principal != NULL)
 	{
-	  debug (":== __nss_ldap_krb5_cache_reset: call krb5_free_principal");
-	  krb5_free_principal (krb5_cache_state->context, krb5_cache_state->principal);
-	  krb5_cache_state->principal = NULL;
+	  krb5_free_principal (state->context, state->principal);
+	  state->principal = NULL;
 	}
-      if (krb5_cache_state->cc != NULL)
+      if (state->cc != NULL)
 	{
-	  krb5_cc_close (krb5_cache_state->context, krb5_cache_state->cc);
-	  krb5_cache_state->cc = NULL;
+	  krb5_cc_close (state->context, state->cc);
+	  state->cc = NULL;
 	}
 
-      krb5_free_context (krb5_cache_state->context);
-      krb5_cache_state->context = NULL;
+      krb5_free_context (state->context);
+      state->context = NULL;
     }
 
-  krb5_cache_state->skew = 0;
-  krb5_cache_state->autorenew = 0;
+  state->skew = 0;
+  state->autorenew = 0;
 
-  if (krb5_cache_state->ccname != NULL)
+  if (state->ccname != NULL)
     {
-      free (krb5_cache_state->ccname);
-      krb5_cache_state->ccname = NULL;
+      free (state->ccname);
+      state->ccname = NULL;
     }
-  if (krb5_cache_state->ktname != NULL)
+  if (state->ktname != NULL)
     {
-      free (krb5_cache_state->ktname);
-      krb5_cache_state->ktname = NULL;
+      free (state->ktname);
+      state->ktname = NULL;
     }
-  if (krb5_cache_state->saslid != NULL)
+  if (state->saslid != NULL)
     {
-      free (krb5_cache_state->saslid);
-      krb5_cache_state->saslid = NULL;
+      free (state->saslid);
+      state->saslid = NULL;
     }
 
-  krb5_cache_state->cache_state = KRB5_CACHE_INIT;
+  state->cache_state = KRB5_CACHE_INIT;
 
-  debug ("<== __nss_ldap_krb5_cache_reset");
+  debug ("<== do_krb5_cache_reset");
 
   return;
 }
 
 static char *
-__nss_ldap_krb5_cache_get_ktname (_nss_ldap_krb5_state_p krb5_cache_state, ldap_config_t * config)
+do_krb5_cache_get_ktname (nss_ldap_krb5_state_t *state,
+			  ldap_config_t * config,
+			  int envOK)
 {
   char *ktname = NULL;
   char buf[KT_PATH_MAX];
 
-  assert(krb5_cache_state != NULL && config != NULL);
+  assert(state != NULL && config != NULL);
 
-  debug ("==> __nss_ldap_krb5_cache_get_ktname rootusekeytab = %d, rootusesasl = %d, rootkeytabname = %s",
+  debug ("==> do_krb5_cache_get_ktname rootusekeytab=%d, rootusesasl=%d, rootkeytabname=%s",
 	 config->ldc_krb5_rootusekeytab, config->ldc_rootusesasl, config->ldc_krb5_rootkeytabname);
-  debug ("==> __nss_ldap_krb5_cache_get_ktname usekeytab = %d, usesasl = %d, keytabname = %s",
+  debug ("==> do_krb5_cache_get_ktname usekeytab=%d, usesasl=%d, keytabname=%s",
 	 config->ldc_krb5_usekeytab, config->ldc_usesasl, config->ldc_krb5_keytabname);
 
-  if (krb5_cache_state->euid == 0 &&
+  if (state->euid == 0 &&
       config->ldc_krb5_rootusekeytab &&
       config->ldc_rootusesasl)
     {
@@ -262,9 +261,7 @@ __nss_ldap_krb5_cache_get_ktname (_nss_ldap_krb5_state_p krb5_cache_state, ldap_
       ktname = config->ldc_krb5_keytabname;
     }
 
-  if (ktname == NULL &&
-      getuid() == geteuid() &&
-      getgid() == getegid())
+  if (ktname == NULL && envOK)
     {
       /* Not setuid, so safe to read environment variables or use defaults */
       ktname = getenv ("KRB5_KTNAME");
@@ -273,32 +270,32 @@ __nss_ldap_krb5_cache_get_ktname (_nss_ldap_krb5_state_p krb5_cache_state, ldap_
 	  ktname = getenv ("NSS_LDAP_KRB5_KTNAME");
 	}
 
-      debug (":== __nss_ldap_krb5_cache_get_ktname: call krb5_kt_default_name");
+      assert(state->context != NULL);
 
-      assert(krb5_cache_state->context != NULL);
-
-      if (krb5_kt_default_name (krb5_cache_state->context, buf, KT_PATH_MAX) == 0)
+      if (krb5_kt_default_name (state->context, buf, KT_PATH_MAX) == 0)
 	{
 	  ktname = buf;
 	}
     }
 
-  debug ("<== __nss_ldap_krb5_cache_get_ktname: returns %s",
+  debug ("<== do_krb5_cache_get_ktname: returns %s",
 	 ktname ? ktname : "NULL");
 
   return ktname != NULL ? strdup(ktname) : NULL;
 }
 
 static char *
-__nss_ldap_krb5_cache_get_ccname (_nss_ldap_krb5_state_p krb5_cache_state, ldap_config_t * config)
+do_krb5_cache_get_ccname (nss_ldap_krb5_state_t *state,
+				  ldap_config_t * config,
+				  int envOK)
 {
   char *ccname = NULL;
 
-  debug ("==> __nss_ldap_krb5_cache_get_ccname");
+  debug ("==> do_krb5_cache_get_ccname");
 
-  assert(krb5_cache_state != NULL && config != NULL && krb5_cache_state->context != NULL);
+  assert(state != NULL && config != NULL && state->context != NULL);
 
-  if (krb5_cache_state->euid == 0 && config->ldc_rootusesasl)
+  if (state->euid == 0 && config->ldc_rootusesasl)
     {
       ccname = config->ldc_krb5_rootccname;
     }
@@ -308,9 +305,7 @@ __nss_ldap_krb5_cache_get_ccname (_nss_ldap_krb5_state_p krb5_cache_state, ldap_
       ccname = config->ldc_krb5_ccname;
     }
 
-  if (ccname == NULL &&
-      getuid() == geteuid() &&
-      getgid() == getegid())
+  if (ccname == NULL && envOK)
     {
       /* Not setuid, so safe to read environment variables */
       ccname = getenv ("KRB5CCNAME");
@@ -321,27 +316,27 @@ __nss_ldap_krb5_cache_get_ccname (_nss_ldap_krb5_state_p krb5_cache_state, ldap_
 
       if (ccname == NULL)
 	{
-	  ccname = (char *)krb5_cc_default_name (krb5_cache_state->context);
+	  ccname = (char *)krb5_cc_default_name (state->context);
 	}
     }
 
-  debug ("<== __nss_ldap_krb5_cache_get_ccname: returns ccname = %s",
+  debug ("<== do_krb5_cache_get_ccname: returns ccname = %s",
 	 ccname ? ccname : "NULL");
 
   return (ccname != NULL) ? strdup (ccname) : NULL;
 }
 
 static char *
-__nss_ldap_krb5_cache_get_saslid (_nss_ldap_krb5_state_p krb5_cache_state, ldap_config_t * config)
+do_krb5_cache_get_saslid (nss_ldap_krb5_state_t *state, ldap_config_t * config)
 {
   char *saslid = NULL;
   char defaultSaslId[sizeof("host/") + MAXHOSTNAMELEN] = "host/";
 
-  debug ("==> __nss_ldap_krb5_cache_get_saslid");
+  debug ("==> do_krb5_cache_get_saslid");
 
-  assert (krb5_cache_state != NULL && config != NULL);
+  assert (state != NULL && config != NULL);
 
-  if (krb5_cache_state->euid == 0 && config->ldc_rootusesasl)
+  if (state->euid == 0 && config->ldc_rootusesasl)
     {
       saslid = config->ldc_rootsaslid;
     }
@@ -356,13 +351,14 @@ __nss_ldap_krb5_cache_get_saslid (_nss_ldap_krb5_state_p krb5_cache_state, ldap_
       char *p;
       int hostnamelen;
 
-      debug (":== __nss_ldap_krb5_cache_get_saslid: get default principal name");
+      debug (":== do_krb5_cache_get_saslid: get default principal name");
 
       p = &defaultSaslId[sizeof("host/") - 1];
 
       if (gethostname (p, MAXHOSTNAMELEN) != 0)
 	{
-	  debug ("<== _nss_ldap_krb5_cache_get_saslid: gethostname() failed - %s", strerror(errno));
+	  debug ("<== _nss_ldap_krb5_cache_get_saslid: gethostname() failed - %s",
+		 strerror (errno));
 	  return NULL;
 	}
 
@@ -372,7 +368,8 @@ __nss_ldap_krb5_cache_get_saslid (_nss_ldap_krb5_state_p krb5_cache_state, ldap_
 	{
 	  if (getdomainname (p + 1, MAXHOSTNAMELEN - hostnamelen - 1) != 0)
 	    {
-	      debug ("<== _nss_ldap_krb5_cache_get_saslid: getdomainname() failed - %s", strerror(errno));
+	      debug ("<== _nss_ldap_krb5_cache_get_saslid: getdomainname() failed - %s",
+		     strerror (errno));
 	      return NULL;
 	    }
 
@@ -382,661 +379,556 @@ __nss_ldap_krb5_cache_get_saslid (_nss_ldap_krb5_state_p krb5_cache_state, ldap_
       saslid = defaultSaslId;
     }
 
-  debug ("<== __nss_ldap_krb5_cache_get_saslid: returns %s", saslid);
-    
+  debug ("<== do_krb5_cache_get_saslid: returns %s", saslid);
+
   return (saslid != NULL) ? strdup(saslid) : NULL;
 }
 
 static krb5_principal
-__nss_ldap_krb5_cache_get_principal (_nss_ldap_krb5_state_p krb5_cache_state)
+do_krb5_cache_get_principal (nss_ldap_krb5_state_t *state)
 {
   krb5_error_code code;
   krb5_principal principal;
 
-  debug ("==> __nss_ldap_krb5_cache_get_principal");
+  debug ("==> do_krb5_cache_get_principal");
 
-  assert (krb5_cache_state->context != NULL && krb5_cache_state->saslid != NULL);
+  assert (state->context != NULL && state->saslid != NULL);
 
-  debug (":== __nss_ldap_krb5_cache_get_principal: call krb5_parse_name");
-
-  code = krb5_parse_name (krb5_cache_state->context, krb5_cache_state->saslid, &principal);
+  code = krb5_parse_name (state->context, state->saslid, &principal);
   if (code != 0)
     {
-      debug ("<== __nss_ldap_krb5_cache_get_principal: %s(%d) while parsing principal name %s",
-	     error_message (code), (int) code, krb5_cache_state->saslid);
+      debug ("<== do_krb5_cache_get_principal: %s(%d) while parsing principal name %s",
+	     error_message (code), (int) code, state->saslid);
       return NULL;
     }
 
-  debug ("<== __nss_ldap_krb5_cache_get_principal: returns %p", principal);
+  debug ("<== do_krb5_cache_get_principal: returns %p", principal);
+
   return principal;
 }
 
 /* Set up to manage the credentials cache */
 static krb5_error_code
-__nss_ldap_krb5_cache_setup (_nss_ldap_krb5_state_p krb5_cache_state, ldap_config_t * config)
+do_krb5_cache_setup (nss_ldap_krb5_state_t *state, ldap_config_t * config)
 {
-  krb5_error_code code = 0;
+  krb5_error_code code;
+  int envOK;
 #ifndef HEIMDAL
   profile_t profile;
 #endif
 
-  debug ("==> __nss_ldap_krb5_cache_setup");
+  debug ("==> do_krb5_cache_setup");
 
-  assert(krb5_cache_state != NULL && config != NULL);
+  assert(state != NULL);
+  assert(config != NULL);
 
-  if (krb5_cache_state->context == NULL)
+  if (state->context == NULL)
     {
-      debug (":== __nss_ldap_krb5_cache_setup: call krb5_init_context");
-
-      code = krb5_init_context (&(krb5_cache_state->context));
+      code = krb5_init_context (&state->context);
       if (code != 0)
 	{
-	  debug ("<== __nss_ldap_krb5_cache_setup: %s(%d) while initialising Kerberos library",
+	  debug ("<== do_krb5_cache_setup: %s(%d) while initialising Kerberos library",
 		 error_message (code), (int) code);
 	  return code;
 	}
     }
 #ifndef HEIMDAL
-  debug (":== __nss_ldap_krb5_cache_setup: call krb5_get_profile");
-
-  code = krb5_get_profile (krb5_cache_state->context, &profile);
+  code = krb5_get_profile (state->context, &profile);
   if (code != 0)
     {
-      debug ("<== __nss_ldap_krb5_cache_setup: %s(%d) while getting profile",
+      debug ("<== do_krb5_cache_setup: %s(%d) while getting profile",
 	     error_message (code), (int) code);
       return code;
     }
-
-  debug (":== __nss_ldap_krb5_cache_setup: call profile_get_integer");
 
   code = profile_get_integer (profile,
 			      "libdefaults",
-			      "clockskew", 0, 5 * 60, &(krb5_cache_state->skew));
-
-  debug (":== __nss_ldap_krb5_cache_setup: profile_get_integer returns %d", code);
-
+			      "clockskew", 0, 5 * 60, &state->skew);
   if (code != 0)
     {
-      debug ("<== __nss_ldap_krb5_cache_setup: %s(%d) while getting clockskew",
+      debug ("<== do_krb5_cache_setup: %s(%d) while getting clockskew",
 	     error_message (code), (int) code);
       return code;
     }
 
-  debug (":== __nss_ldap_krb5_cache_setup: call profile_release");
   profile_release (profile);
 #else
-  krb5_cache_state->skew = krb5_cache_state->context->max_skew;
+  state->skew = state->context->max_skew;
 #endif
-  krb5_cache_state->autorenew = (config->ldc_krb5_autorenew
-				 || (krb5_cache_state->euid == 0 && config->ldc_krb5_rootautorenew));
+  state->autorenew = (config->ldc_krb5_autorenew
+				 || (state->euid == 0 && config->ldc_krb5_rootautorenew));
 
-  krb5_cache_state->ktname = __nss_ldap_krb5_cache_get_ktname (krb5_cache_state, config);
+  /* It's safe to consult the environment if we're not setuid. */
+  envOK = (getuid() == geteuid()) && (getgid() == getegid());
 
-  debug (":== __nss_ldap_krb5_cache_setup: keytab name %s",
-	 krb5_cache_state->ktname ? krb5_cache_state->ktname : "NULL");
+  state->ktname = do_krb5_cache_get_ktname (state, config, envOK);
 
-  krb5_cache_state->ccname = __nss_ldap_krb5_cache_get_ccname (krb5_cache_state, config);
+  debug (":== do_krb5_cache_setup: keytab name %s",
+	 state->ktname ? state->ktname : "NULL");
 
-  debug (":== __nss_ldap_krb5_cache_setup: credential cache name %s",
-	 krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
-  krb5_cache_state->cache_state = KRB5_CACHE_REFRESH;
+  state->ccname = do_krb5_cache_get_ccname (state, config, envOK);
 
-  debug ("<== __nss_ldap_krb5_cache_setup");
+  debug (":== do_krb5_cache_setup: credential cache name %s",
+	 state->ccname ? state->ccname : "NULL");
+  state->cache_state = KRB5_CACHE_REFRESH;
+
+  debug ("<== do_krb5_cache_setup");
 
   return 0;
 }
 
 static int
-__nss_ldap_krb5_cache_setup_creds (_nss_ldap_krb5_state_p krb5_cache_state)
+do_krb5_cache_setup_creds (nss_ldap_krb5_state_t *state)
 {
-  debug ("==> __nss_ldap_krb5_cache_setup_creds");
+  debug ("==> do_krb5_cache_setup_creds");
 
-  assert(krb5_cache_state != NULL);
+  assert(state != NULL);
 
-  if (krb5_cache_state->creds == NULL)
+  if (state->creds == NULL)
     {
-      krb5_cache_state->creds = malloc (sizeof (*(krb5_cache_state->creds)));
-      if (krb5_cache_state->creds == NULL)
+      state->creds = malloc (sizeof (*(state->creds)));
+      if (state->creds == NULL)
 	{
-	  debug ("<== __nss_ldap_krb5_cache_setup_creds: out of memory while allocating cache creds");
-	  return -1;
+	  return ENOMEM;
 	}
     }
 
-  memset (krb5_cache_state->creds, 0, sizeof (*(krb5_cache_state->creds)));
+  memset (state->creds, 0, sizeof (*(state->creds)));
 
-  debug ("<== __nss_ldap_krb5_cache_setup_creds");
+  debug ("<== do_krb5_cache_setup_creds");
 
   return 0;
 }
 
 /* (Re)load the credentials cache into our local data */
 static int
-__nss_ldap_krb5_cache_refresh (_nss_ldap_krb5_state_p krb5_cache_state)
+do_krb5_cache_refresh (nss_ldap_krb5_state_t *state)
 {
-
   krb5_error_code code;
+  char *principal_name = NULL;
+  krb5_cc_cursor cursor;
 
-  debug ("==> __nss_ldap_krb5_cache_refresh");
+  debug ("==> do_krb5_cache_refresh");
 
-  assert(krb5_cache_state != NULL);
-  assert(krb5_cache_state->ccname != NULL);
-  assert(krb5_cache_state->cc == NULL);
+  assert(state != NULL);
+  assert(state->ccname != NULL);
+  assert(state->cc == NULL);
 
-  debug (":== __nss_ldap_krb5_cache_refresh %s", krb5_cache_state->ccname);
+  debug (":== do_krb5_cache_refresh %s", state->ccname);
 
-  code = krb5_cc_resolve (krb5_cache_state->context, krb5_cache_state->ccname, &krb5_cache_state->cc);
+  code = krb5_cc_resolve (state->context,
+			  state->ccname,
+			  &state->cc);
   if (code != 0)
     {
-      debug (":== __nss_ldap_krb5_cache_refresh: cache %s cannot be resolved",
-	     krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
+      debug (":== do_krb5_cache_refresh: cache %s cannot be resolved: %s",
+	     state->ccname ? state->ccname : "NULL", error_message(code));
+      goto cleanup;
     }
-  else
+
+  code = krb5_cc_get_principal (state->context,
+				state->cc,
+				&state->principal);
+  if (code != 0)
     {
-      debug (":== __nss_ldap_krb5_cache_refresh: call krb5_cc_get_principal");
+      debug (":== do_krb5_cache_refresh: cannot get principal from cache %s: %s",
+	     state->ccname ? state->ccname : "NULL", error_message(code));
+      goto cleanup;
+    }
 
-      code = krb5_cc_get_principal (krb5_cache_state->context,
-				    krb5_cache_state->cc,
-				    &krb5_cache_state->principal);
+  /* Use the principal name from the cache rather than preconfigured saslid */
+  code = krb5_unparse_name (state->context,
+			    state->principal,
+			    &principal_name);
+  if (code != 0)
+    {
+      debug (":== do_krb5_cache_refresh: cannot unparse principal from cache %s: %s",
+	     state->ccname ? state->ccname : "NULL", error_message(code));
+      goto cleanup;
+    }
+
+  code = krb5_cc_start_seq_get (state->context, state->cc, &cursor);
+  if (code != 0)
+    {
+      debug (":== do_krb5_cache_refresh: cache %s credentials not usable: %s",
+	     state->ccname ? state->ccname : "NULL", error_message(code));
+      goto cleanup;
+    }
+
+  code = do_krb5_cache_setup_creds (state);
+  if (code != 0)
+      goto cleanup;
+
+  while (state->cache_state == KRB5_CACHE_REFRESH)
+    {
+      code = krb5_cc_next_cred (state->context,
+				state->cc,
+				&cursor,
+				state->creds);
       if (code != 0)
+	break;
+    
+      debug (":== do_krb5_cache_refresh: retrieved creds");
+
+      if (credsOK (state))
 	{
-	  debug (":== __nss_ldap_krb5_cache_refresh: cannot get principal from cache %s",
-		 krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
+	  debug (":== do_krb5_cache_refresh: creds are OK --> RUNNING");
+	  /* Reloaded cache is fine */
+	  state->cache_state = KRB5_CACHE_RUNNING;
+	  break;
 	}
-      else
+
+      if (credsEXPIRING (state))
 	{
-	  /* Use the principal name from the cache rather than preconfigured saslid */
-	  char *principal_name = NULL;
-
-	  debug (":== __nss_ldap_krb5_cache_refresh: found existing cache %s call krb5_unparse_name",
-		 krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
-
-	  code = krb5_unparse_name (krb5_cache_state->context, krb5_cache_state->principal, &principal_name);
-
-	  debug (":== __nss_ldap_krb5_cache_refresh: krb5_unparse_name returns %d", code);
-
-	  if (code != 0)
+	  debug (":== do_krb5_cache_refresh: creds are EXPIRING");
+	  /* Reloaded cache will expire shortly */
+	  if (state->autorenew)
 	    {
-	      debug (":== __nss_ldap_krb5_cache_refresh: cannot unparse principal from cache %s",
-		     krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
+	      debug (":== do_krb5_cache_refresh: --> RENEW");
+	      state->cache_state = KRB5_CACHE_RENEW;
 	    }
 	  else
 	    {
-	      krb5_cc_cursor cursor;
-
-	      debug (":== __nss_ldap_krb5_cache_refresh: cache %s principal %s call krb5_cc_start_seq_get",
-		     krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL",
-		     principal_name ? principal_name : "NULL");
-
-	      code = krb5_cc_start_seq_get (krb5_cache_state->context, krb5_cache_state->cc, &cursor);
-
-	      debug (":== __nss_ldap_krb5_cache_refresh: krb5_cc_start_seq_get returns %d", code);
-
-	      if (code != 0)
-		{
-		  debug (":== __nss_ldap_krb5_cache_refresh: cache %s credentials not usable",
-			 krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
-		}
-	      else
-		{
-		  if (__nss_ldap_krb5_cache_setup_creds (krb5_cache_state))
-		    {
-		      debug ("<== __nss_ldap_krb5_cache_refresh: failed to setup creds");
-		      return 1;
-		    }
-		  while (krb5_cache_state->cache_state == KRB5_CACHE_REFRESH)
-		    {
-		      debug (":== __nss_ldap_krb5_cache_refresh: call krb5_cc_next_cred");
-
-		      code = krb5_cc_next_cred (krb5_cache_state->context,
-						krb5_cache_state->cc,
-						&cursor,
-						krb5_cache_state->creds);
-
-		      debug (":== __nss_ldap_krb5_cache_refresh: krb5_cc_next_cred returns %d", code);
-
-		      if (code != 0)
-			{
-			  break;
-			}
-
-		      debug (":== __nss_ldap_krb5_cache_refresh: retrieved creds");
-
-		      if (credsOK (krb5_cache_state))
-			{
-			  debug (":== __nss_ldap_krb5_cache_refresh: creds are OK --> RUNNING");
-			  /* Reloaded cache is fine */
-			  krb5_cache_state->cache_state = KRB5_CACHE_RUNNING;
-			  break;
-			}
-
-		      if (credsEXPIRING (krb5_cache_state))
-			{
-			  debug (":== __nss_ldap_krb5_cache_refresh: creds are EXPIRING");
-			  /* Reloaded cache will expire shortly */
-			  if (krb5_cache_state->autorenew)
-			    {
-			      debug (":== __nss_ldap_krb5_cache_refresh: --> RENEW");
-			      krb5_cache_state->cache_state = KRB5_CACHE_RENEW;
-			    }
-			  else
-			    {
-			      debug (":== __nss_ldap_krb5_cache_refresh: --> EXPIRED");
-			      krb5_cache_state->cache_state = KRB5_CACHE_EXPIRED;
-			    }
-			  goto next_creds;
-			}
-
-		      if (credsEXPIRED (krb5_cache_state))
-			{
-			  debug (":== __nss_ldap_krb5_cache_refresh: creds have EXPIRED --> EXPIRED");
-			  /* Reload cache has expired */
-			  krb5_cache_state->cache_state = KRB5_CACHE_EXPIRED;
-			  goto next_creds;
-			}
-
-		      /*
-		       * Should never happen
-		       * This is a logic error if we get here - so force a reset
-		       */
-		      debug (":== __nss_ldap_krb5_cache_refresh: creds in weird state --> ERROR");
-		      krb5_cache_state->cache_state = KRB5_CACHE_ERROR;
-
-		    next_creds:
-		      debug (":== __nss_ldap_krb5_cache_refresh: call krb5_free_cred_contents");
-		      krb5_free_cred_contents (krb5_cache_state->context, krb5_cache_state->creds);
-		    }
-		  debug (":== __nss_ldap_krb5_cache_refresh: call krb5_cc_end_seq_get");
-
-		  code = krb5_cc_end_seq_get (krb5_cache_state->context, krb5_cache_state->cc, &cursor);
-
-		  debug (":== __nss_ldap_krb5_cache_refresh: krb5_cc_end_seq_get returns %d", code);
-
-		  if (code != 0)
-		    {
-		      debug (":== __nss_ldap_krb5_cache_refresh: cache %s scan failed to end cleanly",
-			     krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
-		    }
-		}
-	      debug (":== __nss_ldap_krb5_cache_refresh: call krb5_free_unparsed_name");
-
-	      krb5_free_unparsed_name (krb5_cache_state->context, principal_name);
-
+	      debug (":== do_krb5_cache_refresh: --> EXPIRED");
+	      state->cache_state = KRB5_CACHE_EXPIRED;
 	    }
+	  krb5_free_cred_contents (state->context, state->creds);
+	  state->creds = NULL;
+	}
+      else if (credsEXPIRED (state))
+	{
+	  debug (":== do_krb5_cache_refresh: creds have EXPIRED --> EXPIRED");
+	  /* Reload cache has expired */
+	  state->cache_state = KRB5_CACHE_EXPIRED;
+	  krb5_free_cred_contents (state->context, state->creds);
+	  state->creds = NULL;
 	}
     }
 
-  if (krb5_cache_state->principal != NULL)
+  code = krb5_cc_end_seq_get (state->context, state->cc, &cursor);
+  if (code != 0)
     {
-      debug (":== __nss_ldap_krb5_cache_refresh: call krb5_free_principal");
-
-      krb5_free_principal (krb5_cache_state->context, krb5_cache_state->principal);
-      krb5_cache_state->principal = NULL;
+      debug (":== do_krb5_cache_refresh: cache %s scan failed to end cleanly",
+	     state->ccname ? state->ccname : "NULL");
+      goto cleanup;
     }
-  if (krb5_cache_state->cc != NULL)
-    {
-      debug (":== __nss_ldap_krb5_cache_refresh: call krb5_cc_close");
 
-      code = krb5_cc_close (krb5_cache_state->context, krb5_cache_state->cc);
+cleanup:
+  if (principal_name != NULL)
+      krb5_free_unparsed_name (state->context, principal_name);
+
+  if (state->principal != NULL)
+    {
+      krb5_free_principal (state->context, state->principal);
+      state->principal = NULL;
+    }
+
+  if (state->cc != NULL)
+    {
+      code = krb5_cc_close (state->context, state->cc);
       if (code != 0)
 	{
-	  debug (":== __nss_ldap_krb5_cache_refresh: cache %s close failed",
-		 krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
+	  debug (":== do_krb5_cache_refresh: cache %s close failed (ignoring): %s",
+		 state->ccname ? state->ccname : "NULL",
+		 error_message(code));
 	}
-      krb5_cache_state->cc = NULL;
-    }
-  if (krb5_cache_state->cache_state == KRB5_CACHE_REFRESH)
-    {
-      debug (":== __nss_ldap_krb5_cache_refresh: stuck in refresh --> ACQUIRE");
-      krb5_cache_state->cache_state = KRB5_CACHE_ACQUIRE;	/* Try for a keytab */
+      state->cc = NULL;
     }
 
-  debug ("<== __nss_ldap_krb5_cache_refresh");
+  if (state->cache_state == KRB5_CACHE_REFRESH)
+    {
+      debug (":== do_krb5_cache_refresh: REFRESH --> ACQUIRE");
+      state->cache_state = KRB5_CACHE_ACQUIRE; /* Try for a keytab */
+    }
+
+  debug ("<== do_krb5_cache_refresh");
 
   return code;
 }
 
 /* Renew an expired credentials cache */
 static int
-__nss_ldap_krb5_cache_renew (_nss_ldap_krb5_state_p krb5_cache_state)
+do_krb5_cache_renew (nss_ldap_krb5_state_t *state)
 {
-
   krb5_error_code code = 0;
-
 #ifdef HEIMDAL
   krb5_kdc_flags flags;
   krb5_realm *client_realm;
 #endif
 
-  debug ("==> __nss_ldap_krb5_cache_renew");
+  debug ("==> do_krb5_cache_renew");
 
-  assert(krb5_cache_state != NULL);
+  assert(state != NULL);
 
-  if (!krb5_cache_state->autorenew)
+  assert(state->autorenew == 0);
+  if (!state->autorenew)
     {
-      /*
-       * We should never get here
-       * as the refresh code should only enter renew
-       * if autorenew is true
-       */
-      debug ("<== __nss_ldap_krb5_cache_renew: renew called with autorenew off --> ERROR");
-      krb5_cache_state->cache_state = KRB5_CACHE_ERROR;
-      return 1;
+      /* Should not be reached */
+      debug ("<== do_krb5_cache_renew: renew called with autorenew off --> ERROR");
+      state->cache_state = KRB5_CACHE_ERROR;
+      return EINVAL;
     }
 
-  assert (krb5_cache_state->context != NULL && krb5_cache_state->creds != NULL);	/* Refresh or acquire will have set this up */
+  /* Refresh or acquire will have set this up */
+  assert (state->context != NULL && state->creds != NULL);
+
   /* renew ticket */
 #ifndef HEIMDAL
   /* Overwrites contents of creds no storage allocation happening */
-  assert(krb5_cache_state->principal != NULL && krb5_cache_state->cc != NULL);
+  assert(state->principal != NULL && state->cc != NULL);
 
-  debug (":== __nss_ldap_krb5_cache_renew: call krb5_get_renewed_creds");
-
-  code = krb5_get_renewed_creds (krb5_cache_state->context,
-				 krb5_cache_state->creds,
-				 krb5_cache_state->principal,
-				 krb5_cache_state->cc,
+  code = krb5_get_renewed_creds (state->context,
+				 state->creds,
+				 state->principal,
+				 state->cc,
 				 NULL);
-
-  debug (":== __nss_ldap_krb5_cache_renew: krb5_get_renewed_creds returns %d", code);
-
-  if (code != 0)
-    {
-      debug (":== __nss_ldap_krb5_cache_renew: failed to renew creds %s(%d)",
-	     error_message (code), (int) code);
 #else
   flags.i = 0;
   flags.b.renewable = flags.b.renew = 1;
-  if (krb5_cache_state->creds2 == NULL)
+
+  if (state->creds2 == NULL)
     {
-      krb5_cache_state->creds2 = (krb5_creds*)malloc(sizeof(krb5_creds));
-      if (krb5_cache_state->creds2 == NULL)
+      state->creds2 = (krb5_creds *)calloc(1, sizeof(krb5_creds));
+      if (state->creds2 == NULL)
 	{
-	  debug ("<== __nss_ldap_krb5_cache_renew: out of memory failed to allocate creds2");
-	  return 1;
+	  debug ("<== do_krb5_cache_renew: out of memory failed to allocate creds2");
+	  return ENOMEM;
 	}
-      memset(krb5_cache_state->creds2, 0, sizeof(krb5_creds));
     }
-  assert(krb5_cache_state->cc != NULL);
+  assert(state->cc != NULL);
 
-  debug (":== __nss_ldap_krb5_cache_renew: call krb5_cc_get_principal");
-
-  code = krb5_cc_get_principal (krb5_cache_state->context, krb5_cache_state->cc, &(krb5_cache_state->creds2.client));
-
-  debug (":== __nss_ldap_krb5_cache_renew: krb5_cc_get_principal returns %d", code);
-
+  code = krb5_cc_get_principal (state->context,
+				state->cc,
+				&state->creds2.client);
   if (code != 0)
     {
-      debug ("<== __nss_ldap_krb5_cache_renew: %s(%d) while getting principal from credentials cache",
+      debug ("<== do_krb5_cache_renew: %s(%d) while getting principal from credentials cache",
 	 error_message (code), (int) code);
-      krb5_cache_state->cache_state = KRB5_CACHE_REFRESH;
+      state->cache_state = KRB5_CACHE_REFRESH;
       return code;
     }
 
-  debug (":== __nss_ldap_krb5_cache_renew: call krb5_princ_realm");
+  client_realm = krb5_princ_realm (state->context, state->creds2.client);
 
-  client_realm = krb5_princ_realm (krb5_cache_state->context, krb5_cache_state->creds2.client);
-
-  debug (":== __nss_ldap_krb5_cache_renew: krb5_princ_realm returned %p, call krb5_make_principal");
-
-  code = krb5_make_principal (krb5_cache_state->context, &(krb5_cache_state->creds2.server), *client_realm,
-			      KRB5_TGS_NAME, *client_realm, NULL);
-
-  debug (":== __nss_ldap_krb5_cache_renew: krb5_make_principal returns %d", code);
+  code = krb5_make_principal (state->context,
+			      &state->creds2.server,
+			      *client_realm,
+			      KRB5_TGS_NAME,
+			      *client_realm,
+			      NULL);
   if (code != 0)
     {
       debug ("<== krb5_cache_renew: %s(%d) while getting krbtgt principal",
 	     error_message (code), (int) code);
-      krb5_cache_state->cache_state = KRB5_CACHE_REFRESH;
+      state->cache_state = KRB5_CACHE_REFRESH;
       return code;
     }
 
   /* I think there is a potential storage leak here as creds is written to */
   /* Need to check Heimdal code to see if it will overwrite or replace memory */
-  debug (":== __nss_ldap_krb5_cache_renew: call krb5_get_kdc_cred");
 
-  code = krb5_get_kdc_cred (krb5_cache_state->context,
-			    krb5_cache_state->cc, flags, NULL,
-			    NULL, krb5_cache_state->creds2,
-			    &krb5_cache_state->creds);
-
-  debug (":== __nss_ldap_krb5_cache_renew: krb5_get_kdc_cred returned %d");
-
+  code = krb5_get_kdc_cred (state->context,
+			    state->cc, flags, NULL,
+			    NULL, state->creds2,
+			    &state->creds);
+#endif
   if (code != 0)
     {
-      debug (":== __nss_ldap_krb5_cache_renew: failed to get creds from kdc %s(%d)",
+      debug (":== do_krb5_cache_renew: failed to renew credentials: %s(%d)",
 	     error_message (code), (int) code);
-#endif
       if (code == KRB5KRB_AP_ERR_TKT_EXPIRED)
 	{
 	  /* this can happen because of clock skew */
-	  debug ("<== __nss_ldap_krb5_cache_renew: ticket has expired because of clock skew --> EXPIRED");
-	  krb5_cache_state->cache_state = KRB5_CACHE_EXPIRED;
-	  return 0;
+	  debug ("<== do_krb5_cache_renew: ticket has expired because of clock skew --> EXPIRED");
+	  state->cache_state = KRB5_CACHE_EXPIRED;
+	  code = 0;
 	}
       else
 	{
-	  debug ("==> __nss_ldap_krb5_cache_renew: %s(%d) while renewing credentials",
+	  debug ("==> do_krb5_cache_renew: %s(%d) while renewing credentials",
 		 error_message (code), (int) code);
-	  krb5_cache_state->cache_state = KRB5_CACHE_REFRESH;
-	  return code;
+	  state->cache_state = KRB5_CACHE_REFRESH;
 	}
     }
-  krb5_cache_state->cache_state = KRB5_CACHE_RUNNING;
+  else
+    {
+      debug ("<== do_krb5_cache_renew: renewed creds --> RUNNING");
+      state->cache_state = KRB5_CACHE_RUNNING;
+    }
 
-  debug ("<== __nss_ldap_krb5_cache_renew: renewed creds --> RUNNING");
 
-  return 0;
+  return code;
 }
 
 /* Initialise the credentials cache from a keytab */
 static int
-__nss_ldap_krb5_cache_acquire (_nss_ldap_krb5_state_p krb5_cache_state, ldap_config_t *config)
+do_krb5_cache_acquire (nss_ldap_krb5_state_t *state, ldap_config_t *config)
 {
-
   krb5_error_code code;
   krb5_keytab keytab = NULL;
   krb5_get_init_creds_opt options;
   krb5_deltat rlife;
   int usekeytab;
 
-  debug ("==> __nss_ldap_krb5_cache_acquire");
-  /*
-   * We have not managed to find any credentials.
-   * If a keytab is configured then try using that
-   */
-  assert (krb5_cache_state != NULL);
+  debug ("==> do_krb5_cache_acquire");
+
+  /* No credentials; use keytab if configured */
+
+  assert (state != NULL);
   assert (config != NULL);
-  assert (krb5_cache_state->context != NULL);
+  assert (state->context != NULL);
 
   /* use keytab to fill cache */
 
   usekeytab = config->ldc_krb5_usekeytab ||
-      (krb5_cache_state->euid == 0 && config->ldc_krb5_rootusekeytab);
-  if (!usekeytab || krb5_cache_state->ktname == NULL)
+      (state->euid == 0 && config->ldc_krb5_rootusekeytab);
+  if (!usekeytab || state->ktname == NULL)
     {
-      debug (":== __nss_ldap_krb5_cache_acquire: no usable keytab");
+      debug (":== do_krb5_cache_acquire: no usable keytab");
       code = ENOENT;
       goto finish_acquire_creds;
     }
 
-  debug (":== __nss_ldap_krb5_cache_acquire: call krb5_kt_resolve");
-
-  code = krb5_kt_resolve (krb5_cache_state->context, krb5_cache_state->ktname, &keytab);
-
-  debug (":== __nss_ldap_krb5_cache_acquire: krb5_kt_resolve returns %d", code);
-
+  code = krb5_kt_resolve (state->context, state->ktname, &keytab);
   if (code != 0)
     {
-      debug (":== __nss_ldap_krb5_cache_acquire: %s(%d) while resolving keytab filename %s",
-	     error_message (code), (int) code, krb5_cache_state->ktname);
+      debug (":== do_krb5_cache_acquire: %s(%d) while resolving keytab filename %s",
+	     error_message (code), (int) code, state->ktname);
       goto finish_acquire_creds;
     }
 
-  if (krb5_cache_state->saslid == NULL)
+  if (state->saslid == NULL)
     {
-      krb5_cache_state->saslid = __nss_ldap_krb5_cache_get_saslid (krb5_cache_state, config);
+      state->saslid = do_krb5_cache_get_saslid (state, config);
     }
 
-  debug (":== __nss_ldap_krb5_cache_acquire: saslid = %s",
-	 (krb5_cache_state->saslid) ? krb5_cache_state->saslid : "NULL");
+  debug (":== do_krb5_cache_acquire: saslid = %s",
+	 state->saslid ? state->saslid : "NULL");
 
-  if (krb5_cache_state->saslid && krb5_cache_state->principal == NULL)
+  if (state->saslid && state->principal == NULL)
     {
-      krb5_cache_state->principal = __nss_ldap_krb5_cache_get_principal (krb5_cache_state);
-      if (krb5_cache_state->principal == NULL)
+      state->principal = do_krb5_cache_get_principal (state);
+      if (state->principal == NULL)
 	{
-	  debug ("<== __nss_ldap_krb5_cache_acquire: no valid principal --> ERROR");
+	  debug ("<== do_krb5_cache_acquire: no valid principal --> ERROR");
 	  code = ENOENT;
 	  goto finish_acquire_creds;
 	}
     }
 
-  debug (":== __nss_ldap_krb5_cache_acquire: call krb5_get_init_creds_opt_init");
-
   krb5_get_init_creds_opt_init (&options);
 
-  debug (":== __nss_ldap_krb5_cache_acquire: call krb5_string_to_deltat");
-
   code = krb5_string_to_deltat (MAX_RENEW_TIME, &rlife);
-
-  debug (":== __nss_ldap_krb5_cache_acquire: krb5_string_to_deltat returns %d", code);
   if (code != 0 || rlife == 0)
     {
-      debug (":== __nss_ldap_krb5_cache_acquire: %s(%d) while setting renew lifetime value to %s",
+      debug (":== do_krb5_cache_acquire: %s(%d) while setting renew lifetime value to %s",
 	     error_message (code), (int) code, MAX_RENEW_TIME);
       code = (code == 0) ? 1 : code;
       goto finish_acquire_creds;
     }
 
-  debug (":== __nss_ldap_krb5_cache_acquire: call krb5_get_init_creds_opt_set_renew_life");
-
   krb5_get_init_creds_opt_set_renew_life (&options, rlife);
 
-  debug (":== __nss_ldap_krb5_cache_acquire: get credentials from keytab");
+  debug (":== do_krb5_cache_acquire: get credentials from keytab");
 
-  code = __nss_ldap_krb5_cache_setup_creds (krb5_cache_state);
+  code = do_krb5_cache_setup_creds (state);
   if (code != 0)
     {
-      debug ("<== __nss_ldap_krb5_cache_acquire: failed to set up credentials");
+      debug ("<== do_krb5_cache_acquire: failed to set up credentials");
       goto finish_acquire_creds;
     }
 
-  debug (":== __nss_ldap_krb5_cache_acquire: call krb5_get_init_creds_keytab");
-
-  code = krb5_get_init_creds_keytab (krb5_cache_state->context,
-				     krb5_cache_state->creds,
-				     krb5_cache_state->principal,
+  code = krb5_get_init_creds_keytab (state->context,
+				     state->creds,
+				     state->principal,
 				     keytab,
 				     0,
 				     NULL,
 				     &options);
-
-  debug (":== __nss_ldap_krb5_cache_acquire: krb5_get_init_creds_keytab returns %d", code);
-
   if (code != 0 && code != EEXIST)
     {
       /* Failed to initialise credentials from keytab */
-      debug (":== __nss_ldap_krb5_cache_acquire get credentials from keytab failed %s(%d)",
+      debug (":== do_krb5_cache_acquire get credentials from keytab failed %s(%d)",
 	     error_message (code), (int) code);
-      debug (":== __nss_ldap_krb5_cache_acquire try refreshing from credential cache");
-      code = __nss_ldap_krb5_cache_refresh (krb5_cache_state);
+      debug (":== do_krb5_cache_acquire try refreshing from credential cache");
+      code = do_krb5_cache_refresh (state);
       if (code != 0)
 	{
-	  debug (":== __nss_ldap_krb5_cache_acquire: cache credentials not usable");
-	  free (krb5_cache_state->creds);
-	  krb5_cache_state->creds = NULL;
+	  debug (":== do_krb5_cache_acquire: cache credentials not usable");
+	  free (state->creds);
+	  state->creds = NULL;
 	}
-      else if (krb5_cache_state->cache_state == KRB5_CACHE_ACQUIRE)
+      else if (state->cache_state == KRB5_CACHE_ACQUIRE)
 	code = EEXIST;
       goto finish_acquire_creds;
     }
 
   /* We have a set of credentials we now need to save them */
-  debug (":== __nss_ldap_krb5_cache_acquire: call krb5_cc_resolve");
 
-  code = krb5_cc_resolve (krb5_cache_state->context, krb5_cache_state->ccname, &(krb5_cache_state->cc));
-
-  debug (":== __nss_ldap_krb5_cache_acquire: krb5_cc_resolve returns %d", code);
-
+  code = krb5_cc_resolve (state->context,
+			  state->ccname,
+			  &state->cc);
   if (code != 0)
     {
-      debug (":== __nss_ldap_krb5_cache_acquire: %s(%d) while resolving credential cache",
+      debug (":== do_krb5_cache_acquire: %s(%d) while resolving credential cache",
 	     error_message (code), (int) code);
       goto finish_acquire_creds;
     }
   
-  debug (":== __nss_ldap_krb5_cache_acquire: call krb5_cc_initialize");
-
-  code = krb5_cc_initialize (krb5_cache_state->context, krb5_cache_state->cc, krb5_cache_state->principal);
-
-  debug (":== __nss_ldap_krb5_cache_acquire: krb5_cc_initialize returns %d", code);
-
+  code = krb5_cc_initialize (state->context,
+			     state->cc,
+			     state->principal);
   if (code != 0 && code != EEXIST)
     {
       /* Failed to initialize the cache try to use a default one instead */
-      debug (":== __nss_ldap_krb5_cache_acquire: initializing credential cache failed %s(%d)",
+      debug (":== do_krb5_cache_acquire: initializing credential cache failed %s(%d)",
 	     error_message (code), (int) code);
       goto finish_acquire_creds;
     }
 
-  debug (":== __nss_ldap_krb5_cache_acquire call krb5_cc_store_cred");
-
-  code = krb5_cc_store_cred (krb5_cache_state->context, krb5_cache_state->cc, krb5_cache_state->creds);
-
-  debug (":== __nss_ldap_krb5_cache_acquire: krb5_cc_store_cred returns %d", code);
-
+  code = krb5_cc_store_cred (state->context,
+			     state->cc,
+			     state->creds);
   if (code != 0)
     {
-      debug (":== __nss_ldap_krb5_cache_acquire: %s(%d) while storing credentials",
+      debug (":== do_krb5_cache_acquire: %s(%d) while storing credentials",
 	     error_message (code), (int) code);
       goto finish_acquire_creds;
     }
 
-  if (krb5_cache_state->creds->times.starttime == 0)
-    krb5_cache_state->creds->times.starttime = krb5_cache_state->creds->times.authtime;
-
-  debug (":== __nss_ldap_krb5_cache_acquire: got new credentials");
-  krb5_cache_state->cache_state = KRB5_CACHE_RUNNING;
-
-  code = 0;
-
- finish_acquire_creds:
-
-  if (krb5_cache_state->cc != NULL)
+  if (state->creds->times.starttime == 0)
     {
-      debug (":== __nss_ldap_krb5_cache_acquire: call krb5_cc_close");
+      state->creds->times.starttime = state->creds->times.authtime;
+    }
 
-      code = krb5_cc_close (krb5_cache_state->context, krb5_cache_state->cc);
+  debug (":== do_krb5_cache_acquire: got new credentials");
+  state->cache_state = KRB5_CACHE_RUNNING;
 
-      krb5_cache_state->cc = NULL;
-
-      debug (":== __nss_ldap_krb5_cache_acquire: krb5_cc_close returns %d", code);
-
+finish_acquire_creds:
+  if (state->cc != NULL)
+    {
+      code = krb5_cc_close (state->context, state->cc);
       if (code != 0)
 	{
-	  debug (":== __nss_ldap_krb5_cache_acquire: cache %s close failed",
-		 krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL");
+	  debug (":== do_krb5_cache_acquire: cache %s close failed",
+		 state->ccname ? state->ccname : "NULL");
 	}
+      state->cc = NULL;
     }
  
   if (keytab != NULL)
     {
-      debug (":== __nss_ldap_krb5_cache_acquire: call krb5_kt_close");
-
-      code = krb5_kt_close (krb5_cache_state->context, keytab);
-
-      debug (":== __nss_ldap_krb5_cache_acquire: krb5_kt_close returns %d", code);
+      code = krb5_kt_close (state->context, keytab);
     }
 
   if (code != 0)
     {
-      debug ("<== __nss_ldap_krb5_cache_acquire: --> ERROR");
-      krb5_cache_state->cache_state = KRB5_CACHE_ERROR;
+      debug ("<== do_krb5_cache_acquire: --> ERROR");
+      state->cache_state = KRB5_CACHE_ERROR;
     }
   else
     {
-      debug ("<== __nss_ldap_krb5_cache_acquire");
+      debug ("<== do_krb5_cache_acquire");
     }
 
   return code;
@@ -1046,76 +938,77 @@ __nss_ldap_krb5_cache_acquire (_nss_ldap_krb5_state_p krb5_cache_state, ldap_con
  * Entry points into the kerberos support
  */
 static void *
-__nss_ldap_krb5_cache_init (ldap_session_t *session)
+do_krb5_cache_init (ldap_session_t *session)
 {
   krb5_error_code code;
-  ldap_session_opaque_t krb5_cache_state_obj = NULL;
-  _nss_ldap_krb5_state_p krb5_cache_state = NULL;
+  ldap_session_opaque_t state_p = NULL;
+  nss_ldap_krb5_state_t *state = NULL;
   ldap_config_t * config = NULL;
   uid_t euid = geteuid();
 
-  debug ("==> __nss_ldap_krb5_cache_init");
+  debug ("==> do_krb5_cache_init");
 
   if (session == NULL)
     {
-      debug ("<== __nss_ldap_krb5_cache_init: called with NULL session ignoring krb5 initialisation");
+      debug ("<== do_krb5_cache_init: called with NULL session ignoring krb5 initialisation");
       return NULL;
     }
 
   config = session->ls_config;
-
   if (config == NULL)
     {
-      debug("<== __nss_ldap_krb5_cache_init: no configuration available ignoring krb5 initialisation");
+      debug("<== do_krb5_cache_init: no configuration available ignoring krb5 initialisation");
       return NULL;
     }
 
-  debug (":== __nss_ldap_krb5_cache_init: keytabname = %s, ccname = %s, saslid = %s, rootkeytabname = %s, rootccname = %s, rootsaslid = %s",
-	 config->ldc_krb5_keytabname ? config->ldc_krb5_keytabname : "NULL",
-	 config->ldc_krb5_ccname ? config->ldc_krb5_ccname : "NULL",
-	 config->ldc_saslid ? config->ldc_saslid : "NULL",
-	 config->ldc_krb5_rootkeytabname ? config->ldc_krb5_rootkeytabname : "NULL",
-	 config->ldc_krb5_rootccname ? config->ldc_krb5_rootccname : "NULL",
-	 config->ldc_rootsaslid ? config->ldc_rootsaslid : "NULL");
+  debug (":== do_krb5_cache_init: keytabname=%s, ccname=%s, saslid=%s, "
+	"rootkeytabname=%s, rootccname=%s, rootsaslid=%s",
+	 config->ldc_krb5_keytabname	  ? config->ldc_krb5_keytabname	      : "NULL",
+	 config->ldc_krb5_ccname	  ? config->ldc_krb5_ccname	      : "NULL",
+	 config->ldc_saslid		  ? config->ldc_saslid		      : "NULL",
+	 config->ldc_krb5_rootkeytabname  ? config->ldc_krb5_rootkeytabname   : "NULL",
+	 config->ldc_krb5_rootccname	  ? config->ldc_krb5_rootccname	      : "NULL",
+	 config->ldc_rootsaslid		  ? config->ldc_rootsaslid	      : "NULL");
 
   /*
    * Check to see if we are using sasl, if not then return as nothing to do
    * This is a guard as we would not expect to be called unless sasl is running
    */
-  if (!(config->ldc_usesasl || (euid == 0 && config->ldc_rootusesasl)))
+  if (!config->ldc_usesasl && (euid != 0 || !config->ldc_rootusesasl))
     {
       return NULL;
     }
 
-  krb5_cache_state_obj = __nss_ldap_find_opaque(session, LSO_KRB5);
-
-  if (krb5_cache_state_obj == NULL)
+  state_p = __nss_ldap_find_opaque(session, LSO_KRB5);
+  if (state_p == NULL)
     {
-      krb5_cache_state_obj = __nss_ldap_allocate_opaque(session, LSO_KRB5);
-      if (krb5_cache_state_obj == NULL)
+      state_p = __nss_ldap_allocate_opaque(session, LSO_KRB5);
+      if (state_p == NULL)
 	{
-	  debug ("<== __nss_ldap_krb5_cache_init - out of memory while allocating state object container");
+	  debug ("<== do_krb5_cache_init - out of memory while allocating state object container");
 	  return NULL;
 	}
     }
-  if ((krb5_cache_state = krb5_cache_state_obj->lso_data) == NULL)
+
+  state = state_p->lso_data;
+  if (state == NULL)
     {
-      krb5_cache_state = krb5_cache_state_obj->lso_data = (_nss_ldap_krb5_state_p)malloc(sizeof(_nss_ldap_krb5_state));
-      if (krb5_cache_state == NULL)
+      state = state_p->lso_data = (nss_ldap_krb5_state_t *)calloc(1, sizeof(nss_ldap_krb5_state_t));
+      if (state == NULL)
 	{
 	  __nss_ldap_free_opaque(session, LSO_KRB5);
-	  debug ("<== __nss_ldap_krb5_cache_init - out of memory while allocating state object");
+	  debug ("<== do_krb5_cache_init - out of memory while allocating state object");
 	  return NULL;
 	}
-      memset((void*)krb5_cache_state, 0, sizeof(_nss_ldap_krb5_state));
-      krb5_cache_state->euid = -1; /* force reset */
+      state->euid = -1; /* force reset */
     }
 
   /* Check to see if we have swapped user since we were last called */
-  if (krb5_cache_state->euid != euid)
-    { /* Could be first call but clear everything out anyway */
-      __nss_ldap_krb5_cache_reset (krb5_cache_state);
-      krb5_cache_state->euid = euid;
+  if (state->euid != euid)
+    {
+      /* Could be first call but clear everything out anyway */
+      do_krb5_cache_reset (state);
+      state->euid = euid;
     }
 
   /* 
@@ -1127,16 +1020,16 @@ __nss_ldap_krb5_cache_init (ldap_session_t *session)
    */
   do
     {
-      switch (krb5_cache_state->cache_state)
+      switch (state->cache_state)
 	{
 
 	case KRB5_CACHE_INIT:
-	  code = __nss_ldap_krb5_cache_setup (krb5_cache_state, config);
-	  debug (":== __nss_ldap_krb5_cache_init: ktname = %s, ccname = %s, saslid = %s, euid = %d",
-		 krb5_cache_state->ktname ? krb5_cache_state->ktname : "NULL",
-		 krb5_cache_state->ccname ? krb5_cache_state->ccname : "NULL",
-		 krb5_cache_state->saslid ? krb5_cache_state->saslid : "NULL",
-		 krb5_cache_state->euid);
+	  code = do_krb5_cache_setup (state, config);
+	  debug (":== do_krb5_cache_init: ktname=%s, ccname=%s, saslid=%s, euid=%d",
+		 state->ktname ? state->ktname : "NULL",
+		 state->ccname ? state->ccname : "NULL",
+		 state->saslid ? state->saslid : "NULL",
+		 state->euid);
 	  break;
 
 	case KRB5_CACHE_RUNNING:
@@ -1144,68 +1037,69 @@ __nss_ldap_krb5_cache_init (ldap_session_t *session)
 	   * If we have credentials 
 	   * and they are not expired or about to expire then OK!
 	   */
-	  if (credsOK (krb5_cache_state))
+	  if (credsOK (state))
 	    {
-	      debug ("<== __nss_ldap_krb5_cache_init: return OK");
-	      return krb5_cache_state;
+	      debug ("<== do_krb5_cache_init: return OK");
+	      return state;
 	    }
 
-	  if (credsEXPIRED (krb5_cache_state))
+	  if (credsEXPIRED (state))
 	    {
-	      krb5_cache_state->cache_state = KRB5_CACHE_EXPIRED;
+	      state->cache_state = KRB5_CACHE_EXPIRED;
 	    }
-	  else if (credsEXPIRING (krb5_cache_state))
+	  else if (credsEXPIRING (state))
 	    {
-	      krb5_cache_state->cache_state = KRB5_CACHE_REFRESH;
+	      state->cache_state = KRB5_CACHE_REFRESH;
 	    }
 	  else
 	    {
 	      /* Should not get here if things are OK so start again */
-	      debug(":== __nss_ldap_krb5_cache_init: RESET credentials as we got into an unusual state");
-	      __nss_ldap_krb5_cache_reset (krb5_cache_state);
-	      krb5_cache_state->cache_state = KRB5_CACHE_INIT;
+	      debug(":== do_krb5_cache_init: RESET credentials as we got into an unusual state");
+	      do_krb5_cache_reset (state);
+	      state->cache_state = KRB5_CACHE_INIT;
 	    }
 	  break;
 
 	case KRB5_CACHE_RENEW:
-	  debug(":== __nss_ldap_krb5_cache_init: RENEW credentials");
-	  code = __nss_ldap_krb5_cache_renew (krb5_cache_state);
+	  debug(":== do_krb5_cache_init: RENEW credentials");
+	  code = do_krb5_cache_renew (state);
 	  break;
 
 	case KRB5_CACHE_EXPIRED:
-	  debug(":== __nss_ldap_krb5_cache_init: ACQUIRE credentials they EXPIRED");
-	  code = __nss_ldap_krb5_cache_acquire (krb5_cache_state, config);
+	  debug(":== do_krb5_cache_init: ACQUIRE credentials they EXPIRED");
+	  code = do_krb5_cache_acquire (state, config);
 	  break;
 
 	case KRB5_CACHE_REFRESH:
-	  debug(":== __nss_ldap_krb5_cache_init: REFRESH credentials");
-	  code = __nss_ldap_krb5_cache_refresh (krb5_cache_state);
+	  debug(":== do_krb5_cache_init: REFRESH credentials");
+	  code = do_krb5_cache_refresh (state);
 	  break;
 
 	case KRB5_CACHE_ACQUIRE:
-	  debug(":== __nss_ldap_krb5_cache_init: ACQUIRE credentials  first time");
-	  code = __nss_ldap_krb5_cache_acquire (krb5_cache_state, config);
+	  debug(":== do_krb5_cache_init: ACQUIRE credentials  first time");
+	  code = do_krb5_cache_acquire (state, config);
 	  break;
 
 	case KRB5_CACHE_ERROR:
 	  /*
 	   * Can't do anything while in ERROR state.
-	   * So release all of the structures and return failure, let the higher level code try again later.
+	   * So release all of the structures and return failure,
+	   * let the higher level code try again later.
 	   */
-	  __nss_ldap_krb5_cache_close(session);
-	  debug(":== __nss_ldap_krb5_cache_init: reset cache for ERROR state");
+	  do_krb5_cache_close(session);
+	  debug(":== do_krb5_cache_init: reset cache for ERROR state");
 	  code = -1;
 	  break;
 
 	default:
-	  debug(":== __nss_ldap_krb5_cache_init: got a default entry for state %d this is an error",
-		krb5_cache_state->cache_state);
+	  debug(":== do_krb5_cache_init: got a default entry for state %d this is an error",
+		state->cache_state);
 	  break;
 	}
       if (code != 0)
 	{
 	  debug ("<== krb5_cache_init: got %d", (int) code);
-	  return krb5_cache_state;
+	  return state;
 	}
     }
   while (1);
@@ -1213,148 +1107,143 @@ __nss_ldap_krb5_cache_init (ldap_session_t *session)
   /*NOTREACHED*/
   debug ("<== krb5_cache_init: reinit ticket loop exit failure");
 
-  return krb5_cache_state;
+  return state;
 }
 
 static int
-__nss_ldap_krb5_cache_select (ldap_session_t *session)
+do_krb5_cache_select (ldap_session_t *session)
 {
   int result = 0;
-  ldap_session_opaque_t krb5_cache_state_obj = NULL;
-  _nss_ldap_krb5_state_p krb5_cache_state = NULL;
+  ldap_session_opaque_t state_p = NULL;
+  nss_ldap_krb5_state_t *state = NULL;
 
-  debug("==> __nss_ldap_krb5_cache_select");
+  debug("==> do_krb5_cache_select");
 
   if (session == NULL)
     {
-      debug ("<== __nss_ldap_krb5_cache_select: called with NULL session cache not running");
+      debug ("<== do_krb5_cache_select: called with NULL session cache not running");
       return -1;
     }
 
-  krb5_cache_state_obj = __nss_ldap_find_opaque(session, LSO_KRB5);
-
-  if (krb5_cache_state_obj == NULL)
-    {
-      krb5_cache_state = (_nss_ldap_krb5_state_p)__nss_ldap_krb5_cache_init (session);
-    }
+  state_p = __nss_ldap_find_opaque(session, LSO_KRB5);
+  if (state_p == NULL)
+      state = (nss_ldap_krb5_state_t *)do_krb5_cache_init (session);
   else 
+      state = (nss_ldap_krb5_state_t *)state_p->lso_data;
+
+  if (state == NULL)
     {
-      krb5_cache_state = (_nss_ldap_krb5_state_p)(krb5_cache_state_obj->lso_data);
+      debug ("<== do_krb5_cache_select - cache initialisation failed no state object allocated");
+      return -1;
     }
-  if (krb5_cache_state == NULL)
+
+  if (state->cache_state != KRB5_CACHE_RUNNING)
     {
-    debug ("<== __nss_ldap_krb5_cache_select - cache initialisation failed no state object allocated");
-    return -1;
+      debug ("<== do_krb5_cache_select - cache initialisation failed - cache not running");
+      return -1;
     }
-  if (krb5_cache_state->cache_state != KRB5_CACHE_RUNNING)
+
+  if (state->ccname != NULL)
     {
-    debug ("<== __nss_ldap_krb5_cache_select - cache initialisation failed - cache not running");
-    return -1;
-    }
-  if (krb5_cache_state->ccname != NULL)
-    {
-      OM_uint32 retval = 0;
+      OM_uint32 minor;
       krb5_error_code code;
 
-      debug (":== __nss_ldap_krb5_cache_select: call gss_krb5_ccache_name");
-
-      code = gss_krb5_ccache_name (&retval,
-				   (const char *) krb5_cache_state->ccname,
-				   (const char **) &(krb5_cache_state->saveccname));
+      code = gss_krb5_ccache_name (&minor,
+				   (const char *) state->ccname,
+				   (const char **) &state->saveccname);
       if (code != GSS_S_COMPLETE)
 	{
-	  debug (":== __nss_ldap_krb5_cache_select: unable to set default credential cache - retval %d", retval);
+	  debug (":== do_krb5_cache_select: unable to set default credential cache - retval %d", retval);
 	  result = -1;
 	}
-      debug(":== __nss_ldap_krb5_cache_select: ccname = %s", krb5_cache_state->ccname);
+      debug(":== do_krb5_cache_select: ccname = %s", state->ccname);
     }
   else
     {
-      debug(":== __nss_ldap_krb5_cache_select: ccname is NULL");
+      debug(":== do_krb5_cache_select: ccname is NULL");
     }
 
-  debug ("<== __nss_ldap_krb5_cache_select returns result = %d", result);
+  debug ("<== do_krb5_cache_select returns result = %d", result);
 
   return result;
 }
 
 static int
-__nss_ldap_krb5_cache_restore (ldap_session_t *session)
+do_krb5_cache_restore (ldap_session_t *session)
 {
   int result = 0;
-  ldap_session_opaque_t krb5_cache_state_obj = NULL;
-  _nss_ldap_krb5_state_p krb5_cache_state = NULL;
-  OM_uint32 retval = 0;
+  ldap_session_opaque_t state_p;
+  nss_ldap_krb5_state_t *state;
+  OM_uint32 retval;
   krb5_error_code code;
 
-  debug("==> __nss_ldap_krb5_cache_restore");
+  debug("==> do_krb5_cache_restore");
 
   if (session == NULL)
     {
-      debug ("<== __nss_ldap_krb5_cache_restore: called with NULL session cache not running");
+      debug ("<== do_krb5_cache_restore: called with NULL session cache not running");
       return -1;
     }
 
-  krb5_cache_state_obj = __nss_ldap_find_opaque(session, LSO_KRB5);
-
-  if (krb5_cache_state_obj == NULL)
+  state_p = __nss_ldap_find_opaque(session, LSO_KRB5);
+  if (state_p == NULL)
     {
-      debug ("<== __nss_ldap_krb5_cache_restore - cache not initialised no state object container allocated");
+      debug ("<== do_krb5_cache_restore - cache not initialised no state object container allocated");
       return -1;
     }
-  if ((krb5_cache_state = (_nss_ldap_krb5_state_p)(krb5_cache_state_obj->lso_data)) == NULL)
+  state = (nss_ldap_krb5_state_t *)state_p->lso_data;
+  if (state == NULL)
     {
       __nss_ldap_free_opaque(session, LSO_KRB5);
-      debug ("<== __nss_ldap_krb5_cache_restore - cache not initialised no state object allocated");
+      debug ("<== do_krb5_cache_restore - cache not initialised no state object allocated");
       return -1;
     }
-  if (krb5_cache_state->cache_state != KRB5_CACHE_RUNNING)
+
+  if (state->cache_state != KRB5_CACHE_RUNNING)
     {
-      debug ("<== __nss_ldap_krb5_cache_restore - cache not initialised - cache not running");
+      debug ("<== do_krb5_cache_restore - cache not initialised - cache not running");
       return -1;
     }
 
-  debug (":== __nss_ldap_krb5_cache_restore: call gss_krb5_ccache_name");
-
-  code = gss_krb5_ccache_name (&retval, (const char *) krb5_cache_state->saveccname, NULL);
+  code = gss_krb5_ccache_name (&retval, (const char *) state->saveccname, NULL);
   if (code != GSS_S_COMPLETE)
     {
-      debug (":== __nss_ldap_krb5_cache_restore: unable to restore default credential cache- retval %d", retval);
+      debug (":== do_krb5_cache_restore: unable to restore default credential cache- retval %d", retval);
       result = -1;
     }
 
-  krb5_cache_state->saveccname = NULL;
+  state->saveccname = NULL;
 
-  debug ("<== __nss_ldap_krb5_cache_restore: returns result = %d", result);
+  debug ("<== do_krb5_cache_restore: returns result = %d", result);
 
   return result;
 }
 
 static void
-__nss_ldap_krb5_cache_close (ldap_session_t *session)
+do_krb5_cache_close (ldap_session_t *session)
 {
-  ldap_session_opaque_t krb5_cache_state_obj = NULL;
-  _nss_ldap_krb5_state_p krb5_cache_state = NULL;
+  ldap_session_opaque_t state_p = NULL;
+  nss_ldap_krb5_state_t *state = NULL;
 
-  debug ("==> __nss_ldap_krb5_cache_close");
+  debug ("==> do_krb5_cache_close");
 
   if (session == NULL)
     {
-      debug ("<== __nss_ldap_krb5_cache_close: called with NULL session cache not running");
+      debug ("<== do_krb5_cache_close: called with NULL session cache not running");
       return;
     }
 
-  krb5_cache_state_obj = __nss_ldap_find_opaque(session, LSO_KRB5);
+  state_p = __nss_ldap_find_opaque(session, LSO_KRB5);
 
-  if (krb5_cache_state_obj != NULL
-      && (krb5_cache_state = (_nss_ldap_krb5_state_p)(krb5_cache_state_obj->lso_data)) != NULL)
+  if (state_p != NULL
+      && (state = (nss_ldap_krb5_state_t *)(state_p->lso_data)) != NULL)
     {
-      __nss_ldap_krb5_cache_reset(krb5_cache_state);
+      do_krb5_cache_reset(state);
     }
 
   __nss_ldap_free_opaque(session, LSO_KRB5);
 
-  debug ("<== __nss_ldap_krb5_cache_close");
+  debug ("<== do_krb5_cache_close");
 
   return;
 }
@@ -1369,13 +1258,13 @@ static char envbuf[256];
 #endif
 
 static void
-__nss_ldap_krb5_cache_init (ldap_session_t * session)
+do_krb5_cache_init (ldap_session_t * session)
 {
   return;
 }
 
 static int
-__nss_ldap_krb5_cache_select (ldap_session_t * session)
+do_krb5_cache_select (ldap_session_t * session)
 {
   char *ccname;
 # if defined(CONFIGURE_KRB5_CCNAME_ENV)
@@ -1430,7 +1319,7 @@ __nss_ldap_krb5_cache_select (ldap_session_t * session)
 }
 
 static int
-__nss_ldap_krb5_cache_restore (ldap_session_t *session)
+do_krb5_cache_restore (ldap_session_t *session)
 {
 # if defined(CONFIGURE_KRB5_CCNAME_GSSAPI)
   int retval;
@@ -1455,7 +1344,7 @@ __nss_ldap_krb5_cache_restore (ldap_session_t *session)
 }
 
 static void
-__nss_ldap_krb5_cache_close (ldap_session_t *session)
+do_krb5_cache_close (ldap_session_t *session)
 {
   return;
 }
@@ -1464,25 +1353,25 @@ __nss_ldap_krb5_cache_close (ldap_session_t *session)
 
 #if !defined(CONFIGURE_KRB5_KEYTAB) && !defined(CONFIGURE_KRB5_CCNAME)
 static void *
-__nss_ldap_krb5_cache_init (ldap_session_t *session)
+do_krb5_cache_init (ldap_session_t *session)
 {
   return NULL;
 }
 
 static int
-__nss_ldap_krb5_cache_select (ldap_session_t *session)
+do_krb5_cache_select (ldap_session_t *session)
 {
   return 0;
 }
 
 static int
-__nss_ldap_krb5_cache_restore (ldap_session_t *session)
+do_krb5_cache_restore (ldap_session_t *session)
 {
   return 0;
 }
 
 static void
-__nss_ldap_krb5_cache_close (ldap_session_t *session)
+do_krb5_cache_close (ldap_session_t *session)
 {
   return;
 }
@@ -1490,24 +1379,24 @@ __nss_ldap_krb5_cache_close (ldap_session_t *session)
 #endif /* !defined(CONFIGURE_KRB5_KEYTAB) && !defined(CONFIGURE_KRB5_CCNAME) */
 
 ldap_session_mech_t
-__nss_ldap_krb5_cache(void)
+do_krb5_cache(void)
 {
   ldap_session_mech_t krb5_cache_mech = NULL;
 
-  debug("==> __nss_ldap_krb5_cache");
+  debug("==> do_krb5_cache");
 
   krb5_cache_mech = __nss_ldap_mech_setup(LSM_KRB5,
-					  __nss_ldap_krb5_cache_init,
-					  __nss_ldap_krb5_cache_select,
-					  __nss_ldap_krb5_cache_restore,
-					  __nss_ldap_krb5_cache_close);
+					  do_krb5_cache_init,
+					  do_krb5_cache_select,
+					  do_krb5_cache_restore,
+					  do_krb5_cache_close);
 
   if (krb5_cache_mech == NULL)
     {
-      debug (":== __nss_ldap_krb5_cache: Failed to allocate mech structure for kerberos mechs");
+      debug (":== do_krb5_cache: Failed to allocate mech structure for kerberos mechs");
     }
 
-  debug ("<== __nss_ldap_krb5_cache: return %p", krb5_cache_mech);
+  debug ("<== do_krb5_cache: return %p", krb5_cache_mech);
 
   return krb5_cache_mech;
 }

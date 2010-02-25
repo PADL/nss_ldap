@@ -1565,7 +1565,7 @@ do_check_threading (ldap_session_t *session)
 #endif
 #endif /* DEBUG */
 
-  debug (":== do_check_threading pthreading = %d, session pid = %d, pid = %d",
+  debug (":== do_check_threading pthreading=%d, session pid=%d, pid=%d",
 	 pthreading_active(), session->pid, pid);
   assert ((pthreading_active() && (session->pid == -1) && (pid == -1))
 	  || (!pthreading_active() && ((session->pid != -1) || (pid != -1))));
@@ -1608,7 +1608,7 @@ do_check_init (ldap_session_t *session)
 
   do_check_threading (session);
 
-  debug (":== do_check_init: session pid = %d, current pid = %d, session euid = %d, current euid = %d",
+  debug (":== do_check_init: session pid=%d, current pid=%d, session euid=%d, current euid=%d",
 	 pid, session->pid, euid, session->euid);
 
   if (session->ls_state == LS_CONNECTED_TO_DSA &&
@@ -1820,7 +1820,7 @@ do_init (ldap_session_t *session)
       if (__ssl_initialized == 0
 	  && (rc = ldapssl_client_init (cfg->ldc_sslpath, NULL)) != LDAP_SUCCESS)
 	{
-          debug ("<== do_init (ldapssl_client_init failed with rc = %d)", rc);
+          debug ("<== do_init (ldapssl_client_init failed with rc=%d)", rc);
 	  return NSS_UNAVAIL;
 	}
       __ssl_initialized = 1;
@@ -2218,7 +2218,7 @@ do_sasl_interactive_bind (ldap_session_t *session, int timelimit, const char *dn
 {
   int rc = -1;
 
-  debug ("==> do_sasl_interactive_bind: timelimit = %d, dn =%s, pw =%s", timelimit, dn, pw);
+  debug ("==> do_sasl_interactive_bind: timelimit=%d, dn =%s, pw =%s", timelimit, dn, pw);
 
 #if (defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))) || defined(HAVE_LDAP_GSS_BIND)
   if (session->ls_config->ldc_sasl_secprops != NULL)
@@ -2252,7 +2252,7 @@ do_sasl_bind (ldap_session_t *session, int timelimit, const char *dn, const char
   int mech_rc = -1;
   ldap_session_mech_t selectedMech = NULL;
 
-  debug ("==> do_sasl_bind: timelimit = %d, dn =%s, pw =%s", timelimit, dn, pw);
+  debug ("==> do_sasl_bind: timelimit=%d, dn =%s, pw =%s", timelimit, dn, pw);
 
 #if (defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))) || defined(HAVE_LDAP_GSS_BIND)
 
@@ -2312,7 +2312,7 @@ do_bind (ldap_session_t *session, int timelimit, const char *dn, const char *pw,
   struct timeval tv;
   LDAPMessage *result;
 
-  debug ("==> do_bind: timelimit = %d, dn = %s, pw = %s, with_sasl = %d",
+  debug ("==> do_bind: timelimit=%d, dn=%s, pw=%s, with_sasl=%d",
 	 timelimit, dn, pw, with_sasl);
 
   /*
@@ -2325,7 +2325,7 @@ do_bind (ldap_session_t *session, int timelimit, const char *dn, const char *pw,
   if (with_sasl != 0)
     {
       rc = do_sasl_bind (session, timelimit, dn, pw);
-      debug ("<== do_bind: rc = %d", rc);
+      debug ("<== do_bind: rc=%d", rc);
       return rc;
     }
 
@@ -2337,7 +2337,7 @@ do_bind (ldap_session_t *session, int timelimit, const char *dn, const char *pw,
 	{
 	  rc = LDAP_UNAVAILABLE;
 	}
-      debug ("<== do_bind: rc = %d", rc);
+      debug ("<== do_bind: rc=%d", rc);
 
       return rc;
     }
@@ -2346,7 +2346,7 @@ do_bind (ldap_session_t *session, int timelimit, const char *dn, const char *pw,
   if (rc > 0)
     {
       int error = ldap_result2error (session->ls_conn, result, 1);
-      debug ("<== do_bind: result = %s", ldap_err2string(rc));
+      debug ("<== do_bind: result=%s", ldap_err2string(rc));
       return error;
     }
 
@@ -2357,7 +2357,7 @@ do_bind (ldap_session_t *session, int timelimit, const char *dn, const char *pw,
       rc = LDAP_TIMEOUT;
     }
 
-  debug ("<== do_bind: result = %s", ldap_err2string(rc));
+  debug ("<== do_bind: result=%s", ldap_err2string(rc));
 
   return rc;
 }
@@ -3645,7 +3645,9 @@ do_search_params (const ldap_session_t *session,
 }
 
 static NSS_STATUS
-do_filter_with_reconnect(ldap_session_t *session, const ldap_args_t *args, const char *filterprot,
+do_filter_with_reconnect(ldap_session_t *session,
+			 const ldap_args_t *args,
+			 const char *filterprot,
 			 ldap_service_search_descriptor_t *sd,
 			 const char *base, int scope,
 			 const char **attrs, int sizelimit,
@@ -3656,7 +3658,7 @@ do_filter_with_reconnect(ldap_session_t *session, const ldap_args_t *args, const
   const char *filter;
   NSS_STATUS stat;
 
-  debug ("==> do_filter_with_reconnect filterprot = %s, base = %s, scope = %d, sizelimit = %d",
+  debug ("==> do_filter_with_reconnect filterprot=%s, base=%s, scope=%d, sizelimit=%d",
 	 filterprot, base, scope, sizelimit);
 
   stat = do_filter (args, filterprot, sd, filterBuf, sizeof (filterBuf),
@@ -3672,7 +3674,7 @@ do_filter_with_reconnect(ldap_session_t *session, const ldap_args_t *args, const
 	}
     }
 
-  debug ("<== do_filter_with_reconnect stat = %d", stat);
+  debug ("<== do_filter_with_reconnect stat=%d", stat);
 
   return stat;
 }
@@ -4839,7 +4841,7 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
   sasl_interact_t *interact = (sasl_interact_t *) _interact;
   int rc = LDAP_SUCCESS;
 
-  debug("==> do_sasl_interact flags = %d, defaults = %s, _interact = %p", flags, authzid, _interact);
+  debug("==> do_sasl_interact flags=%d, defaults=%s, _interact=%p", flags, authzid, _interact);
 
 #if defined(HAVE_LDAP_SASL_INTERACTIVE_BIND_S) && (defined(HAVE_SASL_H) ||defined (HAVE_SASL_SASL_H))
   while (interact->id != SASL_CB_LIST_END)
@@ -4879,7 +4881,7 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
     }
 #endif
 
-  debug ("<== do_sasl_interact rc = %d", rc);
+  debug ("<== do_sasl_interact rc=%d", rc);
 
   return rc;
 }
