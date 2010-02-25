@@ -57,7 +57,7 @@ NSS_LDAP_NSS_VERSIONED = libnss_ldap.so.$(NSS_VERS)
 endif
 
 if USE_NATIVE_LINKER
-NATIVE_LINK = $(nss_ldap_so_LD) $(AM_LDFLAGS) -o $@ 
+NATIVE_LINK = $(nss_ldap_so_LD) $(AM_LDFLAGS) $(LDFLAGS) -o $@ 
 else
 GNU_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 endif
