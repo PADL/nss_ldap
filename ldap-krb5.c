@@ -113,6 +113,8 @@ static char rcsId[] =
 #include <gssapi.h>
 #endif
 
+#include <sys/param.h>
+
 #define MAX_RENEW_TIME "365d"
 
 #define KT_PATH_MAX 256
@@ -379,7 +381,7 @@ do_krb5_cache_get_saslid (nss_ldap_krb5_state_t *state, ldap_config_t * config)
       saslid = defaultSaslId;
     }
 
-  debug ("<== do_krb5_cache_get_saslid: returns %s", saslid);
+  debug ("<== do_krb5_cache_get_saslid: returns %s", (saslid == NULL) ? "<null>" : saslid);
 
   return (saslid != NULL) ? strdup(saslid) : NULL;
 }
@@ -940,7 +942,7 @@ finish_acquire_creds:
 static void *
 do_krb5_cache_init (ldap_session_t *session)
 {
-  krb5_error_code code;
+  krb5_error_code code = EINVAL;
   ldap_session_opaque_t state_p = NULL;
   nss_ldap_krb5_state_t *state = NULL;
   ldap_config_t * config = NULL;
@@ -1088,7 +1090,7 @@ do_krb5_cache_init (ldap_session_t *session)
 	   */
 	  do_krb5_cache_close(session);
 	  debug(":== do_krb5_cache_init: reset cache for ERROR state");
-	  code = -1;
+	  code = ENOENT;
 	  break;
 
 	default:
@@ -1153,7 +1155,7 @@ do_krb5_cache_select (ldap_session_t *session)
 				   (const char **) &state->saveccname);
       if (code != GSS_S_COMPLETE)
 	{
-	  debug (":== do_krb5_cache_select: unable to set default credential cache - retval %d", retval);
+	  debug (":== do_krb5_cache_select: unable to set default credential cache - code %d", code);
 	  result = -1;
 	}
       debug(":== do_krb5_cache_select: ccname=%s", state->ccname);
@@ -1379,7 +1381,7 @@ do_krb5_cache_close (ldap_session_t *session)
 #endif /* !defined(CONFIGURE_KRB5_KEYTAB) && !defined(CONFIGURE_KRB5_CCNAME) */
 
 ldap_session_mech_t
-do_krb5_cache(void)
+__nss_ldap_krb5_cache(void)
 {
   ldap_session_mech_t krb5_cache_mech = NULL;
 

@@ -559,7 +559,7 @@ __local_option (void *outvalue)
   (__local_option (NULL))
 #endif
 
-static const char *
+const char *
 __nss_ldap_status2string (NSS_STATUS stat)
 {
   switch (stat)

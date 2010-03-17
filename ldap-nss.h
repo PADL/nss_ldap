@@ -1013,6 +1013,8 @@ int _nss_ldap_test_config_flag (unsigned int flag);
 int _nss_ldap_test_initgroups_ignoreuser (const char *user);
 int _nss_ldap_get_ld_errno (char **m, char **s);
 
+const char *__nss_ldap_status2string (NSS_STATUS stat);
+
 ldap_session_mech_t __nss_ldap_mech_setup(ldap_session_mech_type_t mechType,
  					  ldap_session_mech_init_t initFunc,
  					  ldap_session_mech_select_t selectFunc,
