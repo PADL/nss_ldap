@@ -2905,8 +2905,8 @@ do_result (ldap_session_t *session, ent_context_t * ctx, int all)
 	  stat = NSS_UNAVAIL;
 	  break;
 	case 0:
-	  syslog (LOG_ERR, "nss_ldap: count not get LDAP result - request timed-out");
-	  debug (":== do_result: could not get LDAP result - request timed-out");
+	  syslog (LOG_ERR, "nss_ldap: count not get LDAP result - request timed out");
+	  debug (":== do_result: could not get LDAP result - request timed out");
 	  rc = LDAP_TIMEOUT;
 	  stat = NSS_UNAVAIL;
 	  break;
@@ -2986,9 +2986,10 @@ do_result (ldap_session_t *session, ent_context_t * ctx, int all)
 #endif /* LDAP_RES_SEARCH_REFERENCE */
 
   if (stat == NSS_SUCCESS)
-    time (&(session->ls_timestamp));
+    time (&session->ls_timestamp);
 
-  debug ("<== do_result: returns %s(%d), ldap result %s", __nss_ldap_status2string(stat), stat, ldap_err2string(rc));
+  debug ("<== do_result: returns %s(%d), ldap result %s",
+	 __nss_ldap_status2string(stat), stat, ldap_err2string(rc));
 
   return stat;
 }
@@ -4085,9 +4086,8 @@ _nss_ldap_getbyname (ldap_args_t * args,
 
   debug ("==> _nss_ldap_getbyname");
 
+  memset (&ctx, 0, sizeof(ctx));
   ctx.ec_msgid = -1;
-  ctx.ec_cookie = NULL;
-  ctx.ec_eof = 0;
 
   stat = _nss_ldap_search_s (args, filterprot, sel, NULL, 1, &ctx.ec_res);
   if (stat != NSS_SUCCESS)
