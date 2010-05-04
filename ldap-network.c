@@ -108,8 +108,8 @@ _nss_ldap_parse_net (LDAPMessage * e,
     return NSS_TRYAGAIN;
   addr = buffer;
   buffer += MAXADDRSIZE;
-  buffer -= MAXADDRSIZE;
-  network->n_length = inet_net_pton (AF_INET, tmp, &addr, MAXADDRSIZE);
+  buflen -= MAXADDRSIZE;
+  network->n_length = inet_net_pton (AF_INET, tmp, addr, MAXADDRSIZE);
   network->n_addr = addr;
 #else
   network->n_net = inet_network (tmp);
