@@ -25,6 +25,8 @@ $Id$
 	* fix for BUG#416: FreeBSD 7.x/8.x compatibility
 	* fix for BUG#420: _nss_ldap_parse_net() dumps core on
 	  AIX 5.3 and 6.1
+	* fix for BUG#425: nss_ldap doesn't parse IPv4 addresses
+	  correctly on non-ipv6 systems
 
 265	Luke Howard <lukeh@padl.com>
 

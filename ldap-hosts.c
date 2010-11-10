@@ -205,7 +205,7 @@ _nss_ldap_parse_host (LDAPMessage * e,
 	continue;
 
 #else
-      unsigned long haddr;
+      in_addr_t haddr;
       haddr = inet_addr (addresses[i]);
 #endif
 
