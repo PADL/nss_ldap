@@ -3327,7 +3327,7 @@ do_search (ldap_session_t *session, const char *base, int scope,
     {
       if (GET_ERROR_NUMBER (session->ls_conn, &rc) != LDAP_OPT_SUCCESS)
 	{
-	  debug (":== do_search: failed to get erro number from ldap_search");
+	  debug (":== do_search: failed to get error number from ldap_search");
 	  rc = LDAP_UNAVAILABLE;
 	}
       debug (":== do_search: error from ldap_search is %s(%d)",
