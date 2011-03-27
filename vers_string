@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-#ident $Id$
+#ident $Id: vers_string,v 1.10 1999/04/05 01:38:26 lukeh Exp $
 #
 # Implementation of SGS vers_string which uses CVSVersionInfo.txt.
 
@@ -8,7 +8,7 @@ require "cvslib.pl";
 
 $OUTFILE = (-f "version.h") ? "version.h" : "vers.c";
 $AUTHOR = `whoami`;
-$HEADER = '$Id$';
+$HEADER = '$Id: vers_string,v 1.10 1999/04/05 01:38:26 lukeh Exp $';
 
 if ($ENV{'PROGRAM'}) { $PROGRAM = $ENV{'PROGRAM'}; }
 
@@ -58,7 +58,7 @@ if ($ARGV[0] eq "-f") {
 	close(OUTFILE);
 } elsif ($ARGV[0] ne "") {
 	print STDERR "$HEADER\n";
-	print STDERR "Copyright (C) 1997-2010 Luke Howard <lukeh\@padl.com>";
+	print STDERR "Copyright (C) 1997-2011 Luke Howard <lukeh\@padl.com>";
 	print STDERR "\n\n";
 	print STDERR "Unknown command line option $ARGV[0].\n";
 	print STDERR "Usage: vers_string [-f|-l|-c|-n|-B|-v]\n";
