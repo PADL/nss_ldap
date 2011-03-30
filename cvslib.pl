@@ -51,6 +51,13 @@ sub getCVSVersionInfo
 {
 	local ($VERSION, $PROJECT);
 
+	local $gitVersion = `git describe --tags`;
+	if ($gitVersion ne "")
+	{
+		chop($gitVersion);
+		return $gitVersion;
+	}
+
 	if (-f $INFOFILE)
 	{
 		open(INFOFILE, $INFOFILE) || return;
@@ -74,4 +81,3 @@ sub getCVSVersionInfo
 	close(INFOFILE);
 	return "$PROJECT-$VERSION";
 }
-

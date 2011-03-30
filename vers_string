@@ -4,7 +4,11 @@
 #
 # Implementation of SGS vers_string which uses CVSVersionInfo.txt.
 
-require "cvslib.pl";
+if (-f "./cvslib.pl") {
+	require "./cvslib.pl";
+} else {
+	require "/usr/share/cvslib.pl";
+}
 
 $OUTFILE = (-f "version.h") ? "version.h" : "vers.c";
 $AUTHOR = `whoami`;
@@ -16,7 +20,7 @@ chop($AUTHOR);
 chop($DATE=`date -u`);
 chop($CWD=`pwd`);
 
-($PROJECT, $VERSION) = split(/\-/, &getCVSVersionInfo());
+($PROJECT, $VERSION) = split(/\-/, &getCVSVersionInfo(), 2);
 
 if (!defined($PROJECT)) {
 	$PROJECT = "Unknown";
@@ -31,14 +35,14 @@ if (!defined($PROJECT)) {
 if ($ARGV[0] eq "-f") {
 	print $PROJECT, $SEP, $VERSION, "\n";
 } elsif ($ARGV[0] eq "-l") {
-	print "static const char SGS_VERS[160] = \"";
+	print "static const char SGS_VERS[] = \"";
 	print '@(#)LIBRARY:', $PROGRAM, '  PROJECT:', $PROJECT, $SEP, $VERSION, '  DEVELOPER:', $AUTHOR,  '  BUILT:', $DATE;
 	print "\";\n";
 } elsif ($ARGV[0] eq "-c") {
-	print "const char SGS_VERS[160] = \"";
+	print "const char SGS_VERS[] = \"";
 	print '@(#)PROGRAM:', $PROGRAM, '  PROJECT:', $PROJECT, $SEP, $VERSION, '  DEVELOPER:', $AUTHOR,  '  BUILT:', $DATE;
 	print "\";\n";
-	print "const char VERS_NUM[10] = \"$VERSION\";\n";
+	print "const char VERS_NUM[] = \"$VERSION\";\n";
 } elsif ($ARGV[0] eq "-n") {
 	print "$VERSION\n";
 } elsif ($ARGV[0] eq "-B") {
@@ -51,10 +55,10 @@ if ($ARGV[0] eq "-f") {
 	if ($OUTFILE eq "version.h") {
 		print OUTFILE "#define USE_SGS_VERS\n\n";
 	}
-	print OUTFILE "const char SGS_VERS[160] = \"";
+	print OUTFILE "const char SGS_VERS[] = \"";
 	print OUTFILE '@(#)PROGRAM:', $PROGRAM, '  PROJECT:', $PROJECT, $SEP, $VERSION, '  DEVELOPER:', $AUTHOR,  '  BUILT:', $DATE;
 	print OUTFILE "\";\n\n";
-	print OUTFILE "const char VERS_NUM[10] = \"$VERSION\";\n\n";
+	print OUTFILE "const char VERS_NUM[] = \"$VERSION\";\n\n";
 	close(OUTFILE);
 } elsif ($ARGV[0] ne "") {
 	print STDERR "$HEADER\n";
