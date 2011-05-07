@@ -1,4 +1,4 @@
-#ident $Id: cvslib.pl,v 1.5 1999/04/05 01:38:26 lukeh Exp $
+#ident $Id$
 
 $CVSVERSIONDIR = $ENV{'CVSVERSIONDIR'};
 
