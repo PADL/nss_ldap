@@ -137,15 +137,26 @@ priority_sort(const void *r1, const void *r2)
 {
   struct resource_record **rr1 = (struct resource_record **)r1;
   struct resource_record **rr2 = (struct resource_record **)r2;
-  int ret;
+  unsigned int total;
 
-  ret = (*rr1)->u.srv->priority - (*rr2)->u.srv->priority;
-  if (ret == 0)
+  if ((*rr1)->u.srv->priority == (*rr2)->u.srv->priority)
     {
-      ret = (*rr2)->u.srv->weight - (*rr1)->u.srv->weight;
+      /* Weight-based selection */
+      if ((*rr1)->u.srv->weight == 0 && (*rr2)->u.srv->weight == 0)
+        {
+          return (rand() % 2) ? -1 : 1;
+        }
+
+      total = (*rr1)->u.srv->weight + (*rr2)->u.srv->weight;
+      return (rand() % total < (*rr1)->u.srv->weight) ? -1 : 1;
+    }
+  else if ((*rr1)->u.srv->priority < (*rr2)->u.srv->priority)
+    {
+      return -1;
     }
 
-  return ret;
+  /* rr1 > rr2 */
+  return 1;
 }
 
 NSS_STATUS
