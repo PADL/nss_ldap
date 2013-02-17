@@ -560,11 +560,11 @@ do_searchdescriptorconfig (const char *key, const char *value, size_t len,
     {
       *s = '\0';
       s++;
-      if (!strcasecmp (s, "sub"))
+      if (!strncasecmp (s, "sub", 3))
 	scope = LDAP_SCOPE_SUBTREE;
-      else if (!strcasecmp (s, "one"))
+      else if (!strncasecmp (s, "one", 3))
 	scope = LDAP_SCOPE_ONELEVEL;
-      else if (!strcasecmp (s, "base"))
+      else if (!strncasecmp (s, "base", 4))
 	scope = LDAP_SCOPE_BASE;
       filter = strchr (s, '?');
       if (filter != NULL)
