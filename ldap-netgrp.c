@@ -793,6 +793,7 @@ static NSS_STATUS
 _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 {
   struct nss_innetgr_args *args = (struct nss_innetgr_args *) _args;
+  const char *machine, *user, *domain;
   int i;
 
   /*
@@ -815,11 +816,11 @@ _nss_ldap_innetgr (nss_backend_t * be, void *_args)
 
   _nss_ldap_enter ();
 
-  const char *machine = (args->arg[NSS_NETGR_MACHINE].argc != 0) ?
+  machine = (args->arg[NSS_NETGR_MACHINE].argc != 0) ?
     args->arg[NSS_NETGR_MACHINE].argv[0] : NULL;
-  const char *user = (args->arg[NSS_NETGR_USER].argc != 0) ?
+  user = (args->arg[NSS_NETGR_USER].argc != 0) ?
     args->arg[NSS_NETGR_USER].argv[0] : NULL;
-  const char *domain = (args->arg[NSS_NETGR_DOMAIN].argc != 0) ?
+  domain = (args->arg[NSS_NETGR_DOMAIN].argc != 0) ?
     args->arg[NSS_NETGR_DOMAIN].argv[0] : NULL;
 
   for (i = 0; i < args->groups.argc; i++)
