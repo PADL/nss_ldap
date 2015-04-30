@@ -113,8 +113,10 @@ extern char _nss_ldap_filt_getautomntbyname[];
  */
 #define OC(oc)                   _nss_ldap_map_oc(LM_NONE, OC##_##oc)
 #define OCM(map, at)             _nss_ldap_map_oc(map, AT##_##at)
-#define AT(at)                   _nss_ldap_map_at(LM_NONE, AT##_##at)
-#define ATM(map, at)             _nss_ldap_map_at(map, AT##_##at)
+#define AT(at)                   _nss_ldap_map_at(LM_NONE, AT##_##at, 0)
+#define ATM(map, at)             _nss_ldap_map_at(map, AT##_##at, 0)
+#define ATF(at)                  _nss_ldap_map_at(LM_NONE, AT##_##at, MAP_ATTRIBUTE_FILTER)
+#define ATMF(map, at)            _nss_ldap_map_at(map, AT##_##at, MAP_ATTRIBUTE_FILTER)
 #define DF(at)                   _nss_ldap_map_df(at)
 #define OV(at)                   _nss_ldap_map_ov(at)
 

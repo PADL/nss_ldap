@@ -481,7 +481,9 @@ enum ldap_map_type
   MAP_DEFAULT,
   MAP_ATTRIBUTE_REVERSE,
   MAP_OBJECTCLASS_REVERSE, /* XXX not used yet? */
-  MAP_MAX = MAP_OBJECTCLASS_REVERSE
+  MAP_MAX = MAP_OBJECTCLASS_REVERSE,
+  MAP_ATTRIBUTE_FILTER = 0x1000,
+  MAP_ATTRIBUTE_MASK = ~(MAP_ATTRIBUTE_FILTER)
 };
 
 typedef enum ldap_map_type ldap_map_type_t;
@@ -893,7 +895,7 @@ NSS_STATUS _nss_ldap_map_get (ldap_config_t * config,
 			      ldap_map_type_t map,
 			      const char *key, const char **value);
 
-const char *_nss_ldap_map_at (ldap_map_selector_t sel, const char *pChar2);
+const char *_nss_ldap_map_at (ldap_map_selector_t sel, const char *pChar2, ldap_map_type_t flags);
 const char *_nss_ldap_unmap_at (ldap_map_selector_t sel, const char *attribute);
 
 const char *_nss_ldap_map_oc (ldap_map_selector_t sel, const char *pChar);

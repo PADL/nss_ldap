@@ -3882,12 +3882,13 @@ _nss_ldap_shadow_handle_flag (struct spwd *sp)
 #endif /* HAVE_SHADOW_H */
 
 const char *
-_nss_ldap_map_at (ldap_map_selector_t sel, const char *attribute)
+_nss_ldap_map_at (ldap_map_selector_t sel, const char *attribute, ldap_map_type_t flags)
 {
   const char *mapped = NULL;
   NSS_STATUS stat;
+  ldap_map_type_t type = MAP_ATTRIBUTE | flags;
 
-  stat = _nss_ldap_map_get (__config, sel, MAP_ATTRIBUTE, attribute, &mapped);
+  stat = _nss_ldap_map_get (__config, sel, type, attribute, &mapped);
 
   return (stat == NSS_SUCCESS) ? mapped : attribute;
 }
@@ -3956,6 +3957,8 @@ _nss_ldap_map_put (ldap_config_t * config,
   void **map;
   NSS_STATUS stat;
 
+  assert ((type & MAP_ATTRIBUTE_MASK) == type);
+
   switch (type)
     {
     case MAP_ATTRIBUTE:
@@ -3995,7 +3998,7 @@ _nss_ldap_map_put (ldap_config_t * config,
 
   NSS_LDAP_DATUM_ZERO (&key);
   key.data = (void *) from;
-  key.size = strlen (from) + 1;
+  key.size = strlen (from);
 
   NSS_LDAP_DATUM_ZERO (&val);
   val.data = (void *) to;
@@ -4005,10 +4008,25 @@ _nss_ldap_map_put (ldap_config_t * config,
   if (stat == NSS_SUCCESS &&
       (type == MAP_ATTRIBUTE || type == MAP_OBJECTCLASS))
     {
+      ldap_datum_t reverseKey, reverseVal;
+      const char *pColon;
+
       type = (type == MAP_ATTRIBUTE) ? MAP_ATTRIBUTE_REVERSE : MAP_OBJECTCLASS_REVERSE;
       map = &config->ldc_maps[sel][type];
 
-      stat = _nss_ldap_db_put (*map, NSS_LDAP_DB_NORMALIZE_CASE, &val, &key);
+      NSS_LDAP_DATUM_ZERO (&reverseKey);
+      reverseKey.data = (void *)to;
+      pColon = strchr(to, ':');
+      if (pColon)
+        reverseKey.size = pColon - to;
+      else
+        reverseKey.size = val.size - 1;
+
+      NSS_LDAP_DATUM_ZERO (&reverseVal);
+      reverseVal.data = (void *)from;
+      reverseVal.size = key.size + 1;
+
+      stat = _nss_ldap_db_put (*map, NSS_LDAP_DB_NORMALIZE_CASE, &reverseKey, &reverseVal);
     }
 
   return stat;
@@ -4024,24 +4042,33 @@ _nss_ldap_map_get (ldap_config_t * config,
   void *map;
   NSS_STATUS stat;
 
-  if (config == NULL || sel > LM_NONE || type > MAP_MAX)
+  if (config == NULL || sel > LM_NONE || (type & MAP_ATTRIBUTE_MASK) > MAP_MAX)
     {
       return NSS_NOTFOUND;
     }
 
-  map = config->ldc_maps[sel][type];
+  map = config->ldc_maps[sel][type & MAP_ATTRIBUTE_MASK];
   assert (map != NULL);
 
   NSS_LDAP_DATUM_ZERO (&key);
   key.data = (void *) from;
-  key.size = strlen (from) + 1;
+
+  if (type == MAP_ATTRIBUTE)
+    {
+      /* strip matching rules */
+      char *pColon = strchr (from, ':');
+      if (pColon)
+        key.size = pColon - from;
+    }
+  if (key.size == 0)
+    key.size = strlen (from);
 
   NSS_LDAP_DATUM_ZERO (&val);
 
   stat = _nss_ldap_db_get (map, NSS_LDAP_DB_NORMALIZE_CASE, &key, &val);
   if (stat == NSS_NOTFOUND && sel != LM_NONE)
     {
-      map = config->ldc_maps[LM_NONE][type];
+      map = config->ldc_maps[LM_NONE][type & MAP_ATTRIBUTE_MASK];
       assert (map != NULL);
       stat = _nss_ldap_db_get (map, NSS_LDAP_DB_NORMALIZE_CASE, &key, &val);
     }
