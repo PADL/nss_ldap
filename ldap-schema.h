@@ -117,6 +117,8 @@ extern char _nss_ldap_filt_getautomntbyname[];
 #define ATM(map, at)             _nss_ldap_map_at(map, AT##_##at)
 #define DF(at)                   _nss_ldap_map_df(at)
 #define OV(at)                   _nss_ldap_map_ov(at)
+#define MR(at)                   _nss_ldap_map_mr(LM_NONE, AT##_##at)
+#define MRM(map, at)             _nss_ldap_map_mr(map, AT##_##at)
 
 /**
  * Common attributes, not from RFC 2307.

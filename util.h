@@ -50,6 +50,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_MAP_OBJECTCLASS    "nss_map_objectclass"
 #define NSS_LDAP_KEY_SET_OVERRIDE       "nss_override_attribute_value"
 #define NSS_LDAP_KEY_SET_DEFAULT        "nss_default_attribute_value"
+#define NSS_LDAP_KEY_MATCHING_RULE      "nss_matching_rule"
 
 #define NSS_LDAP_CONFIG_BUFSIZ		4096
 #define NSS_LDAP_KEY_HOST		"host"
