@@ -140,9 +140,10 @@ char _nss_ldap_filt_getautomntbyname[LDAP_FILT_MAXSIZ];
 
 #define PUT_STR(str) \
   do { \
-    char const* const s = str; \
+    char const * const s = str; \
     size_t const s_size = strlen (s); \
-    size_t const space_left = buffer_end - buffer; \
+    assert (buffer < buffer_end); \
+    size_t const space_left = (unsigned)(buffer_end - buffer); \
     size_t const copy_size = (s_size < space_left ? s_size : space_left); \
     memcpy (buffer, s, copy_size); \
     buffer += copy_size; \
@@ -150,8 +151,8 @@ char _nss_ldap_filt_getautomntbyname[LDAP_FILT_MAXSIZ];
 
 #define FILL(filter_buffer) \
   do { \
-    char* buffer = filter_buffer; \
-    char* const buffer_end = buffer + LDAP_FILT_MAXSIZ
+    char *buffer = filter_buffer; \
+    char *const buffer_end = buffer + LDAP_FILT_MAXSIZ
 
 #define FILL_END \
     assert (buffer < buffer_end); \
@@ -209,7 +210,7 @@ char _nss_ldap_filt_getautomntbyname[LDAP_FILT_MAXSIZ];
  * lookup filter initialization
  */
 void
-_nss_ldap_init_filters ()
+_nss_ldap_init_filters (void)
 {
   /* rfc822 mail aliases */
   FILL (_nss_ldap_filt_getaliasbyname);
