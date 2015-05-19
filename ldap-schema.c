@@ -35,6 +35,7 @@ static char rcsId[] =
 #include <pthread.h>
 #endif
 
+#include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <netdb.h>
@@ -131,144 +132,332 @@ char _nss_ldap_filt_setautomntent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getautomntent[LDAP_FILT_MAXSIZ];
 char _nss_ldap_filt_getautomntbyname[LDAP_FILT_MAXSIZ];
 
+#define PUT_CHAR(c) \
+  do { \
+    if (buffer < buffer_end) \
+      *(buffer++) = c; \
+  } while (0)
+
+#define PUT_STR(str) \
+  do { \
+    char const * const s = str; \
+    size_t const s_size = strlen (s); \
+    assert (buffer < buffer_end); \
+    size_t const space_left = (unsigned)(buffer_end - buffer); \
+    size_t const copy_size = (s_size < space_left ? s_size : space_left); \
+    memcpy (buffer, s, copy_size); \
+    buffer += copy_size; \
+  } while (0)
+
+#define FILL(filter_buffer) \
+  do { \
+    char *buffer = filter_buffer; \
+    char *const buffer_end = buffer + LDAP_FILT_MAXSIZ
+
+#define FILL_END \
+    assert (buffer < buffer_end); \
+    *(buffer < buffer_end ? buffer : buffer_end - 1) = '\0'; \
+  } while (0)
+
+#define FILTER \
+  do { \
+    PUT_CHAR ('(')
+
+#define FILTER_END \
+    PUT_CHAR (')'); \
+  } while (0)
+
+#define AND_FILTER \
+  FILTER; \
+    PUT_CHAR ('&')
+
+#define OR_FILTER \
+  FILTER; \
+    PUT_CHAR ('|')
+
+#define ITEM(attr, matchingrule, filtertype, assertionvalue) \
+  do { \
+    char const* const mr = matchingrule; \
+    PUT_STR (attr); \
+    if (mr) \
+    { \
+      PUT_CHAR (':'); \
+      PUT_STR (mr); \
+      PUT_CHAR (':'); \
+    } \
+    PUT_STR (#filtertype); \
+    PUT_STR (assertionvalue); \
+  } while (0)
+
+#define ITEM_FILTER(map, at, assertionvalue) \
+  FILTER; \
+    ITEM (ATM (map, at), MRM (map, at), =, assertionvalue); \
+  FILTER_END
+
+#define FIXED_ITEM_FILTERM(map, at, oc) \
+  ITEM_FILTER (map, at, OC (oc))
+
+#define FIXED_ITEM_FILTER(at, oc) \
+  FIXED_ITEM_FILTERM (LM_NONE, at, oc)
+
+#define QUERY_ITEM_FILTERM(map, at, specifier) \
+  ITEM_FILTER (map, at, specifier)
+
+#define QUERY_ITEM_FILTER(at, specifier) \
+  QUERY_ITEM_FILTERM (LM_NONE, at, specifier)
+
 /**
  * lookup filter initialization
  */
 void
-_nss_ldap_init_filters ()
+_nss_ldap_init_filters (void)
 {
   /* rfc822 mail aliases */
-  snprintf (_nss_ldap_filt_getaliasbyname, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (nisMailAlias),
-            ATM (LM_ALIASES, cn), "%s");
-  snprintf (_nss_ldap_filt_getaliasent, LDAP_FILT_MAXSIZ,
-	    "(%s=%s)", AT (objectClass), OC (nisMailAlias));
+  FILL (_nss_ldap_filt_getaliasbyname);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, nisMailAlias);
+      QUERY_ITEM_FILTERM (LM_ALIASES, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getaliasent);
+    FIXED_ITEM_FILTER (objectClass, nisMailAlias);
+  FILL_END;
 
   /* boot parameters */
-  snprintf (_nss_ldap_filt_getbootparamsbyname, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (bootableDevice),
-            ATM (LM_BOOTPARAMS, cn), "%d");
+  FILL (_nss_ldap_filt_getbootparamsbyname);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, bootableDevice);
+      QUERY_ITEM_FILTERM (LM_BOOTPARAMS, cn, "%d");
+    FILTER_END;
+  FILL_END;
 
   /* MAC address mappings */
-  snprintf (_nss_ldap_filt_gethostton, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ieee802Device),
-            ATM (LM_ETHERS, cn), "%s");
-  snprintf (_nss_ldap_filt_getntohost, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(|(%s=%s)(%s=%s)))", AT (objectClass), OC (ieee802Device),
-	    AT (macAddress), "%s", AT (macAddress), "%s");
-  snprintf (_nss_ldap_filt_getetherent, LDAP_FILT_MAXSIZ, "(%s=%s)",
-	    AT (objectClass), OC (ieee802Device));
+  FILL (_nss_ldap_filt_gethostton);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ieee802Device);
+      QUERY_ITEM_FILTERM (LM_ETHERS, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getntohost);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ieee802Device);
+      OR_FILTER;
+        QUERY_ITEM_FILTER (macAddress, "%s");
+        QUERY_ITEM_FILTER (macAddress, "%s");
+      FILTER_END;
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getetherent);
+    FIXED_ITEM_FILTER (objectClass, ieee802Device);
+  FILL_END;
 
   /* groups */
-  snprintf (_nss_ldap_filt_getgrnam, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (posixGroup),
-            ATM (LM_GROUP, cn), "%s");
-  snprintf (_nss_ldap_filt_getgrgid, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (posixGroup),
-            ATM (LM_GROUP, gidNumber), "%d");
-  snprintf (_nss_ldap_filt_getgrent, LDAP_FILT_MAXSIZ, "(&(%s=%s))",
-	    AT (objectClass), OC (posixGroup));
-  snprintf (_nss_ldap_filt_getgroupsbymemberanddn, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(|(%s=%s)(%s=%s)))",
-	    AT (objectClass), OC (posixGroup), AT (memberUid), "%s", AT (uniqueMember), "%s");
-  snprintf (_nss_ldap_filt_getgroupsbydn, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))",
-	    AT (objectClass), OC (posixGroup), AT (uniqueMember), "%s");
-  snprintf (_nss_ldap_filt_getpwnam_groupsbymember, LDAP_FILT_MAXSIZ,
-	    "(|(&(%s=%s)(%s=%s))(&(%s=%s)(%s=%s)))",
-	    AT (objectClass), OC (posixGroup), AT (memberUid), "%s",
-	    AT (objectClass), OC (posixAccount), ATM (LM_PASSWD, uid), "%s");
-  snprintf (_nss_ldap_filt_getgroupsbymember, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (posixGroup), AT (memberUid),
-	    "%s");
+  FILL (_nss_ldap_filt_getgrnam);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, posixGroup);
+      QUERY_ITEM_FILTERM (LM_GROUP, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getgrgid);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, posixGroup);
+      QUERY_ITEM_FILTERM (LM_GROUP, gidNumber, "%d");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getgrent);
+    FIXED_ITEM_FILTER (objectClass, posixGroup);
+  FILL_END;
+  FILL (_nss_ldap_filt_getgroupsbymemberanddn);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, posixGroup);
+      OR_FILTER;
+        QUERY_ITEM_FILTER (memberUid, "%s");
+        QUERY_ITEM_FILTER (uniqueMember, "%s");
+      FILTER_END;
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getgroupsbydn);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, posixGroup);
+      QUERY_ITEM_FILTER (uniqueMember, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getpwnam_groupsbymember);
+    OR_FILTER;
+      AND_FILTER;
+        FIXED_ITEM_FILTER (objectClass, posixGroup);
+        QUERY_ITEM_FILTER (memberUid, "%s");
+      FILTER_END;
+      AND_FILTER;
+        FIXED_ITEM_FILTER (objectClass, posixAccount);
+        QUERY_ITEM_FILTERM (LM_PASSWD, uid, "%s");
+      FILTER_END;
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getgroupsbymember);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, posixGroup);
+      QUERY_ITEM_FILTER (memberUid, "%s");
+    FILTER_END;
+  FILL_END;
 
   /* IP hosts */
-  snprintf (_nss_ldap_filt_gethostbyname, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipHost), ATM (LM_HOSTS, cn),
-            "%s");
-  snprintf (_nss_ldap_filt_gethostbyaddr, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipHost), AT (ipHostNumber),
-	    "%s");
-  snprintf (_nss_ldap_filt_gethostent, LDAP_FILT_MAXSIZ, "(%s=%s)",
-	    AT (objectClass), OC (ipHost));
+  FILL (_nss_ldap_filt_gethostbyname);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipHost);
+      QUERY_ITEM_FILTERM (LM_HOSTS, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_gethostbyaddr);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipHost);
+      QUERY_ITEM_FILTER (ipHostNumber, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_gethostent);
+    FIXED_ITEM_FILTER (objectClass, ipHost);
+  FILL_END;
 
   /* IP networks */
-  snprintf (_nss_ldap_filt_getnetbyname, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipNetwork),
-            ATM (LM_NETWORKS, cn), "%s");
-  snprintf (_nss_ldap_filt_getnetbyaddr, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipNetwork),
-	    AT (ipNetworkNumber), "%s");
-  snprintf (_nss_ldap_filt_getnetent, LDAP_FILT_MAXSIZ, "(%s=%s)",
-	    AT (objectClass), OC (ipNetwork));
+  FILL (_nss_ldap_filt_getnetbyname);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipNetwork);
+      QUERY_ITEM_FILTERM (LM_NETWORKS, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getnetbyaddr);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipNetwork);
+      QUERY_ITEM_FILTER (ipNetworkNumber, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getnetent);
+    FIXED_ITEM_FILTER (objectClass, ipNetwork);
+  FILL_END;
 
   /* IP protocols */
-  snprintf (_nss_ldap_filt_getprotobyname, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipProtocol),
-            ATM (LM_PROTOCOLS, cn), "%s");
-  snprintf (_nss_ldap_filt_getprotobynumber, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipProtocol),
-	    AT (ipProtocolNumber), "%d");
-  snprintf (_nss_ldap_filt_getprotoent, LDAP_FILT_MAXSIZ, "(%s=%s)",
-	    AT (objectClass), OC (ipProtocol));
+  FILL (_nss_ldap_filt_getprotobyname);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipProtocol);
+      QUERY_ITEM_FILTERM (LM_PROTOCOLS, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getprotobynumber);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipProtocol);
+      QUERY_ITEM_FILTER (ipProtocolNumber, "%d");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getprotoent);
+    FIXED_ITEM_FILTER (objectClass, ipProtocol);
+  FILL_END;
 
   /* users */
-  snprintf (_nss_ldap_filt_getpwnam, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (posixAccount),
-            ATM (LM_PASSWD, uid), "%s");
-  snprintf (_nss_ldap_filt_getpwuid, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))",
-	    AT (objectClass), OC (posixAccount), AT (uidNumber), "%d");
-  snprintf (_nss_ldap_filt_getpwent, LDAP_FILT_MAXSIZ,
-	    "(%s=%s)", AT (objectClass), OC (posixAccount));
+  FILL (_nss_ldap_filt_getpwnam);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, posixAccount);
+      QUERY_ITEM_FILTERM (LM_PASSWD, uid, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getpwuid);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, posixAccount);
+      QUERY_ITEM_FILTER (uidNumber, "%d");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getpwent);
+    FIXED_ITEM_FILTER (objectClass, posixAccount);
+  FILL_END;
 
   /* RPCs */
-  snprintf (_nss_ldap_filt_getrpcbyname, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (oncRpc), ATM (LM_RPC, cn), "%s");
-  snprintf (_nss_ldap_filt_getrpcbynumber, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (oncRpc), AT (oncRpcNumber),
-	    "%d");
-  snprintf (_nss_ldap_filt_getrpcent, LDAP_FILT_MAXSIZ, "(%s=%s)",
-	    AT (objectClass), OC (oncRpc));
+  FILL (_nss_ldap_filt_getrpcbyname);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, oncRpc);
+      QUERY_ITEM_FILTERM (LM_RPC, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getrpcbynumber);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, oncRpc);
+      QUERY_ITEM_FILTER (oncRpcNumber, "%d");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getrpcent);
+    FIXED_ITEM_FILTER (objectClass, oncRpc);
+  FILL_END;
 
   /* IP services */
-  snprintf (_nss_ldap_filt_getservbyname, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipService), ATM (LM_SERVICES, cn),
-            "%s");
-  snprintf (_nss_ldap_filt_getservbynameproto, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s)(%s=%s))",
-	    AT (objectClass), OC (ipService), ATM (LM_SERVICES, cn), "%s", AT (ipServiceProtocol),
-            "%s");
-  snprintf (_nss_ldap_filt_getservbyport, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (ipService), AT (ipServicePort),
-	    "%d");
-  snprintf (_nss_ldap_filt_getservbyportproto, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s)(%s=%s))", AT (objectClass), OC (ipService),
-	    AT (ipServicePort), "%d", AT (ipServiceProtocol), "%s");
-  snprintf (_nss_ldap_filt_getservent, LDAP_FILT_MAXSIZ, "(%s=%s)",
-	    AT (objectClass), OC (ipService));
+  FILL (_nss_ldap_filt_getservbyname);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipService);
+      QUERY_ITEM_FILTERM (LM_SERVICES, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getservbynameproto);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipService);
+      QUERY_ITEM_FILTERM (LM_SERVICES, cn, "%s");
+      QUERY_ITEM_FILTER (ipServiceProtocol, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getservbyport);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipService);
+      QUERY_ITEM_FILTER (ipServicePort, "%d");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getservbyportproto);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, ipService);
+      QUERY_ITEM_FILTER (ipServicePort, "%d");
+      QUERY_ITEM_FILTER (ipServiceProtocol, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getservent);
+    FIXED_ITEM_FILTER (objectClass, ipService);
+  FILL_END;
 
   /* shadow users */
-  snprintf (_nss_ldap_filt_getspnam, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (shadowAccount),
-            ATM (LM_SHADOW, uid), "%s");
-  snprintf (_nss_ldap_filt_getspent, LDAP_FILT_MAXSIZ,
-	    "(%s=%s)", AT (objectClass), OC (shadowAccount));
+  FILL (_nss_ldap_filt_getspnam);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, shadowAccount);
+      QUERY_ITEM_FILTERM (LM_SHADOW, uid, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getspent);
+    FIXED_ITEM_FILTER (objectClass, shadowAccount);
+  FILL_END;
 
   /* netgroups */
-  snprintf (_nss_ldap_filt_getnetgrent, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (nisNetgroup),
-            ATM (LM_NETGROUP, cn), "%s");
-  snprintf (_nss_ldap_filt_innetgr, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (nisNetgroup), AT (memberNisNetgroup), "%s");
+  FILL (_nss_ldap_filt_getnetgrent);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, nisNetgroup);
+      QUERY_ITEM_FILTERM (LM_NETGROUP, cn, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_innetgr);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, nisNetgroup);
+      QUERY_ITEM_FILTER (memberNisNetgroup, "%s");
+    FILTER_END;
+  FILL_END;
 
   /* automounts */
-  snprintf (_nss_ldap_filt_setautomntent, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (automountMap), AT (automountMapName), "%s");
-  snprintf (_nss_ldap_filt_getautomntent, LDAP_FILT_MAXSIZ,
-	    "(%s=%s)", AT (objectClass), OC (automount));
-  snprintf (_nss_ldap_filt_getautomntbyname, LDAP_FILT_MAXSIZ,
-	    "(&(%s=%s)(%s=%s))", AT (objectClass), OC (automount), AT (automountKey), "%s");
+  FILL (_nss_ldap_filt_setautomntent);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, automountMap);
+      QUERY_ITEM_FILTER (automountMapName, "%s");
+    FILTER_END;
+  FILL_END;
+  FILL (_nss_ldap_filt_getautomntent);
+    FIXED_ITEM_FILTER (objectClass, automount);
+  FILL_END;
+  FILL (_nss_ldap_filt_getautomntbyname);
+    AND_FILTER;
+      FIXED_ITEM_FILTER (objectClass, automount);
+      QUERY_ITEM_FILTER (automountKey, "%s");
+    FILTER_END;
+  FILL_END;
 }
 
 static void init_pwd_attributes (const char ***pwd_attrs);

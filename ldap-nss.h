@@ -384,7 +384,7 @@ struct ldap_config
   /*
    * attribute/objectclass maps relative to this config
    */
-  void *ldc_maps[LM_NONE + 1][6]; /* must match MAP_MAX */
+  void *ldc_maps[LM_NONE + 1][7]; /* must match MAP_MAX */
 
   /*
    * is userPassword "userPassword" or not? 
@@ -561,7 +561,8 @@ enum ldap_map_type
   MAP_DEFAULT,
   MAP_ATTRIBUTE_REVERSE,
   MAP_OBJECTCLASS_REVERSE, /* XXX not used yet? */
-  MAP_MAX = MAP_OBJECTCLASS_REVERSE
+  MAP_MATCHING_RULE,
+  MAP_MAX = MAP_MATCHING_RULE
 };
 
 typedef enum ldap_map_type ldap_map_type_t;
@@ -992,6 +993,8 @@ const char *_nss_ldap_unmap_oc (ldap_map_selector_t sel, const char *pChar);
 
 const char *_nss_ldap_map_ov (const char *pChar);
 const char *_nss_ldap_map_df (const char *pChar);
+
+const char *_nss_ldap_map_mr (ldap_map_selector_t sel, const char *attribute);
 
 /*
  * Proxy bind support for AIX.

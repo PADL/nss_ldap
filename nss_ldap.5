@@ -452,6 +452,27 @@ If
 was built without schema mapping support, then this option
 is ignored.
 .TP
+.B nss_matching_rule <attribute> <matching_rule>
+This option may be specified multiple times, and directs
+.B nss_ldap
+to use the matching rule
+.B matching_rule
+in all lookups for
+.B attribute
+attribute.
+If
+.B nss_ldap
+was built without schema mapping support, then this option
+is ignored.
+Matching rule can be specified either as numeric OID or using
+descriptive form. Provide only value itself without any colons (:).
+Note that
+.B caseExactMatch
+(or its numeric OID
+.B 2.5.13.5
+) matching rule can be used to enforce case sensitive lookup for
+attributes that are case insensitive by itself.
+.TP
 .B nss_schema <rfc2307bis|rfc2307>
 If the value of this option is
 .BR

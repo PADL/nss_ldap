@@ -1234,6 +1234,11 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  do_parse_map_statement (result, v, MAP_DEFAULT);
 	}
+      else if (!strncasecmp (k, NSS_LDAP_KEY_MATCHING_RULE,
+			     strlen (NSS_LDAP_KEY_MATCHING_RULE)))
+	{
+	  do_parse_map_statement (result, v, MAP_MATCHING_RULE);
+	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_INITGROUPS))
 	{
 	  if (!strcasecmp (v, "backlink"))

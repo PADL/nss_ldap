@@ -4563,6 +4563,18 @@ _nss_ldap_map_df (const char *attribute)
   return value;
 }
 
+const char *
+_nss_ldap_map_mr (ldap_map_selector_t sel, const char *attribute)
+{
+  const char *mapped = NULL;
+  NSS_STATUS stat;
+  ldap_session_t *session = &__session;
+
+  stat = _nss_ldap_map_get (session->ls_config, sel, MAP_MATCHING_RULE, attribute, &mapped);
+
+  return (stat == NSS_SUCCESS) ? mapped : NULL;
+}
+
 NSS_STATUS
 _nss_ldap_map_put (ldap_config_t * config,
 		   ldap_map_selector_t sel,
@@ -4600,6 +4612,7 @@ _nss_ldap_map_put (ldap_config_t * config,
     case MAP_OBJECTCLASS:
     case MAP_OVERRIDE:
     case MAP_DEFAULT:
+    case MAP_MATCHING_RULE:
       break;
     default:
       return NSS_NOTFOUND;
