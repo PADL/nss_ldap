@@ -59,6 +59,21 @@
 #include "ldap-nss.h"
 #include "util.h"
 
+#ifndef LDAP_OPT_X_TLS_NEVER
+#define LDAP_OPT_X_TLS_NEVER    0
+#define LDAP_OPT_X_TLS_HARD     1
+#define LDAP_OPT_X_TLS_DEMAND   2
+#define LDAP_OPT_X_TLS_ALLOW    3
+#define LDAP_OPT_X_TLS_TRY      4
+#endif /* LDAP_OPT_X_TLS_NEVER */
+
+#ifndef LDAP_OPT_X_TLS_CRL_NONE
+#define LDAP_OPT_X_TLS_CRL_NONE 0
+#define LDAP_OPT_X_TLS_CRL_PEER 1
+#define LDAP_OPT_X_TLS_CRL_ALL  2
+#endif /* LDAP_OPT_X_TLS_CRL_NONE */
+
+
 static char rcsId[] = "$Id$";
 
 static NSS_STATUS do_getrdnvalue (const char *dn,
@@ -634,6 +649,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_referrals = 1;
   result->ldc_restart = 1;
   result->ldc_tls_checkpeer = -1;
+  result->ldc_tls_crlcheck = -1;
   result->ldc_tls_cacertfile = NULL;
   result->ldc_tls_cacertdir = NULL;
   result->ldc_tls_ciphers = NULL;
@@ -1177,20 +1193,49 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	    }
 	}
 #endif /* CONFIGURE_KRB5_KEYTAB */
-      else if (!strcasecmp (k, "tls_checkpeer"))
+      else if (!strcasecmp (k, "tls_checkpeer") ||
+	       !strcasecmp (k, "tls_reqcert")) /* name from libldap */
 	{
 	  if (!strcasecmp (v, "on") || !strcasecmp (v, "yes")
-	      || !strcasecmp (v, "true"))
+	      || !strcasecmp (v, "true") || !strcasecmp (v, "hard")) 
 	    {
-	      result->ldc_tls_checkpeer = 1;
+	      result->ldc_tls_checkpeer = LDAP_OPT_X_TLS_HARD;
+	    }
+	  else if (!strcasecmp (v, "demand"))
+	    {
+	      result->ldc_tls_checkpeer = LDAP_OPT_X_TLS_DEMAND;
+	    }
+	  else if (!strcasecmp (v, "allow"))
+	    {
+	      result->ldc_tls_checkpeer = LDAP_OPT_X_TLS_ALLOW;
+	    }
+	  else if (!strcasecmp (v, "try"))
+	    {
+	      result->ldc_tls_checkpeer = LDAP_OPT_X_TLS_TRY;
 	    }
 	  else if (!strcasecmp (v, "off") || !strcasecmp (v, "no")
-		   || !strcasecmp (v, "false"))
+		   || !strcasecmp (v, "false") || !strcasecmp (v, "never"))
 	    {
-	      result->ldc_tls_checkpeer = 0;
+	      result->ldc_tls_checkpeer = LDAP_OPT_X_TLS_NEVER;
 	    }
 	}
-      else if (!strcasecmp (k, "tls_cacertfile"))
+      else if (!strcasecmp (k, "tls_crlcheck"))
+	{
+	  if (!strcasecmp (v, "none"))
+	    {
+	      result->ldc_tls_crlcheck = LDAP_OPT_X_TLS_CRL_NONE;
+	    }
+	  else if (!strcasecmp (v, "peer"))
+	    {
+	      result->ldc_tls_crlcheck = LDAP_OPT_X_TLS_CRL_PEER;
+	    }
+	  else if (!strcasecmp (v, "all"))
+	    {
+	      result->ldc_tls_crlcheck = LDAP_OPT_X_TLS_CRL_ALL;
+	    }
+	}
+      else if (!strcasecmp (k, "tls_cacertfile")
+	       || !strcasecmp (k, "tls_cacert"))
 	{
 	  t = &result->ldc_tls_cacertfile;
 	}
@@ -1198,7 +1243,8 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	{
 	  t = &result->ldc_tls_cacertdir;
 	}
-      else if (!strcasecmp (k, "tls_ciphers"))
+      else if (!strcasecmp (k, "tls_ciphers")
+	       || !strcasecmp (k, "tls_cipher_suite"))
 	{
 	  t = &result->ldc_tls_ciphers;
 	}
