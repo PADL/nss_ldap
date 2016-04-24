@@ -59,7 +59,11 @@
 #include <nss_dbdefs.h>
 #include <nsswitch.h>
 #elif defined(HAVE_NSS_H)
+#ifdef __NetBSD__
+#include <nsswitch.h> /* NSS like interface in nsswitch.h header */
+#else
 #include <nss.h>
+#endif
 #elif defined(HAVE_IRS_H)
 #include "irs-nss.h"
 #endif

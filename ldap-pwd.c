@@ -21,6 +21,10 @@
 static char rcsId[] =
   "$Id$";
 
+#if defined(__FreeBSD__)
+#include <sys/types.h>
+#include <unistd.h>
+#endif
 #include "config.h"
 
 #ifdef HAVE_PORT_BEFORE_H

@@ -56,7 +56,7 @@ am_NSS_LDAP_OBJECTS = ldap-nss.$(OBJEXT) ldap-grp.$(OBJEXT) \
 	util.$(OBJEXT) ltf.$(OBJEXT) snprintf.$(OBJEXT) \
 	resolve.$(OBJEXT) dnsconfig.$(OBJEXT) irs-nss.$(OBJEXT) \
 	pagectrl.$(OBJEXT) aix_authmeth.$(OBJEXT) ldap-krb5.$(OBJEXT) \
-	bsd-nss.$(OBJEXT) vers.$(OBJEXT)
+	bsd-nss.$(OBJEXT) vers.$(OBJEXT) osdep.$(OBJEXT)
 NSS_LDAP_OBJECTS = $(am_NSS_LDAP_OBJECTS)
 NSS_LDAP_LDADD = $(LDADD)
 NSS_LDAP_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(NSS_LDAP_LDFLAGS) \
@@ -70,7 +70,7 @@ am_nss_ldap_so_OBJECTS = ldap-nss.$(OBJEXT) ldap-pwd.$(OBJEXT) \
 	ldap-automount.$(OBJEXT) util.$(OBJEXT) ltf.$(OBJEXT) \
 	snprintf.$(OBJEXT) resolve.$(OBJEXT) dnsconfig.$(OBJEXT) \
 	irs-nss.$(OBJEXT) pagectrl.$(OBJEXT) ldap-sldap.$(OBJEXT) \
-	ldap-krb5.$(OBJEXT) bsd-nss.$(OBJEXT) vers.$(OBJEXT)
+	ldap-krb5.$(OBJEXT) bsd-nss.$(OBJEXT) vers.$(OBJEXT) osdep.$(OBJEXT)
 nss_ldap_so_OBJECTS = $(am_nss_ldap_so_OBJECTS)
 nss_ldap_so_LDADD = $(LDADD)
 nss_ldap_so_LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -205,8 +205,9 @@ top_srcdir = @top_srcdir@
 @AIX_FALSE@authmod = 
 @AIX_TRUE@authmod = NSS_LDAP
 INST_UID = root
-@AIX_FALSE@@FreeBSD_FALSE@INST_GID = root
-@AIX_FALSE@@FreeBSD_TRUE@INST_GID = wheel
+@AIX_FALSE@@FreeBSD_FALSE@@NetBSD_FALSE@INST_GID = root
+@AIX_FALSE@@FreeBSD_TRUE@@NetBSD_FALSE@INST_GID = wheel
+@AIX_FALSE@@FreeBSD_FALSE@@NetBSD_TRUE@INST_GID = wheel
 @AIX_TRUE@INST_GID = system
 EXTRA_DIST = CVSVersionInfo.txt ChangeLog \
 	     AUTHORS ANNOUNCE NEWS INSTALL README LICENSE.OpenLDAP COPYING\
@@ -218,11 +219,11 @@ nss_ldap_so_SOURCES = ldap-nss.c ldap-pwd.c ldap-grp.c ldap-netgrp.c ldap-rpc.c 
 	ldap-alias.c ldap-service.c ldap-schema.c ldap-ethers.c \
 	ldap-bp.c ldap-automount.c util.c ltf.c snprintf.c resolve.c \
 	dnsconfig.c irs-nss.c pagectrl.c ldap-sldap.c ldap-krb5.c \
-	bsd-nss.c vers.c
+	bsd-nss.c vers.c osdep.c
 
 NSS_LDAP_SOURCES = ldap-nss.c ldap-grp.c ldap-pwd.c ldap-netgrp.c ldap-schema.c \
 	util.c ltf.c snprintf.c resolve.c dnsconfig.c \
-	irs-nss.c pagectrl.c aix_authmeth.c ldap-krb5.c bsd-nss.c vers.c
+	irs-nss.c pagectrl.c aix_authmeth.c ldap-krb5.c bsd-nss.c vers.c osdep.c
 
 @GCC_FALSE@MULTI_OS_DIRECTORY = .
 #INCLUDES = -I$(top_builddir) -I$(srcdir)
@@ -335,6 +336,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/snprintf.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/util.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/vers.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/osdep.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
