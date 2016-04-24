@@ -360,3 +360,10 @@
 
 /* Version number of package */
 #undef VERSION
+
+#ifdef __NetBSD__
+#include "netbsd.h"
+#endif
+#ifdef __FreeBSD__
+#include "nss.h"
+#endif

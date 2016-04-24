@@ -96,6 +96,10 @@ static char *ether_ntoa (const struct ether_addr *e);
 static ent_context_t *ether_context = NULL;
 #endif
 
+#ifdef __FreeBSD__
+#define ether_addr_octet octet
+#endif
+
 static NSS_STATUS
 _nss_ldap_parse_ether (LDAPMessage * e,
 		       ldap_state_t * pvt,
