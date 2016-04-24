@@ -33,6 +33,7 @@ static char rcsId[] =
 #include <pthread.h>
 #endif
 
+#include <sys/param.h> /* for PATH_MAX */
 #include <assert.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -524,6 +525,14 @@ __local_option (void *outvalue)
   (ldap_set_option (NULL, LDAP_OPT_X_TLS_REQUIRE_CERT, (__checkpeer__)))
 #else
 #define SET_TLS_REQUIRE_CERT(__conn__, __checkpeer__) \
+  (__local_option (NULL))
+#endif
+
+#if defined(HAVE_LDAP_SET_OPTION) && defined(LDAP_OPT_X_TLS_CRLCHECK)
+#define SET_TLS_CRLCHECK(__conn__, __crlcheck__) \
+  (ldap_set_option (NULL, LDAP_OPT_X_TLS_CRLCHECK, (__crlcheck__)))
+#else
+#define SET_TLS_CRLCHECK(__conn__, __crlcheck__) \
   (__local_option (NULL))
 #endif
 
@@ -2173,6 +2182,16 @@ do_ssl_options (ldap_config_t * cfg)
       if ((rc = SET_TLS_REQUIRE_CERT (NULL, &cfg->ldc_tls_checkpeer)) != LDAP_OPT_SUCCESS)
 	{
 	  debug ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_REQUIRE_CERT failed");
+	  return LDAP_OPERATIONS_ERROR;
+	}
+    }
+
+  /* require crl? */
+  if (cfg->ldc_tls_crlcheck > -1)
+    {
+      if ((rc = SET_TLS_CRLCHECK (NULL, &cfg->ldc_tls_crlcheck)) != LDAP_OPT_SUCCESS)
+	{
+	  debug ("<== do_ssl_options: Setting of LDAP_OPT_X_TLS_CRLCHECK failed");
 	  return LDAP_OPERATIONS_ERROR;
 	}
     }

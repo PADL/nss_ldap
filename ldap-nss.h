@@ -59,7 +59,11 @@
 #include <nss_dbdefs.h>
 #include <nsswitch.h>
 #elif defined(HAVE_NSS_H)
+#ifdef __NetBSD__
+#include <nsswitch.h> /* NSS like interface in nsswitch.h header */
+#else
 #include <nss.h>
+#endif
 #elif defined(HAVE_IRS_H)
 #include "irs-nss.h"
 #endif
@@ -332,6 +336,8 @@ struct ldap_config
   ldap_service_search_descriptor_t *ldc_sds[LM_NONE];
   /* tls check peer */
   int ldc_tls_checkpeer;
+  /* tls crl check */
+  int ldc_tls_crlcheck;
   /* tls ca certificate file */
   char *ldc_tls_cacertfile;
   /* tls ca certificate dir */
