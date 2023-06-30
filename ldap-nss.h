@@ -59,24 +59,9 @@
 #include <nss_dbdefs.h>
 #include <nsswitch.h>
 #elif defined(HAVE_NSS_H)
-#ifdef __NetBSD__
-#include <nsswitch.h>
-#else
 #include <nss.h>
-#endif
 #elif defined(HAVE_IRS_H)
 #include "irs-nss.h"
-#endif
-
-#ifdef __NetBSD__
-/* From http://cvsweb.netbsd.org/bsdweb.cgi/pkgsrc/databases/nss_ldap/files/netbsd.h?rev=1.2 */
-enum nss_status {
-	NSS_STATUS_SUCCESS,
-	NSS_STATUS_NOTFOUND,
-	NSS_STATUS_UNAVAIL,
-	NSS_STATUS_TRYAGAIN,
-	NSS_STATUS_RETURN
-};
 #endif
 
 #include "ldap-schema.h"
@@ -544,10 +529,6 @@ struct ldap_session_mech
 
 typedef ldap_session_mech_t (*ldap_session_mech_setup_t)(void);
 
-#ifdef __NetBSD__
-#define UID_NOBODY 32767
-#define GID_NOBODY 39
-#else
 #ifndef HAVE_NSSWITCH_H
 #ifndef UID_NOBODY
 #define UID_NOBODY      (-2)
@@ -556,7 +537,6 @@ typedef ldap_session_mech_t (*ldap_session_mech_setup_t)(void);
 
 #ifndef GID_NOBODY
 #define GID_NOBODY     UID_NOBODY
-#endif
 #endif
 
 enum ldap_args_types

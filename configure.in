@@ -98,9 +98,6 @@ linux*) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic -Wl,--version-script,\$(srcdi
 freebsd*) TARGET_OS=FreeBSD
   nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic"
   CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
-netbsd*) TARGET_OS=NetBSD
-  nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic"
-  CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
 *) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic" ;;
 esac
 
@@ -109,7 +106,6 @@ AM_CONDITIONAL(GLIBC, test "$target_os" = "linux" -o "$target_os" = "linux-gnu" 
 AM_CONDITIONAL(AIX, test "$TARGET_OS" = AIX)
 AM_CONDITIONAL(HPUX, test "$TARGET_OS" = HPUX)
 AM_CONDITIONAL(FreeBSD, test "$TARGET_OS" = FreeBSD)
-AM_CONDITIONAL(NetBSD, test "$TARGET_OS" = NetBSD)
 
 AM_CONDITIONAL(USE_NATIVE_LINKER, test -n "$nss_ldap_so_LD")
 
@@ -162,7 +158,6 @@ case "$target_os" in
   aix*) AC_CHECK_HEADERS(irs.h usersec.h) ;;
   hpux*) AC_CHECK_HEADERS(nsswitch.h) ;;
   freebsd*) AC_CHECK_HEADERS(nss.h irs.h) ;;
-  netbsd*) AC_DEFINE(HAVE_NSS_H, 1) ;;
   *) AC_CHECK_HEADERS(nss.h)
      AC_CHECK_HEADERS(nsswitch.h)
      AC_CHECK_HEADERS(irs.h) ;;

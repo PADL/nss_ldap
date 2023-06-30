@@ -717,8 +717,6 @@ HPUX_TRUE
 HPUX_FALSE
 FreeBSD_TRUE
 FreeBSD_FALSE
-NetBSD_TRUE
-NetBSD_FALSE
 USE_NATIVE_LINKER_TRUE
 USE_NATIVE_LINKER_FALSE
 nss_ldap_so_LD
@@ -3964,9 +3962,6 @@ linux*) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic -Wl,--version-script,\$(srcdi
 freebsd*) TARGET_OS=FreeBSD
   nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic"
   CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
-netbsd*) TARGET_OS=NetBSD
-  nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic"
-  CPPFLAGS="$CPPFLAGS -DPIC -D_REENTRANT" ;;
 *) nss_ldap_so_LDFLAGS="-shared -Wl,-Bdynamic" ;;
 esac
 
@@ -4008,14 +4003,6 @@ fi
 else
   FreeBSD_TRUE='#'
   FreeBSD_FALSE=
-fi
-
- if test "$TARGET_OS" = NetBSD; then
-  NetBSD_TRUE=
-  NetBSD_FALSE='#'
-else
-  NetBSD_TRUE='#'
-  NetBSD_FALSE=
 fi
 
 
@@ -5314,10 +5301,6 @@ _ACEOF
 fi
 
 done
- ;;
-  netbsd*) cat >>confdefs.h <<\_ACEOF
-#define HAVE_NSS_H 1
-_ACEOF
  ;;
   *)
 for ac_header in nss.h
@@ -15502,13 +15485,6 @@ echo "$as_me: error: conditional \"FreeBSD\" was never defined.
 Usually this means the macro was only invoked conditionally." >&2;}
    { (exit 1); exit 1; }; }
 fi
-if test -z "${NetBSD_TRUE}" && test -z "${NetBSD_FALSE}"; then
-  { { echo "$as_me:$LINENO: error: conditional \"NetBSD\" was never defined.
-Usually this means the macro was only invoked conditionally." >&5
-echo "$as_me: error: conditional \"NetBSD\" was never defined.
-Usually this means the macro was only invoked conditionally." >&2;}
-   { (exit 1); exit 1; }; }
-fi
 if test -z "${USE_NATIVE_LINKER_TRUE}" && test -z "${USE_NATIVE_LINKER_FALSE}"; then
   { { echo "$as_me:$LINENO: error: conditional \"USE_NATIVE_LINKER\" was never defined.
 Usually this means the macro was only invoked conditionally." >&5
@@ -16192,8 +16168,6 @@ HPUX_TRUE!$HPUX_TRUE$ac_delim
 HPUX_FALSE!$HPUX_FALSE$ac_delim
 FreeBSD_TRUE!$FreeBSD_TRUE$ac_delim
 FreeBSD_FALSE!$FreeBSD_FALSE$ac_delim
-NetBSD_TRUE!$NetBSD_TRUE$ac_delim
-NetBSD_FALSE!$NetBSD_FALSE$ac_delim
 USE_NATIVE_LINKER_TRUE!$USE_NATIVE_LINKER_TRUE$ac_delim
 USE_NATIVE_LINKER_FALSE!$USE_NATIVE_LINKER_FALSE$ac_delim
 nss_ldap_so_LD!$nss_ldap_so_LD$ac_delim
@@ -16205,7 +16179,7 @@ LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 17; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 15; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5
