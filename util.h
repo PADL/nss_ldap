@@ -92,6 +92,7 @@ NSS_STATUS _nss_ldap_dn2uid (const char *dn,
 #define NSS_LDAP_KEY_DEBUG		"debug"
 #define NSS_LDAP_KEY_PAGESIZE		"pagesize"
 #define NSS_LDAP_KEY_INITGROUPS		"nss_initgroups"
+#define NSS_LDAP_KEY_ENTRYDN		"nss_entrydn"
 #define NSS_LDAP_KEY_INITGROUPS_IGNOREUSERS	"nss_initgroups_ignoreusers"
 #define NSS_LDAP_KEY_GETGRENT_SKIPMEMBERS	"nss_getgrent_skipmembers"
 

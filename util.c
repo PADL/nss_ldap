@@ -672,6 +672,7 @@ NSS_STATUS _nss_ldap_init_config (ldap_config_t * result)
   result->ldc_reconnect_maxsleeptime = LDAP_NSS_MAXSLEEPTIME * USECSPERSEC;
   result->ldc_reconnect_maxconntries = LDAP_NSS_MAXCONNTRIES;
   result->ldc_initgroups_ignoreusers = NULL;
+  result->ldc_entrydn = LDAP_NSS_ENTRYDN;
 
   for (i = 0; i <= LM_NONE; i++)
     {
@@ -1249,6 +1250,10 @@ _nss_ldap_readconfig (ldap_config_t ** presult, char **buffer, size_t *buflen)
 	    {
 	      result->ldc_flags &= ~(NSS_LDAP_FLAGS_INITGROUPS_BACKLINK);
 	    }
+	}
+      else if (!strcasecmp (k, NSS_LDAP_KEY_ENTRYDN))
+	{
+	    t = &result->ldc_entrydn;
 	}
       else if (!strcasecmp (k, NSS_LDAP_KEY_SCHEMA))
 	{

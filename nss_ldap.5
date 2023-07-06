@@ -480,6 +480,11 @@ rfc2307bis
 then support for the RFC2307bis schema (distinguished names in
 groups) will be enabled.
 .TP
+.B nss_entrydn <attribute>
+Specify how to search for DN when using the RFC2307bis schema.
+Default is dinstinguishedName, which fits Active Directory. 
+Use entryDN for OpenLDAP.
+.TP
 .B nss_initgroups <backlink>
 This option directs the
 .B nss_ldap
