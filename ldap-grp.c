@@ -987,6 +987,7 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
   const char *gidnumber_attrs[3];
   const char **memberP;
   const char **filteredMembersOf; /* remove already traversed groups */
+  const char *filterEntryDN;
   size_t memberCount, i;
   int erange;
 
@@ -1043,8 +1044,16 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
       return NSS_UNAVAIL;
     }
 
+  if (asprintf(&filterEntryDN, "(%s=%%s)",
+               ctx->ec_session->ls_config->ldc_entrydn) < 0)
+    {
+      free (filteredMembersOf);
+      debug ("<== ns_chase_backlink: returns NSS_UNAVAIL");
+      return NSS_UNAVAIL;
+    }
+
   stat = _nss_ldap_getent_ex (&a, &ctx, lia, NULL, 0,
-			      &erange, "(distinguishedName=%s)",
+			      &erange, filterEntryDN,
 			      LM_GROUP, gidnumber_attrs,
 			      do_parse_initgroups_nested);
 
@@ -1063,6 +1072,7 @@ ng_chase_backlink (const char ** membersOf, ldap_initgroups_args_t * lia)
 	}
     }
 
+  free (filterEntryDN);
   free (filteredMembersOf);
 
   _nss_ldap_ent_context_release (&ctx);
