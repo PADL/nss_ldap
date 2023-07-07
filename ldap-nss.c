@@ -2793,16 +2793,12 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 	{
 	  size_t filterBufPLen = strlen (filterBufP);
 
-	  /* remove trailing bracket */
-	  if (filterBufP[filterBufPLen - 1] == ')')
-	    filterBufP[filterBufPLen - 1] = '\0';
-
 	  if (*dynamicUserBuf != NULL)
 	    {
 	      char *oldDynamicUserBuf = *dynamicUserBuf;
 	      size_t dynamicUserBufSiz;
 
-	      dynamicUserBufSiz = filterBufPLen + strlen (sd->lsd_filter) + sizeof ("())");
+	      dynamicUserBufSiz = filterBufPLen + strlen (sd->lsd_filter) + sizeof ("(&())");
 	      *dynamicUserBuf = malloc (dynamicUserBufSiz);
 	      if (*dynamicUserBuf == NULL)
 		{
@@ -2810,13 +2806,13 @@ do_filter (const ldap_args_t * args, const char *filterprot,
 		  return NSS_UNAVAIL;
 		}
 
-	      snprintf (*dynamicUserBuf, dynamicUserBufSiz, "%s(%s))",
+	      snprintf (*dynamicUserBuf, dynamicUserBufSiz, "(&%s(%s))",
 			filterBufP, sd->lsd_filter);
 	      free (oldDynamicUserBuf);
 	    }
 	  else
 	    {
-	      snprintf (userBuf, userBufSiz, "%s(%s))",
+	      snprintf (userBuf, userBufSiz, "(&%s(%s))",
 			filterBufP, sd->lsd_filter);
 	    }
 	}
