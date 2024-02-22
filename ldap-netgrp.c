@@ -382,7 +382,9 @@ NSS_STATUS
 _nss_ldap_getnetgrent_r (struct __netgrent *result,
 			 char *buffer, size_t buflen, int *errnop)
 {
-  return _nss_ldap_parse_netgr (result, buffer, buflen);
+  NSS_STATUS status = _nss_ldap_parse_netgr (result, buffer, buflen);
+  if (status == NSS_TRYAGAIN) *errnop = ERANGE;
+  return status;
 }
 #endif /* HAVE_NSS_H */
 
