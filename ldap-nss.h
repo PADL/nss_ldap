@@ -107,6 +107,8 @@
 
 #define LDAP_NSS_MAXGR_DEPTH     16     /* maximum depth of group nesting for getgrent()/initgroups() */
 
+#define LDAP_NSS_ENTRYDN         "distinguishedName"
+
 #if LDAP_NSS_NGROUPS > 64
 #define LDAP_NSS_BUFLEN_GROUP	(NSS_BUFSIZ + (LDAP_NSS_NGROUPS * (sizeof (char *) + LOGNAME_MAX))) 
 #else
@@ -407,6 +409,8 @@ struct ldap_config
   time_t ldc_mtime;
 
   char **ldc_initgroups_ignoreusers;
+
+  char *ldc_entrydn;
 };
 
 typedef struct ldap_config ldap_config_t;
@@ -649,6 +653,7 @@ typedef struct ldap_state ldap_state_t;
  */
 struct ent_context
 {
+  ldap_session_t *ec_session;	/* LDAP session */
   ldap_state_t ec_state;	/* eg. for services */
   int ec_msgid;			/* message ID */
   LDAPMessage *ec_res;		/* result chain */

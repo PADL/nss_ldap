@@ -2426,6 +2426,7 @@ _nss_ldap_ent_context_init_locked (ent_context_t ** pctx)
 	}
     }
 
+  ctx->ec_session = &__session;
   ctx->ec_cookie = NULL;
   ctx->ec_res = NULL;
   ctx->ec_msgid = -1;
