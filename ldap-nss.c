@@ -4872,6 +4872,7 @@ _nss_ldap_proxy_bind (const char *user, const char *password)
   return stat;
 }
 
+#if (defined(HAVE_SASL_H) || defined(HAVE_SASL_SASL_H))
 static int
 do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 {
@@ -4923,6 +4924,7 @@ do_sasl_interact (LDAP * ld, unsigned flags, void *defaults, void *_interact)
 
   return rc;
 }
+#endif
 
 const char **
 _nss_ldap_get_attributes (ldap_map_selector_t sel)
