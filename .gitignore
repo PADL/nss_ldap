@@ -2,6 +2,11 @@ config.log
 config.h
 config.cache
 config.status
-stamp-h
+stamp-h*
 Makefile
 NSS_LDAP
+vers.*
+nss_ldap.so
+*.o
+.deps/
+autom4te.cache/
