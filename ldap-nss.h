@@ -334,6 +334,8 @@ struct ldap_config
   ldap_service_search_descriptor_t *ldc_sds[LM_NONE];
   /* tls check peer */
   int ldc_tls_checkpeer;
+  /* tls crl check */
+  int ldc_tls_crlcheck;
   /* tls ca certificate file */
   char *ldc_tls_cacertfile;
   /* tls ca certificate dir */
