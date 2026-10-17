@@ -4114,6 +4114,15 @@ _nss_ldap_getbyname (ldap_args_t * args,
     {
       _nss_ldap_leave ();
       debug ("<== _nss_ldap_getbyname");
+      if (stat == NSS_UNAVAIL)
+	{
+	  /* Search failures bypass the parser's error mapping. */
+	  errno = EIO;
+#ifndef HAVE_NSSWITCH_H
+	  /* On Solaris, errnop is an erange flag, not an errno value. */
+	  *errnop = errno;
+#endif
+	}
       return stat;
     }
 
