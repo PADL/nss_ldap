@@ -13394,7 +13394,9 @@ if test $ac_cv_lib_dl_dlopen = yes; then
   LIBS="-ldl $LIBS"
 fi
 
-
+if test "x$enable_configurable_krb5_ccname_env" = "xyes" -o \
+        "x$enable_configurable_krb5_ccname_gssapi" = "xyes" -o \
+        "x$enable_configurable_krb5_keytab" = "xyes" ; then
 { echo "$as_me:$LINENO: checking for gss_krb5_ccache_name in -lgssapi" >&5
 echo $ECHO_N "checking for gss_krb5_ccache_name in -lgssapi... $ECHO_C" >&6; }
 if test "${ac_cv_lib_gssapi_gss_krb5_ccache_name+set}" = set; then
@@ -13645,7 +13647,7 @@ echo "${ECHO_T}$ac_cv_lib_krb5_main" >&6; }
 if test $ac_cv_lib_krb5_main = yes; then
   LIBS="-lkrb5 $LIBS"
 fi
-
+fi
 
 { echo "$as_me:$LINENO: checking for sasl_client_init in -lsasl2" >&5
 echo $ECHO_N "checking for sasl_client_init in -lsasl2... $ECHO_C" >&6; }
