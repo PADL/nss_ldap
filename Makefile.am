@@ -12,6 +12,9 @@ else
 if FreeBSD
 INST_GID=wheel
 else
+if FreeBSD
+INST_GID=wheel
+else
 INST_GID=root
 endif
 endif
