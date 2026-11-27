@@ -98,12 +98,14 @@ static char rcsId[] =
 #include <string.h>
 #include <errno.h>
 #include <time.h>
+#if defined(CONFIGURE_KRB5_KEYTAB) || defined(CONFIGURE_KRB5_CCNAME)
 #ifndef HEIMDAL
 #include <profile.h>
 #endif
 #ifdef HEIMDAL
 #define error_message(code) krb5_get_err_text(context,code)
 #endif
+#endif /* CONFIGURE_KRB5_KEYTAB || CONFIGURE_KRB5_CCNAME */
 #include <sys/types.h>
 #include <assert.h>
 #if defined(HAVE_GSSAPI_GSSAPI_KRB5_H)
